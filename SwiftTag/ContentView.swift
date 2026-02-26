@@ -13,22 +13,24 @@ struct ContentView: View {
         let number: Int
         var title: String
         let filename: String
+        var artist: String
+        var composer: String
+        var location: String
+        var date: Date
         var description: String
     }
 
-    @State private var artist: String = ""
-    @State private var venue: String = ""
     @State private var album: String = ""
-    @State private var date: Date = .now
-    @State private var selectedTrackID: UUID?
+    @State private var albumArtist: String = ""
+    @State private var selectedTrackIDs: Set<UUID> = []
     @State private var trackItems: [Track] = [
-        Track(number: 1, title: "Intro", filename: "01-intro.wav", description: "Opening track"),
-        Track(number: 2, title: "Verse", filename: "02-verse.wav", description: "Main section"),
-        Track(number: 3, title: "Outro", filename: "03-outro.wav", description: "Closing section")
+        Track(number: 1, title: "Intro", filename: "01-intro.wav", artist: "", composer: "", location: "", date: .now, description: "Opening track"),
+        Track(number: 2, title: "Verse", filename: "02-verse.wav", artist: "", composer: "", location: "", date: .now, description: "Main section"),
+        Track(number: 3, title: "Outro", filename: "03-outro.wav", artist: "", composer: "", location: "", date: .now, description: "Closing section")
     ]
 
     var tracks: some View {
-        Table(trackItems, selection: $selectedTrackID) {
+        Table(trackItems, selection: $selectedTrackIDs) {
             TableColumn("#") { track in
                 Text("\(track.number)")
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -56,46 +58,127 @@ struct ContentView: View {
         return $trackItems[index].title
     }
 
-    private func descriptionBinding(for trackID: UUID?) -> Binding<String>? {
-        guard let trackID,
-              let index = trackItems.firstIndex(where: { $0.id == trackID }) else {
+    private func selectedStringBinding(for keyPath: WritableKeyPath<Track, String>) -> Binding<String>? {
+        guard !selectedTrackIDs.isEmpty else {
             return nil
         }
 
-        return $trackItems[index].description
+        return Binding(
+            get: {
+                let selectedValues = trackItems
+                    .filter { selectedTrackIDs.contains($0.id) }
+                    .map { $0[keyPath: keyPath] }
+
+                guard let firstValue = selectedValues.first else {
+                    return ""
+                }
+
+                let allMatch = selectedValues.allSatisfy { $0 == firstValue }
+                return allMatch ? firstValue : ""
+            },
+            set: { newValue in
+                for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
+                    trackItems[index][keyPath: keyPath] = newValue
+                }
+            }
+        )
+    }
+
+    private var selectedDateBinding: Binding<Date>? {
+        guard !selectedTrackIDs.isEmpty else {
+            return nil
+        }
+
+        return Binding(
+            get: {
+                trackItems.first(where: { selectedTrackIDs.contains($0.id) })?.date ?? .now
+            },
+            set: { newValue in
+                for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
+                    trackItems[index].date = newValue
+                }
+            }
+        )
+    }
+
+    private var selectedArtistBinding: Binding<String>? {
+        selectedStringBinding(for: \.artist)
+    }
+
+    private var selectedComposerBinding: Binding<String>? {
+        selectedStringBinding(for: \.composer)
+    }
+
+    private var selectedLocationBinding: Binding<String>? {
+        selectedStringBinding(for: \.location)
+    }
+
+    private var selectedDescriptionsBinding: Binding<String>? {
+        selectedStringBinding(for: \.description)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Artist")
-                TextField("Artist", text: $artist)
-            }
-
-            HStack {
-                Text("Venue")
-                TextField("Venue", text: $venue)
-
-                Text("Date")
-                TextField("Date", value: $date, format: .dateTime.year().month().day())
-                    .frame(width: 130)
-            }
-
-            HStack {
                 Text("Album")
                 TextField("Album", text: $album)
             }
 
+            HStack {
+                Text("Album Artist")
+                TextField("Album Artist", text: $albumArtist)
+            }
+
             tracks
+
+            HStack {
+                Text("Artist")
+                if let selectedArtist = selectedArtistBinding {
+                    TextField("Artist", text: selectedArtist)
+                } else {
+                    TextField("Artist", text: .constant("Select track(s) to edit artist."))
+                        .disabled(true)
+                }
+            }
+
+            HStack {
+                Text("Composer")
+                if let selectedComposer = selectedComposerBinding {
+                    TextField("Composer", text: selectedComposer)
+                } else {
+                    TextField("Composer", text: .constant("Select track(s) to edit composer."))
+                        .disabled(true)
+                }
+            }
+
+            HStack {
+                Text("Location")
+                if let selectedLocation = selectedLocationBinding {
+                    TextField("Location", text: selectedLocation)
+                } else {
+                    TextField("Location", text: .constant("Select track(s) to edit location."))
+                        .disabled(true)
+                }
+
+                Text("Date")
+                if let selectedDate = selectedDateBinding {
+                    TextField("Date", value: selectedDate, format: .dateTime.year().month().day())
+                        .frame(width: 130)
+                } else {
+                    TextField("Date", value: .constant(.now), format: .dateTime.year().month().day())
+                        .frame(width: 130)
+                        .disabled(true)
+                }
+            }
 
             VStack(alignment: .leading, spacing: 10) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Description")
-                    if let selectedDescription = descriptionBinding(for: selectedTrackID) {
-                        TextEditor(text: selectedDescription)
+                    if let selectedDescriptions = selectedDescriptionsBinding {
+                        TextEditor(text: selectedDescriptions)
                             .frame(minHeight: 60, idealHeight: 60)
                     } else {
-                        TextEditor(text: .constant("Select a track to edit its description."))
+                        TextEditor(text: .constant("Select track(s) to edit description."))
                             .frame(minHeight: 60, idealHeight: 60)
                             .disabled(true)
                     }
