@@ -6,6 +6,13 @@
 //
 
 import SwiftUI
+import Combine
+
+final class TOMLStore: ObservableObject {
+    static let shared = TOMLStore()
+
+    @Published var text: String = ""
+}
 
 struct ContentView: View {
     struct Track: Identifiable {
@@ -117,6 +124,37 @@ struct ContentView: View {
         selectedStringBinding(for: \.description)
     }
 
+    private func tomlText() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+
+        var lines: [String] = [
+            "album = '''\(album)'''",
+            "album_artist = '''\(albumArtist)'''",
+            ""
+        ]
+
+        for track in trackItems.sorted(by: { $0.number < $1.number }) {
+            lines.append("[[tracks]]")
+            lines.append("number = \(track.number)")
+            lines.append("title = '''\(track.title)'''")
+            lines.append("filename = '''\(track.filename)'''")
+            lines.append("artist = '''\(track.artist)'''")
+            lines.append("composer = '''\(track.composer)'''")
+            lines.append("location = '''\(track.location)'''")
+            lines.append("date = \(dateFormatter.string(from: track.date))")
+            lines.append("description = '''\(track.description)'''")
+            lines.append("")
+        }
+
+        if lines.last?.isEmpty == true {
+            lines.removeLast()
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -186,10 +224,54 @@ struct ContentView: View {
                 .padding(.top, 8)
             }
             .frame(height: 92)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("TOML")
+                TextEditor(text: .constant(tomlText()))
+                    .font(.body.monospaced())
+                    .frame(minHeight: 180)
+                    .disabled(true)
+            }
         }
         .padding()
         .frame(minWidth: 520, minHeight: 520, idealHeight: 620)
+        .focusedSceneValue(\.tomlExportText, tomlText())
+        .onAppear {
+            TOMLStore.shared.text = tomlText()
+        }
+        .onChange(of: tomlText()) { _, newValue in
+            TOMLStore.shared.text = newValue
+        }
     }
+}
+
+struct TOMLUtilityView: View {
+    @ObservedObject private var tomlStore = TOMLStore.shared
+    @State private var displayedToml: String = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            TextEditor(text: $displayedToml)
+                .font(.body.monospaced())
+                .frame(minWidth: 500, minHeight: 400)
+                .disabled(true)
+
+            Button("Refresh") {
+                displayedToml = tomlStore.text
+            }
+        }
+        .padding()
+        .onAppear {
+            displayedToml = tomlStore.text
+        }
+        .onReceive(tomlStore.$text) { newValue in
+            displayedToml = newValue
+        }
+    }
+}
+
+extension FocusedValues {
+    @Entry var tomlExportText: String?
 }
 
 #Preview {
