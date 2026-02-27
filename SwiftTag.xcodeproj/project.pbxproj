@@ -29,6 +29,7 @@
 		720E0CAB2F4E5E99000DD6E1 /* SwiftTagUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftTagUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7275A2332F521874001AE708 /* build-libflac.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-libflac.sh"; sourceTree = "<group>"; };
 		7275A23B2F521875001AE708 /* FLACBridgeExecution.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = FLACBridgeExecution.md; sourceTree = "<group>"; };
+		7275A3202F521E70001AE708 /* SwiftTag-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftTag-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -83,6 +84,7 @@
 				720E0C952F4E5E98000DD6E1 /* Products */,
 				7275A22E2F521848001AE708 /* Docs */,
 				7275A22F2F521849001AE708 /* BuildScripts */,
+				7275A3202F521E70001AE708 /* SwiftTag-Bridging-Header.h */,
 			);
 			sourceTree = "<group>";
 		};
@@ -269,7 +271,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "set -euo pipefail\n\nFLAC_SOURCE_DIR=\"${FLAC_SOURCE_DIR:-${SRCROOT}/ThirdParty/flac}\"\nif [[ ! -d \"${FLAC_SOURCE_DIR}\" ]]; then\n  echo \"warning: FLAC source not found at ${FLAC_SOURCE_DIR}; skipping libFLAC build\"\n  exit 0\nfi\n\nif ! command -v cmake >/dev/null 2>&1; then\n  echo \"warning: cmake is not available; skipping libFLAC build\"\n  exit 0\nfi\n\nBUILD_ROOT=\"${DERIVED_FILE_DIR}/flac-build\"\nINSTALL_ROOT=\"${BUILD_ROOT}/install\"\nRESOURCE_BIN_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bin\"\nmkdir -p \"${BUILD_ROOT}\" \"${INSTALL_ROOT}\" \"${RESOURCE_BIN_DIR}\"\n\nPRIMARY_ARCH=\"${CURRENT_ARCH:-arm64}\"\nif [[ -z \"${PRIMARY_ARCH}\" || \"${PRIMARY_ARCH}\" == \"undefined_arch\" ]]; then\n  PRIMARY_ARCH=arm64\nfi\n\nCMAKE_CONFIG=Release\nif [[ \"${CONFIGURATION:-Release}\" == \"Debug\" ]]; then\n  CMAKE_CONFIG=Debug\nfi\n\nCMAKE_OSX_DEPLOYMENT_TARGET=\"${MACOSX_DEPLOYMENT_TARGET:-13.0}\"\n\ncmake -S \"${FLAC_SOURCE_DIR}\" -B \"${BUILD_ROOT}\" \\n  -DCMAKE_BUILD_TYPE=\"${CMAKE_CONFIG}\" \\n  -DCMAKE_OSX_ARCHITECTURES=\"${PRIMARY_ARCH}\" \\n  -DCMAKE_OSX_DEPLOYMENT_TARGET=\"${CMAKE_OSX_DEPLOYMENT_TARGET}\" \\n  -DBUILD_PROGRAMS=ON \\n  -DBUILD_SHARED_LIBS=OFF \\n  -DBUILD_TESTING=OFF \\n  -DINSTALL_MANPAGES=OFF \\n  -DINSTALL_PKGCONFIG_MODULE=OFF \\n  -DCMAKE_INSTALL_PREFIX=\"${INSTALL_ROOT}\"\n\ncmake --build \"${BUILD_ROOT}\" --config \"${CMAKE_CONFIG}\" --target metaflac FLAC\ncmake --install \"${BUILD_ROOT}\" --config \"${CMAKE_CONFIG}\"\n\nif [[ -f \"${INSTALL_ROOT}/bin/metaflac\" ]]; then\n  cp -f \"${INSTALL_ROOT}/bin/metaflac\" \"${RESOURCE_BIN_DIR}/metaflac\"\n  chmod +x \"${RESOURCE_BIN_DIR}/metaflac\"\nfi\nif [[ -f \"${INSTALL_ROOT}/lib/libFLAC.a\" ]]; then\n  cp -f \"${INSTALL_ROOT}/lib/libFLAC.a\" \"${RESOURCE_BIN_DIR}/libFLAC.a\"\nfi\nif [[ -f \"${INSTALL_ROOT}/lib/libFLAC.dylib\" ]]; then\n  cp -f \"${INSTALL_ROOT}/lib/libFLAC.dylib\" \"${RESOURCE_BIN_DIR}/libFLAC.dylib\"\nfi\n\necho \"Built FLAC artifacts staged to ${RESOURCE_BIN_DIR}\"\n";
+			shellScript = "\"${SRCROOT}/BuildScripts/build-libflac.sh\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -348,7 +350,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -411,7 +413,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -448,7 +450,11 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/SwiftTag/Resources/bin",
+					"$(DERIVED_FILE_DIR)/flac-build/install/lib",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lFLAC",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = toowalks.SwiftTag;
@@ -458,6 +464,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "SwiftTag-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -482,7 +489,11 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/SwiftTag/Resources/bin",
+					"$(DERIVED_FILE_DIR)/flac-build/install/lib",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lFLAC",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = toowalks.SwiftTag;
@@ -492,6 +503,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "SwiftTag-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};

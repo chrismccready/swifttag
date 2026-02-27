@@ -3,8 +3,8 @@
 
 #include "../include/FlacMetadataBridge.h"
 
-// TODO: include libFLAC headers, e.g.:
-// #include <FLAC/metadata.h>
+// Vendored libFLAC public headers live in ../vendor/FLAC.
+// TODO: include metadata API headers for direct parsing.
 
 int flac_read_tags(const char *file_path, FlacTagResult *out_result, char **error_message) {
     (void)file_path;

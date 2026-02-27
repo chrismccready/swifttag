@@ -17,7 +17,8 @@
 - Activate C bridge implementation:
   - Rename `FlacMetadataBridge.c.template` -> `FlacMetadataBridge.c`
   - Rename `module.modulemap.template` -> `module.modulemap`
-  - Configure Header Search Paths + Library Search Paths.
+  - Vendored FLAC public headers now live in `SwiftTag/FLACBridge/vendor/FLAC`.
+  - Build phase stages generated headers to `${DERIVED_FILE_DIR}/flac-include/FLAC`.
 
 ## Step 4
 - Replace `Process`-based `metaflac` calls in `ContentView` with `FlacMetadataService.readTags`.
