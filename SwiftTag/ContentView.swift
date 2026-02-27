@@ -14,6 +14,12 @@ final class TOMLStore: ObservableObject {
     @Published var text: String = ""
 }
 
+final class TOMLPresentationState: ObservableObject {
+    static let shared = TOMLPresentationState()
+
+    @Published var isPresented: Bool = false
+}
+
 struct ContentView: View {
     struct Track: Identifiable {
         let id = UUID()
@@ -27,6 +33,7 @@ struct ContentView: View {
         var description: String
     }
 
+    @ObservedObject private var tomlPresentationState = TOMLPresentationState.shared
     @State private var album: String = ""
     @State private var albumArtist: String = ""
     @State private var selectedTrackIDs: Set<UUID> = []
@@ -225,13 +232,6 @@ struct ContentView: View {
             }
             .frame(height: 92)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("TOML")
-                TextEditor(text: .constant(tomlText()))
-                    .font(.body.monospaced())
-                    .frame(minHeight: 180)
-                    .disabled(true)
-            }
         }
         .padding()
         .frame(minWidth: 520, minHeight: 520, idealHeight: 620)
@@ -242,22 +242,28 @@ struct ContentView: View {
         .onChange(of: tomlText()) { _, newValue in
             TOMLStore.shared.text = newValue
         }
+        .sheet(isPresented: $tomlPresentationState.isPresented) {
+            TOMLUtilityView()
+        }
     }
 }
 
 struct TOMLUtilityView: View {
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject private var tomlStore = TOMLStore.shared
     @State private var displayedToml: String = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TextEditor(text: $displayedToml)
+            TextEditor(text: .constant(displayedToml))
                 .font(.body.monospaced())
                 .frame(minWidth: 500, minHeight: 400)
-                .disabled(true)
 
-            Button("Refresh") {
-                displayedToml = tomlStore.text
+            HStack {
+                Spacer()
+                Button("Done") {
+                    dismiss()
+                }
             }
         }
         .padding()

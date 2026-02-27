@@ -8,10 +8,6 @@
 import SwiftUI
 import AppKit
 
-private enum WindowID {
-    static let tomlUtility = "toml-utility"
-}
-
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
@@ -19,12 +15,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 private struct TomlCommands: Commands {
-    @Environment(\.openWindow) private var openWindow
-
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Button("Show TOML...") {
-                openWindow(id: WindowID.tomlUtility)
+                TOMLPresentationState.shared.isPresented = true
             }
         }
     }
@@ -40,10 +34,6 @@ struct SwiftTagApp: App {
         }
         .commands {
             TomlCommands()
-        }
-
-        UtilityWindow("TOML", id: WindowID.tomlUtility) {
-            TOMLUtilityView()
         }
     }
 }
