@@ -15,11 +15,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 private struct TomlCommands: Commands {
+    @FocusedValue(\.showTomlSheet) private var showTomlSheet
+
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Button("Show TOML...") {
-                TOMLPresentationState.shared.isPresented = true
+                showTomlSheet?()
             }
+            .disabled(showTomlSheet == nil)
         }
     }
 }

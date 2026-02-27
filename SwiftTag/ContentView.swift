@@ -6,19 +6,6 @@
 //
 
 import SwiftUI
-import Combine
-
-final class TOMLStore: ObservableObject {
-    static let shared = TOMLStore()
-
-    @Published var text: String = ""
-}
-
-final class TOMLPresentationState: ObservableObject {
-    static let shared = TOMLPresentationState()
-
-    @Published var isPresented: Bool = false
-}
 
 struct ContentView: View {
     struct Track: Identifiable {
@@ -33,7 +20,7 @@ struct ContentView: View {
         var description: String
     }
 
-    @ObservedObject private var tomlPresentationState = TOMLPresentationState.shared
+    @State private var isTomlSheetPresented: Bool = false
     @State private var album: String = ""
     @State private var albumArtist: String = ""
     @State private var selectedTrackIDs: Set<UUID> = []
@@ -235,27 +222,22 @@ struct ContentView: View {
         }
         .padding()
         .frame(minWidth: 520, minHeight: 520, idealHeight: 620)
-        .focusedSceneValue(\.tomlExportText, tomlText())
-        .onAppear {
-            TOMLStore.shared.text = tomlText()
+        .focusedSceneValue(\.showTomlSheet) {
+            isTomlSheetPresented = true
         }
-        .onChange(of: tomlText()) { _, newValue in
-            TOMLStore.shared.text = newValue
-        }
-        .sheet(isPresented: $tomlPresentationState.isPresented) {
-            TOMLUtilityView()
+        .sheet(isPresented: $isTomlSheetPresented) {
+            TOMLUtilityView(tomlText: tomlText())
         }
     }
 }
 
 struct TOMLUtilityView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var tomlStore = TOMLStore.shared
-    @State private var displayedToml: String = ""
+    let tomlText: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TextEditor(text: .constant(displayedToml))
+            TextEditor(text: .constant(tomlText))
                 .font(.body.monospaced())
                 .frame(minWidth: 500, minHeight: 400)
 
@@ -267,17 +249,11 @@ struct TOMLUtilityView: View {
             }
         }
         .padding()
-        .onAppear {
-            displayedToml = tomlStore.text
-        }
-        .onReceive(tomlStore.$text) { newValue in
-            displayedToml = newValue
-        }
     }
 }
 
 extension FocusedValues {
-    @Entry var tomlExportText: String?
+    @Entry var showTomlSheet: (() -> Void)?
 }
 
 #Preview {
