@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Foundation
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     struct Track: Identifiable {
@@ -20,7 +22,30 @@ struct ContentView: View {
         var description: String
     }
 
+    private enum MetaflacError: LocalizedError {
+        case bundledToolMissing
+        case launchFailed(filePath: String, reason: String)
+        case commandFailed(filePath: String, status: Int32, stderr: String)
+        case invalidOutput(filePath: String)
+
+        var errorDescription: String? {
+            switch self {
+            case .bundledToolMissing:
+                return "Bundled metaflac not found in app resources."
+            case let .launchFailed(filePath, reason):
+                return "Failed to start metaflac for \(filePath): \(reason)"
+            case let .commandFailed(filePath, status, stderr):
+                return "metaflac failed for \(filePath) with exit code \(status).\n\n\(stderr)"
+            case let .invalidOutput(filePath):
+                return "metaflac returned unreadable output for \(filePath)."
+            }
+        }
+    }
+
     @State private var isTomlSheetPresented: Bool = false
+    @State private var isFlacImporterPresented: Bool = false
+    @State private var isImportErrorPresented: Bool = false
+    @State private var importErrorMessage: String = ""
     @State private var album: String = ""
     @State private var albumArtist: String = ""
     @State private var selectedTrackIDs: Set<UUID> = []
@@ -149,6 +174,194 @@ struct ContentView: View {
         return lines.joined(separator: "\n")
     }
 
+    private func handleFlacImportResult(_ result: Result<[URL], Error>) {
+        guard case .success(let selectedURLs) = result else {
+            return
+        }
+
+        Task {
+            let scopedURLs = selectedURLs.filter { $0.startAccessingSecurityScopedResource() }
+            defer {
+                for scopedURL in scopedURLs {
+                    scopedURL.stopAccessingSecurityScopedResource()
+                }
+            }
+
+            let flacFiles = collectFlacFiles(from: selectedURLs)
+            await importFlacFiles(flacFiles)
+        }
+    }
+
+    private func collectFlacFiles(from selectedURLs: [URL]) -> [URL] {
+        var flacFiles: [URL] = []
+        let fileManager = FileManager.default
+
+        for selectedURL in selectedURLs {
+            if selectedURL.pathExtension.lowercased() == "flac" {
+                flacFiles.append(selectedURL)
+                continue
+            }
+
+            var isDirectory: ObjCBool = false
+            if fileManager.fileExists(atPath: selectedURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+                if let enumerator = fileManager.enumerator(at: selectedURL,
+                                                           includingPropertiesForKeys: [.isRegularFileKey],
+                                                           options: [.skipsHiddenFiles]) {
+                    for case let fileURL as URL in enumerator {
+                        if fileURL.pathExtension.lowercased() == "flac" {
+                            flacFiles.append(fileURL)
+                        }
+                    }
+                }
+            }
+        }
+
+        let uniqueFiles = Array(Set(flacFiles.map(\.path))).map(URL.init(fileURLWithPath:))
+        return uniqueFiles.sorted {
+            $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
+        }
+    }
+
+    private func importFlacFiles(_ flacFiles: [URL]) async {
+        guard !flacFiles.isEmpty else {
+            return
+        }
+
+        let nextTrackNumber = (trackItems.map(\.number).max() ?? 0) + 1
+        var importedTracks: [Track] = []
+
+        for (index, fileURL) in flacFiles.enumerated() {
+            let tags: [String: String]
+            do {
+                tags = try metaflacTags(for: fileURL)
+            } catch {
+                importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                isImportErrorPresented = true
+                return
+            }
+
+            let fileTitle = fileURL.deletingPathExtension().lastPathComponent
+            let title = tags["TITLE"]?.isEmpty == false ? tags["TITLE"]! : fileTitle
+
+            let parsedDate = parseDate(from: tags["DATE"]) ?? .now
+            let description = tags["DESCRIPTION"] ?? tags["COMMENT"] ?? ""
+            let location = tags["LOCATION"] ?? tags["VENUE"] ?? ""
+
+            if index == 0 {
+                if let albumTag = tags["ALBUM"], !albumTag.isEmpty {
+                    album = albumTag
+                }
+
+                let albumArtistTag = tags["ALBUMARTIST"] ?? tags["ALBUM ARTIST"]
+                if let albumArtistTag, !albumArtistTag.isEmpty {
+                    albumArtist = albumArtistTag
+                }
+            }
+
+            importedTracks.append(
+                Track(
+                    number: nextTrackNumber + index,
+                    title: title,
+                    filename: fileURL.lastPathComponent,
+                    artist: tags["ARTIST"] ?? "",
+                    composer: tags["COMPOSER"] ?? "",
+                    location: location,
+                    date: parsedDate,
+                    description: description
+                )
+            )
+        }
+
+        trackItems.append(contentsOf: importedTracks)
+    }
+
+    private func metaflacTags(for fileURL: URL) throws -> [String: String] {
+        guard let metaflacPath = bundledToolPath(named: "metaflac") else {
+            throw MetaflacError.bundledToolMissing
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: metaflacPath)
+        process.arguments = ["--show-all-tags", fileURL.path]
+
+        let outputPipe = Pipe()
+        process.standardOutput = outputPipe
+        let errorPipe = Pipe()
+        process.standardError = errorPipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            throw MetaflacError.launchFailed(filePath: fileURL.path, reason: error.localizedDescription)
+        }
+
+        guard process.terminationStatus == 0 else {
+            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+            let errorText = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            throw MetaflacError.commandFailed(
+                filePath: fileURL.path,
+                status: process.terminationStatus,
+                stderr: errorText
+            )
+        }
+
+        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+        guard let outputText = String(data: outputData, encoding: .utf8) else {
+            throw MetaflacError.invalidOutput(filePath: fileURL.path)
+        }
+
+        var tags: [String: String] = [:]
+        for line in outputText.split(separator: "\n") {
+            guard let equalsIndex = line.firstIndex(of: "=") else {
+                continue
+            }
+
+            let key = String(line[..<equalsIndex]).trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            let value = String(line[line.index(after: equalsIndex)...]).trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if !key.isEmpty {
+                tags[key] = value
+            }
+        }
+
+        return tags
+    }
+
+    private func bundledToolPath(named toolName: String) -> String? {
+        let fileManager = FileManager.default
+
+        let candidates = [
+            Bundle.main.url(forResource: toolName, withExtension: nil, subdirectory: "bin"),
+            Bundle.main.url(forResource: toolName, withExtension: nil)
+        ]
+
+        for case let url? in candidates where fileManager.isExecutableFile(atPath: url.path) {
+            return url.path
+        }
+
+        return nil
+    }
+
+    private func parseDate(from value: String?) -> Date? {
+        guard let value, !value.isEmpty else {
+            return nil
+        }
+
+        let formats = ["yyyy-MM-dd", "yyyy/MM/dd", "yyyy-MM", "yyyy"]
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+
+        for format in formats {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: value) {
+                return date
+            }
+        }
+
+        return nil
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -225,8 +438,22 @@ struct ContentView: View {
         .focusedSceneValue(\.showTomlSheet) {
             isTomlSheetPresented = true
         }
+        .focusedSceneValue(\.showFlacImporter) {
+            isFlacImporterPresented = true
+        }
+        .fileImporter(
+            isPresented: $isFlacImporterPresented,
+            allowedContentTypes: [.folder, UTType(filenameExtension: "flac") ?? .data],
+            allowsMultipleSelection: true,
+            onCompletion: handleFlacImportResult
+        )
         .sheet(isPresented: $isTomlSheetPresented) {
             TOMLUtilityView(tomlText: tomlText())
+        }
+        .alert("FLAC Import Error", isPresented: $isImportErrorPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importErrorMessage)
         }
     }
 }
@@ -254,6 +481,7 @@ struct TOMLUtilityView: View {
 
 extension FocusedValues {
     @Entry var showTomlSheet: (() -> Void)?
+    @Entry var showFlacImporter: (() -> Void)?
 }
 
 #Preview {

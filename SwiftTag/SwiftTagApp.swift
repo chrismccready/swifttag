@@ -16,9 +16,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 private struct TomlCommands: Commands {
     @FocusedValue(\.showTomlSheet) private var showTomlSheet
+    @FocusedValue(\.showFlacImporter) private var showFlacImporter
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
+            Button("Load FLAC files...") {
+                showFlacImporter?()
+            }
+            .disabled(showFlacImporter == nil)
+
             Button("Show TOML...") {
                 showTomlSheet?()
             }
