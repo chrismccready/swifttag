@@ -1,25 +1,23 @@
-# FLAC C-Bridge Incremental Execution
+# FLAC Bridge Build Notes
 
-## Step 1 (this change)
-- Added `BuildScripts/build-libflac.sh` to build and stage `metaflac` + `libFLAC` during app builds.
-- Added C API shape templates in `SwiftTag/SwiftTag/FLACBridge/`.
-- Added Swift stub `FlacMetadataService.swift`.
+## Current Architecture
+- `ThirdParty/flac` is the source of truth for FLAC.
+- `BuildScripts/build-libflac.sh` builds static `libFLAC.a` during Xcode builds.
+- `SwiftTag/FLACBridge/src/FlacMetadataBridge.c` is the C bridge used by Swift.
+- `SwiftTag/FlacMetadataService.swift` consumes the bridge API.
 
-## Step 2 (next)
-- Add Run Script Build Phase:
-  - Script: `${SRCROOT}/SwiftTag/BuildScripts/build-libflac.sh`
-- Ensure `ThirdParty/flac` exists (git submodule checkout).
-- Confirm staged outputs in app resources:
-  - `Contents/Resources/bin/metaflac`
-  - `Contents/Resources/bin/libFLAC.a`
+## Build Configuration
+- FLAC is built as static-only (`BUILD_SHARED_LIBS=OFF`).
+- Programs are disabled (`BUILD_PROGRAMS=OFF`).
+- C++ FLAC library is disabled (`BUILD_CXXLIBS=OFF`).
+- Ogg support is disabled (`WITH_OGG=OFF`).
 
-## Step 3
-- Activate C bridge implementation:
-  - Rename `FlacMetadataBridge.c.template` -> `FlacMetadataBridge.c`
-  - Rename `module.modulemap.template` -> `module.modulemap`
-  - Vendored FLAC public headers now live in `SwiftTag/FLACBridge/vendor/FLAC`.
-  - Build phase stages generated headers to `${DERIVED_FILE_DIR}/flac-include/FLAC`.
+## Output Locations
+- Static library: `${DERIVED_FILE_DIR}/flac-build/install/lib/libFLAC.a`
+- Staged headers: `${DERIVED_FILE_DIR}/flac-include/FLAC`
 
-## Step 4
-- Replace `Process`-based `metaflac` calls in `ContentView` with `FlacMetadataService.readTags`.
-- Preserve existing user-facing error dialog behavior.
+## Cleanup Status
+- Legacy `metaflac` CLI runtime flow is removed.
+- Legacy `.template` bridge files are removed.
+- Vendored `SwiftTag/FLACBridge/vendor/FLAC` headers are removed.
+- Prebuilt `Resources/bin` FLAC artifacts are removed.

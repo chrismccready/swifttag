@@ -1,5 +1,5 @@
 #include "../include/FlacMetadataBridge.h"
-#include "../vendor/FLAC/metadata.h"
+#include <FLAC/metadata.h>
 
 #include <stddef.h>
 #include <stdint.h>
