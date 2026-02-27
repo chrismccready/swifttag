@@ -1,0 +1,5 @@
+// Template modulemap (not active yet)
+module FlacMetadataBridge {
+    header "FlacMetadataBridge.h"
+    export *
+}

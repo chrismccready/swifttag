@@ -27,6 +27,8 @@
 		720E0C942F4E5E98000DD6E1 /* SwiftTag.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftTag.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		720E0CA12F4E5E99000DD6E1 /* SwiftTagTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftTagTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		720E0CAB2F4E5E99000DD6E1 /* SwiftTagUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftTagUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7275A2332F521874001AE708 /* build-libflac.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-libflac.sh"; sourceTree = "<group>"; };
+		7275A23B2F521875001AE708 /* FLACBridgeExecution.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = FLACBridgeExecution.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +81,8 @@
 				720E0CA42F4E5E99000DD6E1 /* SwiftTagTests */,
 				720E0CAE2F4E5E99000DD6E1 /* SwiftTagUITests */,
 				720E0C952F4E5E98000DD6E1 /* Products */,
+				7275A22E2F521848001AE708 /* Docs */,
+				7275A22F2F521849001AE708 /* BuildScripts */,
 			);
 			sourceTree = "<group>";
 		};
@@ -92,6 +96,22 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		7275A22E2F521848001AE708 /* Docs */ = {
+			isa = PBXGroup;
+			children = (
+				7275A23B2F521875001AE708 /* FLACBridgeExecution.md */,
+			);
+			path = Docs;
+			sourceTree = "<group>";
+		};
+		7275A22F2F521849001AE708 /* BuildScripts */ = {
+			isa = PBXGroup;
+			children = (
+				7275A2332F521874001AE708 /* build-libflac.sh */,
+			);
+			path = BuildScripts;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -99,6 +119,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 720E0CB52F4E5E99000DD6E1 /* Build configuration list for PBXNativeTarget "SwiftTag" */;
 			buildPhases = (
+				72A1D0012F522A8E00123456 /* Build libFLAC */,
 				720E0C902F4E5E98000DD6E1 /* Sources */,
 				720E0C912F4E5E98000DD6E1 /* Frameworks */,
 				720E0C922F4E5E98000DD6E1 /* Resources */,
@@ -230,6 +251,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		72A1D0012F522A8E00123456 /* Build libFLAC */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build libFLAC";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "set -euo pipefail\n\nFLAC_SOURCE_DIR=\"${FLAC_SOURCE_DIR:-${SRCROOT}/ThirdParty/flac}\"\nif [[ ! -d \"${FLAC_SOURCE_DIR}\" ]]; then\n  echo \"warning: FLAC source not found at ${FLAC_SOURCE_DIR}; skipping libFLAC build\"\n  exit 0\nfi\n\nif ! command -v cmake >/dev/null 2>&1; then\n  echo \"warning: cmake is not available; skipping libFLAC build\"\n  exit 0\nfi\n\nBUILD_ROOT=\"${DERIVED_FILE_DIR}/flac-build\"\nINSTALL_ROOT=\"${BUILD_ROOT}/install\"\nRESOURCE_BIN_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bin\"\nmkdir -p \"${BUILD_ROOT}\" \"${INSTALL_ROOT}\" \"${RESOURCE_BIN_DIR}\"\n\nPRIMARY_ARCH=\"${CURRENT_ARCH:-arm64}\"\nif [[ -z \"${PRIMARY_ARCH}\" || \"${PRIMARY_ARCH}\" == \"undefined_arch\" ]]; then\n  PRIMARY_ARCH=arm64\nfi\n\nCMAKE_CONFIG=Release\nif [[ \"${CONFIGURATION:-Release}\" == \"Debug\" ]]; then\n  CMAKE_CONFIG=Debug\nfi\n\nCMAKE_OSX_DEPLOYMENT_TARGET=\"${MACOSX_DEPLOYMENT_TARGET:-13.0}\"\n\ncmake -S \"${FLAC_SOURCE_DIR}\" -B \"${BUILD_ROOT}\" \\n  -DCMAKE_BUILD_TYPE=\"${CMAKE_CONFIG}\" \\n  -DCMAKE_OSX_ARCHITECTURES=\"${PRIMARY_ARCH}\" \\n  -DCMAKE_OSX_DEPLOYMENT_TARGET=\"${CMAKE_OSX_DEPLOYMENT_TARGET}\" \\n  -DBUILD_PROGRAMS=ON \\n  -DBUILD_SHARED_LIBS=OFF \\n  -DBUILD_TESTING=OFF \\n  -DINSTALL_MANPAGES=OFF \\n  -DINSTALL_PKGCONFIG_MODULE=OFF \\n  -DCMAKE_INSTALL_PREFIX=\"${INSTALL_ROOT}\"\n\ncmake --build \"${BUILD_ROOT}\" --config \"${CMAKE_CONFIG}\" --target metaflac FLAC\ncmake --install \"${BUILD_ROOT}\" --config \"${CMAKE_CONFIG}\"\n\nif [[ -f \"${INSTALL_ROOT}/bin/metaflac\" ]]; then\n  cp -f \"${INSTALL_ROOT}/bin/metaflac\" \"${RESOURCE_BIN_DIR}/metaflac\"\n  chmod +x \"${RESOURCE_BIN_DIR}/metaflac\"\nfi\nif [[ -f \"${INSTALL_ROOT}/lib/libFLAC.a\" ]]; then\n  cp -f \"${INSTALL_ROOT}/lib/libFLAC.a\" \"${RESOURCE_BIN_DIR}/libFLAC.a\"\nfi\nif [[ -f \"${INSTALL_ROOT}/lib/libFLAC.dylib\" ]]; then\n  cp -f \"${INSTALL_ROOT}/lib/libFLAC.dylib\" \"${RESOURCE_BIN_DIR}/libFLAC.dylib\"\nfi\n\necho \"Built FLAC artifacts staged to ${RESOURCE_BIN_DIR}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		720E0C902F4E5E98000DD6E1 /* Sources */ = {
