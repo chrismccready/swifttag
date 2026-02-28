@@ -11,15 +11,24 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     struct Track: Identifiable {
-        let id = UUID()
-        let number: Int
-        var title: String
-        let filename: String
-        var artist: String
-        var composer: String
-        var location: String
-        var date: Date
-        var description: String
+        let id: UUID
+        var tags: [String: String]
+
+        init(id: UUID = UUID(), tags: [String: String]) {
+            self.id = id
+            self.tags = tags
+        }
+    }
+
+    private enum TagKey {
+        static let number = "NUMBER"
+        static let title = "TITLE"
+        static let filename = "FILENAME"
+        static let artist = "ARTIST"
+        static let composer = "COMPOSER"
+        static let location = "LOCATION"
+        static let date = "DATE"
+        static let description = "DESCRIPTION"
     }
 
     @State private var isTomlSheetPresented: Bool = false
@@ -28,21 +37,43 @@ struct ContentView: View {
     @State private var importErrorMessage: String = ""
     @State private var album: String = ""
     @State private var albumArtist: String = ""
+    @State private var totalTracks: String = ""
     @State private var selectedTrackIDs: Set<UUID> = []
     @State private var trackItems: [Track] = [
-        Track(number: 1, title: "Intro", filename: "01-intro.wav", artist: "", composer: "", location: "", date: .now, description: "Opening track"),
-        Track(number: 2, title: "Verse", filename: "02-verse.wav", artist: "", composer: "", location: "", date: .now, description: "Main section"),
-        Track(number: 3, title: "Outro", filename: "03-outro.wav", artist: "", composer: "", location: "", date: .now, description: "Closing section")
+        Track(tags: [
+            TagKey.number: "1",
+            TagKey.title: "Intro",
+            TagKey.filename: "01-intro.wav",
+            TagKey.artist: "",
+            TagKey.composer: "",
+            TagKey.location: "",
+            TagKey.date: formatDate(.now),
+            TagKey.description: "Opening track"
+        ]),
+        Track(tags: [
+            TagKey.number: "2",
+            TagKey.title: "Verse",
+            TagKey.filename: "02-verse.wav",
+            TagKey.artist: "",
+            TagKey.composer: "",
+            TagKey.location: "",
+            TagKey.date: formatDate(.now),
+            TagKey.description: "Main section"
+        ]),
+        Track(tags: [
+            TagKey.number: "3",
+            TagKey.title: "Outro",
+            TagKey.filename: "03-outro.wav",
+            TagKey.artist: "",
+            TagKey.composer: "",
+            TagKey.location: "",
+            TagKey.date: formatDate(.now),
+            TagKey.description: "Closing section"
+        ])
     ]
 
     var tracks: some View {
         Table(trackItems, selection: $selectedTrackIDs) {
-            TableColumn("#") { track in
-                Text("\(track.number)")
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-            .width(16)
-
             TableColumn("Title") { track in
                 if let title = titleBinding(for: track.id) {
                     TextField("Title", text: title)
@@ -50,21 +81,32 @@ struct ContentView: View {
             }
             .width(min: 140, max: 800)
 
-            TableColumn("Filename", value: \.filename)
+            TableColumn("Filename") { track in
+                Text(track.tags[TagKey.filename] ?? "")
+            }
                 .width(min: 52)
         }
         .frame(minHeight: 104, idealHeight: .infinity)
     }
 
     private func titleBinding(for trackID: UUID) -> Binding<String>? {
+        tagBinding(for: trackID, tagName: TagKey.title)
+    }
+
+    private func tagBinding(for trackID: UUID, tagName: String) -> Binding<String>? {
         guard let index = trackItems.firstIndex(where: { $0.id == trackID }) else {
             return nil
         }
 
-        return $trackItems[index].title
+        return Binding(
+            get: { trackItems[index].tags[tagName] ?? "" },
+            set: { newValue in
+                trackItems[index].tags[tagName] = newValue
+            }
+        )
     }
 
-    private func selectedStringBinding(for keyPath: WritableKeyPath<Track, String>) -> Binding<String>? {
+    private func selectedTagBinding(tagName: String) -> Binding<String>? {
         guard !selectedTrackIDs.isEmpty else {
             return nil
         }
@@ -73,7 +115,7 @@ struct ContentView: View {
             get: {
                 let selectedValues = trackItems
                     .filter { selectedTrackIDs.contains($0.id) }
-                    .map { $0[keyPath: keyPath] }
+                    .map { $0.tags[tagName] ?? "" }
 
                 guard let firstValue = selectedValues.first else {
                     return ""
@@ -84,7 +126,7 @@ struct ContentView: View {
             },
             set: { newValue in
                 for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
-                    trackItems[index][keyPath: keyPath] = newValue
+                    trackItems[index].tags[tagName] = newValue
                 }
             }
         )
@@ -97,30 +139,55 @@ struct ContentView: View {
 
         return Binding(
             get: {
-                trackItems.first(where: { selectedTrackIDs.contains($0.id) })?.date ?? .now
+                let firstSelectedDate = trackItems
+                    .first(where: { selectedTrackIDs.contains($0.id) })?
+                    .tags[TagKey.date]
+                return parseDate(from: firstSelectedDate) ?? .now
             },
             set: { newValue in
                 for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
-                    trackItems[index].date = newValue
+                    trackItems[index].tags[TagKey.date] = formatDate(newValue)
                 }
             }
         )
     }
 
     private var selectedArtistBinding: Binding<String>? {
-        selectedStringBinding(for: \.artist)
+        selectedTagBinding(tagName: TagKey.artist)
     }
 
     private var selectedComposerBinding: Binding<String>? {
-        selectedStringBinding(for: \.composer)
+        selectedTagBinding(tagName: TagKey.composer)
     }
 
     private var selectedLocationBinding: Binding<String>? {
-        selectedStringBinding(for: \.location)
+        selectedTagBinding(tagName: TagKey.location)
     }
 
     private var selectedDescriptionsBinding: Binding<String>? {
-        selectedStringBinding(for: \.description)
+        selectedTagBinding(tagName: TagKey.description)
+    }
+
+    private var selectedNumberBinding: Binding<String>? {
+        selectedTagBinding(tagName: TagKey.number)
+    }
+
+    private func positiveIntegerStringBinding(_ source: Binding<String>) -> Binding<String> {
+        Binding(
+            get: { source.wrappedValue },
+            set: { newValue in
+                if newValue.isEmpty {
+                    source.wrappedValue = ""
+                    return
+                }
+
+                guard let value = Int(newValue), value > 0, String(value) == newValue else {
+                    return
+                }
+
+                source.wrappedValue = newValue
+            }
+        )
     }
 
     private func tomlText() -> String {
@@ -134,16 +201,25 @@ struct ContentView: View {
             ""
         ]
 
-        for track in trackItems.sorted(by: { $0.number < $1.number }) {
+        let sortedTracks = trackItems.sorted {
+            let lhs = Int($0.tags[TagKey.number] ?? "") ?? 0
+            let rhs = Int($1.tags[TagKey.number] ?? "") ?? 0
+            if lhs == rhs {
+                return ($0.tags[TagKey.title] ?? "") < ($1.tags[TagKey.title] ?? "")
+            }
+            return lhs < rhs
+        }
+
+        for track in sortedTracks {
             lines.append("[[tracks]]")
-            lines.append("number = \(track.number)")
-            lines.append("title = '''\(track.title)'''")
-            lines.append("filename = '''\(track.filename)'''")
-            lines.append("artist = '''\(track.artist)'''")
-            lines.append("composer = '''\(track.composer)'''")
-            lines.append("location = '''\(track.location)'''")
-            lines.append("date = \(dateFormatter.string(from: track.date))")
-            lines.append("description = '''\(track.description)'''")
+            lines.append("number = \(track.tags[TagKey.number] ?? "0")")
+            lines.append("title = '''\(track.tags[TagKey.title] ?? "")'''")
+            lines.append("filename = '''\(track.tags[TagKey.filename] ?? "")'''")
+            lines.append("artist = '''\(track.tags[TagKey.artist] ?? "")'''")
+            lines.append("composer = '''\(track.tags[TagKey.composer] ?? "")'''")
+            lines.append("location = '''\(track.tags[TagKey.location] ?? "")'''")
+            lines.append("date = \(track.tags[TagKey.date] ?? dateFormatter.string(from: .now))")
+            lines.append("description = '''\(track.tags[TagKey.description] ?? "")'''")
             lines.append("")
         }
 
@@ -207,10 +283,9 @@ struct ContentView: View {
             return
         }
 
-        let nextTrackNumber = (trackItems.map(\.number).max() ?? 0) + 1
         var importedTracks: [Track] = []
 
-        for (index, fileURL) in flacFiles.enumerated() {
+        for fileURL in flacFiles {
             let tags: [String: String]
             do {
                 tags = try FlacMetadataService.readTags(for: fileURL).tags
@@ -223,11 +298,10 @@ struct ContentView: View {
             let fileTitle = fileURL.deletingPathExtension().lastPathComponent
             let title = tags["TITLE"]?.isEmpty == false ? tags["TITLE"]! : fileTitle
 
-            let parsedDate = parseDate(from: tags["DATE"]) ?? .now
             let description = tags["DESCRIPTION"] ?? tags["COMMENT"] ?? ""
             let location = tags["LOCATION"] ?? tags["VENUE"] ?? ""
 
-            if index == 0 {
+            if importedTracks.isEmpty {
                 if let albumTag = tags["ALBUM"], !albumTag.isEmpty {
                     album = albumTag
                 }
@@ -238,18 +312,20 @@ struct ContentView: View {
                 }
             }
 
-            importedTracks.append(
-                Track(
-                    number: nextTrackNumber + index,
-                    title: title,
-                    filename: fileURL.lastPathComponent,
-                    artist: tags["ARTIST"] ?? "",
-                    composer: tags["COMPOSER"] ?? "",
-                    location: location,
-                    date: parsedDate,
-                    description: description
-                )
-            )
+            let rawTrackNumber = tags["TRACKNUMBER"] ?? tags["TRACK"] ?? ""
+            let normalizedTrackNumber = Int(rawTrackNumber).map(String.init) ?? rawTrackNumber
+
+            var trackTags = tags
+            trackTags[TagKey.number] = normalizedTrackNumber
+            trackTags[TagKey.title] = title
+            trackTags[TagKey.filename] = fileURL.lastPathComponent
+            trackTags[TagKey.artist] = tags["ARTIST"] ?? ""
+            trackTags[TagKey.composer] = tags["COMPOSER"] ?? ""
+            trackTags[TagKey.location] = location
+            trackTags[TagKey.date] = formatDate(parseDate(from: tags["DATE"]) ?? .now)
+            trackTags[TagKey.description] = description
+
+            importedTracks.append(Track(tags: trackTags))
         }
 
         trackItems.append(contentsOf: importedTracks)
@@ -274,6 +350,17 @@ struct ContentView: View {
         return nil
     }
 
+    private static func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        Self.formatDate(date)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -287,6 +374,24 @@ struct ContentView: View {
             }
 
             tracks
+
+            HStack(spacing: 6) {
+                Text("Number")
+                if let selectedNumber = selectedNumberBinding {
+                    TextField("Number", text: positiveIntegerStringBinding(selectedNumber))
+                        .multilineTextAlignment(.center)
+                        .frame(width: 30)
+                } else {
+                    TextField("Number", text: .constant(""))
+                        .multilineTextAlignment(.center)
+                        .frame(width: 30)
+                        .disabled(true)
+                }
+                Text("of")
+                TextField("", text: positiveIntegerStringBinding($totalTracks))
+                    .multilineTextAlignment(.center)
+                    .frame(width: 30)
+            }
 
             HStack {
                 Text("Artist")
