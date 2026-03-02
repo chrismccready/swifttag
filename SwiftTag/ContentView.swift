@@ -20,6 +20,12 @@ struct ContentView: View {
         }
     }
 
+    struct MiscTagRow: Identifiable, Hashable {
+        let id: UUID
+        var key: String
+        var value: String
+    }
+
     private enum TagKey {
         static let number = "NUMBER"
         static let title = "TITLE"
@@ -39,6 +45,8 @@ struct ContentView: View {
     @State private var albumArtist: String = ""
     @State private var totalTracks: String = ""
     @State private var selectedTrackIDs: Set<UUID> = []
+    @State private var miscTagRows: [MiscTagRow] = []
+    @State private var selectedMiscTagRowIDs: Set<MiscTagRow.ID> = []
     @State private var trackItems: [Track] = [
         Track(tags: [
             TagKey.number: "1",
@@ -72,22 +80,6 @@ struct ContentView: View {
         ])
     ]
 
-    var tracks: some View {
-        Table(trackItems, selection: $selectedTrackIDs) {
-            TableColumn("Title") { track in
-                if let title = titleBinding(for: track.id) {
-                    TextField("Title", text: title)
-                }
-            }
-            .width(min: 140, max: 800)
-
-            TableColumn("Filename") { track in
-                Text(track.tags[TagKey.filename] ?? "")
-            }
-                .width(min: 52)
-        }
-        .frame(minHeight: 104, idealHeight: .infinity)
-    }
 
     private func titleBinding(for trackID: UUID) -> Binding<String>? {
         tagBinding(for: trackID, tagName: TagKey.title)
@@ -170,6 +162,195 @@ struct ContentView: View {
 
     private var selectedNumberBinding: Binding<String>? {
         selectedTagBinding(tagName: TagKey.number)
+    }
+
+    private var explicitTagKeys: Set<String> {
+        [
+            TagKey.number,
+            TagKey.title,
+            TagKey.filename,
+            TagKey.artist,
+            TagKey.composer,
+            TagKey.location,
+            TagKey.date,
+            TagKey.description
+        ]
+    }
+
+    private func normalizedTagKey(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+    }
+
+    private func isExplicitTagKey(_ value: String) -> Bool {
+        explicitTagKeys.contains(normalizedTagKey(value))
+    }
+
+    private var miscTags: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Misc Tags")
+                Spacer()
+                Button {
+                    addMiscTagRow()
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .buttonStyle(.borderless)
+                .help("Add Tag")
+
+                Button {
+                    deleteSelectedMiscTagRows()
+                } label: {
+                    Image(systemName: "minus")
+                }
+                .buttonStyle(.borderless)
+                .help("Delete Selected Tags")
+                .disabled(selectedMiscTagRowIDs.isEmpty)
+            }
+
+            Table(miscTagRows, selection: $selectedMiscTagRowIDs) {
+                TableColumn("Key") { row in
+                    if let keyBinding = miscTagKeyBinding(for: row.id) {
+                        TextField("Key", text: keyBinding)
+                    }
+                }
+                .width(min: 120)
+
+                TableColumn("Value") { row in
+                    if let valueBinding = miscTagValueBinding(for: row.id) {
+                        TextField("Value", text: valueBinding)
+                    }
+                }
+                .width(min: 160)
+            }
+            .frame(minHeight: 90, idealHeight: 120)
+        }
+    }
+
+    private func reloadMiscTagRowsFromSelection() {
+        selectedMiscTagRowIDs.removeAll()
+
+        let existingRowsByKey = Dictionary(uniqueKeysWithValues: miscTagRows.map { (normalizedTagKey($0.key), $0) })
+
+        let allMiscKeys = Set(
+            trackItems
+                .flatMap(\.tags.keys)
+                .filter { !isExplicitTagKey($0) }
+                .map { normalizedTagKey($0) }
+        ).union(
+            miscTagRows
+                .map(\.key)
+                .map(normalizedTagKey)
+                .filter { !$0.isEmpty && !isExplicitTagKey($0) }
+        )
+
+        miscTagRows = allMiscKeys
+            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+            .map { key in
+                let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
+                let value: String
+
+                if selectedTracks.isEmpty {
+                    value = existingRowsByKey[key]?.value ?? ""
+                } else {
+                    let selectedValues = selectedTracks.map { $0.tags[key] ?? "" }
+                    if let firstValue = selectedValues.first, selectedValues.allSatisfy({ $0 == firstValue }) {
+                        value = firstValue
+                    } else {
+                        value = ""
+                    }
+                }
+
+                return MiscTagRow(
+                    id: existingRowsByKey[key]?.id ?? UUID(),
+                    key: key,
+                    value: value
+                )
+            }
+    }
+
+    private func setMiscTagValueForSelectedTracks(key: String, value: String) {
+        let normalizedKey = normalizedTagKey(key)
+        guard !normalizedKey.isEmpty, !isExplicitTagKey(normalizedKey) else {
+            return
+        }
+
+        for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
+            trackItems[index].tags[normalizedKey] = value
+        }
+    }
+
+    private func addMiscTagRow() {
+        let newRow = MiscTagRow(id: UUID(), key: "", value: "")
+        miscTagRows.append(newRow)
+        selectedMiscTagRowIDs = [newRow.id]
+    }
+
+    private func deleteSelectedMiscTagRows() {
+        guard !selectedMiscTagRowIDs.isEmpty else {
+            return
+        }
+
+        let keysToDelete = miscTagRows
+            .filter { selectedMiscTagRowIDs.contains($0.id) }
+            .map(\.key)
+            .map(normalizedTagKey)
+
+        for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
+            for key in keysToDelete where !isExplicitTagKey(key) {
+                trackItems[index].tags.removeValue(forKey: key)
+            }
+        }
+
+        selectedMiscTagRowIDs.removeAll()
+        reloadMiscTagRowsFromSelection()
+    }
+
+    private func miscTagKeyBinding(for rowID: MiscTagRow.ID) -> Binding<String>? {
+        guard let rowIndex = miscTagRows.firstIndex(where: { $0.id == rowID }) else {
+            return nil
+        }
+
+        return Binding(
+            get: { miscTagRows[rowIndex].key },
+            set: { newValue in
+                let oldKey = miscTagRows[rowIndex].key
+                miscTagRows[rowIndex].key = newValue
+
+                let oldNormalizedKey = normalizedTagKey(oldKey)
+                let newNormalizedKey = normalizedTagKey(newValue)
+                guard !newNormalizedKey.isEmpty, !isExplicitTagKey(newNormalizedKey) else {
+                    return
+                }
+
+                if oldNormalizedKey != newNormalizedKey {
+                    for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
+                        if let oldValue = trackItems[index].tags.removeValue(forKey: oldNormalizedKey) {
+                            trackItems[index].tags[newNormalizedKey] = oldValue
+                        } else {
+                            trackItems[index].tags[newNormalizedKey] = miscTagRows[rowIndex].value
+                        }
+                    }
+                }
+
+                miscTagRows[rowIndex].key = newNormalizedKey
+                reloadMiscTagRowsFromSelection()
+            }
+        )
+    }
+
+    private func miscTagValueBinding(for rowID: MiscTagRow.ID) -> Binding<String>? {
+        guard let rowIndex = miscTagRows.firstIndex(where: { $0.id == rowID }) else {
+            return nil
+        }
+
+        return Binding(
+            get: { miscTagRows[rowIndex].value },
+            set: { newValue in
+                miscTagRows[rowIndex].value = newValue
+                setMiscTagValueForSelectedTracks(key: miscTagRows[rowIndex].key, value: newValue)
+            }
+        )
     }
 
     private func positiveIntegerStringBinding(_ source: Binding<String>) -> Binding<String> {
@@ -329,6 +510,7 @@ struct ContentView: View {
         }
 
         trackItems.append(contentsOf: importedTracks)
+        reloadMiscTagRowsFromSelection()
     }
 
     private func parseDate(from value: String?) -> Date? {
@@ -361,6 +543,23 @@ struct ContentView: View {
         Self.formatDate(date)
     }
 
+    var tracks: some View {
+        Table(trackItems, selection: $selectedTrackIDs) {
+            TableColumn("Title") { track in
+                if let title = titleBinding(for: track.id) {
+                    TextField("Title", text: title)
+                }
+            }
+            .width(min: 140, max: 800)
+
+            TableColumn("Filename") { track in
+                Text(track.tags[TagKey.filename] ?? "")
+            }
+                .width(min: 52)
+        }
+        .frame(minHeight: 104, idealHeight: .infinity)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -382,13 +581,13 @@ struct ContentView: View {
                         .multilineTextAlignment(.center)
                         .frame(width: 30)
                 } else {
-                    TextField("Number", text: .constant(""))
+                    TextField("#", text: .constant(""))
                         .multilineTextAlignment(.center)
                         .frame(width: 30)
                         .disabled(true)
                 }
                 Text("of")
-                TextField("", text: positiveIntegerStringBinding($totalTracks))
+                TextField("#", text: positiveIntegerStringBinding($totalTracks))
                     .multilineTextAlignment(.center)
                     .frame(width: 30)
             }
@@ -445,13 +644,20 @@ struct ContentView: View {
                             .disabled(true)
                     }
                 }
-                .padding(.top, 8)
             }
             .frame(height: 92)
 
+            miscTags
+
         }
         .padding()
-        .frame(minWidth: 520, minHeight: 520, idealHeight: 620)
+        .frame(minWidth: 520, minHeight: 540, idealHeight: 640)
+        .onAppear {
+            reloadMiscTagRowsFromSelection()
+        }
+        .onChange(of: selectedTrackIDs) { _, _ in
+            reloadMiscTagRowsFromSelection()
+        }
         .focusedSceneValue(\.showTomlSheet) {
             isTomlSheetPresented = true
         }
