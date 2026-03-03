@@ -28,6 +28,8 @@ struct ContentView: View {
 
     private enum TagKey {
         static let number = "NUMBER"
+        static let disc = "DISC"
+        static let genre = "GENRE"
         static let title = "TITLE"
         static let filename = "FILENAME"
         static let artist = "ARTIST"
@@ -43,7 +45,7 @@ struct ContentView: View {
     @State private var importErrorMessage: String = ""
     @State private var album: String = ""
     @State private var albumArtist: String = ""
-    @State private var totalTracks: String = ""
+    @State private var totalDiscs: String = ""
     @State private var selectedTrackIDs: Set<UUID> = []
     @State private var miscTagRows: [MiscTagRow] = []
     @State private var selectedMiscTagRowIDs: Set<MiscTagRow.ID> = []
@@ -164,16 +166,101 @@ struct ContentView: View {
         selectedTagBinding(tagName: TagKey.number)
     }
 
+    private var selectedDiscBinding: Binding<String>? {
+        selectedTagBinding(tagName: TagKey.disc)
+    }
+
+    private var selectedGenreBinding: Binding<String>? {
+        selectedTagBinding(tagName: TagKey.genre)
+    }
+
+    private var totalTrackTagKeys: [String] {
+        ["TOTALTRACKS", "TRACKTOTAL"]
+    }
+
+    private var totalTracks: String {
+        String(trackItems.count)
+    }
+
+    private var hasTotalTracksMismatch: Bool {
+        let expectedValue = totalTracks
+
+        for track in trackItems {
+            for key in totalTrackTagKeys {
+                let rawValue = track.tags[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                guard !rawValue.isEmpty else {
+                    continue
+                }
+
+                let normalizedValue = Int(rawValue).map(String.init) ?? rawValue
+                if normalizedValue != expectedValue {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    private var totalTracksHoverMessage: String {
+        if hasTotalTracksMismatch {
+            return "Track count mismatch: one or more TOTALTRACKS/TRACKTOTAL tag values do not match the current album track count. This value will overwrite any existing values."
+        }
+
+        return "Album track count is \(totalTracks)."
+    }
+
+    private var normalizedTotalDiscsValue: String {
+        Int(totalDiscs).map(String.init) ?? totalDiscs
+    }
+
+    private var hasTotalDiscsMismatch: Bool {
+        for track in trackItems {
+            let rawValue = track.tags["TOTALDISCS"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !rawValue.isEmpty else {
+                continue
+            }
+
+            let normalizedValue = Int(rawValue).map(String.init) ?? rawValue
+            if normalizedValue != normalizedTotalDiscsValue {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private var totalDiscsHoverMessage: String {
+        if hasTotalDiscsMismatch {
+            return "Disc count mismatch: one or more TOTALDISCS tag values do not match this total discs value."
+        }
+
+        if totalDiscs.isEmpty {
+            return "Set total discs. Empty TOTALDISCS values are ignored."
+        }
+
+        return "Album disc count is \(normalizedTotalDiscsValue)."
+    }
+
     private var explicitTagKeys: Set<String> {
         [
             TagKey.number,
+            TagKey.disc,
+            TagKey.genre,
             TagKey.title,
             TagKey.filename,
             TagKey.artist,
             TagKey.composer,
             TagKey.location,
             TagKey.date,
-            TagKey.description
+            TagKey.description,
+            "ALBUM",
+            "TRACK",
+            "TRACKNUMBER",
+            "TOTALTRACKS",
+            "TRACKTOTAL",
+            "DISCNUMBER",
+            "TOTALDISCS"
         ]
     }
 
@@ -481,6 +568,7 @@ struct ContentView: View {
 
             let description = tags["DESCRIPTION"] ?? tags["COMMENT"] ?? ""
             let location = tags["LOCATION"] ?? tags["VENUE"] ?? ""
+            let genre = tags["GENRE"] ?? ""
 
             if importedTracks.isEmpty {
                 if let albumTag = tags["ALBUM"], !albumTag.isEmpty {
@@ -491,13 +579,23 @@ struct ContentView: View {
                 if let albumArtistTag, !albumArtistTag.isEmpty {
                     albumArtist = albumArtistTag
                 }
+
+                let rawTotalDiscs = tags["TOTALDISCS"] ?? ""
+                let normalizedTotalDiscs = Int(rawTotalDiscs).map(String.init) ?? rawTotalDiscs
+                if !normalizedTotalDiscs.isEmpty {
+                    totalDiscs = normalizedTotalDiscs
+                }
             }
 
             let rawTrackNumber = tags["TRACKNUMBER"] ?? tags["TRACK"] ?? ""
             let normalizedTrackNumber = Int(rawTrackNumber).map(String.init) ?? rawTrackNumber
+            let rawDiscNumber = tags["DISCNUMBER"] ?? tags["DISC"] ?? ""
+            let normalizedDiscNumber = Int(rawDiscNumber).map(String.init) ?? rawDiscNumber
 
             var trackTags = tags
             trackTags[TagKey.number] = normalizedTrackNumber
+            trackTags[TagKey.disc] = normalizedDiscNumber
+            trackTags[TagKey.genre] = genre
             trackTags[TagKey.title] = title
             trackTags[TagKey.filename] = fileURL.lastPathComponent
             trackTags[TagKey.artist] = tags["ARTIST"] ?? ""
@@ -587,9 +685,40 @@ struct ContentView: View {
                         .disabled(true)
                 }
                 Text("of")
-                TextField("#", text: positiveIntegerStringBinding($totalTracks))
+                Text(totalTracks)
+                    .fontWeight(hasTotalTracksMismatch ? .bold : .regular)
+                    .foregroundStyle(hasTotalTracksMismatch ? .red : .primary)
+                    .multilineTextAlignment(.center)
+                    .help(totalTracksHoverMessage)
+                    .padding(.trailing, 14)
+
+                Text("Disc")
+                if let selectedDisc = selectedDiscBinding {
+                    TextField("#", text: positiveIntegerStringBinding(selectedDisc))
+                        .multilineTextAlignment(.center)
+                        .frame(width: 30)
+                } else {
+                    TextField("#", text: .constant(""))
+                        .multilineTextAlignment(.center)
+                        .frame(width: 30)
+                        .disabled(true)
+                }
+                Text("of")
+                TextField("#", text: positiveIntegerStringBinding($totalDiscs))
+                    .fontWeight(hasTotalDiscsMismatch ? .bold : .regular)
+                    .foregroundStyle(hasTotalDiscsMismatch ? .red : .primary)
                     .multilineTextAlignment(.center)
                     .frame(width: 30)
+                    .help(totalDiscsHoverMessage)
+                    .padding(.trailing, 40)
+
+                Text("Genre")
+                if let selectedGenre = selectedGenreBinding {
+                    TextField("Genre", text: selectedGenre)
+                } else {
+                    TextField("Genre", text: .constant("Select track(s) to edit genre."))
+                        .disabled(true)
+                }
             }
 
             HStack {
