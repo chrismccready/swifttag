@@ -263,15 +263,18 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/BuildScripts/build-libflac.sh",
 			);
 			name = "Build libFLAC";
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/flac-build/install/lib/libFLAC.a",
+				"$(DERIVED_FILE_DIR)/flac-include/FLAC",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "\"${SRCROOT}/BuildScripts/build-libflac.sh\"";
+			shellScript = "\"${SRCROOT}/BuildScripts/build-libflac.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
