@@ -49,6 +49,8 @@ struct ContentView: View {
     @State private var selectedTrackIDs: Set<UUID> = []
     @State private var miscTagRows: [MiscTagRow] = []
     @State private var selectedMiscTagRowIDs: Set<MiscTagRow.ID> = []
+    @State private var originalMiscTagKeyByRowID: [MiscTagRow.ID: String] = [:]
+    @FocusState private var focusedMiscTagKeyRowID: MiscTagRow.ID?
     @State private var trackItems: [Track] = [
         Track(tags: [
             TagKey.number: "1",
@@ -299,6 +301,8 @@ struct ContentView: View {
                 TableColumn("Key") { row in
                     if let keyBinding = miscTagKeyBinding(for: row.id) {
                         TextField("Key", text: keyBinding)
+                            .foregroundStyle(isInvalidMiscTagKeyInput(row.key, for: row.id) ? .red : .primary)
+                            .focused($focusedMiscTagKeyRowID, equals: row.id)
                     }
                 }
                 .width(min: 120)
@@ -310,14 +314,25 @@ struct ContentView: View {
                 }
                 .width(min: 160)
             }
-            .frame(minHeight: 90, idealHeight: 120)
+            .frame(minHeight: 80, maxHeight: 176)
         }
+        .padding(.top, 6)
     }
 
     private func reloadMiscTagRowsFromSelection() {
         selectedMiscTagRowIDs.removeAll()
 
-        let existingRowsByKey = Dictionary(uniqueKeysWithValues: miscTagRows.map { (normalizedTagKey($0.key), $0) })
+        var existingRowsByKey: [String: MiscTagRow] = [:]
+        for row in miscTagRows {
+            let key = normalizedTagKey(row.key)
+            guard !key.isEmpty else {
+                continue
+            }
+
+            if existingRowsByKey[key] == nil {
+                existingRowsByKey[key] = row
+            }
+        }
 
         let allMiscKeys = Set(
             trackItems
@@ -371,6 +386,9 @@ struct ContentView: View {
         let newRow = MiscTagRow(id: UUID(), key: "", value: "")
         miscTagRows.append(newRow)
         selectedMiscTagRowIDs = [newRow.id]
+        DispatchQueue.main.async {
+            focusedMiscTagKeyRowID = newRow.id
+        }
     }
 
     private func deleteSelectedMiscTagRows() {
@@ -378,12 +396,20 @@ struct ContentView: View {
             return
         }
 
-        let keysToDelete = miscTagRows
+        let rowsToDelete = miscTagRows
             .filter { selectedMiscTagRowIDs.contains($0.id) }
+
+        let keysToDelete = rowsToDelete
             .map(\.key)
             .map(normalizedTagKey)
 
-        for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
+        for row in rowsToDelete {
+            originalMiscTagKeyByRowID.removeValue(forKey: row.id)
+        }
+
+        miscTagRows.removeAll { selectedMiscTagRowIDs.contains($0.id) }
+
+        for index in trackItems.indices {
             for key in keysToDelete where !isExplicitTagKey(key) {
                 trackItems[index].tags.removeValue(forKey: key)
             }
@@ -401,29 +427,76 @@ struct ContentView: View {
         return Binding(
             get: { miscTagRows[rowIndex].key },
             set: { newValue in
-                let oldKey = miscTagRows[rowIndex].key
                 miscTagRows[rowIndex].key = newValue
-
-                let oldNormalizedKey = normalizedTagKey(oldKey)
-                let newNormalizedKey = normalizedTagKey(newValue)
-                guard !newNormalizedKey.isEmpty, !isExplicitTagKey(newNormalizedKey) else {
-                    return
-                }
-
-                if oldNormalizedKey != newNormalizedKey {
-                    for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
-                        if let oldValue = trackItems[index].tags.removeValue(forKey: oldNormalizedKey) {
-                            trackItems[index].tags[newNormalizedKey] = oldValue
-                        } else {
-                            trackItems[index].tags[newNormalizedKey] = miscTagRows[rowIndex].value
-                        }
-                    }
-                }
-
-                miscTagRows[rowIndex].key = newNormalizedKey
-                reloadMiscTagRowsFromSelection()
             }
         )
+    }
+
+    private func isDuplicateMiscTagKey(_ normalizedKey: String, excluding rowID: MiscTagRow.ID) -> Bool {
+        guard !normalizedKey.isEmpty else {
+            return false
+        }
+
+        return miscTagRows.contains { row in
+            row.id != rowID && normalizedTagKey(row.key) == normalizedKey
+        }
+    }
+
+    private func isInvalidMiscTagKeyInput(_ rawKey: String, for rowID: MiscTagRow.ID) -> Bool {
+        let normalizedKey = normalizedTagKey(rawKey)
+        guard !normalizedKey.isEmpty else {
+            return false
+        }
+
+        return isExplicitTagKey(normalizedKey) || isDuplicateMiscTagKey(normalizedKey, excluding: rowID)
+    }
+
+    private func recordOriginalMiscTagKeyIfNeeded(for rowID: MiscTagRow.ID) {
+        guard originalMiscTagKeyByRowID[rowID] == nil,
+              let row = miscTagRows.first(where: { $0.id == rowID }) else {
+            return
+        }
+
+        originalMiscTagKeyByRowID[rowID] = normalizedTagKey(row.key)
+    }
+
+    private func finalizeMiscTagKeyEditing(for rowID: MiscTagRow.ID) {
+        guard let rowIndex = miscTagRows.firstIndex(where: { $0.id == rowID }) else {
+            originalMiscTagKeyByRowID.removeValue(forKey: rowID)
+            return
+        }
+
+        let row = miscTagRows[rowIndex]
+        let normalizedCurrentKey = normalizedTagKey(row.key)
+        let normalizedOriginalKey = originalMiscTagKeyByRowID[rowID] ?? normalizedCurrentKey
+        let isNewRow = normalizedOriginalKey.isEmpty
+        let hasInvalidFinalKey = normalizedCurrentKey.isEmpty || isInvalidMiscTagKeyInput(row.key, for: rowID)
+
+        if hasInvalidFinalKey {
+            if isNewRow {
+                miscTagRows.removeAll { $0.id == rowID }
+                selectedMiscTagRowIDs.remove(rowID)
+            } else {
+                miscTagRows[rowIndex].key = normalizedOriginalKey
+            }
+
+            originalMiscTagKeyByRowID.removeValue(forKey: rowID)
+            reloadMiscTagRowsFromSelection()
+            return
+        }
+
+        miscTagRows[rowIndex].key = normalizedCurrentKey
+
+        if !normalizedOriginalKey.isEmpty, normalizedOriginalKey != normalizedCurrentKey {
+            for index in trackItems.indices {
+                if let value = trackItems[index].tags.removeValue(forKey: normalizedOriginalKey) {
+                    trackItems[index].tags[normalizedCurrentKey] = value
+                }
+            }
+        }
+
+        originalMiscTagKeyByRowID.removeValue(forKey: rowID)
+        reloadMiscTagRowsFromSelection()
     }
 
     private func miscTagValueBinding(for rowID: MiscTagRow.ID) -> Binding<String>? {
@@ -655,7 +728,7 @@ struct ContentView: View {
             }
                 .width(min: 52)
         }
-        .frame(minHeight: 104, idealHeight: .infinity)
+        .frame(minHeight: 64, idealHeight: .infinity)
     }
     
     var body: some View {
@@ -774,18 +847,27 @@ struct ContentView: View {
                     }
                 }
             }
-            .frame(height: 92)
+            .frame(height: 60)
 
             miscTags
 
         }
         .padding()
-        .frame(minWidth: 520, minHeight: 540, idealHeight: 640)
+        .frame(minWidth: 520, minHeight: 530, idealHeight: 640, alignment: .topLeading)
         .onAppear {
             reloadMiscTagRowsFromSelection()
         }
         .onChange(of: selectedTrackIDs) { _, _ in
             reloadMiscTagRowsFromSelection()
+        }
+        .onChange(of: focusedMiscTagKeyRowID) { oldValue, newValue in
+            if let oldValue {
+                finalizeMiscTagKeyEditing(for: oldValue)
+            }
+
+            if let newValue {
+                recordOriginalMiscTagKeyIfNeeded(for: newValue)
+            }
         }
         .focusedSceneValue(\.showTomlSheet) {
             isTomlSheetPresented = true
