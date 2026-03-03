@@ -286,6 +286,7 @@ struct ContentView: View {
                 }
                 .buttonStyle(.borderless)
                 .help("Add Tag")
+                .accessibilityIdentifier("miscTags.addButton")
 
                 Button {
                     deleteSelectedMiscTagRows()
@@ -295,6 +296,7 @@ struct ContentView: View {
                 .buttonStyle(.borderless)
                 .help("Delete Selected Tags")
                 .disabled(selectedMiscTagRowIDs.isEmpty)
+                .accessibilityIdentifier("miscTags.deleteButton")
             }
 
             Table(miscTagRows, selection: $selectedMiscTagRowIDs) {
@@ -303,6 +305,7 @@ struct ContentView: View {
                         TextField("Key", text: keyBinding)
                             .foregroundStyle(isInvalidMiscTagKeyInput(row.key, for: row.id) ? .red : .primary)
                             .focused($focusedMiscTagKeyRowID, equals: row.id)
+                            .accessibilityIdentifier("miscTags.keyField.\(row.id.uuidString)")
                     }
                 }
                 .width(min: 120)
@@ -315,6 +318,7 @@ struct ContentView: View {
                 .width(min: 160)
             }
             .frame(minHeight: 80, maxHeight: 176)
+            .accessibilityIdentifier("miscTags.table")
         }
         .padding(.top, 6)
     }
@@ -736,6 +740,7 @@ struct ContentView: View {
             HStack {
                 Text("Album")
                 TextField("Album", text: $album)
+                    .accessibilityIdentifier("albumTextField")
             }
 
             HStack {
