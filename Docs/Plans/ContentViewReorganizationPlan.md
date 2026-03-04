@@ -87,8 +87,8 @@ Use feature-first folders with small shared foundations:
 Recommended file split for current `ContentView.swift`:
 
 - `Features/TagEditor/TagEditorView.swift` (new root screen replacing large body)
-- `Features/TagEditor/TagEditorTrackView.swift`
-- `Features/TagEditor/Tag​Editor​Tag​Fields​View.swift`
+- `Features/TagEditor/TagEditorTrackFileView.swift`
+- `Features/TagEditor/TagEditorCoreTagsView.swift`
 - `Features/TagEditor/TagEditorMiscTagsView.swift`
 - `Features/TagEditor/TOMLUtilityView.swift`
 - `Features/AlbumArt/AlbumArtSheetView.swift`

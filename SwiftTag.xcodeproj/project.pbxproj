@@ -28,9 +28,7 @@
 		720E0CA12F4E5E99000DD6E1 /* SwiftTagTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftTagTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		720E0CAB2F4E5E99000DD6E1 /* SwiftTagUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftTagUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7275A2332F521874001AE708 /* build-libflac.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-libflac.sh"; sourceTree = "<group>"; };
-		7275A23B2F521875001AE708 /* FLACBridgeExecution.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = FLACBridgeExecution.md; sourceTree = "<group>"; };
 		7275A3202F521E70001AE708 /* SwiftTag-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftTag-Bridging-Header.h"; sourceTree = "<group>"; };
-		7275A4CC2F57E4D1001AE708 /* ContentViewReorganizationPlan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ContentViewReorganizationPlan.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -47,6 +45,16 @@
 		720E0CAE2F4E5E99000DD6E1 /* SwiftTagUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SwiftTagUITests;
+			sourceTree = "<group>";
+		};
+		7268E7DF2F58B67F009A1E37 /* Plans */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Plans;
+			sourceTree = "<group>";
+		};
+		7268E7E02F58B69F009A1E37 /* Guides */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Guides;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -102,8 +110,8 @@
 		7275A22E2F521848001AE708 /* Docs */ = {
 			isa = PBXGroup;
 			children = (
-				7275A23B2F521875001AE708 /* FLACBridgeExecution.md */,
-				7275A4CC2F57E4D1001AE708 /* ContentViewReorganizationPlan.md */,
+				7268E7E02F58B69F009A1E37 /* Guides */,
+				7268E7DF2F58B67F009A1E37 /* Plans */,
 			);
 			path = Docs;
 			sourceTree = "<group>";

@@ -46,13 +46,13 @@ struct TagEditorView: View {
                 onFrontCoverTap: onFrontCoverTap
             )
 
-            TagEditorTrackView(
+            TagEditorTrackFileView(
                 trackItems: trackItems,
                 selection: selectedTrackIDsBinding,
                 titleBindingForTrack: titleBindingForTrack
             )
 
-            TagEditorTagFieldsView(
+            TagEditorCoreTagsView(
                 totalTracks: totalTracks,
                 hasTotalTracksMismatch: hasTotalTracksMismatch,
                 totalTracksHoverMessage: totalTracksHoverMessage,
