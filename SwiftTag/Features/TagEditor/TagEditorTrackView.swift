@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct TrackTableView: View {
+struct TagEditorTrackView: View {
     let trackItems: [Track]
     var selection: Binding<Set<UUID>>
     let titleBindingForTrack: (UUID) -> Binding<String>?

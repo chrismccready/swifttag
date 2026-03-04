@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct TagEditorMetadataFieldsView: View {
+struct TagEditorTagFieldsView: View {
     let totalTracks: String
     let hasTotalTracksMismatch: Bool
     let totalTracksHoverMessage: String

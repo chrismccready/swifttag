@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-struct TagEditorHeaderView: View {
+struct TagEditorAlbumView: View {
     var albumBinding: Binding<String>
     var albumArtistBinding: Binding<String>
     let frontCoverImage: Image

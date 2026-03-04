@@ -38,7 +38,7 @@ struct TagEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TagEditorHeaderView(
+            TagEditorAlbumView(
                 albumBinding: albumBinding,
                 albumArtistBinding: albumArtistBinding,
                 frontCoverImage: frontCoverImage,
@@ -46,13 +46,13 @@ struct TagEditorView: View {
                 onFrontCoverTap: onFrontCoverTap
             )
 
-            TrackTableView(
+            TagEditorTrackView(
                 trackItems: trackItems,
                 selection: selectedTrackIDsBinding,
                 titleBindingForTrack: titleBindingForTrack
             )
 
-            TagEditorMetadataFieldsView(
+            TagEditorTagFieldsView(
                 totalTracks: totalTracks,
                 hasTotalTracksMismatch: hasTotalTracksMismatch,
                 totalTracksHoverMessage: totalTracksHoverMessage,
@@ -70,7 +70,7 @@ struct TagEditorView: View {
                 positiveIntegerTransform: positiveIntegerTransform
             )
 
-            MiscTagsSectionView(
+            TagEditorMiscTagsView(
                 rows: miscTagRowsBinding,
                 selectedRowIDs: selectedMiscTagRowIDsBinding,
                 focusedRowID: focusedMiscTagKeyRowIDBinding,

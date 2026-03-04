@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct MiscTagsSectionView: View {
+struct TagEditorMiscTagsView: View {
     @Binding var rows: [MiscTagRow]
     @Binding var selectedRowIDs: Set<MiscTagRow.ID>
     var focusedRowID: FocusState<MiscTagRow.ID?>.Binding
