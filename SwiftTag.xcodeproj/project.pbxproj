@@ -30,6 +30,7 @@
 		7275A2332F521874001AE708 /* build-libflac.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-libflac.sh"; sourceTree = "<group>"; };
 		7275A23B2F521875001AE708 /* FLACBridgeExecution.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = FLACBridgeExecution.md; sourceTree = "<group>"; };
 		7275A3202F521E70001AE708 /* SwiftTag-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftTag-Bridging-Header.h"; sourceTree = "<group>"; };
+		7275A4CC2F57E4D1001AE708 /* ContentViewReorganizationPlan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ContentViewReorganizationPlan.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -102,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				7275A23B2F521875001AE708 /* FLACBridgeExecution.md */,
+				7275A4CC2F57E4D1001AE708 /* ContentViewReorganizationPlan.md */,
 			);
 			path = Docs;
 			sourceTree = "<group>";

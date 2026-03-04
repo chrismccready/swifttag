@@ -14,6 +14,8 @@ final class SwiftTagUITests: XCTestCase {
         static let miscTagTable = "miscTags.table"
         static let miscTagKeyFieldPrefix = "miscTags.keyField."
         static let albumTextField = "albumTextField"
+        static let albumArtistTextField = "albumArtistTextField"
+        static let albumArtImageWell = "albumArtImageWell"
     }
 
     override func setUpWithError() throws {
@@ -104,12 +106,45 @@ final class SwiftTagUITests: XCTestCase {
         )
     }
 
-    private func launchApp() -> XCUIApplication {
+    @MainActor
+    func testAlbumArtWellOpensAlbumArtSheet() throws {
+        let app = launchApp()
+        let albumArtWell = app.descendants(matching: .any)
+            .matching(identifier: UIID.albumArtImageWell)
+            .firstMatch
+        XCTAssertTrue(albumArtWell.waitForExistence(timeout: 2.0))
+    }
+
+    @MainActor
+    func testFlacFixtureImportBindsExpectedValues() throws {
+        let app = launchApp(importFixture: true)
+
+        XCTAssertTrue(waitForTextFieldValue(in: app, identifier: UIID.albumTextField, expectedValue: "Test Album"))
+        XCTAssertTrue(waitForTextFieldValue(in: app, identifier: UIID.albumArtistTextField, expectedValue: "Test AlbumArtist"))
+        XCTAssertTrue(miscTagKeyField(in: app, key: "ENCODED_BY").waitForExistence(timeout: 2.0))
+    }
+
+    private func launchApp(importFixture: Bool = false, openAlbumArtSheet: Bool = false) -> XCUIApplication {
         let app = XCUIApplication()
+        if importFixture {
+            app.launchEnvironment["UITEST_FLAC_PATH"] = fixtureFlacPath()
+        }
+        if openAlbumArtSheet {
+            app.launchEnvironment["UITEST_OPEN_ALBUM_ART_SHEET"] = "1"
+        }
         app.launch()
         XCTAssertTrue(app.buttons[UIID.addMiscTagButton].waitForExistence(timeout: 2.0))
         XCTAssertTrue(app.textFields[UIID.albumTextField].waitForExistence(timeout: 2.0))
         return app
+    }
+
+    private func fixtureFlacPath() -> String {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTagTestFiles")
+            .appendingPathComponent("test.flac")
+            .path
     }
 
     private func addMiscTagRow(in app: XCUIApplication, key: String) {
@@ -156,6 +191,18 @@ final class SwiftTagUITests: XCTestCase {
         let predicate = NSPredicate(format: "count == %d", expectedCount)
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: query)
 
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func waitForTextFieldValue(
+        in app: XCUIApplication,
+        identifier: String,
+        expectedValue: String,
+        timeout: TimeInterval = 3.0
+    ) -> Bool {
+        let textField = app.textFields[identifier]
+        let predicate = NSPredicate(format: "value == %@", expectedValue)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: textField)
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 }
