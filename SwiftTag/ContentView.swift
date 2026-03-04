@@ -8,6 +8,8 @@
 import SwiftUI
 import Foundation
 import UniformTypeIdentifiers
+import AppKit
+import ImageIO
 
 struct ContentView: View {
     struct Track: Identifiable {
@@ -39,10 +41,105 @@ struct ContentView: View {
         static let description = "DESCRIPTION"
     }
 
+    private enum AlbumArtSlot: Hashable {
+        case other
+        case pngIcon
+        case otherIcon
+        case frontCover
+        case backCover
+        case leaflet
+        case media
+        case leadArtist
+        case artist
+        case conductor
+        case band
+        case composer
+        case lyricist
+        case recordingStudioOrLocation
+        case recordingSession
+        case performance
+        case captureFromMovieOrVideo
+        case brightlyColoredFish
+        case illustration
+        case bandLogo
+        case publisherLogo
+    }
+
+    private struct AlbumArtType: Identifiable {
+        let number: Int
+        let navigationLinkName: String
+        let slot: AlbumArtSlot
+
+        var id: Int { number }
+    }
+
+    private struct AlbumArtImageAsset {
+        let image: NSImage
+        let type: UTType
+    }
+
+    private struct AlbumArtExportDocument: FileDocument {
+        static var readableContentTypes: [UTType] { [.png, .jpeg] }
+
+        let data: Data
+
+        init(data: Data) {
+            self.data = data
+        }
+
+        init(configuration: ReadConfiguration) throws {
+            guard let data = configuration.file.regularFileContents else {
+                throw CocoaError(.fileReadCorruptFile)
+            }
+            self.data = data
+        }
+
+        func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+            FileWrapper(regularFileWithContents: data)
+        }
+    }
+
+    private let albumArtTypes: [AlbumArtType] = [
+        AlbumArtType(number: 3, navigationLinkName: "Front Cover", slot: .frontCover),
+        AlbumArtType(number: 4, navigationLinkName: "Back Cover", slot: .backCover),
+        AlbumArtType(number: 5, navigationLinkName: "Leaflet", slot: .leaflet),
+        AlbumArtType(number: 6, navigationLinkName: "Media", slot: .media),
+        AlbumArtType(number: 7, navigationLinkName: "Lead Artist", slot: .leadArtist),
+        AlbumArtType(number: 8, navigationLinkName: "Artist", slot: .artist),
+        AlbumArtType(number: 9, navigationLinkName: "Conductor", slot: .conductor),
+        AlbumArtType(number: 10, navigationLinkName: "Band", slot: .band),
+        AlbumArtType(number: 11, navigationLinkName: "Composer", slot: .composer),
+        AlbumArtType(number: 12, navigationLinkName: "Lyricist", slot: .lyricist),
+        AlbumArtType(number: 13, navigationLinkName: "Recording Studio or Location", slot: .recordingStudioOrLocation),
+        AlbumArtType(number: 14, navigationLinkName: "Recording Session", slot: .recordingSession),
+        AlbumArtType(number: 15, navigationLinkName: "Performance", slot: .performance),
+        AlbumArtType(number: 16, navigationLinkName: "Capture from Movie or Video", slot: .captureFromMovieOrVideo),
+        AlbumArtType(number: 17, navigationLinkName: "Bright(ly) Colored Fish", slot: .brightlyColoredFish),
+        AlbumArtType(number: 18, navigationLinkName: "Illustration", slot: .illustration),
+        AlbumArtType(number: 19, navigationLinkName: "Band Logo", slot: .bandLogo),
+        AlbumArtType(number: 20, navigationLinkName: "Publisher Logo", slot: .publisherLogo),
+        AlbumArtType(number: 1, navigationLinkName: "32x32 PNG Icon", slot: .pngIcon),
+        AlbumArtType(number: 2, navigationLinkName: "Other Icon", slot: .otherIcon),
+        AlbumArtType(number: 0, navigationLinkName: "Other", slot: .other)
+    ]
+
+    private func albumArtType(for slot: AlbumArtSlot) -> AlbumArtType? {
+        albumArtTypes.first { $0.slot == slot }
+    }
+
     @State private var isTomlSheetPresented: Bool = false
     @State private var isFlacImporterPresented: Bool = false
     @State private var isImportErrorPresented: Bool = false
+    @State private var isAlbumArtSheetPresented: Bool = false
+    @State private var isAlbumArtFileImporterPresented: Bool = false
+    @State private var isAlbumArtFileExporterPresented: Bool = false
     @State private var importErrorMessage: String = ""
+    @State private var pendingAlbumArtSlotForImport: AlbumArtSlot?
+    @State private var albumArtExportDocument: AlbumArtExportDocument?
+    @State private var albumArtExportContentType: UTType = .png
+    @State private var albumArtExportDefaultFileName: String = "Album Art"
+    @State private var albumArtNavigationPath: [AlbumArtSlot] = []
+    @State private var albumArtImages: [AlbumArtSlot: AlbumArtImageAsset] = [:]
     @State private var album: String = ""
     @State private var albumArtist: String = ""
     @State private var totalDiscs: String = ""
@@ -734,18 +831,258 @@ struct ContentView: View {
         }
         .frame(minHeight: 64, idealHeight: .infinity)
     }
+
+    private func imageForAlbumArtSlot(_ albumArtSlot: AlbumArtSlot) -> Image {
+        if let asset = albumArtImages[albumArtSlot] {
+            return Image(nsImage: asset.image)
+        }
+
+        return Image(systemName: "photo.badge.plus")
+    }
+
+    private func setAlbumArtImage(_ image: NSImage, type: UTType, for albumArtSlot: AlbumArtSlot) {
+        albumArtImages[albumArtSlot] = AlbumArtImageAsset(image: image, type: type)
+    }
+
+    private func albumArtType(for fileURL: URL) -> UTType {
+        guard let type = UTType(filenameExtension: fileURL.pathExtension.lowercased()) else {
+            return .png
+        }
+
+        if type.conforms(to: .jpeg) {
+            return .jpeg
+        }
+
+        if type.conforms(to: .png) {
+            return .png
+        }
+
+        return .png
+    }
+
+    private func albumArtType(for imageData: Data) -> UTType {
+        guard let source = CGImageSourceCreateWithData(imageData as CFData, nil),
+              let sourceType = CGImageSourceGetType(source),
+              let type = UTType(sourceType as String) else {
+            return .png
+        }
+
+        if type.conforms(to: .jpeg) {
+            return .jpeg
+        }
+
+        if type.conforms(to: .png) {
+            return .png
+        }
+
+        return .png
+    }
+
+    private func imageData(from image: NSImage, as type: UTType) -> Data? {
+        guard let tiffRepresentation = image.tiffRepresentation,
+              let bitmapRepresentation = NSBitmapImageRep(data: tiffRepresentation) else {
+            return nil
+        }
+
+        let bitmapFileType: NSBitmapImageRep.FileType = type.conforms(to: .jpeg) ? .jpeg : .png
+        return bitmapRepresentation.representation(using: bitmapFileType, properties: [:])
+    }
+
+    private func prepareAlbumArtExport(for albumArtSlot: AlbumArtSlot) {
+        guard let asset = albumArtImages[albumArtSlot] else {
+            return
+        }
+
+        let exportType: UTType = asset.type.conforms(to: .jpeg) ? .jpeg : .png
+        let fileExtension = exportType.preferredFilenameExtension ?? (exportType.conforms(to: .jpeg) ? "jpg" : "png")
+        let baseName = albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art"
+        guard let data = imageData(from: asset.image, as: exportType) else {
+            return
+        }
+
+        albumArtExportDocument = AlbumArtExportDocument(data: data)
+        albumArtExportContentType = exportType
+        albumArtExportDefaultFileName = "\(baseName).\(fileExtension)"
+        isAlbumArtFileExporterPresented = true
+    }
+
+    private func handleAlbumArtFileExportResult(_ result: Result<URL, Error>) {
+        albumArtExportDocument = nil
+    }
+
+    private func droppedFileURL(from item: NSSecureCoding?) -> URL? {
+        if let url = item as? URL {
+            return url
+        }
+
+        if let data = item as? Data {
+            return URL(dataRepresentation: data, relativeTo: nil)
+        }
+
+        if let text = item as? String {
+            return URL(string: text)
+        }
+
+        if let text = item as? NSString {
+            return URL(string: text as String)
+        }
+
+        return nil
+    }
+
+    private func handleAlbumArtDrop(_ providers: [NSItemProvider], for albumArtSlot: AlbumArtSlot) -> Bool {
+        if let imageProvider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.image.identifier) }) {
+            imageProvider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                guard let data, let image = NSImage(data: data) else {
+                    return
+                }
+
+                DispatchQueue.main.async {
+                    setAlbumArtImage(image, type: albumArtType(for: data), for: albumArtSlot)
+                }
+            }
+            return true
+        }
+
+        if let fileProvider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) }) {
+            fileProvider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
+                guard let url = droppedFileURL(from: item),
+                      let image = NSImage(contentsOf: url) else {
+                    return
+                }
+
+                DispatchQueue.main.async {
+                    setAlbumArtImage(image, type: albumArtType(for: url), for: albumArtSlot)
+                }
+            }
+            return true
+        }
+
+        return false
+    }
+
+    private func handleAlbumArtFileImportResult(_ result: Result<[URL], Error>) {
+        defer {
+            pendingAlbumArtSlotForImport = nil
+        }
+
+        guard case .success(let urls) = result,
+              let selectedURL = urls.first,
+              let pendingAlbumArtSlotForImport,
+              selectedURL.startAccessingSecurityScopedResource() else {
+            return
+        }
+
+        defer {
+            selectedURL.stopAccessingSecurityScopedResource()
+        }
+
+        guard let image = NSImage(contentsOf: selectedURL) else {
+            return
+        }
+
+        setAlbumArtImage(image, type: albumArtType(for: selectedURL), for: pendingAlbumArtSlotForImport)
+    }
+
+    private func openAlbumArtFilePicker(for albumArtSlot: AlbumArtSlot) {
+        pendingAlbumArtSlotForImport = albumArtSlot
+        DispatchQueue.main.async {
+            isAlbumArtFileImporterPresented = true
+        }
+    }
+
+    private func albumArtWell(for albumArtSlot: AlbumArtSlot, dimension: CGFloat) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .strokeBorder(.secondary, lineWidth: 1)
+
+            imageForAlbumArtSlot(albumArtSlot)
+                .resizable()
+                .scaledToFit()
+                .padding(4)
+        }
+        .frame(width: dimension, height: dimension)
+        .onDrop(of: [UTType.image.identifier, UTType.fileURL.identifier], isTargeted: nil) { providers in
+            handleAlbumArtDrop(providers, for: albumArtSlot)
+        }
+    }
+
+    private var albumArtSheet: some View {
+        NavigationStack(path: $albumArtNavigationPath) {
+            List {
+                ForEach(albumArtTypes) { albumArtType in
+                    NavigationLink(albumArtType.navigationLinkName, value: albumArtType.slot)
+                }
+            }
+            .navigationTitle("Album Art")
+            .navigationDestination(for: AlbumArtSlot.self) { albumArtSlot in
+                VStack(alignment: .leading, spacing: 0) {
+                    albumArtWell(for: albumArtSlot, dimension: 480)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            openAlbumArtFilePicker(for: albumArtSlot)
+                        }
+                        .contextMenu {
+                            let navigationLinkName = albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art"
+                            Button("Import \(navigationLinkName)...") {
+                                openAlbumArtFilePicker(for: albumArtSlot)
+                            }
+                            Button("Export \(navigationLinkName)...") {
+                                prepareAlbumArtExport(for: albumArtSlot)
+                            }
+                            .disabled(albumArtImages[albumArtSlot] == nil)
+                        }
+                        .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
+                }
+                .padding(22)
+                .navigationTitle(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art")
+            }
+        }
+        .frame(width: 524, height: 572)
+        .onAppear {
+            if albumArtNavigationPath.isEmpty {
+                albumArtNavigationPath = [.frontCover]
+            }
+        }
+        .fileImporter(
+            isPresented: $isAlbumArtFileImporterPresented,
+            allowedContentTypes: [.jpeg, .png],
+            allowsMultipleSelection: false,
+            onCompletion: handleAlbumArtFileImportResult
+        )
+        .fileExporter(
+            isPresented: $isAlbumArtFileExporterPresented,
+            document: albumArtExportDocument,
+            contentType: albumArtExportContentType,
+            defaultFilename: albumArtExportDefaultFileName,
+            onCompletion: handleAlbumArtFileExportResult
+        )
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Album")
-                TextField("Album", text: $album)
-                    .accessibilityIdentifier("albumTextField")
-            }
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Album")
+                        TextField("Album", text: $album)
+                            .accessibilityIdentifier("albumTextField")
+                    }
 
-            HStack {
-                Text("Album Artist")
-                TextField("Album Artist", text: $albumArtist)
+                    HStack {
+                        Text("Album Artist")
+                        TextField("Album Artist", text: $albumArtist)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                albumArtWell(for: .frontCover, dimension: 60)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isAlbumArtSheetPresented = true
+                }
+                .help("Click to edit album art or drag and drop an image to set album Front Cover.")
+                .accessibilityIdentifier("albumArtImageWell")
             }
 
             tracks
@@ -888,6 +1225,9 @@ struct ContentView: View {
         )
         .sheet(isPresented: $isTomlSheetPresented) {
             TOMLUtilityView(tomlText: tomlText())
+        }
+        .sheet(isPresented: $isAlbumArtSheetPresented) {
+            albumArtSheet
         }
         .alert("FLAC Import Error", isPresented: $isImportErrorPresented) {
             Button("OK", role: .cancel) {}
