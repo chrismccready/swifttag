@@ -11,27 +11,27 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     private let albumArtTypes: [AlbumArtType] = [
-        AlbumArtType(number: 3, navigationLinkName: "Front Cover", slot: .frontCover),
-        AlbumArtType(number: 4, navigationLinkName: "Back Cover", slot: .backCover),
-        AlbumArtType(number: 5, navigationLinkName: "Leaflet", slot: .leaflet),
-        AlbumArtType(number: 6, navigationLinkName: "Media", slot: .media),
-        AlbumArtType(number: 7, navigationLinkName: "Lead Artist", slot: .leadArtist),
-        AlbumArtType(number: 8, navigationLinkName: "Artist", slot: .artist),
-        AlbumArtType(number: 9, navigationLinkName: "Conductor", slot: .conductor),
-        AlbumArtType(number: 10, navigationLinkName: "Band", slot: .band),
-        AlbumArtType(number: 11, navigationLinkName: "Composer", slot: .composer),
-        AlbumArtType(number: 12, navigationLinkName: "Lyricist", slot: .lyricist),
-        AlbumArtType(number: 13, navigationLinkName: "Recording Studio or Location", slot: .recordingStudioOrLocation),
-        AlbumArtType(number: 14, navigationLinkName: "Recording Session", slot: .recordingSession),
-        AlbumArtType(number: 15, navigationLinkName: "Performance", slot: .performance),
-        AlbumArtType(number: 16, navigationLinkName: "Capture from Movie or Video", slot: .captureFromMovieOrVideo),
-        AlbumArtType(number: 17, navigationLinkName: "Bright(ly) Colored Fish", slot: .brightlyColoredFish),
-        AlbumArtType(number: 18, navigationLinkName: "Illustration", slot: .illustration),
-        AlbumArtType(number: 19, navigationLinkName: "Band Logo", slot: .bandLogo),
-        AlbumArtType(number: 20, navigationLinkName: "Publisher Logo", slot: .publisherLogo),
-        AlbumArtType(number: 1, navigationLinkName: "32x32 PNG Icon", slot: .pngIcon),
-        AlbumArtType(number: 2, navigationLinkName: "Other Icon", slot: .otherIcon),
-        AlbumArtType(number: 0, navigationLinkName: "Other", slot: .other)
+        AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
+        AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover),
+        AlbumArtType(flacPictureType: 5, flacDescription: "Leaflet page", navigationLinkName: "Leaflet", slot: .leaflet),
+        AlbumArtType(flacPictureType: 6, flacDescription: "Media", navigationLinkName: "Media", slot: .media),
+        AlbumArtType(flacPictureType: 7, flacDescription: "Lead artist/lead performer/soloist", navigationLinkName: "Lead Artist", slot: .leadArtist),
+        AlbumArtType(flacPictureType: 8, flacDescription: "Artist/performer", navigationLinkName: "Artist", slot: .artist),
+        AlbumArtType(flacPictureType: 9, flacDescription: "Conductor", navigationLinkName: "Conductor", slot: .conductor),
+        AlbumArtType(flacPictureType: 10, flacDescription: "Band/Orchestra", navigationLinkName: "Band", slot: .band),
+        AlbumArtType(flacPictureType: 11, flacDescription: "Composer", navigationLinkName: "Composer", slot: .composer),
+        AlbumArtType(flacPictureType: 12, flacDescription: "Lyricist/text writer", navigationLinkName: "Lyricist", slot: .lyricist),
+        AlbumArtType(flacPictureType: 13, flacDescription: "Recording location", navigationLinkName: "Recording Studio or Location", slot: .recordingStudioOrLocation),
+        AlbumArtType(flacPictureType: 14, flacDescription: "During recording", navigationLinkName: "Recording Session", slot: .recordingSession),
+        AlbumArtType(flacPictureType: 15, flacDescription: "During performance", navigationLinkName: "Performance", slot: .performance),
+        AlbumArtType(flacPictureType: 16, flacDescription: "Movie/video capture", navigationLinkName: "Capture from Movie or Video", slot: .captureFromMovieOrVideo),
+        AlbumArtType(flacPictureType: 17, flacDescription: "Bright coloured fish", navigationLinkName: "Bright(ly) Colored Fish", slot: .brightlyColoredFish),
+        AlbumArtType(flacPictureType: 18, flacDescription: "Illustration", navigationLinkName: "Illustration", slot: .illustration),
+        AlbumArtType(flacPictureType: 19, flacDescription: "Band/artist logotype", navigationLinkName: "Band Logo", slot: .bandLogo),
+        AlbumArtType(flacPictureType: 20, flacDescription: "Publisher/studio logotype", navigationLinkName: "Publisher Logo", slot: .publisherLogo),
+        AlbumArtType(flacPictureType: 1, flacDescription: "32x32 pixels file icon (PNG only)", navigationLinkName: "32x32 PNG Icon", slot: .pngIcon),
+        AlbumArtType(flacPictureType: 2, flacDescription: "Other file icon", navigationLinkName: "Other Icon", slot: .otherIcon),
+        AlbumArtType(flacPictureType: 0, flacDescription: "Other", navigationLinkName: "Other", slot: .other)
     ]
 
     @State private var isTomlSheetPresented: Bool = false
@@ -284,6 +284,10 @@ struct ContentView: View {
 
     private func importFlacFiles(_ flacFiles: [URL]) async throws {
         try await viewModel.importFlacFiles(flacFiles)
+        albumArtViewModel.applyImportedFlacPictures(
+            viewModel.importedFlacPicturesByType,
+            albumArtTypes: albumArtTypes
+        )
     }
 
     private func loadUITestStateIfNeeded() {

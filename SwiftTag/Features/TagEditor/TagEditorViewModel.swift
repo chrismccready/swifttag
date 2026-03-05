@@ -13,6 +13,7 @@ final class TagEditorViewModel {
     var selectedMiscTagRowIDs: Set<MiscTagRow.ID> = []
     var originalMiscTagKeyByRowID: [MiscTagRow.ID: String] = [:]
     var trackItems: [Track]
+    var importedFlacPicturesByType: [Int: Data] = [:]
 
     private let totalTrackTagKeys: [String] = ["TOTALTRACKS", "TRACKTOTAL"]
 
@@ -437,9 +438,16 @@ final class TagEditorViewModel {
         }
 
         var importedTracks: [Track] = []
+        var importedPicturesByType: [Int: Data] = [:]
 
         for fileURL in flacFiles {
-            let tags = try FlacMetadataService.readTags(for: fileURL).tags
+            let metadata = try FlacMetadataService.readTags(for: fileURL)
+            let tags = metadata.tags
+            let trackPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+
+            for (pictureType, pictureData) in trackPicturesByType where importedPicturesByType[pictureType] == nil {
+                importedPicturesByType[pictureType] = pictureData
+            }
 
             if importedTracks.isEmpty {
                 let initialValues = FlacImportMapper.initialValues(from: tags)
@@ -459,9 +467,10 @@ final class TagEditorViewModel {
                 fileURL: fileURL,
                 defaultDate: .now
             )
-            importedTracks.append(Track(tags: trackTags))
+            importedTracks.append(Track(tags: trackTags, flacPicturesByType: trackPicturesByType))
         }
 
+        importedFlacPicturesByType = importedPicturesByType
         trackItems.append(contentsOf: importedTracks)
         reloadMiscTagRowsFromSelection()
     }

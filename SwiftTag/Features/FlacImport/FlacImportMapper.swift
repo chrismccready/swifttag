@@ -54,4 +54,16 @@ enum FlacImportMapper {
 
         return trackTags
     }
+
+    static func mapPicturesByType(_ pictures: [FlacPictureRecord]) -> [Int: Data] {
+        var picturesByType: [Int: Data] = [:]
+
+        for picture in pictures where !picture.data.isEmpty {
+            if picturesByType[picture.type] == nil {
+                picturesByType[picture.type] = picture.data
+            }
+        }
+
+        return picturesByType
+    }
 }

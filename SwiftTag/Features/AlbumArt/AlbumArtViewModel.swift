@@ -111,6 +111,25 @@ final class AlbumArtViewModel {
         }
     }
 
+    func applyImportedFlacPictures(_ picturesByType: [Int: Data], albumArtTypes: [AlbumArtType]) {
+        guard !picturesByType.isEmpty else {
+            return
+        }
+
+        let albumArtTypeByFlacType = Dictionary(
+            uniqueKeysWithValues: albumArtTypes.map { ($0.flacPictureType, $0) }
+        )
+
+        for (flacPictureType, data) in picturesByType {
+            guard let mappedAlbumArtType = albumArtTypeByFlacType[flacPictureType],
+                  let image = NSImage(data: data) else {
+                continue
+            }
+
+            setAlbumArtImage(image, type: albumArtType(for: data), for: mappedAlbumArtType.slot)
+        }
+    }
+
     private func setAlbumArtImage(_ image: NSImage, type: UTType, for albumArtSlot: AlbumArtSlot) {
         albumArtImages[albumArtSlot] = AlbumArtImageAsset(image: image, type: type)
     }

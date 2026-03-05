@@ -27,11 +27,12 @@ enum AlbumArtSlot: Hashable {
 }
 
 struct AlbumArtType: Identifiable {
-    let number: Int
+    let flacPictureType: Int
+    let flacDescription: String
     let navigationLinkName: String
     let slot: AlbumArtSlot
 
-    var id: Int { number }
+    var id: AlbumArtSlot { slot }
 }
 
 struct AlbumArtImageAsset {
