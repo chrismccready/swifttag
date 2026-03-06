@@ -38,6 +38,7 @@ struct AlbumArtType: Identifiable {
 struct AlbumArtImageAsset {
     let image: NSImage
     let type: UTType
+    let data: Data
 }
 
 struct AlbumArtExportDocument: FileDocument {

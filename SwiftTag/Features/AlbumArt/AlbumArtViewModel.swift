@@ -36,9 +36,7 @@ final class AlbumArtViewModel {
         let exportType: UTType = asset.type.conforms(to: .jpeg) ? .jpeg : .png
         let fileExtension = exportType.preferredFilenameExtension ?? (exportType.conforms(to: .jpeg) ? "jpg" : "png")
         let baseName = albumArtTypes.first(where: { $0.slot == albumArtSlot })?.navigationLinkName ?? "Album Art"
-        guard let data = imageData(from: asset.image, as: exportType) else {
-            return
-        }
+        let data = asset.type == exportType ? asset.data : (imageData(from: asset.image, as: exportType) ?? asset.data)
 
         albumArtExportDocument = AlbumArtExportDocument(data: data)
         albumArtExportContentType = exportType
@@ -58,7 +56,7 @@ final class AlbumArtViewModel {
                 }
 
                 Task { @MainActor in
-                    self.setAlbumArtImage(image, type: self.albumArtType(for: data), for: albumArtSlot)
+                    self.setAlbumArtImage(image, data: data, type: self.albumArtType(for: data), for: albumArtSlot)
                 }
             }
             return true
@@ -67,12 +65,13 @@ final class AlbumArtViewModel {
         if let fileProvider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) }) {
             fileProvider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
                 guard let url = Self.droppedFileURL(from: item),
-                      let image = NSImage(contentsOf: url) else {
+                      let image = NSImage(contentsOf: url),
+                      let data = try? Data(contentsOf: url) else {
                     return
                 }
 
                 Task { @MainActor in
-                    self.setAlbumArtImage(image, type: self.albumArtType(for: url), for: albumArtSlot)
+                    self.setAlbumArtImage(image, data: data, type: self.albumArtType(for: url), for: albumArtSlot)
                 }
             }
             return true
@@ -101,7 +100,11 @@ final class AlbumArtViewModel {
             return
         }
 
-        setAlbumArtImage(image, type: albumArtType(for: selectedURL), for: pendingAlbumArtSlotForImport)
+        guard let data = try? Data(contentsOf: selectedURL) else {
+            return
+        }
+
+        setAlbumArtImage(image, data: data, type: albumArtType(for: selectedURL), for: pendingAlbumArtSlotForImport)
     }
 
     func openAlbumArtFilePicker(for albumArtSlot: AlbumArtSlot) {
@@ -126,12 +129,32 @@ final class AlbumArtViewModel {
                 continue
             }
 
-            setAlbumArtImage(image, type: albumArtType(for: data), for: mappedAlbumArtType.slot)
+            setAlbumArtImage(image, data: data, type: albumArtType(for: data), for: mappedAlbumArtType.slot)
         }
     }
 
-    private func setAlbumArtImage(_ image: NSImage, type: UTType, for albumArtSlot: AlbumArtSlot) {
-        albumArtImages[albumArtSlot] = AlbumArtImageAsset(image: image, type: type)
+    func flacPictures(albumArtTypes: [AlbumArtType]) -> [FlacWritablePictureRecord] {
+        let albumArtTypeBySlot = Dictionary(uniqueKeysWithValues: albumArtTypes.map { ($0.slot, $0) })
+
+        return albumArtImages.compactMap { slot, asset in
+            guard let albumArtType = albumArtTypeBySlot[slot] else {
+                return nil
+            }
+
+            return FlacWritablePictureRecord(
+                type: albumArtType.flacPictureType,
+                mimeType: asset.type.preferredMIMEType ?? "image/png",
+                description: albumArtType.flacDescription,
+                data: asset.data
+            )
+        }
+        .sorted { lhs, rhs in
+            lhs.type < rhs.type
+        }
+    }
+
+    private func setAlbumArtImage(_ image: NSImage, data: Data, type: UTType, for albumArtSlot: AlbumArtSlot) {
+        albumArtImages[albumArtSlot] = AlbumArtImageAsset(image: image, type: type, data: data)
     }
 
     private func albumArtType(for fileURL: URL) -> UTType {

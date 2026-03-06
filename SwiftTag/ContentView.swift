@@ -37,12 +37,20 @@ struct ContentView: View {
     @State private var isTomlSheetPresented: Bool = false
     @State private var isFlacImporterPresented: Bool = false
     @State private var isImportErrorPresented: Bool = false
+    @State private var isSaveErrorPresented: Bool = false
     @State private var isAlbumArtSheetPresented: Bool = false
     @State private var importErrorMessage: String = ""
+    @State private var saveErrorMessage: String = ""
     @State private var viewModel: TagEditorViewModel = .init()
     @State private var albumArtViewModel: AlbumArtViewModel = .init()
     @State private var hasPerformedInitialUITestSetup: Bool = false
     @FocusState private var focusedMiscTagKeyRowID: MiscTagRow.ID?
+    @AppStorage(SaveSettingsKey.defaultSavePayload) private var defaultSavePayloadRawValue: String = SaveSettingsDefaults.defaultSavePayload.rawValue
+    @AppStorage(SaveSettingsKey.defaultSaveScope) private var defaultSaveScopeRawValue: String = SaveSettingsDefaults.defaultSaveScope.rawValue
+    @AppStorage(SaveSettingsKey.zeroPadTrackNumber) private var zeroPadTrackNumber: Bool = SaveSettingsDefaults.zeroPadTrackNumber
+    @AppStorage(SaveSettingsKey.trackCountKeyStrategy) private var trackCountKeyStrategyRawValue: String = SaveSettingsDefaults.trackCountKeyStrategy.rawValue
+    @AppStorage(SaveSettingsKey.zeroPadDiscNumber) private var zeroPadDiscNumber: Bool = SaveSettingsDefaults.zeroPadDiscNumber
+    @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
 
     private var album: String {
         get { viewModel.album }
@@ -155,11 +163,11 @@ struct ContentView: View {
     }
 
     private var selectedNumberBinding: Binding<String>? {
-        selectedTagBinding(tagName: TagKey.number)
+        selectedTagBinding(tagName: TagKey.trackNumber)
     }
 
     private var selectedDiscBinding: Binding<String>? {
-        selectedTagBinding(tagName: TagKey.disc)
+        selectedTagBinding(tagName: TagKey.discNumber)
     }
 
     private var selectedGenreBinding: Binding<String>? {
@@ -242,7 +250,7 @@ struct ContentView: View {
                 }
             }
 
-            let flacFiles = collectFlacFiles(from: selectedURLs)
+            let flacFiles = collectFlacFiles(from: scopedURLs)
             do {
                 try await importFlacFiles(flacFiles)
             } catch {
@@ -290,29 +298,141 @@ struct ContentView: View {
         )
     }
 
+    private var saveSettingsSnapshot: SaveSettingsSnapshot {
+        SaveSettingsSnapshot(
+            payload: SavePayloadOption(rawValue: defaultSavePayloadRawValue) ?? SaveSettingsDefaults.defaultSavePayload,
+            scope: SaveScopeOption(rawValue: defaultSaveScopeRawValue) ?? SaveSettingsDefaults.defaultSaveScope,
+            tagWriteOptions: TagWriteOptions(
+                zeroPadTrackNumber: zeroPadTrackNumber,
+                trackCountKeyStrategy: TrackCountKeyStrategy(rawValue: trackCountKeyStrategyRawValue) ?? SaveSettingsDefaults.trackCountKeyStrategy,
+                zeroPadDiscNumber: zeroPadDiscNumber,
+                discCountKeyStrategy: DiscCountKeyStrategy(rawValue: discCountKeyStrategyRawValue) ?? SaveSettingsDefaults.discCountKeyStrategy
+            )
+        )
+    }
+
+    private func canSave(payload: SavePayloadOption) -> Bool {
+        let scope = saveSettingsSnapshot.scope
+        if payload.writesPictures || payload.writesTags {
+            return viewModel.canSave(scope: scope)
+        }
+
+        return false
+    }
+
+    private func save(using payload: SavePayloadOption? = nil) {
+        let settings = saveSettingsSnapshot
+        let effectivePayload = payload ?? settings.payload
+
+        do {
+            try viewModel.save(
+                payload: effectivePayload,
+                scope: settings.scope,
+                tagWriteOptions: settings.tagWriteOptions,
+                albumArtPictures: albumArtViewModel.flacPictures(albumArtTypes: albumArtTypes)
+            )
+        } catch {
+            saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            isSaveErrorPresented = true
+        }
+    }
+
     private func loadUITestStateIfNeeded() {
         guard !hasPerformedInitialUITestSetup else {
             return
         }
 
         hasPerformedInitialUITestSetup = true
-        let environment = ProcessInfo.processInfo.environment
-        if environment["UITEST_OPEN_ALBUM_ART_SHEET"] == "1" {
+        if uiTestLaunchFlagEnabled("UITEST_OPEN_ALBUM_ART_SHEET") {
             isAlbumArtSheetPresented = true
         }
 
-        guard let fixturePath = environment["UITEST_FLAC_PATH"], !fixturePath.isEmpty else {
+        guard let fixturePath = uiTestLaunchValue(for: "UITEST_FLAC_PATH") else {
             return
         }
 
         Task {
             do {
-                try await importFlacFiles([URL(fileURLWithPath: fixturePath)])
+                let fileURL = try uiTestImportFileURL(for: fixturePath)
+                try await importFlacFiles([fileURL])
             } catch {
                 importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 isImportErrorPresented = true
             }
         }
+    }
+
+    private func uiTestLaunchFlagEnabled(_ key: String) -> Bool {
+        let environment = ProcessInfo.processInfo.environment
+        if environment[key] == "1" {
+            return true
+        }
+
+        return ProcessInfo.processInfo.arguments.contains("-\(key)")
+    }
+
+    private func uiTestLaunchValue(for key: String) -> String? {
+        let environment = ProcessInfo.processInfo.environment
+        if let value = environment[key], !value.isEmpty {
+            return value
+        }
+
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let keyIndex = arguments.firstIndex(of: "-\(key)") else {
+            return nil
+        }
+
+        let valueIndex = arguments.index(after: keyIndex)
+        guard valueIndex < arguments.endIndex else {
+            return nil
+        }
+
+        let value = arguments[valueIndex]
+        return value.isEmpty ? nil : value
+    }
+
+    private func uiTestImportFileURL(for fallbackPath: String) throws -> URL {
+        guard let dataValue = uiTestLaunchValue(for: "UITEST_FLAC_DATA_BASE64"),
+              let fileData = Data(base64Encoded: dataValue) else {
+            if let reuseURL = try uiTestReusableImportFileURLIfPresent() {
+                return reuseURL
+            }
+            return URL(fileURLWithPath: fallbackPath)
+        }
+
+        let tempURL: URL
+        if let reuseURL = try uiTestReusableImportFileURLIfPresent() {
+            if uiTestLaunchFlagEnabled("UITEST_REUSE_IMPORTED_FLAC"),
+               FileManager.default.fileExists(atPath: reuseURL.path) {
+                return reuseURL
+            }
+            tempURL = reuseURL
+        } else {
+            tempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("SwiftTagUITestFixture")
+                .appendingPathExtension("flac")
+        }
+        try fileData.write(to: tempURL, options: .atomic)
+        return tempURL
+    }
+
+    private func uiTestReusableImportFileURLIfPresent() throws -> URL? {
+        guard let destinationName = uiTestLaunchValue(for: "UITEST_FLAC_DESTINATION_NAME") else {
+            return nil
+        }
+
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftTagUITestFixtures", isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+
+        let fileURL = directoryURL
+            .appendingPathComponent(destinationName)
+            .appendingPathExtension("flac")
+        if uiTestLaunchFlagEnabled("UITEST_REUSE_IMPORTED_FLAC"), FileManager.default.fileExists(atPath: fileURL.path) {
+            return fileURL
+        }
+
+        return fileURL
     }
 
     var body: some View {
@@ -377,6 +497,18 @@ struct ContentView: View {
         .focusedSceneValue(\.showFlacImporter) {
             isFlacImporterPresented = true
         }
+        .focusedSceneValue(\.performDefaultSave) {
+            save()
+        }
+        .focusedSceneValue(\.performSaveTagsOnly) {
+            save(using: .writeTags)
+        }
+        .focusedSceneValue(\.performSavePicturesOnly) {
+            save(using: .writePictures)
+        }
+        .focusedSceneValue(\.canPerformDefaultSave, canSave(payload: saveSettingsSnapshot.payload))
+        .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
+        .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
         .fileImporter(
             isPresented: $isFlacImporterPresented,
             allowedContentTypes: [.folder, UTType(filenameExtension: "flac") ?? .data],
@@ -420,12 +552,23 @@ struct ContentView: View {
         } message: {
             Text(importErrorMessage)
         }
+        .alert("Save Error", isPresented: $isSaveErrorPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage)
+        }
     }
 }
 
 extension FocusedValues {
     @Entry var showTomlSheet: (() -> Void)?
     @Entry var showFlacImporter: (() -> Void)?
+    @Entry var performDefaultSave: (() -> Void)?
+    @Entry var performSaveTagsOnly: (() -> Void)?
+    @Entry var performSavePicturesOnly: (() -> Void)?
+    @Entry var canPerformDefaultSave: Bool?
+    @Entry var canPerformSaveTagsOnly: Bool?
+    @Entry var canPerformSavePicturesOnly: Bool?
 }
 
 #Preview {

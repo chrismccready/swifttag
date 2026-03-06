@@ -35,14 +35,14 @@ enum FlacImportMapper {
         let location = sourceTags[TagKey.location] ?? sourceTags["VENUE"] ?? ""
         let genre = sourceTags[TagKey.genre] ?? ""
 
-        let rawTrackNumber = sourceTags["TRACKNUMBER"] ?? sourceTags["TRACK"] ?? ""
+        let rawTrackNumber = sourceTags[TagKey.trackNumber] ?? sourceTags["TRACK"] ?? ""
         let normalizedTrackNumber = Int(rawTrackNumber).map(String.init) ?? rawTrackNumber
-        let rawDiscNumber = sourceTags["DISCNUMBER"] ?? sourceTags[TagKey.disc] ?? ""
+        let rawDiscNumber = sourceTags[TagKey.discNumber] ?? sourceTags["DISC"] ?? ""
         let normalizedDiscNumber = Int(rawDiscNumber).map(String.init) ?? rawDiscNumber
 
         var trackTags = sourceTags
-        trackTags[TagKey.number] = normalizedTrackNumber
-        trackTags[TagKey.disc] = normalizedDiscNumber
+        trackTags[TagKey.trackNumber] = normalizedTrackNumber
+        trackTags[TagKey.discNumber] = normalizedDiscNumber
         trackTags[TagKey.genre] = genre
         trackTags[TagKey.title] = title
         trackTags[TagKey.filename] = fileURL.lastPathComponent

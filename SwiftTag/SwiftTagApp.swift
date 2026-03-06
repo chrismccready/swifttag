@@ -14,9 +14,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-private struct TomlCommands: Commands {
+private struct AppCommands: Commands {
     @FocusedValue(\.showTomlSheet) private var showTomlSheet
     @FocusedValue(\.showFlacImporter) private var showFlacImporter
+    @FocusedValue(\.performDefaultSave) private var performDefaultSave
+    @FocusedValue(\.performSaveTagsOnly) private var performSaveTagsOnly
+    @FocusedValue(\.performSavePicturesOnly) private var performSavePicturesOnly
+    @FocusedValue(\.canPerformDefaultSave) private var canPerformDefaultSave
+    @FocusedValue(\.canPerformSaveTagsOnly) private var canPerformSaveTagsOnly
+    @FocusedValue(\.canPerformSavePicturesOnly) private var canPerformSavePicturesOnly
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
@@ -30,6 +36,26 @@ private struct TomlCommands: Commands {
             }
             .disabled(showTomlSheet == nil)
         }
+
+        CommandGroup(replacing: .saveItem) {
+            Button("Save") {
+                performDefaultSave?()
+            }
+            .keyboardShortcut("s")
+            .disabled(!(canPerformDefaultSave ?? false))
+
+            Divider()
+
+            Button("Save Tags...") {
+                performSaveTagsOnly?()
+            }
+            .disabled(!(canPerformSaveTagsOnly ?? false))
+
+            Button("Save Pictures...") {
+                performSavePicturesOnly?()
+            }
+            .disabled(!(canPerformSavePicturesOnly ?? false))
+        }
     }
 }
 
@@ -37,12 +63,41 @@ private struct TomlCommands: Commands {
 struct SwiftTagApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
+    init() {
+        resetUITestSaveSettingsIfNeeded()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
         }
         .commands {
-            TomlCommands()
+            AppCommands()
         }
+
+        #if os(macOS)
+        Settings {
+            SettingsView()
+        }
+        #endif
+    }
+
+    private func resetUITestSaveSettingsIfNeeded() {
+        guard uiTestLaunchFlagEnabled("UITEST_RESET_SAVE_SETTINGS"),
+              let bundleIdentifier = Bundle.main.bundleIdentifier else {
+            return
+        }
+
+        UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
+        UserDefaults.standard.synchronize()
+    }
+
+    private func uiTestLaunchFlagEnabled(_ key: String) -> Bool {
+        let environment = ProcessInfo.processInfo.environment
+        if environment[key] == "1" {
+            return true
+        }
+
+        return ProcessInfo.processInfo.arguments.contains("-\(key)")
     }
 }

@@ -8,6 +8,9 @@
 import XCTest
 
 final class SwiftTagUITests: XCTestCase {
+    private static let fixtureDirectoryName = "SwiftTagTestFiles"
+    private static let fixtureFileName = "test.flac"
+
     private enum UIID {
         static let addMiscTagButton = "miscTags.addButton"
         static let deleteMiscTagButton = "miscTags.deleteButton"
@@ -16,6 +19,13 @@ final class SwiftTagUITests: XCTestCase {
         static let albumTextField = "albumTextField"
         static let albumArtistTextField = "albumArtistTextField"
         static let albumArtImageWell = "albumArtImageWell"
+        static let settingsTabView = "settings.tabView"
+        static let defaultSavePayload = "settings.general.defaultSavePayload"
+        static let defaultSaveScope = "settings.general.defaultSaveScope"
+        static let zeroPadTrackNumber = "settings.tags.zeroPadTrackNumber"
+        static let trackCountKeyStrategy = "settings.tags.trackCountKeyStrategy"
+        static let zeroPadDiscNumber = "settings.tags.zeroPadDiscNumber"
+        static let discCountKeyStrategy = "settings.tags.discCountKeyStrategy"
     }
 
     override func setUpWithError() throws {
@@ -50,7 +60,7 @@ final class SwiftTagUITests: XCTestCase {
 
     @MainActor
     func testMiscTagsAddAndDeleteRow() throws {
-        let app = launchApp()
+        let app = try launchApp()
 
         let initialCount = miscTagKeyFields(in: app).count
         addMiscTagRow(in: app, key: "CUSTOM_ROW_A")
@@ -66,7 +76,7 @@ final class SwiftTagUITests: XCTestCase {
 
     @MainActor
     func testMiscTagsNewRowWithExplicitKeyIsRemovedOnBlur() throws {
-        let app = launchApp()
+        let app = try launchApp()
 
         let initialCount = miscTagKeyFields(in: app).count
         addMiscTagRow(in: app, key: "TITLE")
@@ -76,7 +86,7 @@ final class SwiftTagUITests: XCTestCase {
 
     @MainActor
     func testMiscTagsNewRowWithDuplicateKeyIsRemovedOnBlur() throws {
-        let app = launchApp()
+        let app = try launchApp()
 
         addMiscTagRow(in: app, key: "DUPLICATE_BASE")
         let committedCount = miscTagKeyFields(in: app).count
@@ -87,7 +97,7 @@ final class SwiftTagUITests: XCTestCase {
 
     @MainActor
     func testMiscTagsExistingRowDuplicateEditRevertsToOriginalKey() throws {
-        let app = launchApp()
+        let app = try launchApp()
 
         addMiscTagRow(in: app, key: "ORIGINAL_KEY")
         XCTAssertTrue(miscTagKeyField(in: app, key: "ORIGINAL_KEY").waitForExistence(timeout: 2.0))
@@ -108,7 +118,7 @@ final class SwiftTagUITests: XCTestCase {
 
     @MainActor
     func testAlbumArtWellOpensAlbumArtSheet() throws {
-        let app = launchApp()
+        let app = try launchApp()
         let albumArtWell = app.descendants(matching: .any)
             .matching(identifier: UIID.albumArtImageWell)
             .firstMatch
@@ -117,34 +127,294 @@ final class SwiftTagUITests: XCTestCase {
 
     @MainActor
     func testFlacFixtureImportBindsExpectedValues() throws {
-        let app = launchApp(importFixture: true)
+        let app = try launchApp(importFixture: true)
 
-        XCTAssertTrue(waitForTextFieldValue(in: app, identifier: UIID.albumTextField, expectedValue: "Test Album"))
-        XCTAssertTrue(waitForTextFieldValue(in: app, identifier: UIID.albumArtistTextField, expectedValue: "Test AlbumArtist"))
-        XCTAssertTrue(miscTagKeyField(in: app, key: "ENCODED_BY").waitForExistence(timeout: 2.0))
+        XCTAssertTrue(
+            waitForTextFieldValue(in: app, identifier: UIID.albumTextField, expectedValue: "Test Album"),
+            """
+            Album field value was \(String(describing: app.textFields[UIID.albumTextField].value)).
+            Import alert exists: \(app.alerts["FLAC Import Error"].exists).
+            """
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(in: app, identifier: UIID.albumArtistTextField, expectedValue: "Test AlbumArtist"),
+            "Album Artist field value was \(String(describing: app.textFields[UIID.albumArtistTextField].value))"
+        )
+        XCTAssertTrue(
+            miscTagKeyField(in: app, key: "ENCODED_BY").waitForExistence(timeout: 2.0),
+            "ENCODED_BY field was not found"
+        )
     }
 
-    private func launchApp(importFixture: Bool = false, openAlbumArtSheet: Bool = false) -> XCUIApplication {
+    @MainActor
+    func testSettingsWindowPersistsSavePreferencesAcrossRelaunch() throws {
+        let app = try launchApp(resetSaveSettings: true)
+
+        openSettings(in: app)
+        XCTAssertTrue(settingsControl(in: app, identifier: UIID.settingsTabView).waitForExistence(timeout: 2.0))
+
+        selectPopupValue(
+            in: app,
+            identifier: UIID.defaultSavePayload,
+            menuItemTitle: "Write Pictures"
+        )
+        selectPopupValue(
+            in: app,
+            identifier: UIID.defaultSaveScope,
+            menuItemTitle: "Write to Selected Tracks"
+        )
+        clickSettingsTab(in: app, named: "Tags")
+        XCTAssertTrue(settingsControl(in: app, identifier: UIID.zeroPadTrackNumber).waitForExistence(timeout: 2.0))
+        selectPopupValue(
+            in: app,
+            identifier: UIID.trackCountKeyStrategy,
+            menuItemTitle: "TRACKTOTAL"
+        )
+        XCTAssertTrue(settingsControl(in: app, identifier: UIID.zeroPadDiscNumber).waitForExistence(timeout: 2.0))
+        selectPopupValue(
+            in: app,
+            identifier: UIID.discCountKeyStrategy,
+            menuItemTitle: "DISCTOTAL"
+        )
+
+        app.terminate()
+
+        let relaunchedApp = try launchApp(resetSaveSettings: false)
+        openSettings(in: relaunchedApp)
+        clickSettingsTab(in: relaunchedApp, named: "General")
+
+        XCTAssertEqual(
+            popupValue(in: relaunchedApp, identifier: UIID.defaultSavePayload),
+            "Write Pictures"
+        )
+        XCTAssertEqual(
+            popupValue(in: relaunchedApp, identifier: UIID.defaultSaveScope),
+            "Write to Selected Tracks"
+        )
+        clickSettingsTab(in: relaunchedApp, named: "Tags")
+        XCTAssertTrue(settingsControl(in: relaunchedApp, identifier: UIID.zeroPadTrackNumber).waitForExistence(timeout: 2.0))
+        XCTAssertEqual(
+            popupValue(in: relaunchedApp, identifier: UIID.trackCountKeyStrategy),
+            "TRACKTOTAL"
+        )
+        XCTAssertTrue(settingsControl(in: relaunchedApp, identifier: UIID.zeroPadDiscNumber).waitForExistence(timeout: 2.0))
+        XCTAssertEqual(
+            popupValue(in: relaunchedApp, identifier: UIID.discCountKeyStrategy),
+            "DISCTOTAL"
+        )
+    }
+
+    @MainActor
+    func testFileMenuSaveTagsPersistsTagEditsAcrossRelaunch() throws {
+        let destinationName = "save-tags-\(UUID().uuidString)"
+        let app = try launchApp(
+            importFixture: true,
+            persistentFixtureName: destinationName,
+            resetSaveSettings: true
+        )
+
+        clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Saved By Menu Tags")
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save Tags...")
+        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+
+        app.terminate()
+
+        let relaunchedApp = try launchApp(
+            importFixture: true,
+            persistentFixtureName: destinationName,
+            reuseImportedFixture: true,
+            resetSaveSettings: false
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: relaunchedApp,
+                identifier: UIID.albumTextField,
+                expectedValue: "Saved By Menu Tags"
+            )
+        )
+    }
+
+    @MainActor
+    func testFileMenuSavePicturesDoesNotPersistTagOnlyEditsAcrossRelaunch() throws {
+        let destinationName = "save-pictures-\(UUID().uuidString)"
+        let app = try launchApp(
+            importFixture: true,
+            persistentFixtureName: destinationName,
+            resetSaveSettings: true
+        )
+
+        clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Should Not Persist")
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save Pictures...")
+        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+
+        app.terminate()
+
+        let relaunchedApp = try launchApp(
+            importFixture: true,
+            persistentFixtureName: destinationName,
+            reuseImportedFixture: true,
+            resetSaveSettings: false
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: relaunchedApp,
+                identifier: UIID.albumTextField,
+                expectedValue: "Test Album"
+            )
+        )
+    }
+
+    @MainActor
+    func testFileMenuSaveUsesPersistedDefaultPayloadAcrossRelaunch() throws {
+        let destinationName = "save-default-\(UUID().uuidString)"
+        let app = try launchApp(
+            importFixture: true,
+            persistentFixtureName: destinationName,
+            resetSaveSettings: true
+        )
+
+        openSettings(in: app)
+        selectPopupValue(
+            in: app,
+            identifier: UIID.defaultSavePayload,
+            menuItemTitle: "Write Pictures"
+        )
+        typeEscape(in: app)
+
+        clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Default Save Should Not Persist")
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+
+        app.terminate()
+
+        let relaunchedApp = try launchApp(
+            importFixture: true,
+            persistentFixtureName: destinationName,
+            reuseImportedFixture: true,
+            resetSaveSettings: false
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: relaunchedApp,
+                identifier: UIID.albumTextField,
+                expectedValue: "Test Album"
+            )
+        )
+    }
+
+    private func launchApp(
+        importFixture: Bool = false,
+        fixtureFileName: String = "test.flac",
+        persistentFixtureName: String? = nil,
+        reuseImportedFixture: Bool = false,
+        openAlbumArtSheet: Bool = false,
+        resetSaveSettings: Bool = true
+    ) throws -> XCUIApplication {
         let app = XCUIApplication()
+        if resetSaveSettings {
+            app.launchEnvironment["UITEST_RESET_SAVE_SETTINGS"] = "1"
+            app.launchArguments.append("-UITEST_RESET_SAVE_SETTINGS")
+        }
         if importFixture {
-            app.launchEnvironment["UITEST_FLAC_PATH"] = fixtureFlacPath()
+            let fixturePath = fixtureFlacPath(fileName: fixtureFileName)
+            XCTAssertTrue(
+                FileManager.default.fileExists(atPath: fixturePath),
+                "UI test fixture was not found at \(fixturePath)"
+            )
+            let fixtureDataBase64 = try Data(contentsOf: URL(fileURLWithPath: fixturePath)).base64EncodedString()
+            app.launchEnvironment["UITEST_FLAC_PATH"] = fixturePath
+            app.launchEnvironment["UITEST_FLAC_DATA_BASE64"] = fixtureDataBase64
+            if let persistentFixtureName {
+                app.launchEnvironment["UITEST_FLAC_DESTINATION_NAME"] = persistentFixtureName
+            }
+            if reuseImportedFixture {
+                app.launchEnvironment["UITEST_REUSE_IMPORTED_FLAC"] = "1"
+            }
         }
         if openAlbumArtSheet {
             app.launchEnvironment["UITEST_OPEN_ALBUM_ART_SHEET"] = "1"
+            app.launchArguments.append("-UITEST_OPEN_ALBUM_ART_SHEET")
         }
         app.launch()
-        XCTAssertTrue(app.buttons[UIID.addMiscTagButton].waitForExistence(timeout: 2.0))
-        XCTAssertTrue(app.textFields[UIID.albumTextField].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.buttons[UIID.addMiscTagButton].waitForExistence(timeout: 10.0))
+        XCTAssertTrue(app.textFields[UIID.albumTextField].waitForExistence(timeout: 10.0))
         return app
     }
 
-    private func fixtureFlacPath() -> String {
-        URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("SwiftTagTestFiles")
-            .appendingPathComponent("test.flac")
-            .path
+    private func fixtureFlacPath(fileName: String) -> String {
+        let fileManager = FileManager.default
+        var searchURL = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+
+        while true {
+            let candidateURL = searchURL
+                .appendingPathComponent(Self.fixtureDirectoryName, isDirectory: true)
+                .appendingPathComponent(fileName)
+            if fileManager.fileExists(atPath: candidateURL.path) {
+                return candidateURL.path
+            }
+
+            let parentURL = searchURL.deletingLastPathComponent()
+            if parentURL.path == searchURL.path {
+                XCTFail("Unable to locate \(Self.fixtureDirectoryName)/\(fileName) from \(#filePath)")
+                return candidateURL.path
+            }
+            searchURL = parentURL
+        }
+    }
+
+    private func openSettings(in app: XCUIApplication) {
+        app.typeKey(",", modifierFlags: .command)
+        XCTAssertTrue(settingsControl(in: app, identifier: UIID.settingsTabView).waitForExistence(timeout: 2.0))
+    }
+
+    private func clickSettingsTab(in app: XCUIApplication, named tabName: String) {
+        let tabButton = app.buttons[tabName].firstMatch
+        let radioButton = app.radioButtons[tabName].firstMatch
+        let didFindTab = tabButton.waitForExistence(timeout: 1.0) || radioButton.waitForExistence(timeout: 1.0)
+        XCTAssertTrue(didFindTab)
+        let control = tabButton.exists ? tabButton : radioButton
+        XCTAssertTrue(control.exists)
+        control.tap()
+    }
+
+    private func popupButton(in app: XCUIApplication, identifier: String) -> XCUIElement {
+        settingsControl(in: app, identifier: identifier)
+    }
+
+    private func popupValue(in app: XCUIApplication, identifier: String) -> String? {
+        let popup = popupButton(in: app, identifier: identifier)
+        XCTAssertTrue(popup.waitForExistence(timeout: 2.0))
+        return popup.value as? String
+    }
+
+    private func selectPopupValue(in app: XCUIApplication, identifier: String, menuItemTitle: String) {
+        let popup = popupButton(in: app, identifier: identifier)
+        XCTAssertTrue(popup.waitForExistence(timeout: 2.0))
+        popup.tap()
+
+        let menuItem = app.menuItems[menuItemTitle].firstMatch
+        XCTAssertTrue(menuItem.waitForExistence(timeout: 2.0))
+        menuItem.tap()
+    }
+
+    private func settingsControl(in app: XCUIApplication, identifier: String) -> XCUIElement {
+        app.descendants(matching: .any)
+            .matching(identifier: identifier)
+            .firstMatch
+    }
+
+    private func clickMenuItem(in app: XCUIApplication, menuBarItem: String, menuItem: String) {
+        let menuBarButton = app.menuBars.menuBarItems[menuBarItem]
+        XCTAssertTrue(menuBarButton.waitForExistence(timeout: 2.0))
+        menuBarButton.click()
+
+        let item = app.menuItems[menuItem].firstMatch
+        XCTAssertTrue(item.waitForExistence(timeout: 2.0))
+        item.click()
+    }
+
+    private func typeEscape(in app: XCUIApplication) {
+        app.typeKey(XCUIKeyboardKey.escape.rawValue, modifierFlags: [])
     }
 
     private func addMiscTagRow(in app: XCUIApplication, key: String) {
@@ -198,11 +468,22 @@ final class SwiftTagUITests: XCTestCase {
         in app: XCUIApplication,
         identifier: String,
         expectedValue: String,
-        timeout: TimeInterval = 3.0
+        timeout: TimeInterval = 10.0
     ) -> Bool {
         let textField = app.textFields[identifier]
-        let predicate = NSPredicate(format: "value == %@", expectedValue)
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: textField)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+        guard textField.waitForExistence(timeout: timeout) else {
+            return false
+        }
+
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if let value = textField.value as? String, value == expectedValue {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
     }
 }

@@ -2,6 +2,26 @@ import Foundation
 import Observation
 import SwiftUI
 
+enum TagEditorSaveError: LocalizedError {
+    case noTracksToSave
+    case failedToResolveAccess(path: String)
+    case failedToAccessFile(path: String)
+    case partialFailure(messages: [String])
+
+    var errorDescription: String? {
+        switch self {
+        case .noTracksToSave:
+            return "There are no imported FLAC tracks available for the requested save operation."
+        case let .failedToResolveAccess(path):
+            return "Failed to resolve security-scoped access for \(path). Re-import the file and try again."
+        case let .failedToAccessFile(path):
+            return "Failed to access \(path) for writing."
+        case let .partialFailure(messages):
+            return messages.joined(separator: "\n")
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class TagEditorViewModel {
@@ -18,38 +38,7 @@ final class TagEditorViewModel {
     private let totalTrackTagKeys: [String] = ["TOTALTRACKS", "TRACKTOTAL"]
 
     init() {
-        trackItems = [
-            Track(tags: [
-                TagKey.number: "1",
-                TagKey.title: "Intro",
-                TagKey.filename: "01-intro.wav",
-                TagKey.artist: "",
-                TagKey.composer: "",
-                TagKey.location: "",
-                TagKey.date: DateTagFormatter.format(.now),
-                TagKey.description: "Opening track"
-            ]),
-            Track(tags: [
-                TagKey.number: "2",
-                TagKey.title: "Verse",
-                TagKey.filename: "02-verse.wav",
-                TagKey.artist: "",
-                TagKey.composer: "",
-                TagKey.location: "",
-                TagKey.date: DateTagFormatter.format(.now),
-                TagKey.description: "Main section"
-            ]),
-            Track(tags: [
-                TagKey.number: "3",
-                TagKey.title: "Outro",
-                TagKey.filename: "03-outro.wav",
-                TagKey.artist: "",
-                TagKey.composer: "",
-                TagKey.location: "",
-                TagKey.date: DateTagFormatter.format(.now),
-                TagKey.description: "Closing section"
-            ])
-        ]
+        trackItems = []
     }
 
     var totalTracks: String {
@@ -114,6 +103,14 @@ final class TagEditorViewModel {
 
     private var normalizedTotalDiscsValue: String {
         Int(totalDiscs).map(String.init) ?? totalDiscs
+    }
+
+    var hasImportedFlacTracks: Bool {
+        trackItems.contains(where: \.isImportedFlacTrack)
+    }
+
+    func canSave(scope: SaveScopeOption) -> Bool {
+        !saveTrackIndices(for: scope).isEmpty
     }
 
     func titleBinding(for trackID: UUID) -> Binding<String>? {
@@ -404,8 +401,8 @@ final class TagEditorViewModel {
         ]
 
         let sortedTracks = trackItems.sorted {
-            let lhs = Int($0.tags[TagKey.number] ?? "") ?? 0
-            let rhs = Int($1.tags[TagKey.number] ?? "") ?? 0
+            let lhs = Int($0.tags[TagKey.trackNumber] ?? "") ?? 0
+            let rhs = Int($1.tags[TagKey.trackNumber] ?? "") ?? 0
             if lhs == rhs {
                 return ($0.tags[TagKey.title] ?? "") < ($1.tags[TagKey.title] ?? "")
             }
@@ -414,7 +411,7 @@ final class TagEditorViewModel {
 
         for track in sortedTracks {
             lines.append("[[tracks]]")
-            lines.append("number = \(track.tags[TagKey.number] ?? "0")")
+            lines.append("number = \(track.tags[TagKey.trackNumber] ?? "0")")
             lines.append("title = '''\(track.tags[TagKey.title] ?? "")'''")
             lines.append("filename = '''\(track.tags[TagKey.filename] ?? "")'''")
             lines.append("artist = '''\(track.tags[TagKey.artist] ?? "")'''")
@@ -444,6 +441,7 @@ final class TagEditorViewModel {
             let metadata = try FlacMetadataService.readTags(for: fileURL)
             let tags = metadata.tags
             let trackPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+            let bookmarkData = try fileURL.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
 
             for (pictureType, pictureData) in trackPicturesByType where importedPicturesByType[pictureType] == nil {
                 importedPicturesByType[pictureType] = pictureData
@@ -467,12 +465,68 @@ final class TagEditorViewModel {
                 fileURL: fileURL,
                 defaultDate: .now
             )
-            importedTracks.append(Track(tags: trackTags, flacPicturesByType: trackPicturesByType))
+            importedTracks.append(
+                Track(
+                    tags: trackTags,
+                    flacPicturesByType: trackPicturesByType,
+                    sourceFileURL: fileURL,
+                    securityScopedBookmarkData: bookmarkData
+                )
+            )
         }
 
         importedFlacPicturesByType = importedPicturesByType
-        trackItems.append(contentsOf: importedTracks)
+        trackItems = importedTracks
+        selectedTrackIDs.removeAll()
         reloadMiscTagRowsFromSelection()
+    }
+
+    func save(
+        payload: SavePayloadOption,
+        scope: SaveScopeOption,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) throws {
+        let trackIndices = saveTrackIndices(for: scope)
+        guard !trackIndices.isEmpty else {
+            throw TagEditorSaveError.noTracksToSave
+        }
+
+        var failures: [String] = []
+
+        for index in trackIndices {
+            let track = trackItems[index]
+
+            do {
+                try withAccessingSecurityScopedTrackURL(for: index) { fileURL in
+                    let tags = payload.writesTags
+                        ? FlacWriteMapper.makeTags(
+                            for: track,
+                            album: album,
+                            albumArtist: albumArtist,
+                            totalTracks: trackItems.count,
+                            totalDiscs: totalDiscs,
+                            options: tagWriteOptions
+                        )
+                        : [:]
+
+                    try FlacMetadataService.writeMetadata(
+                        tags: tags,
+                        pictures: payload.writesPictures ? albumArtPictures : [],
+                        to: fileURL,
+                        writeTags: payload.writesTags,
+                        writePictures: payload.writesPictures
+                    )
+                }
+            } catch {
+                let path = track.sourceFileURL?.path ?? track.tags[TagKey.filename] ?? "Unknown file"
+                failures.append("\(path): \((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)")
+            }
+        }
+
+        guard failures.isEmpty else {
+            throw TagEditorSaveError.partialFailure(messages: failures)
+        }
     }
 
     private func setMiscTagValueForSelectedTracks(key: String, value: String) {
@@ -494,5 +548,63 @@ final class TagEditorViewModel {
         return miscTagRows.contains { row in
             row.id != rowID && normalizedTagKey(row.key) == normalizedKey
         }
+    }
+
+    private func saveTrackIndices(for scope: SaveScopeOption) -> [Int] {
+        switch scope {
+        case .selectedTracks:
+            return trackItems.indices.filter { index in
+                selectedTrackIDs.contains(trackItems[index].id) && trackItems[index].isImportedFlacTrack
+            }
+        case .allTracks:
+            return trackItems.indices.filter { trackItems[$0].isImportedFlacTrack }
+        }
+    }
+
+    private func withAccessingSecurityScopedTrackURL<T>(
+        for index: Int,
+        _ body: (URL) throws -> T
+    ) throws -> T {
+        guard trackItems.indices.contains(index) else {
+            throw TagEditorSaveError.noTracksToSave
+        }
+
+        let track = trackItems[index]
+        guard let bookmarkData = track.securityScopedBookmarkData else {
+            guard let sourceFileURL = track.sourceFileURL else {
+                throw TagEditorSaveError.failedToResolveAccess(path: track.tags[TagKey.filename] ?? "Unknown file")
+            }
+
+            return try body(sourceFileURL)
+        }
+
+        var isStale = false
+        let resolvedURL = try URL(
+            resolvingBookmarkData: bookmarkData,
+            options: [.withSecurityScope, .withoutUI],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+
+        if isStale {
+            trackItems[index].securityScopedBookmarkData = try resolvedURL.bookmarkData(
+                options: .withSecurityScope,
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+        }
+
+        let didAccess = resolvedURL.startAccessingSecurityScopedResource()
+        defer {
+            if didAccess {
+                resolvedURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        guard didAccess else {
+            throw TagEditorSaveError.failedToAccessFile(path: resolvedURL.path)
+        }
+
+        return try body(resolvedURL)
     }
 }

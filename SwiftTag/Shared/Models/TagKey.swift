@@ -1,8 +1,8 @@
 import Foundation
 
 enum TagKey {
-    static let number = "NUMBER"
-    static let disc = "DISC"
+    static let trackNumber = "TRACKNUMBER"
+    static let discNumber = "DISCNUMBER"
     static let genre = "GENRE"
     static let title = "TITLE"
     static let filename = "FILENAME"
