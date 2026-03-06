@@ -1,0 +1,25 @@
+## Xcode User Settings
+# Ignore individual user data, but keep shared team data
+xcuserdata/
+xcdebugger/
+ThirdParty/
+
+## Shared Data Exceptions
+# Ensure shared schemes and team settings ARE tracked
+!xcshareddata/
+!xcschemes/
+
+## Build Artifacts and Derived Data
+# Ignore local build results and cache
+DerivedData/
+build/
+
+## Other Xcode Metadata
+# Ignore temporary and state files
+*.moved-aside
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+
+## vi/vim
+*.swp

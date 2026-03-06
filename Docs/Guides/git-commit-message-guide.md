@@ -321,7 +321,14 @@ Examples of lockfiles: `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `Carg
 
 ## Platform & IDE Considerations
 
--  When running on macOS and in Xcode (Code Assistant): present result in a copyable snippet
+When running on macOS inside Xcode Code Assistant:
+
+- Present the final result inside a single copyable code block.
+- The code block must contain the commit message text only.
+- Do not add prose before or after the code block.
+- Do not include labels such as `Commit message:` or explanatory text.
+- This is a presentation requirement only. The commit message content inside the code block must still
+  follow all commit-formatting rules in this guide.
 
 ## Critical Requirements
 
@@ -331,7 +338,8 @@ Examples of lockfiles: `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `Carg
 4. NO questions or comments
 5. NO formatting instructions or metadata
 6. RESPECT the maximum number of 100 characters per line
-7. DO NOT wrap the output in any special characters or delimiters such as ```
+7. Outside Xcode Code Assistant output, DO NOT wrap the output in delimiters such as ```
+8. In Xcode Code Assistant output, use exactly one code block and put only the commit message inside it
 
 ## Examples
 
