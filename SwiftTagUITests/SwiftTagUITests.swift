@@ -153,29 +153,13 @@ final class SwiftTagUITests: XCTestCase {
         openSettings(in: app)
         XCTAssertTrue(settingsControl(in: app, identifier: UIID.settingsTabView).waitForExistence(timeout: 2.0))
 
-        selectPopupValue(
-            in: app,
-            identifier: UIID.defaultSavePayload,
-            menuItemTitle: "Write Pictures"
-        )
-        selectPopupValue(
-            in: app,
-            identifier: UIID.defaultSaveScope,
-            menuItemTitle: "Write to Selected Tracks"
-        )
+        selectRadioButton(in: app, titled: "Write Pictures")
+        selectRadioButton(in: app, titled: "Write to Selected Tracks")
         clickSettingsTab(in: app, named: "Tags")
         XCTAssertTrue(settingsControl(in: app, identifier: UIID.zeroPadTrackNumber).waitForExistence(timeout: 2.0))
-        selectPopupValue(
-            in: app,
-            identifier: UIID.trackCountKeyStrategy,
-            menuItemTitle: "TRACKTOTAL"
-        )
+        selectRadioButton(in: app, titled: "TRACKTOTAL")
         XCTAssertTrue(settingsControl(in: app, identifier: UIID.zeroPadDiscNumber).waitForExistence(timeout: 2.0))
-        selectPopupValue(
-            in: app,
-            identifier: UIID.discCountKeyStrategy,
-            menuItemTitle: "DISCTOTAL"
-        )
+        selectRadioButton(in: app, titled: "DISCTOTAL")
 
         app.terminate()
 
@@ -183,25 +167,13 @@ final class SwiftTagUITests: XCTestCase {
         openSettings(in: relaunchedApp)
         clickSettingsTab(in: relaunchedApp, named: "General")
 
-        XCTAssertEqual(
-            popupValue(in: relaunchedApp, identifier: UIID.defaultSavePayload),
-            "Write Pictures"
-        )
-        XCTAssertEqual(
-            popupValue(in: relaunchedApp, identifier: UIID.defaultSaveScope),
-            "Write to Selected Tracks"
-        )
+        XCTAssertTrue(radioButton(in: relaunchedApp, titled: "Write Pictures").isSelected)
+        XCTAssertTrue(radioButton(in: relaunchedApp, titled: "Write to Selected Tracks").isSelected)
         clickSettingsTab(in: relaunchedApp, named: "Tags")
         XCTAssertTrue(settingsControl(in: relaunchedApp, identifier: UIID.zeroPadTrackNumber).waitForExistence(timeout: 2.0))
-        XCTAssertEqual(
-            popupValue(in: relaunchedApp, identifier: UIID.trackCountKeyStrategy),
-            "TRACKTOTAL"
-        )
+        XCTAssertTrue(radioButton(in: relaunchedApp, titled: "TRACKTOTAL").isSelected)
         XCTAssertTrue(settingsControl(in: relaunchedApp, identifier: UIID.zeroPadDiscNumber).waitForExistence(timeout: 2.0))
-        XCTAssertEqual(
-            popupValue(in: relaunchedApp, identifier: UIID.discCountKeyStrategy),
-            "DISCTOTAL"
-        )
+        XCTAssertTrue(radioButton(in: relaunchedApp, titled: "DISCTOTAL").isSelected)
     }
 
     @MainActor
@@ -274,11 +246,7 @@ final class SwiftTagUITests: XCTestCase {
         )
 
         openSettings(in: app)
-        selectPopupValue(
-            in: app,
-            identifier: UIID.defaultSavePayload,
-            menuItemTitle: "Write Pictures"
-        )
+        selectRadioButton(in: app, titled: "Write Pictures")
         typeEscape(in: app)
 
         clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Default Save Should Not Persist")
@@ -377,24 +345,14 @@ final class SwiftTagUITests: XCTestCase {
         control.tap()
     }
 
-    private func popupButton(in app: XCUIApplication, identifier: String) -> XCUIElement {
-        settingsControl(in: app, identifier: identifier)
+    private func radioButton(in app: XCUIApplication, titled title: String) -> XCUIElement {
+        app.radioButtons[title].firstMatch
     }
 
-    private func popupValue(in app: XCUIApplication, identifier: String) -> String? {
-        let popup = popupButton(in: app, identifier: identifier)
-        XCTAssertTrue(popup.waitForExistence(timeout: 2.0))
-        return popup.value as? String
-    }
-
-    private func selectPopupValue(in app: XCUIApplication, identifier: String, menuItemTitle: String) {
-        let popup = popupButton(in: app, identifier: identifier)
-        XCTAssertTrue(popup.waitForExistence(timeout: 2.0))
-        popup.tap()
-
-        let menuItem = app.menuItems[menuItemTitle].firstMatch
-        XCTAssertTrue(menuItem.waitForExistence(timeout: 2.0))
-        menuItem.tap()
+    private func selectRadioButton(in app: XCUIApplication, titled title: String) {
+        let button = radioButton(in: app, titled: title)
+        XCTAssertTrue(button.waitForExistence(timeout: 2.0))
+        button.tap()
     }
 
     private func settingsControl(in app: XCUIApplication, identifier: String) -> XCUIElement {
