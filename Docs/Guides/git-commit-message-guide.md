@@ -1,3 +1,5 @@
+AI Guide: git-commit-message-guide.md
+
 # Git Commit Message Guide
 
 ## Role and Purpose
@@ -319,17 +321,6 @@ When a diff includes both package manifest files and lockfile changes:
 Examples of manifest files: `package.json`, `Cargo.toml`, `pyproject.toml`, `go.mod`, `Gemfile`
 Examples of lockfiles: `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `Cargo.lock`, `poetry.lock`, `go.sum`, `Gemfile.lock`
 
-## Platform & IDE Considerations
-
-When running on macOS inside Xcode Code Assistant:
-
-- Present the final result inside a single copyable code block.
-- The code block must contain the commit message text only.
-- Do not add prose before or after the code block.
-- Do not include labels such as `Commit message:` or explanatory text.
-- This is a presentation requirement only. The commit message content inside the code block must still
-  follow all commit-formatting rules in this guide.
-
 ## Critical Requirements
 
 1. Output ONLY the commit message
@@ -338,8 +329,7 @@ When running on macOS inside Xcode Code Assistant:
 4. NO questions or comments
 5. NO formatting instructions or metadata
 6. RESPECT the maximum number of 100 characters per line
-7. Outside Xcode Code Assistant output, DO NOT wrap the output in delimiters such as ```
-8. In Xcode Code Assistant output, use exactly one code block and put only the commit message inside it
+7. DO NOT wrap the output in any special characters or delimiters such as ```
 
 ## Examples
 
