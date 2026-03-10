@@ -24,6 +24,7 @@ Out of scope:
 - Clicking the notification should prefer the already-open window that contains the saved track files and should not reload tracks into that window.
 - If that window is not open, clicking the notification should open a new editor window and load the tracks described by the notification payload.
 - The source of truth for “the given set of tracks” is the set of saved FLAC file URLs/bookmarks produced by the completed save operation.
+- The notification payload must use bookmark data refreshed from the file state after the save finishes, not bookmark data captured before writeback begins.
 
 ## Dependencies And Constraints
 - The app currently uses a single generic `WindowGroup` in [SwiftTagApp.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/SwiftTagApp.swift), so notification routing requires explicit scene/value identity rather than relying on the current one-window setup.
@@ -47,6 +48,7 @@ Out of scope:
 - UI tests for Notification Center interactions can be flaky or unavailable in Xcode automation. The implementation should isolate routing and payload parsing so most coverage stays in unit tests.
 - Opening a new window from a notification requires scene-safe routing and may expose SwiftUI state-restoration behavior. Explicit restoration behavior may be needed if automatic restoration conflicts with notification-targeted opens.
 - Bookmark resolution for notification-triggered reopen must respect sandbox rules and may require stale-bookmark refresh logic similar to the current save path.
+- FLAC fixtures without padding can trigger full-file rewrite behavior, so save-notification verification must explicitly cover `test.flac` to ensure the notification payload/store uses the final post-save bookmark produced after rewrite. Use `test-with_padding.flac` only for separate in-place-write coverage if needed.
 
 ## Implementation Phases
 
@@ -98,6 +100,7 @@ Out of scope:
   - The actual saved track set
   - Payload type written
   - Originating editor session id
+- Refresh each saved track’s bookmark from the written file after the save completes and use that refreshed bookmark in the save result.
 - Trigger notification scheduling only after the save operation completes with no failures.
 - Do not emit a success notification for partial failures unless product behavior is explicitly changed to support a mixed-result notification.
 
@@ -149,6 +152,7 @@ Out of scope:
   - Successful tag save schedules a notification payload for only the written track set
   - Successful picture-only save schedules the correct payload kind
   - Partial failures do not schedule a success notification
+  - Use `test.flac` for a save-result bookmark test that resolves the returned post-save bookmark after rewrite and confirms it reads the updated file
 - Add targeted UI tests only for app-controlled flows:
   - A save operation produces observable in-app state that confirms a notification request was enqueued or recorded in a test seam
   - Opening a new window from a simulated notification response loads the expected fixture tracks
@@ -165,6 +169,7 @@ Out of scope:
 - Clicking the notification while the matching editor window is already open brings that window to the front without reloading tracks or overwriting in-progress edits.
 - Clicking the notification when no matching window is open creates a new editor window and loads the saved tracks into that new session.
 - Selected-track saves reopen or foreground using only the tracks actually written by that save.
+- The saved-track descriptors stored for notification reopening use bookmark data refreshed from the final written file state.
 - Notification scheduling failure or denied authorization does not cause the save operation itself to fail.
 - Notification response failures caused by missing files or invalid bookmark data are surfaced cleanly and do not crash the app.
 - The implementation is covered by unit tests for payloads, matching, and routing, plus targeted integration/UI verification for notification-triggered window behavior.

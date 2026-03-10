@@ -1,6 +1,6 @@
 import Foundation
 
-enum SavePayloadOption: String, CaseIterable, Identifiable {
+enum SavePayloadOption: String, CaseIterable, Identifiable, Codable {
     case writeTags
     case writePictures
     case writeTagsAndPictures
@@ -37,7 +37,7 @@ enum SavePayloadOption: String, CaseIterable, Identifiable {
     }
 }
 
-enum SaveScopeOption: String, CaseIterable, Identifiable {
+enum SaveScopeOption: String, CaseIterable, Identifiable, Codable {
     case selectedTracks
     case allTracks
 
@@ -53,7 +53,7 @@ enum SaveScopeOption: String, CaseIterable, Identifiable {
     }
 }
 
-enum TrackCountKeyStrategy: String, CaseIterable, Identifiable {
+enum TrackCountKeyStrategy: String, CaseIterable, Identifiable, Codable {
     case totalTracks
     case trackTotal
     case both
@@ -75,7 +75,7 @@ enum TrackCountKeyStrategy: String, CaseIterable, Identifiable {
     }
 }
 
-enum DiscCountKeyStrategy: String, CaseIterable, Identifiable {
+enum DiscCountKeyStrategy: String, CaseIterable, Identifiable, Codable {
     case totalDiscs
     case discTotal
     case both

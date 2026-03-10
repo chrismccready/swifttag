@@ -130,7 +130,7 @@ Before stating that a plan is ready for implementation, confirm that it includes
 - If the user requests `full visible user and assistant turns verbatim where available`, or if no different transcript format is specified, then transcript creation should follow these rules:
   - include full visible user turns
   - include full visible assistant replies as shown in the visible conversation history
-  - exclude hidden system messages, developer messages, hidden reasoning, and any content not visible in the chat
+  - exclude hidden system messages, hidden reasoning, and any content not visible in the chat
   - do not invent or reconstruct missing text that is not present in the visible conversation history
   - if some earlier visible content is no longer fully available in context, state that limitation in the transcript rather than fabricating missing text
 - If exact timestamps for individual turns are available in the visible conversation data, place them in headers using the format `## User YYYY-MM-DDTHH:mm:ssZ` or `## Assistant YYYY-MM-DDTHH:mm:ssZ`.

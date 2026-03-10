@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import Testing
+import XCTest
 @testable import SwiftTag
 
 struct SwiftTagTests {
@@ -62,6 +63,14 @@ struct SwiftTagTests {
             tags: tags,
             sourceFileURL: fileURL
         )
+    }
+
+    @MainActor
+    static func notificationUserInfo(for payload: SaveNotificationPayload) throws -> [AnyHashable: Any] {
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(payload)
+        let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
+        return jsonObject as? [AnyHashable: Any] ?? [:]
     }
 
     @Test
@@ -571,7 +580,7 @@ struct SwiftTagTests {
         viewModel.trackItems = [selectedTrack, unselectedTrack]
         viewModel.selectedTrackIDs = [selectedTrack.id]
 
-        try viewModel.save(
+        _ = try viewModel.save(
             payload: .writeTags,
             scope: .selectedTracks,
             tagWriteOptions: TagWriteOptions(
@@ -580,7 +589,8 @@ struct SwiftTagTests {
                 zeroPadDiscNumber: true,
                 discCountKeyStrategy: .totalDiscs
             ),
-            albumArtPictures: []
+            albumArtPictures: [],
+            editorSessionID: UUID()
         )
 
         let selectedRecord = try FlacMetadataService.readTags(for: selectedFileURL)
@@ -617,7 +627,7 @@ struct SwiftTagTests {
             )
         ]
 
-        try viewModel.save(
+        _ = try viewModel.save(
             payload: .writePictures,
             scope: .allTracks,
             tagWriteOptions: TagWriteOptions(
@@ -633,7 +643,8 @@ struct SwiftTagTests {
                     description: "Cover (front)",
                     data: pictureData
                 )
-            ]
+            ],
+            editorSessionID: UUID()
         )
 
         let rewrittenRecord = try FlacMetadataService.readTags(for: fileURL)
@@ -672,7 +683,7 @@ struct SwiftTagTests {
         viewModel.totalDiscs = "1"
         viewModel.trackItems = [firstTrack, secondTrack]
 
-        try viewModel.save(
+        _ = try viewModel.save(
             payload: .writeTags,
             scope: .allTracks,
             tagWriteOptions: TagWriteOptions(
@@ -681,7 +692,8 @@ struct SwiftTagTests {
                 zeroPadDiscNumber: true,
                 discCountKeyStrategy: .totalDiscs
             ),
-            albumArtPictures: []
+            albumArtPictures: [],
+            editorSessionID: UUID()
         )
 
         let firstRecord = try FlacMetadataService.readTags(for: firstFileURL)
@@ -690,5 +702,384 @@ struct SwiftTagTests {
         #expect(secondRecord.tags["ALBUM"] == "All Tracks Album")
         #expect(firstRecord.tags["ALBUMARTIST"] == "All Tracks Artist")
         #expect(secondRecord.tags["ALBUMARTIST"] == "All Tracks Artist")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSaveReturnsFinalBookmarkAfterRewrite() throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "save-notification-rewrite.flac")
+        let originalBookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+
+        let track = Track(
+            tags: [
+                TagKey.title: "Padded Title",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1"
+            ],
+            sourceFileURL: fileURL,
+            securityScopedBookmarkData: originalBookmarkData
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Padded Save Album"
+        viewModel.albumArtist = "Padded Save Artist"
+        viewModel.totalDiscs = "1"
+        viewModel.trackItems = [track]
+
+        let result = try viewModel.save(
+            payload: .writeTags,
+            scope: .allTracks,
+            tagWriteOptions: TagWriteOptions(
+                zeroPadTrackNumber: true,
+                trackCountKeyStrategy: .both,
+                zeroPadDiscNumber: true,
+                discCountKeyStrategy: .totalDiscs
+            ),
+            albumArtPictures: [],
+            editorSessionID: UUID()
+        )
+
+        #expect(result.trackReferences.count == 1)
+        let savedReference = try #require(result.trackReferences.first)
+        let refreshedBookmarkData = try #require(savedReference.securityScopedBookmarkData)
+        #expect(viewModel.trackItems.first?.securityScopedBookmarkData == refreshedBookmarkData)
+
+        var isStale = false
+        let resolvedURL = try URL(
+            resolvingBookmarkData: refreshedBookmarkData,
+            options: [.withSecurityScope, .withoutUI],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+        #expect(!isStale)
+
+        let didAccess = resolvedURL.startAccessingSecurityScopedResource()
+        #expect(didAccess)
+        defer {
+            if didAccess {
+                resolvedURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let savedRecord = try FlacMetadataService.readTags(for: resolvedURL)
+        #expect(savedRecord.tags["ALBUM"] == "Padded Save Album")
+        #expect(savedRecord.tags["ALBUMARTIST"] == "Padded Save Artist")
+        #expect(savedReference.filePath == resolvedURL.path)
+
+        var originalBookmarkIsStale = false
+        let originalResolvedURL = try URL(
+            resolvingBookmarkData: originalBookmarkData,
+            options: [.withSecurityScope, .withoutUI],
+            relativeTo: nil,
+            bookmarkDataIsStale: &originalBookmarkIsStale
+        )
+        #expect(!originalBookmarkIsStale)
+        #expect(originalResolvedURL.path == resolvedURL.path)
+    }
+
+    @Test
+    @MainActor
+    func saveNotificationPreparationPersistsFinalSavedBookmarkAfterRewrite() throws {
+        let suiteName = "SwiftTagTests.SaveNotificationPreparation.\(UUID().uuidString)"
+        guard let userDefaults = UserDefaults(suiteName: suiteName) else {
+            Issue.record("Failed to create isolated UserDefaults suite")
+            return
+        }
+
+        let fileURL = try Self.tempFixtureCopyURL(name: "save-notification-store-rewrite.flac")
+        let originalBookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+
+        let track = Track(
+            tags: [
+                TagKey.title: "Store Title",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1"
+            ],
+            sourceFileURL: fileURL,
+            securityScopedBookmarkData: originalBookmarkData
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Stored Notification Album"
+        viewModel.albumArtist = "Stored Notification Artist"
+        viewModel.totalDiscs = "1"
+        viewModel.trackItems = [track]
+
+        let saveResult = try viewModel.save(
+            payload: .writeTags,
+            scope: .allTracks,
+            tagWriteOptions: TagWriteOptions(
+                zeroPadTrackNumber: true,
+                trackCountKeyStrategy: .both,
+                zeroPadDiscNumber: true,
+                discCountKeyStrategy: .totalDiscs
+            ),
+            albumArtPictures: [],
+            editorSessionID: UUID()
+        )
+
+        let coordinator = SaveNotificationCoordinator(userDefaults: userDefaults)
+        let payload = coordinator.prepareSuccessNotification(for: saveResult)
+        let record = try #require(coordinator.reopenRecord(for: payload.reopenRecordID))
+        let savedReference = try #require(record.trackReferences.first)
+        let savedBookmarkData = try #require(savedReference.securityScopedBookmarkData)
+
+        var isStale = false
+        let resolvedURL = try URL(
+            resolvingBookmarkData: savedBookmarkData,
+            options: [.withSecurityScope, .withoutUI],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+        #expect(!isStale)
+        #expect(savedReference.filePath == resolvedURL.path)
+
+        let didAccess = resolvedURL.startAccessingSecurityScopedResource()
+        #expect(didAccess)
+        defer {
+            if didAccess {
+                resolvedURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let savedRecord = try FlacMetadataService.readTags(for: resolvedURL)
+        #expect(savedRecord.tags["ALBUM"] == "Stored Notification Album")
+        #expect(savedRecord.tags["ALBUMARTIST"] == "Stored Notification Artist")
+    }
+
+}
+
+final class SaveNotificationCoordinatorTests: XCTestCase {
+    func testTrackSetFingerprintUsesStableSortedPaths() {
+        let fingerprint = TrackSetFingerprint.make(from: [
+            "/tmp/b.flac",
+            "/tmp/a.flac"
+        ])
+
+        XCTAssertEqual(fingerprint, "/tmp/a.flac\n/tmp/b.flac")
+    }
+
+    @MainActor
+    func testSaveNotificationStorePersistsReopenRecords() {
+        let suiteName = "SwiftTagTests.SaveNotificationCoordinator.\(UUID().uuidString)"
+        guard let userDefaults = UserDefaults(suiteName: suiteName) else {
+            XCTFail("Failed to create isolated UserDefaults suite")
+            return
+        }
+
+        let store = SaveNotificationStore(userDefaults: userDefaults)
+        store.resetForTesting()
+
+        let record = SaveReopenRecord(
+            sourceSessionID: UUID(),
+            payload: .writeTagsAndPictures,
+            fingerprint: "/tmp/test.flac",
+            trackReferences: [
+                ImportedTrackReference(
+                    filePath: "/tmp/test.flac",
+                    securityScopedBookmarkData: nil
+                )
+            ]
+        )
+        store.saveReopenRecord(record)
+
+        XCTAssertEqual(store.reopenRecord(for: record.id), record)
+    }
+
+    @MainActor
+    func testPrepareSuccessNotificationRecordsLastScheduledPayload() {
+        let coordinator = SaveNotificationCoordinator.shared
+        coordinator.resetForTesting()
+        defer {
+            coordinator.resetForTesting()
+        }
+
+        let sourceSessionID = UUID()
+        let trackReferences = [
+            ImportedTrackReference(
+                filePath: "/tmp/rewritten.flac",
+                securityScopedBookmarkData: Data([0x01, 0x02, 0x03])
+            )
+        ]
+        let result = SaveOperationResult(
+            sourceSessionID: sourceSessionID,
+            payload: .writeTags,
+            trackReferences: trackReferences,
+            fingerprint: TrackSetFingerprint.make(from: trackReferences)
+        )
+
+        let payload = coordinator.prepareSuccessNotification(for: result)
+
+        XCTAssertEqual(coordinator.lastScheduledPayload(), payload)
+        let storedRecord = coordinator.reopenRecord(for: payload.reopenRecordID)
+        XCTAssertEqual(storedRecord?.id, payload.reopenRecordID)
+        XCTAssertEqual(storedRecord?.sourceSessionID, result.sourceSessionID)
+        XCTAssertEqual(storedRecord?.payload, result.payload)
+        XCTAssertEqual(storedRecord?.fingerprint, result.fingerprint)
+        XCTAssertEqual(storedRecord?.trackReferences, result.trackReferences)
+    }
+
+    @MainActor
+    func testEditorWindowCoordinatorFindsRegisteredSessionByFingerprint() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let sessionValue = EditorSessionValue(sessionID: UUID())
+        let references = [
+            ImportedTrackReference(filePath: "/tmp/example.flac", securityScopedBookmarkData: nil)
+        ]
+        let fingerprint = TrackSetFingerprint.make(from: references)
+
+        coordinator.register(sessionValue: sessionValue, trackReferences: references)
+
+        XCTAssertEqual(coordinator.existingSession(forFingerprint: fingerprint), sessionValue)
+    }
+
+    @MainActor
+    func testEditorWindowCoordinatorFindsRegisteredSessionForSavedSubset() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let sessionValue = EditorSessionValue(sessionID: UUID())
+        let allReferences = [
+            ImportedTrackReference(filePath: "/tmp/a.flac", securityScopedBookmarkData: nil),
+            ImportedTrackReference(filePath: "/tmp/b.flac", securityScopedBookmarkData: nil)
+        ]
+        let savedSubset = [
+            ImportedTrackReference(filePath: "/tmp/a.flac", securityScopedBookmarkData: nil)
+        ]
+        let savedFingerprint = TrackSetFingerprint.make(from: savedSubset)
+
+        coordinator.register(sessionValue: sessionValue, trackReferences: allReferences)
+
+        XCTAssertEqual(coordinator.existingSession(forFingerprint: savedFingerprint), sessionValue)
+    }
+
+    @MainActor
+    func testNotificationResponseUsesExistingSessionWhenFingerprintMatches() throws {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let existingSession = EditorSessionValue(sessionID: UUID())
+        let references = [
+            ImportedTrackReference(filePath: "/tmp/existing.flac", securityScopedBookmarkData: nil)
+        ]
+        let fingerprint = TrackSetFingerprint.make(from: references)
+        coordinator.register(sessionValue: existingSession, trackReferences: references)
+
+        var openedSession: EditorSessionValue?
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSession = sessionValue
+        }
+
+        let payload = SaveNotificationPayload(
+            reopenRecordID: UUID(),
+            sourceSessionID: UUID(),
+            payload: .writeTags,
+            fingerprint: fingerprint,
+            trackCount: 1
+        )
+
+        SaveNotificationCoordinator.shared.handleNotificationResponse(
+            userInfo: try SwiftTagTests.notificationUserInfo(for: payload)
+        )
+
+        XCTAssertEqual(openedSession, existingSession)
+    }
+
+    @MainActor
+    func testNotificationResponseOpensNewSessionWhenNoFingerprintMatches() throws {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+        SaveNotificationCoordinator.shared.resetForTesting()
+
+        var openedSession: EditorSessionValue?
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSession = sessionValue
+        }
+
+        let reopenRecordID = UUID()
+        SaveNotificationCoordinator.shared.saveReopenRecord(
+            SaveReopenRecord(
+                id: reopenRecordID,
+                sourceSessionID: UUID(),
+                payload: .writePictures,
+                fingerprint: "/tmp/missing.flac",
+                trackReferences: [
+                    ImportedTrackReference(filePath: "/tmp/missing.flac", securityScopedBookmarkData: nil)
+                ]
+            )
+        )
+        let payload = SaveNotificationPayload(
+            reopenRecordID: reopenRecordID,
+            sourceSessionID: UUID(),
+            payload: .writePictures,
+            fingerprint: "/tmp/missing.flac",
+            trackCount: 1
+        )
+
+        SaveNotificationCoordinator.shared.handleNotificationResponse(
+            userInfo: try SwiftTagTests.notificationUserInfo(for: payload)
+        )
+
+        XCTAssertEqual(openedSession?.reopenRecordID, reopenRecordID)
+        XCTAssertNotNil(openedSession?.sessionID)
+    }
+
+    @MainActor
+    func testNotificationResponseDoesNotOpenEmptyWindowWhenReopenRecordIsMissing() throws {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+        SaveNotificationCoordinator.shared.resetForTesting()
+
+        var openedSession: EditorSessionValue?
+        var reportedError: String?
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSession = sessionValue
+        }
+        SaveNotificationCoordinator.shared.setRoutingErrorHandlerForTesting { message in
+            reportedError = message
+        }
+
+        let payload = SaveNotificationPayload(
+            reopenRecordID: UUID(),
+            sourceSessionID: UUID(),
+            payload: .writePictures,
+            fingerprint: "/tmp/missing.flac",
+            trackCount: 1
+        )
+
+        SaveNotificationCoordinator.shared.handleNotificationResponse(
+            userInfo: try SwiftTagTests.notificationUserInfo(for: payload)
+        )
+
+        XCTAssertNil(openedSession)
+        XCTAssertEqual(reportedError, "The saved track details are no longer available.")
+    }
+
+    @MainActor
+    func testNotificationResponseReportsDecodeFailure() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+        SaveNotificationCoordinator.shared.resetForTesting()
+
+        var reportedError: String?
+        SaveNotificationCoordinator.shared.setRoutingErrorHandlerForTesting { message in
+            reportedError = message
+        }
+
+        SaveNotificationCoordinator.shared.handleNotificationResponse(
+            userInfo: ["invalid": Data([0x00])]
+        )
+
+        XCTAssertEqual(reportedError, "The save notification did not contain valid reopening data.")
     }
 }

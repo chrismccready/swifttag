@@ -109,6 +109,10 @@ final class TagEditorViewModel {
         trackItems.contains(where: \.isImportedFlacTrack)
     }
 
+    var importedTrackReferences: [ImportedTrackReference] {
+        trackItems.compactMap(\.importedTrackReference)
+    }
+
     func canSave(scope: SaveScopeOption) -> Bool {
         !saveTrackIndices(for: scope).isEmpty
     }
@@ -485,14 +489,16 @@ final class TagEditorViewModel {
         payload: SavePayloadOption,
         scope: SaveScopeOption,
         tagWriteOptions: TagWriteOptions,
-        albumArtPictures: [FlacWritablePictureRecord]
-    ) throws {
+        albumArtPictures: [FlacWritablePictureRecord],
+        editorSessionID: UUID
+    ) throws -> SaveOperationResult {
         let trackIndices = saveTrackIndices(for: scope)
         guard !trackIndices.isEmpty else {
             throw TagEditorSaveError.noTracksToSave
         }
 
         var failures: [String] = []
+        var savedTrackReferences: [ImportedTrackReference] = []
 
         for index in trackIndices {
             let track = trackItems[index]
@@ -517,6 +523,12 @@ final class TagEditorViewModel {
                         writeTags: payload.writesTags,
                         writePictures: payload.writesPictures
                     )
+
+                    let refreshedTrackReference = try refreshedImportedTrackReference(
+                        for: fileURL,
+                        trackIndex: index
+                    )
+                    savedTrackReferences.append(refreshedTrackReference)
                 }
             } catch {
                 let path = track.sourceFileURL?.path ?? track.tags[TagKey.filename] ?? "Unknown file"
@@ -527,6 +539,32 @@ final class TagEditorViewModel {
         guard failures.isEmpty else {
             throw TagEditorSaveError.partialFailure(messages: failures)
         }
+
+        return SaveOperationResult(
+            sourceSessionID: editorSessionID,
+            payload: payload,
+            trackReferences: savedTrackReferences,
+            fingerprint: TrackSetFingerprint.make(from: savedTrackReferences)
+        )
+    }
+
+    private func refreshedImportedTrackReference(
+        for fileURL: URL,
+        trackIndex: Int
+    ) throws -> ImportedTrackReference {
+        let refreshedBookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+
+        trackItems[trackIndex].sourceFileURL = fileURL
+        trackItems[trackIndex].securityScopedBookmarkData = refreshedBookmarkData
+
+        return ImportedTrackReference(
+            filePath: fileURL.path,
+            securityScopedBookmarkData: refreshedBookmarkData
+        )
     }
 
     private func setMiscTagValueForSelectedTracks(key: String, value: String) {

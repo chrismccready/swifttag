@@ -11,6 +11,17 @@ struct Track: Identifiable {
         sourceFileURL?.pathExtension.lowercased() == "flac"
     }
 
+    var importedTrackReference: ImportedTrackReference? {
+        guard let sourceFileURL else {
+            return nil
+        }
+
+        return ImportedTrackReference(
+            filePath: sourceFileURL.path,
+            securityScopedBookmarkData: securityScopedBookmarkData
+        )
+    }
+
     init(
         id: UUID = UUID(),
         tags: [String: String],

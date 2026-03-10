@@ -10,6 +10,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 struct ContentView: View {
+    @Binding private var sessionValue: EditorSessionValue
     private let albumArtTypes: [AlbumArtType] = [
         AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
         AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover),
@@ -44,7 +45,9 @@ struct ContentView: View {
     @State private var viewModel: TagEditorViewModel = .init()
     @State private var albumArtViewModel: AlbumArtViewModel = .init()
     @State private var hasPerformedInitialUITestSetup: Bool = false
+    @State private var loadedReopenRecordID: UUID?
     @FocusState private var focusedMiscTagKeyRowID: MiscTagRow.ID?
+    @Environment(\.openWindow) private var openWindow
     @AppStorage(SaveSettingsKey.defaultSavePayload) private var defaultSavePayloadRawValue: String = SaveSettingsDefaults.defaultSavePayload.rawValue
     @AppStorage(SaveSettingsKey.defaultSaveScope) private var defaultSaveScopeRawValue: String = SaveSettingsDefaults.defaultSaveScope.rawValue
     @AppStorage(SaveSettingsKey.zeroPadTrackNumber) private var zeroPadTrackNumber: Bool = SaveSettingsDefaults.zeroPadTrackNumber
@@ -325,15 +328,113 @@ struct ContentView: View {
         let effectivePayload = payload ?? settings.payload
 
         do {
-            try viewModel.save(
+            let saveResult = try viewModel.save(
                 payload: effectivePayload,
                 scope: settings.scope,
                 tagWriteOptions: settings.tagWriteOptions,
-                albumArtPictures: albumArtViewModel.flacPictures(albumArtTypes: albumArtTypes)
+                albumArtPictures: albumArtViewModel.flacPictures(albumArtTypes: albumArtTypes),
+                editorSessionID: sessionValue.sessionID
             )
+            EditorWindowCoordinator.shared.register(
+                sessionValue: sessionValue,
+                trackReferences: viewModel.importedTrackReferences
+            )
+            let notificationPayload = SaveNotificationCoordinator.shared.prepareSuccessNotification(for: saveResult)
+            Task {
+                await SaveNotificationCoordinator.shared.schedulePreparedSuccessNotification(notificationPayload)
+            }
         } catch {
             saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             isSaveErrorPresented = true
+        }
+    }
+
+    private func configureWindowRouting() {
+        EditorWindowCoordinator.shared.setOpenEditorWindowAction { sessionValue in
+            openWindow(id: AppSceneID.editor, value: sessionValue)
+        }
+        EditorWindowCoordinator.shared.register(
+            sessionValue: sessionValue,
+            trackReferences: viewModel.importedTrackReferences
+        )
+    }
+
+    private func loadReopenRecordIfNeeded() {
+        guard let reopenRecordID = sessionValue.reopenRecordID,
+              loadedReopenRecordID != reopenRecordID else {
+            return
+        }
+
+        guard let reopenRecord = SaveNotificationCoordinator.shared.reopenRecord(for: reopenRecordID) else {
+            sessionValue.reopenRecordID = nil
+            importErrorMessage = "The saved track details are no longer available."
+            isImportErrorPresented = true
+            return
+        }
+
+        loadedReopenRecordID = reopenRecordID
+
+        Task {
+            do {
+                try await importSavedTracks(from: reopenRecord.trackReferences)
+                sessionValue.reopenRecordID = nil
+            } catch {
+                sessionValue.reopenRecordID = nil
+                importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                isImportErrorPresented = true
+            }
+        }
+    }
+
+    private func importSavedTracks(from references: [ImportedTrackReference]) async throws {
+        guard !references.isEmpty else {
+            return
+        }
+
+        let resolvedFiles = try resolveTrackURLs(for: references)
+        defer {
+            for resolvedURL in resolvedFiles.securityScopedURLs {
+                resolvedURL.stopAccessingSecurityScopedResource()
+            }
+        }
+        try await importFlacFiles(resolvedFiles.urls)
+    }
+
+    private func resolveTrackURLs(
+        for references: [ImportedTrackReference]
+    ) throws -> (urls: [URL], securityScopedURLs: [URL]) {
+        var resolvedURLs: [URL] = []
+        var securityScopedURLs: [URL] = []
+
+        do {
+            for reference in references {
+                if let bookmarkData = reference.securityScopedBookmarkData {
+                    var isStale = false
+                    let resolvedURL = try URL(
+                        resolvingBookmarkData: bookmarkData,
+                        options: [.withSecurityScope, .withoutUI],
+                        relativeTo: nil,
+                        bookmarkDataIsStale: &isStale
+                    )
+                    let didAccess = resolvedURL.startAccessingSecurityScopedResource()
+                    guard didAccess else {
+                        throw TagEditorSaveError.failedToAccessFile(path: resolvedURL.path)
+                    }
+
+                    resolvedURLs.append(resolvedURL)
+                    securityScopedURLs.append(resolvedURL)
+                    continue
+                }
+
+                resolvedURLs.append(URL(fileURLWithPath: reference.filePath))
+            }
+
+            return (resolvedURLs, securityScopedURLs)
+        } catch {
+            for resolvedURL in securityScopedURLs {
+                resolvedURL.stopAccessingSecurityScopedResource()
+            }
+            throw error
         }
     }
 
@@ -345,6 +446,12 @@ struct ContentView: View {
         hasPerformedInitialUITestSetup = true
         if uiTestLaunchFlagEnabled("UITEST_OPEN_ALBUM_ART_SHEET") {
             isAlbumArtSheetPresented = true
+        }
+
+        if sessionValue.reopenRecordID == nil,
+           let rawRecordID = uiTestLaunchValue(for: "UITEST_OPEN_SAVE_NOTIFICATION_RECORD_ID"),
+           let reopenRecordID = UUID(uuidString: rawRecordID) {
+            sessionValue.reopenRecordID = reopenRecordID
         }
 
         guard let fixturePath = uiTestLaunchValue(for: "UITEST_FLAC_PATH") else {
@@ -435,6 +542,10 @@ struct ContentView: View {
         return fileURL
     }
 
+    init(sessionValue: Binding<EditorSessionValue> = .constant(EditorSessionValue())) {
+        _sessionValue = sessionValue
+    }
+
     var body: some View {
         TagEditorView(
             albumBinding: albumBinding,
@@ -477,10 +588,21 @@ struct ContentView: View {
         .frame(minWidth: 520, minHeight: 530, idealHeight: 640, alignment: .topLeading)
         .onAppear {
             reloadMiscTagRowsFromSelection()
+            configureWindowRouting()
             loadUITestStateIfNeeded()
+            loadReopenRecordIfNeeded()
+        }
+        .onChange(of: sessionValue.reopenRecordID) { _, _ in
+            loadReopenRecordIfNeeded()
         }
         .onChange(of: selectedTrackIDs) { _, _ in
             reloadMiscTagRowsFromSelection()
+        }
+        .onChange(of: TrackSetFingerprint.make(from: viewModel.importedTrackReferences)) { _, _ in
+            EditorWindowCoordinator.shared.register(
+                sessionValue: sessionValue,
+                trackReferences: viewModel.importedTrackReferences
+            )
         }
         .onChange(of: focusedMiscTagKeyRowID) { oldValue, newValue in
             if let oldValue {
@@ -509,6 +631,9 @@ struct ContentView: View {
         .focusedSceneValue(\.canPerformDefaultSave, canSave(payload: saveSettingsSnapshot.payload))
         .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
         .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
+        .onDisappear {
+            EditorWindowCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
+        }
         .fileImporter(
             isPresented: $isFlacImporterPresented,
             allowedContentTypes: [.folder, UTType(filenameExtension: "flac") ?? .data],

@@ -7,10 +7,37 @@
 
 import SwiftUI
 import AppKit
+import UserNotifications
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        UNUserNotificationCenter.current().delegate = self
+        SaveNotificationCoordinator.shared.handlePendingUITestRouteIfNeeded()
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.list, .banner, .badge, .sound])
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        Task { @MainActor in
+            SaveNotificationCoordinator.shared.handleNotificationResponse(
+                userInfo: response.notification.request.content.userInfo
+            )
+            completionHandler()
+        }
     }
 }
 
@@ -65,12 +92,15 @@ struct SwiftTagApp: App {
 
     init() {
         resetUITestSaveSettingsIfNeeded()
+        seedUITestNotificationRouteIfNeeded()
     }
 
     var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+        WindowGroup(id: AppSceneID.editor, for: EditorSessionValue.self, content: { sessionValue in
+            ContentView(sessionValue: sessionValue)
+        }, defaultValue: {
+            EditorSessionValue()
+        })
         .commands {
             AppCommands()
         }
@@ -92,6 +122,18 @@ struct SwiftTagApp: App {
         UserDefaults.standard.synchronize()
     }
 
+    private func seedUITestNotificationRouteIfNeeded() {
+        let environment = ProcessInfo.processInfo.environment
+        let rawRecordID = environment["UITEST_OPEN_SAVE_NOTIFICATION_RECORD_ID"]
+            ?? uiTestLaunchValue(for: "UITEST_OPEN_SAVE_NOTIFICATION_RECORD_ID")
+        guard let rawRecordID,
+              let recordID = UUID(uuidString: rawRecordID) else {
+            return
+        }
+
+        SaveNotificationCoordinator.shared.setPendingUITestReopenRecordID(recordID)
+    }
+
     private func uiTestLaunchFlagEnabled(_ key: String) -> Bool {
         let environment = ProcessInfo.processInfo.environment
         if environment[key] == "1" {
@@ -99,5 +141,20 @@ struct SwiftTagApp: App {
         }
 
         return ProcessInfo.processInfo.arguments.contains("-\(key)")
+    }
+
+    private func uiTestLaunchValue(for key: String) -> String? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let keyIndex = arguments.firstIndex(of: "-\(key)") else {
+            return nil
+        }
+
+        let valueIndex = arguments.index(after: keyIndex)
+        guard valueIndex < arguments.endIndex else {
+            return nil
+        }
+
+        let value = arguments[valueIndex]
+        return value.isEmpty ? nil : value
     }
 }

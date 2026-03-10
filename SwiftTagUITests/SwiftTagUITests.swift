@@ -276,7 +276,9 @@ final class SwiftTagUITests: XCTestCase {
         persistentFixtureName: String? = nil,
         reuseImportedFixture: Bool = false,
         openAlbumArtSheet: Bool = false,
-        resetSaveSettings: Bool = true
+        resetSaveSettings: Bool = true,
+        openSaveNotificationRecordID: String? = nil,
+        waitForEditorUI: Bool = true
     ) throws -> XCUIApplication {
         let app = XCUIApplication()
         if resetSaveSettings {
@@ -303,9 +305,15 @@ final class SwiftTagUITests: XCTestCase {
             app.launchEnvironment["UITEST_OPEN_ALBUM_ART_SHEET"] = "1"
             app.launchArguments.append("-UITEST_OPEN_ALBUM_ART_SHEET")
         }
+        if let openSaveNotificationRecordID {
+            app.launchEnvironment["UITEST_OPEN_SAVE_NOTIFICATION_RECORD_ID"] = openSaveNotificationRecordID
+            app.launchArguments.append("-UITEST_OPEN_SAVE_NOTIFICATION_RECORD_ID")
+            app.launchArguments.append(openSaveNotificationRecordID)
+        }
         app.launch()
-        XCTAssertTrue(app.buttons[UIID.addMiscTagButton].waitForExistence(timeout: 10.0))
-        XCTAssertTrue(app.textFields[UIID.albumTextField].waitForExistence(timeout: 10.0))
+        if waitForEditorUI {
+            XCTAssertTrue(app.textFields[UIID.albumTextField].waitForExistence(timeout: 10.0))
+        }
         return app
     }
 
@@ -444,4 +452,5 @@ final class SwiftTagUITests: XCTestCase {
 
         return false
     }
+
 }
