@@ -130,6 +130,7 @@ Before stating that a plan is ready for implementation, confirm that it includes
 - If the user requests `full visible user and assistant turns verbatim where available`, or if no different transcript format is specified, then transcript creation should follow these rules:
   - include full visible user turns
   - include full visible assistant replies as shown in the visible conversation history
+  - do not omit visible user entries or visible assistant entries, even when multiple entries from the same speaker appear consecutively
   - exclude hidden system messages, hidden reasoning, and any content not visible in the chat
   - do not invent or reconstruct missing text that is not present in the visible conversation history
   - if some earlier visible content is no longer fully available in context, state that limitation in the transcript rather than fabricating missing text
@@ -152,20 +153,20 @@ Before stating that a plan is ready for implementation, confirm that it includes
   - blank line
   - `Note:` followed by transcript-scoping notes
   - blank line
-  - alternating `## User` / `## Assistant` sections in chronological order
+  - `## User` / `## Assistant` sections in chronological order, while allowing consecutive assistant entries to remain under a single `## Assistant` header when no user entry interrupts them
   - `End of Transcript.`
 - Use `## User` / `## Assistant` section headers in turn order. If exact visible timestamps exist for a turn, append the timestamp to that header. Otherwise use the bare header.
+- Never omit a visible user or assistant entry.
+- If multiple visible assistant entries occur consecutively without a user entry between them, they may be grouped under one `## Assistant` header instead of repeating the header for each assistant entry.
 - Preserve quoted console output, file references, explicit code, explicit error text, and visible `<turn_aborted>` markers when they appeared in the conversation.
 - For user turns, preserve visible environment metadata when present in the conversation, including:
   - `Project structure:`
-  - `The user is currently inside this file: ...`
-  - `The user has no code selected.`
   - `The user has selected the following code from that file ...`
 - `Project structure:` handling is special:
   - when a visible `Project structure:` block is available, include it once near the beginning of the transcript before the first user message body
   - repeat the same `Project structure:` block once near the end of the transcript before `End of Transcript.`
   - do not repeat the full project-structure block inside every user turn even if it appeared multiple times in the visible conversation
-- The current-file line and selection-state line are not global transcript headers. Keep them in the relevant user turn content where they appeared.
+- Omit the lines `The user is currently inside this file: ...` and `The user has no code selected.` from transcript output even when they are visible in the conversation metadata.
 - If a user turn contains selected-code metadata, keep the metadata line together with the associated fenced code block in that same user section.
 - If the visible selected-code block is identical to the visible user message body for that same turn, prefer the user message body and omit the duplicated fenced code block.
 - If repeated boilerplate was intentionally abbreviated, explain that decision in the `Note:` section.
