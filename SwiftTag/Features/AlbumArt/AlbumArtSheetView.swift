@@ -3,6 +3,8 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct AlbumArtSheetView: View {
+    let isSaveOperationRunning: Bool
+    let saveStatusPresentation: SaveStatusPresentation?
     let albumArtTypes: [AlbumArtType]
     @Binding var navigationPath: [AlbumArtSlot]
     @Binding var isFileImporterPresented: Bool
@@ -24,44 +26,74 @@ struct AlbumArtSheetView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            List {
-                ForEach(albumArtTypes) { albumArtType in
-                    NavigationLink(albumArtType.navigationLinkName, value: albumArtType.slot)
-                }
-            }
-            .navigationTitle("Album Art")
-            .navigationDestination(for: AlbumArtSlot.self) { albumArtSlot in
-                VStack(alignment: .leading, spacing: 0) {
-                    AlbumArtWellView(
-                        image: imageForSlot(albumArtSlot),
-                        dimension: 480,
-                        onDropProviders: { providers in
-                            onDropForSlot(providers, albumArtSlot)
-                        }
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        onOpenPicker(albumArtSlot)
+        ZStack {
+            NavigationStack(path: $navigationPath) {
+                List {
+                    ForEach(albumArtTypes) { albumArtType in
+                        NavigationLink(albumArtType.navigationLinkName, value: albumArtType.slot)
                     }
-                    .contextMenu {
-                        let navigationLinkName = albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art"
-                        Button("Import \(navigationLinkName)...") {
+                }
+                .navigationTitle("Album Art")
+                .navigationDestination(for: AlbumArtSlot.self) { albumArtSlot in
+                    VStack(alignment: .leading, spacing: 0) {
+                        AlbumArtWellView(
+                            image: imageForSlot(albumArtSlot),
+                            dimension: 480,
+                            onDropProviders: { providers in
+                                onDropForSlot(providers, albumArtSlot)
+                            }
+                        )
+                        .disabled(isSaveOperationRunning)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityIdentifier("albumArt.sheet.imageWell")
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            guard !isSaveOperationRunning else {
+                                return
+                            }
                             onOpenPicker(albumArtSlot)
                         }
-                        Button("Export \(navigationLinkName)...") {
-                            onPrepareExport(albumArtSlot)
+                        .contextMenu {
+                            let navigationLinkName = albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art"
+                            Button("Import \(navigationLinkName)...") {
+                                onOpenPicker(albumArtSlot)
+                            }
+                            .disabled(isSaveOperationRunning)
+                            Button("Export \(navigationLinkName)...") {
+                                onPrepareExport(albumArtSlot)
+                            }
+                            .disabled(!hasImageForSlot(albumArtSlot))
                         }
-                        .disabled(!hasImageForSlot(albumArtSlot))
+                        .allowsHitTesting(!isSaveOperationRunning)
+                        .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
+
+                        Text(isSaveOperationRunning ? "disabled" : "enabled")
+                            .font(.system(size: 1))
+                            .foregroundStyle(.clear)
+                            .accessibilityIdentifier("albumArt.sheet.imageWell.state")
                     }
-                    .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
+                    .padding(22)
+                    .navigationTitle(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art")
                 }
-                .padding(22)
-                .navigationTitle(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art")
+            }
+
+            if let saveStatusPresentation, isSaveOperationRunning {
+                SaveStatusView(presentation: saveStatusPresentation)
+                    .transition(.opacity)
+                    .zIndex(1)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("albumArt.sheet.saveStatusView")
+
+                Text("sheet save status visible")
+                    .font(.system(size: 1))
+                    .foregroundStyle(.clear)
+                    .accessibilityIdentifier("albumArt.sheet.saveStatusVisible")
             }
         }
         .frame(width: 524, height: 572)
         .accessibilityIdentifier("albumArt.sheet")
+        .accessibilityLabel(isSaveOperationRunning ? "imageWellDisabled" : "imageWellEnabled")
+        .accessibilityValue(isSaveOperationRunning ? "imageWellDisabled" : "imageWellEnabled")
         .onAppear {
             if navigationPath.isEmpty {
                 navigationPath = [.frontCover]

@@ -4,6 +4,7 @@ import SwiftUI
 struct TagEditorAlbumView: View {
     var albumBinding: Binding<String>
     var albumArtistBinding: Binding<String>
+    let isSaveOperationRunning: Bool
     let frontCoverImage: Image
     let onFrontCoverDrop: ([NSItemProvider]) -> Bool
     let onFrontCoverTap: () -> Void
@@ -28,10 +29,14 @@ struct TagEditorAlbumView: View {
             AlbumArtWellView(
                 image: frontCoverImage,
                 dimension: 60,
-                onDropProviders: onFrontCoverDrop
+                onDropProviders: onFrontCoverDrop,
+                isEnabled: !isSaveOperationRunning
             )
             .contentShape(Rectangle())
             .onTapGesture {
+                guard !isSaveOperationRunning else {
+                    return
+                }
                 onFrontCoverTap()
             }
             .help("Click to edit album art or drag and drop an image to set album Front Cover.")

@@ -6,6 +6,7 @@ struct AlbumArtWellView: View {
     let image: Image
     let dimension: CGFloat
     let onDropProviders: ([NSItemProvider]) -> Bool
+    var isEnabled: Bool = true
 
     var body: some View {
         ZStack {
@@ -19,7 +20,10 @@ struct AlbumArtWellView: View {
         }
         .frame(width: dimension, height: dimension)
         .onDrop(of: [UTType.image.identifier, UTType.fileURL.identifier], isTargeted: nil) { providers in
-            onDropProviders(providers)
+            guard isEnabled else {
+                return false
+            }
+            return onDropProviders(providers)
         }
     }
 }

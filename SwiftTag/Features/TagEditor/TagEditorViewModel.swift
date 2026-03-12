@@ -114,7 +114,11 @@ final class TagEditorViewModel {
     }
 
     func canSave(scope: SaveScopeOption) -> Bool {
-        !saveTrackIndices(for: scope).isEmpty
+        saveTrackCount(for: scope) > 0
+    }
+
+    func saveTrackCount(for scope: SaveScopeOption) -> Int {
+        saveTrackIndices(for: scope).count
     }
 
     func titleBinding(for trackID: UUID) -> Binding<String>? {
@@ -490,8 +494,9 @@ final class TagEditorViewModel {
         scope: SaveScopeOption,
         tagWriteOptions: TagWriteOptions,
         albumArtPictures: [FlacWritablePictureRecord],
-        editorSessionID: UUID
-    ) throws -> SaveOperationResult {
+        editorSessionID: UUID,
+        progress: ((Int, Int, String) -> Void)? = nil
+    ) async throws -> SaveOperationResult {
         let trackIndices = saveTrackIndices(for: scope)
         guard !trackIndices.isEmpty else {
             throw TagEditorSaveError.noTracksToSave
@@ -499,9 +504,12 @@ final class TagEditorViewModel {
 
         var failures: [String] = []
         var savedTrackReferences: [ImportedTrackReference] = []
+        let totalTrackCount = trackIndices.count
 
-        for index in trackIndices {
+        for (offset, index) in trackIndices.enumerated() {
             let track = trackItems[index]
+            progress?(offset + 1, totalTrackCount, saveStatusDisplayName(for: track))
+            await Task.yield()
 
             do {
                 try withAccessingSecurityScopedTrackURL(for: index) { fileURL in
@@ -597,6 +605,24 @@ final class TagEditorViewModel {
         case .allTracks:
             return trackItems.indices.filter { trackItems[$0].isImportedFlacTrack }
         }
+    }
+
+    private func saveStatusDisplayName(for track: Track) -> String {
+        let title = track.tags[TagKey.title]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !title.isEmpty {
+            return title
+        }
+
+        let filename = track.tags[TagKey.filename]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !filename.isEmpty {
+            return filename
+        }
+
+        if let sourceFileURL = track.sourceFileURL {
+            return sourceFileURL.lastPathComponent
+        }
+
+        return "Unknown track"
     }
 
     private func withAccessingSecurityScopedTrackURL<T>(

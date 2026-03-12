@@ -3,6 +3,7 @@ import SwiftUI
 struct TagEditorView: View {
     var albumBinding: Binding<String>
     var albumArtistBinding: Binding<String>
+    let isSaveOperationRunning: Bool
     let frontCoverImage: Image
     let onFrontCoverDrop: ([NSItemProvider]) -> Bool
     let onFrontCoverTap: () -> Void
@@ -41,6 +42,7 @@ struct TagEditorView: View {
             TagEditorAlbumView(
                 albumBinding: albumBinding,
                 albumArtistBinding: albumArtistBinding,
+                isSaveOperationRunning: isSaveOperationRunning,
                 frontCoverImage: frontCoverImage,
                 onFrontCoverDrop: onFrontCoverDrop,
                 onFrontCoverTap: onFrontCoverTap
@@ -81,5 +83,6 @@ struct TagEditorView: View {
                 isInvalidKeyInput: isInvalidMiscTagKeyInput
             )
         }
+        .disabled(isSaveOperationRunning)
     }
 }

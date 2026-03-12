@@ -56,6 +56,7 @@ private struct AppCommands: Commands {
             Button("Load FLAC files...") {
                 showFlacImporter?()
             }
+            .keyboardShortcut("l")
             .disabled(showFlacImporter == nil)
 
             Button("Show TOML...") {

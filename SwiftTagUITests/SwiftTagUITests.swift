@@ -19,6 +19,11 @@ final class SwiftTagUITests: XCTestCase {
         static let albumTextField = "albumTextField"
         static let albumArtistTextField = "albumArtistTextField"
         static let albumArtImageWell = "albumArtImageWell"
+        static let albumArtSheetImageWell = "albumArt.sheet.imageWell"
+        static let albumArtSheetImageWellState = "albumArt.sheet.imageWell.state"
+        static let albumArtSheetSaveStatusView = "albumArt.sheet.saveStatusView"
+        static let albumArtSheetSaveStatusVisible = "albumArt.sheet.saveStatusVisible"
+        static let saveStatusView = "saveStatusView"
         static let settingsTabView = "settings.tabView"
         static let defaultSavePayload = "settings.general.defaultSavePayload"
         static let defaultSaveScope = "settings.general.defaultSaveScope"
@@ -144,6 +149,55 @@ final class SwiftTagUITests: XCTestCase {
             miscTagKeyField(in: app, key: "ENCODED_BY").waitForExistence(timeout: 2.0),
             "ENCODED_BY field was not found"
         )
+    }
+
+    @MainActor
+    func testSimulatedSaveDisablesEditorControlsAndShowsOverlay() throws {
+        let app = try launchApp(
+            simulateSaveStatus: true,
+            simulatedSaveScope: "allTracks"
+        )
+
+        let saveStatusView = app.descendants(matching: .any)
+            .matching(identifier: UIID.saveStatusView)
+            .firstMatch
+        XCTAssertTrue(saveStatusView.waitForExistence(timeout: 2.0))
+        XCTAssertFalse(app.textFields[UIID.albumTextField].isEnabled)
+        XCTAssertFalse(app.textFields[UIID.albumArtistTextField].isEnabled)
+    }
+
+    @MainActor
+    func testSimulatedSaveShowsOverlayInsideAlbumArtSheet() throws {
+        let app = try launchApp(
+            openAlbumArtSheet: true,
+            simulateSaveStatus: true,
+            simulatedSaveScope: "selectedTracks",
+            simulatedSaveDelay: 0.5
+        )
+
+        let sheet = app.descendants(matching: .any)
+            .matching(identifier: "albumArt.sheet")
+            .firstMatch
+        XCTAssertTrue(sheet.waitForExistence(timeout: 4.0))
+
+        let saveStatusView = app.descendants(matching: .any)
+            .matching(identifier: UIID.saveStatusView)
+            .firstMatch
+        XCTAssertTrue(saveStatusView.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(waitForElementValue(of: sheet, expectedValue: "imageWellDisabled"))
+    }
+
+    @MainActor
+    func testSimulatedSaveReEnablesEditorAfterCompletion() throws {
+        let app = try launchApp(
+            simulateSaveStatus: true,
+            simulatedSaveScope: "allTracks",
+            simulatedSaveDelay: 0.2,
+            simulatedSaveDuration: 1.0
+        )
+
+        XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: false, timeout: 2.0))
+        XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: true, timeout: 4.0))
     }
 
     @MainActor
@@ -276,6 +330,10 @@ final class SwiftTagUITests: XCTestCase {
         persistentFixtureName: String? = nil,
         reuseImportedFixture: Bool = false,
         openAlbumArtSheet: Bool = false,
+        simulateSaveStatus: Bool = false,
+        simulatedSaveScope: String = "allTracks",
+        simulatedSaveDelay: TimeInterval = 0,
+        simulatedSaveDuration: TimeInterval = 0,
         resetSaveSettings: Bool = true,
         openSaveNotificationRecordID: String? = nil,
         waitForEditorUI: Bool = true
@@ -304,6 +362,16 @@ final class SwiftTagUITests: XCTestCase {
         if openAlbumArtSheet {
             app.launchEnvironment["UITEST_OPEN_ALBUM_ART_SHEET"] = "1"
             app.launchArguments.append("-UITEST_OPEN_ALBUM_ART_SHEET")
+        }
+        if simulateSaveStatus {
+            app.launchEnvironment["UITEST_SIMULATE_SAVE_STATUS"] = "1"
+            app.launchEnvironment["UITEST_SIMULATED_SAVE_SCOPE"] = simulatedSaveScope
+            if simulatedSaveDelay > 0 {
+                app.launchEnvironment["UITEST_SIMULATED_SAVE_DELAY"] = String(simulatedSaveDelay)
+            }
+            if simulatedSaveDuration > 0 {
+                app.launchEnvironment["UITEST_SIMULATED_SAVE_DURATION"] = String(simulatedSaveDuration)
+            }
         }
         if let openSaveNotificationRecordID {
             app.launchEnvironment["UITEST_OPEN_SAVE_NOTIFICATION_RECORD_ID"] = openSaveNotificationRecordID
@@ -444,6 +512,69 @@ final class SwiftTagUITests: XCTestCase {
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
             if let value = textField.value as? String, value == expectedValue {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForLabeledElement(
+        in app: XCUIApplication,
+        identifier: String,
+        expectedLabel: String,
+        timeout: TimeInterval = 2.0
+    ) -> Bool {
+        let element = app.descendants(matching: .any)
+            .matching(identifier: identifier)
+            .firstMatch
+        guard element.waitForExistence(timeout: timeout) else {
+            return false
+        }
+
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if element.label == expectedLabel {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForElementValue(
+        of element: XCUIElement,
+        expectedValue: String,
+        timeout: TimeInterval = 2.0
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if element.label == expectedValue {
+                return true
+            }
+
+            if let value = element.value as? String, value == expectedValue {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForEnabledState(
+        of element: XCUIElement,
+        expectedValue: Bool,
+        timeout: TimeInterval = 2.0
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if element.exists && element.isEnabled == expectedValue {
                 return true
             }
 

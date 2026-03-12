@@ -44,6 +44,9 @@ struct ContentView: View {
     @State private var saveErrorMessage: String = ""
     @State private var viewModel: TagEditorViewModel = .init()
     @State private var albumArtViewModel: AlbumArtViewModel = .init()
+    @State private var saveStatusState: SaveStatusState?
+    @State private var isSaveStatusVisible: Bool = false
+    @State private var isSaveOperationRunning: Bool = false
     @State private var hasPerformedInitialUITestSetup: Bool = false
     @State private var loadedReopenRecordID: UUID?
     @FocusState private var focusedMiscTagKeyRowID: MiscTagRow.ID?
@@ -315,6 +318,10 @@ struct ContentView: View {
     }
 
     private func canSave(payload: SavePayloadOption) -> Bool {
+        guard !isSaveOperationRunning else {
+            return false
+        }
+
         let scope = saveSettingsSnapshot.scope
         if payload.writesPictures || payload.writesTags {
             return viewModel.canSave(scope: scope)
@@ -324,29 +331,101 @@ struct ContentView: View {
     }
 
     private func save(using payload: SavePayloadOption? = nil) {
+        guard !isSaveOperationRunning else {
+            return
+        }
+
         let settings = saveSettingsSnapshot
         let effectivePayload = payload ?? settings.payload
+        let scope = settings.scope
+        let trackCount = viewModel.saveTrackCount(for: settings.scope)
 
-        do {
-            let saveResult = try viewModel.save(
-                payload: effectivePayload,
-                scope: settings.scope,
-                tagWriteOptions: settings.tagWriteOptions,
-                albumArtPictures: albumArtViewModel.flacPictures(albumArtTypes: albumArtTypes),
-                editorSessionID: sessionValue.sessionID
-            )
-            EditorWindowCoordinator.shared.register(
-                sessionValue: sessionValue,
-                trackReferences: viewModel.importedTrackReferences
-            )
-            let notificationPayload = SaveNotificationCoordinator.shared.prepareSuccessNotification(for: saveResult)
-            Task {
-                await SaveNotificationCoordinator.shared.schedulePreparedSuccessNotification(notificationPayload)
+        Task { @MainActor in
+            isSaveOperationRunning = true
+
+            do {
+                if trackCount > 0 {
+                    beginSaveStatus(totalTrackCount: trackCount, scope: scope)
+                }
+
+                let saveResult = try await viewModel.save(
+                    payload: effectivePayload,
+                    scope: scope,
+                    tagWriteOptions: settings.tagWriteOptions,
+                    albumArtPictures: albumArtViewModel.flacPictures(albumArtTypes: albumArtTypes),
+                    editorSessionID: sessionValue.sessionID,
+                    progress: updateSaveStatus(currentTrackIndex:totalTrackCount:currentTrackName:)
+                )
+                EditorWindowCoordinator.shared.register(
+                    sessionValue: sessionValue,
+                    trackReferences: viewModel.importedTrackReferences
+                )
+                let notificationPayload = SaveNotificationCoordinator.shared.prepareSuccessNotification(for: saveResult)
+                Task {
+                    await SaveNotificationCoordinator.shared.schedulePreparedSuccessNotification(notificationPayload)
+                }
+                await dismissSaveStatusAfterSuccessIfNeeded()
+            } catch {
+                await dismissSaveStatusImmediately()
+                saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                isSaveErrorPresented = true
             }
-        } catch {
-            saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-            isSaveErrorPresented = true
+
+            isSaveOperationRunning = false
         }
+    }
+
+    private func beginSaveStatus(totalTrackCount: Int, scope: SaveScopeOption) {
+        saveStatusState = SaveStatusState(
+            startedAt: .now,
+            presentation: SaveStatusPresentation(
+                album: viewModel.album,
+                currentTrackName: "",
+                showsSelectedTrackName: scope == .selectedTracks,
+                currentTrackIndex: min(1, totalTrackCount),
+                totalTrackCount: totalTrackCount
+            )
+        )
+        withAnimation(SaveStatusTiming.fadeAnimation) {
+            isSaveStatusVisible = true
+        }
+    }
+
+    private func updateSaveStatus(currentTrackIndex: Int, totalTrackCount: Int, currentTrackName: String) {
+        guard var saveStatusState else {
+            return
+        }
+
+        saveStatusState.presentation.album = viewModel.album
+        saveStatusState.presentation.currentTrackName = currentTrackName
+        saveStatusState.presentation.currentTrackIndex = currentTrackIndex
+        saveStatusState.presentation.totalTrackCount = totalTrackCount
+        self.saveStatusState = saveStatusState
+    }
+
+    private func dismissSaveStatusAfterSuccessIfNeeded() async {
+        guard let saveStatusState else {
+            return
+        }
+
+        let remainingDisplayDuration = SaveStatusTiming.remainingDisplayDuration(startedAt: saveStatusState.startedAt)
+        if remainingDisplayDuration > 0 {
+            try? await Task.sleep(nanoseconds: SaveStatusTiming.nanoseconds(for: remainingDisplayDuration))
+        }
+
+        await dismissSaveStatusImmediately()
+    }
+
+    private func dismissSaveStatusImmediately() async {
+        guard saveStatusState != nil else {
+            return
+        }
+
+        withAnimation(SaveStatusTiming.fadeAnimation) {
+            isSaveStatusVisible = false
+        }
+        try? await Task.sleep(nanoseconds: SaveStatusTiming.fadeDurationNanoseconds)
+        saveStatusState = nil
     }
 
     private func configureWindowRouting() {
@@ -444,6 +523,8 @@ struct ContentView: View {
         }
 
         hasPerformedInitialUITestSetup = true
+        activateUISimulatedSaveStatusIfNeeded()
+
         if uiTestLaunchFlagEnabled("UITEST_OPEN_ALBUM_ART_SHEET") {
             isAlbumArtSheetPresented = true
         }
@@ -466,6 +547,61 @@ struct ContentView: View {
                 importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 isImportErrorPresented = true
             }
+        }
+    }
+
+    private func activateUISimulatedSaveStatusIfNeeded() {
+        guard uiTestLaunchFlagEnabled("UITEST_SIMULATE_SAVE_STATUS") else {
+            return
+        }
+
+        let delay = Double(uiTestLaunchValue(for: "UITEST_SIMULATED_SAVE_DELAY") ?? "") ?? 0
+        guard delay > 0 else {
+            applyUISimulatedSaveStatus()
+            return
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: SaveStatusTiming.nanoseconds(for: delay))
+            applyUISimulatedSaveStatus()
+        }
+    }
+
+    private func applyUISimulatedSaveStatus() {
+        guard uiTestLaunchFlagEnabled("UITEST_SIMULATE_SAVE_STATUS") else {
+            return
+        }
+
+        let simulatedScopeRawValue = uiTestLaunchValue(for: "UITEST_SIMULATED_SAVE_SCOPE")
+        let simulatedScope = SaveScopeOption(rawValue: simulatedScopeRawValue ?? "") ?? .allTracks
+        let totalTrackCount = Int(uiTestLaunchValue(for: "UITEST_SIMULATED_SAVE_TOTAL") ?? "") ?? 3
+        let currentTrackIndex = Int(uiTestLaunchValue(for: "UITEST_SIMULATED_SAVE_CURRENT") ?? "") ?? 1
+        let currentTrackName = uiTestLaunchValue(for: "UITEST_SIMULATED_SAVE_TRACK_NAME") ?? "Simulated Track"
+        let albumValue = uiTestLaunchValue(for: "UITEST_SIMULATED_SAVE_ALBUM") ?? "Simulated Album"
+
+        viewModel.album = albumValue
+        saveStatusState = SaveStatusState(
+            startedAt: .now,
+            presentation: SaveStatusPresentation(
+                album: albumValue,
+                currentTrackName: currentTrackName,
+                showsSelectedTrackName: simulatedScope == .selectedTracks,
+                currentTrackIndex: currentTrackIndex,
+                totalTrackCount: totalTrackCount
+            )
+        )
+        isSaveOperationRunning = true
+        isSaveStatusVisible = true
+
+        let duration = Double(uiTestLaunchValue(for: "UITEST_SIMULATED_SAVE_DURATION") ?? "") ?? 0
+        guard duration > 0 else {
+            return
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: SaveStatusTiming.nanoseconds(for: duration))
+            await dismissSaveStatusImmediately()
+            isSaveOperationRunning = false
         }
     }
 
@@ -547,45 +683,54 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TagEditorView(
-            albumBinding: albumBinding,
-            albumArtistBinding: albumArtistBinding,
-            frontCoverImage: albumArtViewModel.imageForAlbumArtSlot(.frontCover),
-            onFrontCoverDrop: { providers in
-                albumArtViewModel.handleAlbumArtDrop(providers, for: .frontCover)
-            },
-            onFrontCoverTap: {
-                isAlbumArtSheetPresented = true
-            },
-            trackItems: trackItems,
-            selectedTrackIDsBinding: selectedTrackIDsBinding,
-            titleBindingForTrack: titleBinding(for:),
-            totalTracks: totalTracks,
-            hasTotalTracksMismatch: hasTotalTracksMismatch,
-            totalTracksHoverMessage: totalTracksHoverMessage,
-            totalDiscsBinding: totalDiscsBinding,
-            hasTotalDiscsMismatch: hasTotalDiscsMismatch,
-            totalDiscsHoverMessage: totalDiscsHoverMessage,
-            selectedNumberBinding: selectedNumberBinding,
-            selectedDiscBinding: selectedDiscBinding,
-            selectedGenreBinding: selectedGenreBinding,
-            selectedArtistBinding: selectedArtistBinding,
-            selectedComposerBinding: selectedComposerBinding,
-            selectedLocationBinding: selectedLocationBinding,
-            selectedDateBinding: selectedDateBinding,
-            selectedDescriptionsBinding: selectedDescriptionsBinding,
-            positiveIntegerTransform: positiveIntegerStringBinding(_:),
-            miscTagRowsBinding: miscTagRowsBinding,
-            selectedMiscTagRowIDsBinding: selectedMiscTagRowIDsBinding,
-            focusedMiscTagKeyRowIDBinding: $focusedMiscTagKeyRowID,
-            onAddMiscTagRow: addMiscTagRow,
-            onDeleteSelectedMiscTagRows: deleteSelectedMiscTagRows,
-            miscTagKeyBinding: miscTagKeyBinding(for:),
-            miscTagValueBinding: miscTagValueBinding(for:),
-            isInvalidMiscTagKeyInput: isInvalidMiscTagKeyInput(_:for:)
-        )
-        .padding()
-        .frame(minWidth: 520, minHeight: 530, idealHeight: 640, alignment: .topLeading)
+        ZStack {
+            TagEditorView(
+                albumBinding: albumBinding,
+                albumArtistBinding: albumArtistBinding,
+                isSaveOperationRunning: isSaveOperationRunning,
+                frontCoverImage: albumArtViewModel.imageForAlbumArtSlot(.frontCover),
+                onFrontCoverDrop: { providers in
+                    albumArtViewModel.handleAlbumArtDrop(providers, for: .frontCover)
+                },
+                onFrontCoverTap: {
+                    isAlbumArtSheetPresented = true
+                },
+                trackItems: trackItems,
+                selectedTrackIDsBinding: selectedTrackIDsBinding,
+                titleBindingForTrack: titleBinding(for:),
+                totalTracks: totalTracks,
+                hasTotalTracksMismatch: hasTotalTracksMismatch,
+                totalTracksHoverMessage: totalTracksHoverMessage,
+                totalDiscsBinding: totalDiscsBinding,
+                hasTotalDiscsMismatch: hasTotalDiscsMismatch,
+                totalDiscsHoverMessage: totalDiscsHoverMessage,
+                selectedNumberBinding: selectedNumberBinding,
+                selectedDiscBinding: selectedDiscBinding,
+                selectedGenreBinding: selectedGenreBinding,
+                selectedArtistBinding: selectedArtistBinding,
+                selectedComposerBinding: selectedComposerBinding,
+                selectedLocationBinding: selectedLocationBinding,
+                selectedDateBinding: selectedDateBinding,
+                selectedDescriptionsBinding: selectedDescriptionsBinding,
+                positiveIntegerTransform: positiveIntegerStringBinding(_:),
+                miscTagRowsBinding: miscTagRowsBinding,
+                selectedMiscTagRowIDsBinding: selectedMiscTagRowIDsBinding,
+                focusedMiscTagKeyRowIDBinding: $focusedMiscTagKeyRowID,
+                onAddMiscTagRow: addMiscTagRow,
+                onDeleteSelectedMiscTagRows: deleteSelectedMiscTagRows,
+                miscTagKeyBinding: miscTagKeyBinding(for:),
+                miscTagValueBinding: miscTagValueBinding(for:),
+                isInvalidMiscTagKeyInput: isInvalidMiscTagKeyInput(_:for:)
+            )
+            .padding()
+            .frame(minWidth: 520, minHeight: 530, idealHeight: 640, alignment: .topLeading)
+
+            if let saveStatusState, isSaveStatusVisible {
+                SaveStatusView(presentation: saveStatusState.presentation)
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+        }
         .onAppear {
             reloadMiscTagRowsFromSelection()
             configureWindowRouting()
@@ -633,6 +778,9 @@ struct ContentView: View {
         .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
         .onDisappear {
             EditorWindowCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
+            saveStatusState = nil
+            isSaveStatusVisible = false
+            isSaveOperationRunning = false
         }
         .fileImporter(
             isPresented: $isFlacImporterPresented,
@@ -645,6 +793,8 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isAlbumArtSheetPresented) {
             AlbumArtSheetView(
+                isSaveOperationRunning: isSaveOperationRunning,
+                saveStatusPresentation: saveStatusState?.presentation,
                 albumArtTypes: albumArtTypes,
                 navigationPath: Binding(
                     get: { albumArtViewModel.albumArtNavigationPath },

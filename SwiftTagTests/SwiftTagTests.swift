@@ -552,7 +552,7 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
-    func tagEditorViewModelSaveWritesTagsToSelectedImportedTrackOnly() throws {
+    func tagEditorViewModelSaveWritesTagsToSelectedImportedTrackOnly() async throws {
         let selectedFileURL = try Self.tempFixtureCopyURL(name: "selected-save.flac")
         let unselectedFileURL = try Self.tempFixtureCopyURL(name: "unselected-save.flac")
 
@@ -580,7 +580,7 @@ struct SwiftTagTests {
         viewModel.trackItems = [selectedTrack, unselectedTrack]
         viewModel.selectedTrackIDs = [selectedTrack.id]
 
-        _ = try viewModel.save(
+        _ = try await viewModel.save(
             payload: .writeTags,
             scope: .selectedTracks,
             tagWriteOptions: TagWriteOptions(
@@ -610,7 +610,7 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
-    func tagEditorViewModelSaveWritesPicturesWithoutChangingTags() throws {
+    func tagEditorViewModelSaveWritesPicturesWithoutChangingTags() async throws {
         let fileURL = try Self.tempFixtureCopyURL(name: "viewmodel-write-pictures.flac")
         let originalRecord = try FlacMetadataService.readTags(for: fileURL)
         let pictureData = try Self.pngData(color: .purple)
@@ -627,7 +627,7 @@ struct SwiftTagTests {
             )
         ]
 
-        _ = try viewModel.save(
+        _ = try await viewModel.save(
             payload: .writePictures,
             scope: .allTracks,
             tagWriteOptions: TagWriteOptions(
@@ -656,7 +656,7 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
-    func tagEditorViewModelSaveAllTracksWritesToAllImportedTracks() throws {
+    func tagEditorViewModelSaveAllTracksWritesToAllImportedTracks() async throws {
         let firstFileURL = try Self.tempFixtureCopyURL(name: "save-all-first.flac")
         let secondFileURL = try Self.tempFixtureCopyURL(name: "save-all-second.flac")
 
@@ -683,7 +683,7 @@ struct SwiftTagTests {
         viewModel.totalDiscs = "1"
         viewModel.trackItems = [firstTrack, secondTrack]
 
-        _ = try viewModel.save(
+        _ = try await viewModel.save(
             payload: .writeTags,
             scope: .allTracks,
             tagWriteOptions: TagWriteOptions(
@@ -706,7 +706,7 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
-    func tagEditorViewModelSaveReturnsFinalBookmarkAfterRewrite() throws {
+    func tagEditorViewModelSaveReturnsFinalBookmarkAfterRewrite() async throws {
         let fileURL = try Self.tempFixtureCopyURL(name: "save-notification-rewrite.flac")
         let originalBookmarkData = try fileURL.bookmarkData(
             options: .withSecurityScope,
@@ -730,7 +730,7 @@ struct SwiftTagTests {
         viewModel.totalDiscs = "1"
         viewModel.trackItems = [track]
 
-        let result = try viewModel.save(
+        let result = try await viewModel.save(
             payload: .writeTags,
             scope: .allTracks,
             tagWriteOptions: TagWriteOptions(
@@ -783,7 +783,7 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
-    func saveNotificationPreparationPersistsFinalSavedBookmarkAfterRewrite() throws {
+    func saveNotificationPreparationPersistsFinalSavedBookmarkAfterRewrite() async throws {
         let suiteName = "SwiftTagTests.SaveNotificationPreparation.\(UUID().uuidString)"
         guard let userDefaults = UserDefaults(suiteName: suiteName) else {
             Issue.record("Failed to create isolated UserDefaults suite")
@@ -813,7 +813,7 @@ struct SwiftTagTests {
         viewModel.totalDiscs = "1"
         viewModel.trackItems = [track]
 
-        let saveResult = try viewModel.save(
+        let saveResult = try await viewModel.save(
             payload: .writeTags,
             scope: .allTracks,
             tagWriteOptions: TagWriteOptions(
@@ -853,6 +853,98 @@ struct SwiftTagTests {
         let savedRecord = try FlacMetadataService.readTags(for: resolvedURL)
         #expect(savedRecord.tags["ALBUM"] == "Stored Notification Album")
         #expect(savedRecord.tags["ALBUMARTIST"] == "Stored Notification Artist")
+    }
+
+    @Test
+    func saveStatusTimingReturnsRemainingDurationWhenMinimumNotMet() {
+        let startedAt = Date(timeIntervalSince1970: 10)
+        let endedAt = Date(timeIntervalSince1970: 10.4)
+
+        let remaining = SaveStatusTiming.remainingDisplayDuration(
+            startedAt: startedAt,
+            endedAt: endedAt
+        )
+
+        #expect(abs(remaining - 1.1) < 0.0001)
+    }
+
+    @Test
+    func saveStatusTimingReturnsZeroWhenMinimumAlreadyMet() {
+        let startedAt = Date(timeIntervalSince1970: 10)
+        let endedAt = Date(timeIntervalSince1970: 12)
+
+        let remaining = SaveStatusTiming.remainingDisplayDuration(
+            startedAt: startedAt,
+            endedAt: endedAt
+        )
+
+        #expect(remaining == 0)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSaveReportsProgressForSelectedTrackSubset() async throws {
+        let firstFileURL = try Self.tempFixtureCopyURL(name: "progress-first.flac")
+        let secondFileURL = try Self.tempFixtureCopyURL(name: "progress-second.flac")
+        let thirdFileURL = try Self.tempFixtureCopyURL(name: "progress-third.flac")
+
+        let firstTrack = Self.importedTrack(
+            fileURL: firstFileURL,
+            tags: [
+                TagKey.title: "First",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1"
+            ]
+        )
+        let secondTrack = Self.importedTrack(
+            fileURL: secondFileURL,
+            tags: [
+                TagKey.title: "Second",
+                TagKey.trackNumber: "2",
+                TagKey.discNumber: "1"
+            ]
+        )
+        let thirdTrack = Self.importedTrack(
+            fileURL: thirdFileURL,
+            tags: [
+                TagKey.title: "Third",
+                TagKey.trackNumber: "3",
+                TagKey.discNumber: "1"
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Progress Album"
+        viewModel.albumArtist = "Progress Artist"
+        viewModel.totalDiscs = "1"
+        viewModel.trackItems = [firstTrack, secondTrack, thirdTrack]
+        viewModel.selectedTrackIDs = [firstTrack.id, thirdTrack.id]
+
+        var progressUpdates: [(Int, Int, String)] = []
+
+        _ = try await viewModel.save(
+            payload: .writeTags,
+            scope: .selectedTracks,
+            tagWriteOptions: TagWriteOptions(
+                zeroPadTrackNumber: true,
+                trackCountKeyStrategy: .both,
+                zeroPadDiscNumber: true,
+                discCountKeyStrategy: .totalDiscs
+            ),
+            albumArtPictures: [],
+            editorSessionID: UUID(),
+            progress: { currentTrackIndex, totalTrackCount, currentTrackName in
+                progressUpdates.append((currentTrackIndex, totalTrackCount, currentTrackName))
+            }
+        )
+
+        #expect(progressUpdates.count == 2)
+        #expect(progressUpdates[0].0 == 1)
+        #expect(progressUpdates[0].1 == 2)
+        #expect(progressUpdates[0].2 == "First")
+        #expect(progressUpdates[1].0 == 2)
+        #expect(progressUpdates[1].1 == 2)
+        #expect(progressUpdates[1].2 == "Third")
     }
 
 }
