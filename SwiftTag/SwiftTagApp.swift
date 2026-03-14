@@ -44,12 +44,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 private struct AppCommands: Commands {
     @FocusedValue(\.showTomlSheet) private var showTomlSheet
     @FocusedValue(\.showFlacImporter) private var showFlacImporter
+    @FocusedValue(\.showReadOnlyFlacImporter) private var showReadOnlyFlacImporter
     @FocusedValue(\.performDefaultSave) private var performDefaultSave
     @FocusedValue(\.performSaveTagsOnly) private var performSaveTagsOnly
     @FocusedValue(\.performSavePicturesOnly) private var performSavePicturesOnly
+    @FocusedValue(\.performToggleSelectedTrackLocks) private var performToggleSelectedTrackLocks
+    @FocusedValue(\.toggleSelectedTrackLocksTitle) private var toggleSelectedTrackLocksTitle
     @FocusedValue(\.canPerformDefaultSave) private var canPerformDefaultSave
     @FocusedValue(\.canPerformSaveTagsOnly) private var canPerformSaveTagsOnly
     @FocusedValue(\.canPerformSavePicturesOnly) private var canPerformSavePicturesOnly
+    @FocusedValue(\.canPerformToggleSelectedTrackLocks) private var canPerformToggleSelectedTrackLocks
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
@@ -58,6 +62,22 @@ private struct AppCommands: Commands {
             }
             .keyboardShortcut("l")
             .disabled(showFlacImporter == nil)
+
+            Button("Load FLAC files (read-only)...") {
+                showReadOnlyFlacImporter?()
+            }
+            .keyboardShortcut("l", modifiers: [.command, .shift])
+            .disabled(showReadOnlyFlacImporter == nil)
+
+            Divider()
+
+            Button(toggleSelectedTrackLocksTitle ?? "Toggle Selected Tracks Lock") {
+                performToggleSelectedTrackLocks?()
+            }
+            .keyboardShortcut("l", modifiers: [.control])
+            .disabled(!(canPerformToggleSelectedTrackLocks ?? false))
+
+            Divider()
 
             Button("Show TOML...") {
                 showTomlSheet?()

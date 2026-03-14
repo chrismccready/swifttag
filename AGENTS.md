@@ -181,3 +181,5 @@ Before stating that a plan is ready for implementation, confirm that it includes
 ## General
 
 - The great knowledge is presence.
+- At the end of every assistant response, use the shell to run `date -u +"%Y-%m-%dT%H:%M:%SZ"` immediately before replying to the user.
+- Include that UTC timestamp as the final line of the response.

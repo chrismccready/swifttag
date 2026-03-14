@@ -7,6 +7,7 @@ struct AlbumArtWellView: View {
     let dimension: CGFloat
     let onDropProviders: ([NSItemProvider]) -> Bool
     var isEnabled: Bool = true
+    var showsExternalDifferenceOverlay: Bool = false
 
     var body: some View {
         ZStack {
@@ -17,6 +18,11 @@ struct AlbumArtWellView: View {
                 .resizable()
                 .scaledToFit()
                 .padding(4)
+
+            if showsExternalDifferenceOverlay {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(.red.opacity(0.22))
+            }
         }
         .frame(width: dimension, height: dimension)
         .onDrop(of: [UTType.image.identifier, UTType.fileURL.identifier], isTargeted: nil) { providers in

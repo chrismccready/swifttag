@@ -37,6 +37,7 @@ struct ContentView: View {
 
     @State private var isTomlSheetPresented: Bool = false
     @State private var isFlacImporterPresented: Bool = false
+    @State private var pendingImporterLockedState: Bool = false
     @State private var isImportErrorPresented: Bool = false
     @State private var isSaveErrorPresented: Bool = false
     @State private var isAlbumArtSheetPresented: Bool = false
@@ -49,6 +50,7 @@ struct ContentView: View {
     @State private var isSaveOperationRunning: Bool = false
     @State private var hasPerformedInitialUITestSetup: Bool = false
     @State private var loadedReopenRecordID: UUID?
+    @State private var trackFileMonitor: TrackFileMonitor = .init()
     @FocusState private var focusedMiscTagKeyRowID: MiscTagRow.ID?
     @Environment(\.openWindow) private var openWindow
     @AppStorage(SaveSettingsKey.defaultSavePayload) private var defaultSavePayloadRawValue: String = SaveSettingsDefaults.defaultSavePayload.rawValue
@@ -200,6 +202,309 @@ struct ContentView: View {
         viewModel.totalDiscsHoverMessage
     }
 
+    private var isAlbumMetadataEditable: Bool {
+        viewModel.hasUnlockedTracks && !isSaveOperationRunning
+    }
+
+    private var isSelectionEditable: Bool {
+        viewModel.isSelectionEditable() && !isSaveOperationRunning
+    }
+
+    private var lockMenuTitle: String {
+        viewModel.lockMenuTitle(for: selectedTrackIDs) ?? "Toggle Selected Tracks Lock"
+    }
+
+    private var hasAlbumExternalDifference: Bool {
+        viewModel.hasExternalDifferenceForAnyLoadedTrack(keys: ["ALBUM"])
+    }
+
+    private var hasAlbumArtistExternalDifference: Bool {
+        viewModel.hasExternalDifferenceForAnyLoadedTrack(keys: ["ALBUMARTIST"])
+    }
+
+    private var hasPictureDifference: Bool {
+        viewModel.hasExternalPictureDifference()
+    }
+
+    private var hasTotalTracksExternalDifference: Bool {
+        viewModel.hasExternalDifferenceForAnyLoadedTrack(keys: ["TOTALTRACKS", "TRACKTOTAL"])
+    }
+
+    private var hasTotalDiscsExternalDifference: Bool {
+        viewModel.hasExternalDifferenceForAnyLoadedTrack(keys: ["TOTALDISCS", "DISCTOTAL"])
+    }
+
+    private var canToggleTrackLocks: Bool {
+        !selectedTrackIDs.isEmpty && !isSaveOperationRunning
+    }
+
+    private var hasTrackNumberExternalDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.trackNumber])
+    }
+
+    private var hasDiscNumberExternalDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.discNumber])
+    }
+
+    private var hasGenreExternalDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.genre])
+    }
+
+    private var hasArtistExternalDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.artist])
+    }
+
+    private var hasComposerExternalDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.composer])
+    }
+
+    private var hasLocationExternalDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.location])
+    }
+
+    private var hasDateExternalDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.date])
+    }
+
+    private var hasDescriptionExternalDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.description])
+    }
+
+    private var trackStatusPresentationLookup: (UUID) -> TrackStatusPresentation? {
+        { trackID in
+            viewModel.trackStatusPresentation(
+                for: trackID,
+                tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+                albumArtPictures: currentAlbumArtPictures
+            )
+        }
+    }
+
+    private var hasExternalTitleDifferenceLookup: (UUID) -> Bool {
+        { trackID in
+            viewModel.hasExternalTagDifference(for: trackID, key: TagKey.title)
+        }
+    }
+
+    private var hasExternalDifferenceForMiscTagRowLookup: (MiscTagRow) -> Bool {
+        { row in
+            viewModel.hasExternalDifference(forMiscTagRow: row)
+        }
+    }
+
+    private var editorView: TagEditorView {
+        TagEditorView(
+            albumBinding: albumBinding,
+            albumArtistBinding: albumArtistBinding,
+            isSaveOperationRunning: isSaveOperationRunning,
+            isAlbumMetadataEditable: isAlbumMetadataEditable,
+            hasAlbumExternalDifference: hasAlbumExternalDifference,
+            hasAlbumArtistExternalDifference: hasAlbumArtistExternalDifference,
+            showsPictureDifferenceOverlay: hasPictureDifference,
+            frontCoverImage: albumArtViewModel.imageForAlbumArtSlot(.frontCover),
+            onFrontCoverDrop: { providers in
+                albumArtViewModel.handleAlbumArtDrop(providers, for: .frontCover)
+            },
+            onFrontCoverTap: {
+                isAlbumArtSheetPresented = true
+            },
+            trackItems: trackItems,
+            selectedTrackIDsBinding: selectedTrackIDsBinding,
+            titleBindingForTrack: titleBinding(for:),
+            statusPresentationForTrack: trackStatusPresentationLookup,
+            isTrackLocked: viewModel.isTrackLocked(_:),
+            hasDeletedFile: viewModel.hasDeletedFile(for:),
+            hasExternalTitleDifference: hasExternalTitleDifferenceLookup,
+            onToggleTrackLocks: toggleSelectedTrackLocks,
+            lockMenuTitle: lockMenuTitle,
+            canToggleTrackLocks: canToggleTrackLocks,
+            totalTracks: totalTracks,
+            hasTotalTracksMismatch: hasTotalTracksMismatch,
+            totalTracksHoverMessage: totalTracksHoverMessage,
+            totalDiscsBinding: totalDiscsBinding,
+            hasTotalDiscsMismatch: hasTotalDiscsMismatch,
+            totalDiscsHoverMessage: totalDiscsHoverMessage,
+            isSelectionEditable: isSelectionEditable,
+            hasTotalTracksExternalDifference: hasTotalTracksExternalDifference,
+            hasTotalDiscsExternalDifference: hasTotalDiscsExternalDifference,
+            selectedNumberBinding: selectedNumberBinding,
+            selectedDiscBinding: selectedDiscBinding,
+            selectedGenreBinding: selectedGenreBinding,
+            selectedArtistBinding: selectedArtistBinding,
+            selectedComposerBinding: selectedComposerBinding,
+            selectedLocationBinding: selectedLocationBinding,
+            selectedDateBinding: selectedDateBinding,
+            selectedDescriptionsBinding: selectedDescriptionsBinding,
+            hasTrackNumberExternalDifference: hasTrackNumberExternalDifference,
+            hasDiscNumberExternalDifference: hasDiscNumberExternalDifference,
+            hasGenreExternalDifference: hasGenreExternalDifference,
+            hasArtistExternalDifference: hasArtistExternalDifference,
+            hasComposerExternalDifference: hasComposerExternalDifference,
+            hasLocationExternalDifference: hasLocationExternalDifference,
+            hasDateExternalDifference: hasDateExternalDifference,
+            hasDescriptionExternalDifference: hasDescriptionExternalDifference,
+            positiveIntegerTransform: positiveIntegerStringBinding(_:),
+            miscTagRowsBinding: miscTagRowsBinding,
+            selectedMiscTagRowIDsBinding: selectedMiscTagRowIDsBinding,
+            focusedMiscTagKeyRowIDBinding: $focusedMiscTagKeyRowID,
+            isMiscTagEditingEnabled: isSelectionEditable,
+            onAddMiscTagRow: addMiscTagRow,
+            onDeleteSelectedMiscTagRows: deleteSelectedMiscTagRows,
+            miscTagKeyBinding: miscTagKeyBinding(for:),
+            miscTagValueBinding: miscTagValueBinding(for:),
+            isInvalidMiscTagKeyInput: isInvalidMiscTagKeyInput(_:for:),
+            hasExternalDifferenceForMiscTagRow: hasExternalDifferenceForMiscTagRowLookup
+        )
+    }
+
+    private var presentedEditorView: some View {
+        editorView
+            .padding()
+            .frame(minWidth: 520, minHeight: 530, idealHeight: 640, alignment: .topLeading)
+    }
+
+    private var contentStack: some View {
+        ZStack {
+            presentedEditorView
+
+            if let saveStatusState, isSaveStatusVisible {
+                SaveStatusView(presentation: saveStatusState.presentation)
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+        }
+    }
+
+    private var albumArtSheetView: some View {
+        AlbumArtSheetView(
+            isSaveOperationRunning: isSaveOperationRunning,
+            isEditingEnabled: isAlbumMetadataEditable,
+            showsPictureDifferenceOverlay: viewModel.hasExternalPictureDifference(),
+            saveStatusPresentation: saveStatusState?.presentation,
+            albumArtTypes: albumArtTypes,
+            navigationPath: Binding(
+                get: { albumArtViewModel.albumArtNavigationPath },
+                set: { albumArtViewModel.albumArtNavigationPath = $0 }
+            ),
+            isFileImporterPresented: Binding(
+                get: { albumArtViewModel.isAlbumArtFileImporterPresented },
+                set: { albumArtViewModel.isAlbumArtFileImporterPresented = $0 }
+            ),
+            isFileExporterPresented: Binding(
+                get: { albumArtViewModel.isAlbumArtFileExporterPresented },
+                set: { albumArtViewModel.isAlbumArtFileExporterPresented = $0 }
+            ),
+            exportDocument: albumArtViewModel.albumArtExportDocument,
+            exportContentType: albumArtViewModel.albumArtExportContentType,
+            exportDefaultFileName: albumArtViewModel.albumArtExportDefaultFileName,
+            imageForSlot: albumArtViewModel.imageForAlbumArtSlot(_:),
+            hasImageForSlot: albumArtViewModel.hasImage(for:),
+            onOpenPicker: albumArtViewModel.openAlbumArtFilePicker(for:),
+            onPrepareExport: { slot in
+                albumArtViewModel.prepareAlbumArtExport(for: slot, albumArtTypes: albumArtTypes)
+            },
+            onDropForSlot: { providers, slot in albumArtViewModel.handleAlbumArtDrop(providers, for: slot) },
+            onFileImportResult: albumArtViewModel.handleAlbumArtFileImportResult(_:),
+            onFileExportResult: albumArtViewModel.handleAlbumArtFileExportResult(_:)
+        )
+    }
+
+    private var observedContent: some View {
+        contentStack
+            .onAppear {
+                reloadMiscTagRowsFromSelection()
+                configureWindowRouting()
+                refreshTrackMonitoring()
+                loadUITestStateIfNeeded()
+                loadReopenRecordIfNeeded()
+            }
+            .onChange(of: sessionValue.reopenRecordID) { _, _ in
+                loadReopenRecordIfNeeded()
+            }
+            .onChange(of: selectedTrackIDs) { _, _ in
+                reloadMiscTagRowsFromSelection()
+            }
+            .onChange(of: TrackSetFingerprint.make(from: viewModel.importedTrackReferences)) { _, _ in
+                EditorWindowCoordinator.shared.register(
+                    sessionValue: sessionValue,
+                    trackReferences: viewModel.importedTrackReferences
+                )
+                refreshTrackMonitoring()
+            }
+            .onChange(of: focusedMiscTagKeyRowID) { oldValue, newValue in
+                if let oldValue {
+                    finalizeMiscTagKeyEditing(for: oldValue)
+                }
+
+                if let newValue {
+                    recordOriginalMiscTagKeyIfNeeded(for: newValue)
+                }
+            }
+    }
+
+    private var commandFocusedContent: some View {
+        observedContent
+            .focusedSceneValue(\.showTomlSheet) {
+                isTomlSheetPresented = true
+            }
+            .focusedSceneValue(\.showFlacImporter) {
+                showWritableImporter()
+            }
+            .focusedSceneValue(\.showReadOnlyFlacImporter) {
+                showReadOnlyImporter()
+            }
+            .focusedSceneValue(\.performDefaultSave) {
+                save()
+            }
+            .focusedSceneValue(\.performSaveTagsOnly) {
+                save(using: .writeTags)
+            }
+            .focusedSceneValue(\.performSavePicturesOnly) {
+                save(using: .writePictures)
+            }
+            .focusedSceneValue(\.toggleSelectedTrackLocksTitle, lockMenuTitle)
+            .focusedSceneValue(\.performToggleSelectedTrackLocks) {
+                toggleSelectedTrackLocks()
+            }
+            .focusedSceneValue(\.canPerformToggleSelectedTrackLocks, canToggleTrackLocks)
+            .focusedSceneValue(\.canPerformDefaultSave, canSave(payload: saveSettingsSnapshot.payload))
+            .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
+            .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
+            .onDisappear {
+                EditorWindowCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
+                trackFileMonitor.stopAll()
+                saveStatusState = nil
+                isSaveStatusVisible = false
+                isSaveOperationRunning = false
+            }
+    }
+
+    private var presentedContent: some View {
+        commandFocusedContent
+            .fileImporter(
+                isPresented: $isFlacImporterPresented,
+                allowedContentTypes: [.folder, UTType(filenameExtension: "flac") ?? .data],
+                allowsMultipleSelection: true,
+                onCompletion: handleFlacImportResult
+            )
+            .sheet(isPresented: $isTomlSheetPresented) {
+                TOMLUtilityView(tomlText: tomlText())
+            }
+            .sheet(isPresented: $isAlbumArtSheetPresented) {
+                albumArtSheetView
+            }
+            .alert("FLAC Import Error", isPresented: $isImportErrorPresented) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(importErrorMessage)
+            }
+            .alert("Save Error", isPresented: $isSaveErrorPresented) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(saveErrorMessage)
+            }
+    }
+
     private func reloadMiscTagRowsFromSelection() {
         viewModel.reloadMiscTagRowsFromSelection()
     }
@@ -248,6 +553,9 @@ struct ContentView: View {
             return
         }
 
+        let shouldLockImportedTracks = pendingImporterLockedState
+        pendingImporterLockedState = false
+
         Task {
             let scopedURLs = selectedURLs.filter { $0.startAccessingSecurityScopedResource() }
             defer {
@@ -258,7 +566,7 @@ struct ContentView: View {
 
             let flacFiles = collectFlacFiles(from: scopedURLs)
             do {
-                try await importFlacFiles(flacFiles)
+                try await importFlacFiles(flacFiles, locked: shouldLockImportedTracks)
             } catch {
                 importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 isImportErrorPresented = true
@@ -296,12 +604,17 @@ struct ContentView: View {
         }
     }
 
-    private func importFlacFiles(_ flacFiles: [URL]) async throws {
-        try await viewModel.importFlacFiles(flacFiles)
+    private func importFlacFiles(_ flacFiles: [URL], locked: Bool = false) async throws {
+        try await viewModel.importFlacFiles(flacFiles, locked: locked)
         albumArtViewModel.applyImportedFlacPictures(
             viewModel.importedFlacPicturesByType,
             albumArtTypes: albumArtTypes
         )
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures
+        )
+        refreshTrackMonitoring()
     }
 
     private var saveSettingsSnapshot: SaveSettingsSnapshot {
@@ -317,17 +630,21 @@ struct ContentView: View {
         )
     }
 
+    private var currentAlbumArtPictures: [FlacWritablePictureRecord] {
+        albumArtViewModel.flacPictures(albumArtTypes: albumArtTypes)
+    }
+
     private func canSave(payload: SavePayloadOption) -> Bool {
         guard !isSaveOperationRunning else {
             return false
         }
 
-        let scope = saveSettingsSnapshot.scope
-        if payload.writesPictures || payload.writesTags {
-            return viewModel.canSave(scope: scope)
-        }
-
-        return false
+        return viewModel.canSave(
+            payload: payload,
+            scope: saveSettingsSnapshot.scope,
+            tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures
+        )
     }
 
     private func save(using payload: SavePayloadOption? = nil) {
@@ -352,10 +669,11 @@ struct ContentView: View {
                     payload: effectivePayload,
                     scope: scope,
                     tagWriteOptions: settings.tagWriteOptions,
-                    albumArtPictures: albumArtViewModel.flacPictures(albumArtTypes: albumArtTypes),
+                    albumArtPictures: currentAlbumArtPictures,
                     editorSessionID: sessionValue.sessionID,
                     progress: updateSaveStatus(currentTrackIndex:totalTrackCount:currentTrackName:)
                 )
+                refreshTrackMonitoring()
                 EditorWindowCoordinator.shared.register(
                     sessionValue: sessionValue,
                     trackReferences: viewModel.importedTrackReferences
@@ -477,6 +795,34 @@ struct ContentView: View {
             }
         }
         try await importFlacFiles(resolvedFiles.urls)
+    }
+
+    private func refreshTrackMonitoring() {
+        trackFileMonitor.replaceObservations(for: viewModel.trackItems) { event in
+            viewModel.refreshTrackFileState(
+                for: event.trackID,
+                currentPath: event.currentPath,
+                tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+                albumArtPictures: currentAlbumArtPictures
+            )
+            DispatchQueue.main.async {
+                refreshTrackMonitoring()
+            }
+        }
+    }
+
+    private func toggleSelectedTrackLocks() {
+        viewModel.toggleLockState(for: selectedTrackIDs)
+    }
+
+    private func showWritableImporter() {
+        pendingImporterLockedState = false
+        isFlacImporterPresented = true
+    }
+
+    private func showReadOnlyImporter() {
+        pendingImporterLockedState = true
+        isFlacImporterPresented = true
     }
 
     private func resolveTrackURLs(
@@ -683,167 +1029,23 @@ struct ContentView: View {
     }
 
     var body: some View {
-        ZStack {
-            TagEditorView(
-                albumBinding: albumBinding,
-                albumArtistBinding: albumArtistBinding,
-                isSaveOperationRunning: isSaveOperationRunning,
-                frontCoverImage: albumArtViewModel.imageForAlbumArtSlot(.frontCover),
-                onFrontCoverDrop: { providers in
-                    albumArtViewModel.handleAlbumArtDrop(providers, for: .frontCover)
-                },
-                onFrontCoverTap: {
-                    isAlbumArtSheetPresented = true
-                },
-                trackItems: trackItems,
-                selectedTrackIDsBinding: selectedTrackIDsBinding,
-                titleBindingForTrack: titleBinding(for:),
-                totalTracks: totalTracks,
-                hasTotalTracksMismatch: hasTotalTracksMismatch,
-                totalTracksHoverMessage: totalTracksHoverMessage,
-                totalDiscsBinding: totalDiscsBinding,
-                hasTotalDiscsMismatch: hasTotalDiscsMismatch,
-                totalDiscsHoverMessage: totalDiscsHoverMessage,
-                selectedNumberBinding: selectedNumberBinding,
-                selectedDiscBinding: selectedDiscBinding,
-                selectedGenreBinding: selectedGenreBinding,
-                selectedArtistBinding: selectedArtistBinding,
-                selectedComposerBinding: selectedComposerBinding,
-                selectedLocationBinding: selectedLocationBinding,
-                selectedDateBinding: selectedDateBinding,
-                selectedDescriptionsBinding: selectedDescriptionsBinding,
-                positiveIntegerTransform: positiveIntegerStringBinding(_:),
-                miscTagRowsBinding: miscTagRowsBinding,
-                selectedMiscTagRowIDsBinding: selectedMiscTagRowIDsBinding,
-                focusedMiscTagKeyRowIDBinding: $focusedMiscTagKeyRowID,
-                onAddMiscTagRow: addMiscTagRow,
-                onDeleteSelectedMiscTagRows: deleteSelectedMiscTagRows,
-                miscTagKeyBinding: miscTagKeyBinding(for:),
-                miscTagValueBinding: miscTagValueBinding(for:),
-                isInvalidMiscTagKeyInput: isInvalidMiscTagKeyInput(_:for:)
-            )
-            .padding()
-            .frame(minWidth: 520, minHeight: 530, idealHeight: 640, alignment: .topLeading)
-
-            if let saveStatusState, isSaveStatusVisible {
-                SaveStatusView(presentation: saveStatusState.presentation)
-                    .transition(.opacity)
-                    .zIndex(1)
-            }
-        }
-        .onAppear {
-            reloadMiscTagRowsFromSelection()
-            configureWindowRouting()
-            loadUITestStateIfNeeded()
-            loadReopenRecordIfNeeded()
-        }
-        .onChange(of: sessionValue.reopenRecordID) { _, _ in
-            loadReopenRecordIfNeeded()
-        }
-        .onChange(of: selectedTrackIDs) { _, _ in
-            reloadMiscTagRowsFromSelection()
-        }
-        .onChange(of: TrackSetFingerprint.make(from: viewModel.importedTrackReferences)) { _, _ in
-            EditorWindowCoordinator.shared.register(
-                sessionValue: sessionValue,
-                trackReferences: viewModel.importedTrackReferences
-            )
-        }
-        .onChange(of: focusedMiscTagKeyRowID) { oldValue, newValue in
-            if let oldValue {
-                finalizeMiscTagKeyEditing(for: oldValue)
-            }
-
-            if let newValue {
-                recordOriginalMiscTagKeyIfNeeded(for: newValue)
-            }
-        }
-        .focusedSceneValue(\.showTomlSheet) {
-            isTomlSheetPresented = true
-        }
-        .focusedSceneValue(\.showFlacImporter) {
-            isFlacImporterPresented = true
-        }
-        .focusedSceneValue(\.performDefaultSave) {
-            save()
-        }
-        .focusedSceneValue(\.performSaveTagsOnly) {
-            save(using: .writeTags)
-        }
-        .focusedSceneValue(\.performSavePicturesOnly) {
-            save(using: .writePictures)
-        }
-        .focusedSceneValue(\.canPerformDefaultSave, canSave(payload: saveSettingsSnapshot.payload))
-        .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
-        .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
-        .onDisappear {
-            EditorWindowCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
-            saveStatusState = nil
-            isSaveStatusVisible = false
-            isSaveOperationRunning = false
-        }
-        .fileImporter(
-            isPresented: $isFlacImporterPresented,
-            allowedContentTypes: [.folder, UTType(filenameExtension: "flac") ?? .data],
-            allowsMultipleSelection: true,
-            onCompletion: handleFlacImportResult
-        )
-        .sheet(isPresented: $isTomlSheetPresented) {
-            TOMLUtilityView(tomlText: tomlText())
-        }
-        .sheet(isPresented: $isAlbumArtSheetPresented) {
-            AlbumArtSheetView(
-                isSaveOperationRunning: isSaveOperationRunning,
-                saveStatusPresentation: saveStatusState?.presentation,
-                albumArtTypes: albumArtTypes,
-                navigationPath: Binding(
-                    get: { albumArtViewModel.albumArtNavigationPath },
-                    set: { albumArtViewModel.albumArtNavigationPath = $0 }
-                ),
-                isFileImporterPresented: Binding(
-                    get: { albumArtViewModel.isAlbumArtFileImporterPresented },
-                    set: { albumArtViewModel.isAlbumArtFileImporterPresented = $0 }
-                ),
-                isFileExporterPresented: Binding(
-                    get: { albumArtViewModel.isAlbumArtFileExporterPresented },
-                    set: { albumArtViewModel.isAlbumArtFileExporterPresented = $0 }
-                ),
-                exportDocument: albumArtViewModel.albumArtExportDocument,
-                exportContentType: albumArtViewModel.albumArtExportContentType,
-                exportDefaultFileName: albumArtViewModel.albumArtExportDefaultFileName,
-                imageForSlot: albumArtViewModel.imageForAlbumArtSlot(_:),
-                hasImageForSlot: albumArtViewModel.hasImage(for:),
-                onOpenPicker: albumArtViewModel.openAlbumArtFilePicker(for:),
-                onPrepareExport: { slot in
-                    albumArtViewModel.prepareAlbumArtExport(for: slot, albumArtTypes: albumArtTypes)
-                },
-                onDropForSlot: { providers, slot in albumArtViewModel.handleAlbumArtDrop(providers, for: slot) },
-                onFileImportResult: albumArtViewModel.handleAlbumArtFileImportResult(_:),
-                onFileExportResult: albumArtViewModel.handleAlbumArtFileExportResult(_:)
-            )
-        }
-        .alert("FLAC Import Error", isPresented: $isImportErrorPresented) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(importErrorMessage)
-        }
-        .alert("Save Error", isPresented: $isSaveErrorPresented) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(saveErrorMessage)
-        }
+        presentedContent
     }
 }
 
 extension FocusedValues {
     @Entry var showTomlSheet: (() -> Void)?
     @Entry var showFlacImporter: (() -> Void)?
+    @Entry var showReadOnlyFlacImporter: (() -> Void)?
     @Entry var performDefaultSave: (() -> Void)?
     @Entry var performSaveTagsOnly: (() -> Void)?
     @Entry var performSavePicturesOnly: (() -> Void)?
+    @Entry var performToggleSelectedTrackLocks: (() -> Void)?
+    @Entry var toggleSelectedTrackLocksTitle: String?
     @Entry var canPerformDefaultSave: Bool?
     @Entry var canPerformSaveTagsOnly: Bool?
     @Entry var canPerformSavePicturesOnly: Bool?
+    @Entry var canPerformToggleSelectedTrackLocks: Bool?
 }
 
 #Preview {

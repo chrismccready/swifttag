@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import SwiftUI
 import Testing
 import XCTest
 @testable import SwiftTag
@@ -63,6 +64,50 @@ struct SwiftTagTests {
             tags: tags,
             sourceFileURL: fileURL
         )
+    }
+
+    private static var defaultTagWriteOptions: TagWriteOptions {
+        TagWriteOptions(
+            zeroPadTrackNumber: SaveSettingsDefaults.zeroPadTrackNumber,
+            trackCountKeyStrategy: SaveSettingsDefaults.trackCountKeyStrategy,
+            zeroPadDiscNumber: SaveSettingsDefaults.zeroPadDiscNumber,
+            discCountKeyStrategy: SaveSettingsDefaults.discCountKeyStrategy
+        )
+    }
+
+    private static func trackWithSnapshot(
+        tags: [String: String],
+        fileTags: [String: String]? = nil,
+        pictureData: Data = Data([0x01]),
+        isLocked: Bool = false
+    ) -> Track {
+        let normalizedFileTags = fileTags ?? tags
+        return Track(
+            tags: tags,
+            flacPicturesByType: [3: pictureData],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/test.flac"),
+            latestFileSnapshot: TrackFileSnapshot(
+                tags: normalizedFileTags,
+                picturesByType: [3: pictureData]
+            ),
+            isLocked: isLocked
+        )
+    }
+
+    @MainActor
+    private static func waitUntil(
+        timeoutNanoseconds: UInt64 = 2_000_000_000,
+        pollIntervalNanoseconds: UInt64 = 25_000_000,
+        condition: @escaping @MainActor () -> Bool
+    ) async -> Bool {
+        let deadline = DispatchTime.now().uptimeNanoseconds + timeoutNanoseconds
+        while DispatchTime.now().uptimeNanoseconds < deadline {
+            if condition() {
+                return true
+            }
+            try? await Task.sleep(nanoseconds: pollIntervalNanoseconds)
+        }
+        return condition()
     }
 
     @MainActor
@@ -268,6 +313,819 @@ struct SwiftTagTests {
         #expect(tags[TagKey.filename] == nil)
         #expect(tags["TRACK"] == nil)
         #expect(tags["DISC"] == nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelCanSaveWhenTrackTagsDifferFromSnapshot() {
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Album"
+        viewModel.albumArtist = "Artist"
+        viewModel.totalDiscs = "1"
+        viewModel.trackItems = [
+            Self.trackWithSnapshot(
+                tags: [
+                    TagKey.title: "Changed Title",
+                    TagKey.trackNumber: "1",
+                    TagKey.discNumber: "1",
+                    TagKey.filename: "test.flac"
+                ],
+                fileTags: [
+                    TagKey.title: "Original Title",
+                    TagKey.trackNumber: "01",
+                    TagKey.discNumber: "01"
+                ]
+            )
+        ]
+
+        #expect(
+            viewModel.canSave(
+                payload: .writeTags,
+                scope: .allTracks,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: []
+            )
+        )
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelBlocksSaveForLockedTrack() {
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Album"
+        viewModel.albumArtist = "Artist"
+        viewModel.totalDiscs = "1"
+        viewModel.trackItems = [
+            Self.trackWithSnapshot(
+                tags: [
+                    TagKey.title: "Changed Title",
+                    TagKey.trackNumber: "1",
+                    TagKey.discNumber: "1",
+                    TagKey.filename: "test.flac"
+                ],
+                fileTags: [
+                    TagKey.title: "Original Title",
+                    TagKey.trackNumber: "01",
+                    TagKey.discNumber: "01"
+                ],
+                isLocked: true
+            )
+        ]
+
+        #expect(
+            !viewModel.canSave(
+                payload: .writeTags,
+                scope: .allTracks,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: []
+            )
+        )
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelLockMenuTitleReflectsSelectedState() {
+        let firstTrack = Self.trackWithSnapshot(
+            tags: [TagKey.title: "One", TagKey.trackNumber: "1", TagKey.discNumber: "1", TagKey.filename: "one.flac"]
+        )
+        let secondTrack = Self.trackWithSnapshot(
+            tags: [TagKey.title: "Two", TagKey.trackNumber: "2", TagKey.discNumber: "1", TagKey.filename: "two.flac"],
+            isLocked: true
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack, secondTrack]
+
+        #expect(viewModel.lockMenuTitle(for: Set([firstTrack.id])) == "Lock Selected Track")
+        #expect(viewModel.lockMenuTitle(for: Set([secondTrack.id])) == "Unlock Selected Track")
+        #expect(viewModel.lockMenuTitle(for: Set([firstTrack.id, secondTrack.id])) == "Toggle Selected Tracks Lock")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelLockedSelectionKeepsBindingsReadable() throws {
+        let track = Self.trackWithSnapshot(
+            tags: [
+                TagKey.title: "Locked Title",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1",
+                TagKey.date: "2026-03-10",
+                TagKey.filename: "locked.flac",
+                "ENCODED_BY": "Tester"
+            ],
+            isLocked: true
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = Set([track.id])
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        #expect(!viewModel.isSelectionEditable())
+
+        let selectedTitleBinding = viewModel.selectedTagBinding(tagName: TagKey.title)
+        #expect(selectedTitleBinding?.wrappedValue == "Locked Title")
+
+        let selectedDateBinding = try #require(viewModel.selectedDateBinding())
+        #expect(DateTagFormatter.format(selectedDateBinding.wrappedValue) == "2026-03-10")
+
+        let miscRowID = try #require(viewModel.miscTagRows.first(where: { $0.key == "ENCODED_BY" })?.id)
+        let miscKeyBinding = viewModel.miscTagKeyBinding(for: miscRowID)
+        let miscValueBinding = viewModel.miscTagValueBinding(for: miscRowID)
+        #expect(miscKeyBinding?.wrappedValue == "ENCODED_BY")
+        #expect(miscValueBinding?.wrappedValue == "Tester")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelUnlockSelectionRestoresEditability() throws {
+        let track = Self.trackWithSnapshot(
+            tags: [
+                TagKey.title: "Initially Locked",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1",
+                TagKey.filename: "unlock.flac"
+            ],
+            isLocked: true
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = Set([track.id])
+
+        #expect(!viewModel.isSelectionEditable())
+        viewModel.toggleLockState(for: Set([track.id]))
+        #expect(viewModel.isSelectionEditable())
+
+        let selectedTitleBinding = try #require(viewModel.selectedTagBinding(tagName: TagKey.title))
+        selectedTitleBinding.wrappedValue = "Unlocked Title"
+        #expect(viewModel.trackItems.first?.tags[TagKey.title] == "Unlocked Title")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelStatusPresentationPrefersLockAndExternalDifference() {
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Album"
+        viewModel.albumArtist = "Artist"
+        viewModel.totalDiscs = "1"
+
+        var track = Self.trackWithSnapshot(
+            tags: [
+                TagKey.title: "Title",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1",
+                TagKey.filename: "test.flac"
+            ]
+        )
+        track.externalDifferences = TrackExternalDifferences(
+            isDeleted: false,
+            fileValuesByTag: [TagKey.title: "File Title"],
+            hasPictureDifference: false
+        )
+        viewModel.trackItems = [track]
+
+        let externalPresentation = viewModel.trackStatusPresentation(
+            for: track.id,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(externalPresentation?.systemImageName == "exclamationmark.triangle")
+
+        viewModel.toggleLockState(for: Set([track.id]))
+        let lockedPresentation = viewModel.trackStatusPresentation(
+            for: track.id,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(lockedPresentation?.systemImageName == "lock.fill")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelImportsReadOnlyTracksAsLocked() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "read-only-import.flac")
+        let viewModel = TagEditorViewModel()
+
+        try await viewModel.importFlacFiles([fileURL], locked: true)
+
+        #expect(viewModel.trackItems.count == 1)
+        #expect(viewModel.trackItems[0].isLocked)
+        #expect(viewModel.trackItems[0].latestFileSnapshot != nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSyncedSnapshotProducesFishFillStatus() {
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Album"
+        viewModel.albumArtist = "Artist"
+        viewModel.totalDiscs = "1"
+        viewModel.trackItems = [
+            Track(
+                tags: [
+                    TagKey.title: "Title",
+                    TagKey.trackNumber: "1",
+                    TagKey.discNumber: "1",
+                    TagKey.filename: "test.flac"
+                ],
+                sourceFileURL: URL(fileURLWithPath: "/tmp/test.flac")
+            )
+        ]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let presentation = viewModel.trackStatusPresentation(
+            for: viewModel.trackItems[0].id,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(presentation?.systemImageName == "fish.fill")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelRefreshRenameUpdatesFilenameWithoutDeletedState() throws {
+        let originalURL = try Self.tempFixtureCopyURL(name: "rename-source.flac")
+        let bookmarkData = try originalURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let renamedURL = originalURL.deletingLastPathComponent().appendingPathComponent("rename-destination.flac")
+        try FileManager.default.moveItem(at: originalURL, to: renamedURL)
+        let metadata = try FlacMetadataService.readTags(for: renamedURL)
+        let importedPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+        let albumArtPictures = importedPicturesByType.map { pictureType, data in
+            FlacWritablePictureRecord(
+                type: pictureType,
+                mimeType: "image/png",
+                description: "",
+                data: data
+            )
+        }
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Test Album"
+        viewModel.albumArtist = "Test AlbumArtist"
+        viewModel.totalDiscs = "1"
+        viewModel.importedFlacPicturesByType = importedPicturesByType
+        viewModel.trackItems = [
+            Track(
+                tags: FlacImportMapper.mapTrackTags(
+                    sourceTags: metadata.tags,
+                    fileURL: originalURL,
+                    defaultDate: .now
+                ),
+                flacPicturesByType: importedPicturesByType,
+                sourceFileURL: originalURL,
+                securityScopedBookmarkData: bookmarkData,
+                latestFileSnapshot: nil
+            )
+        ]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            currentPath: originalURL.path,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let refreshedTrack = try #require(viewModel.trackItems.first)
+        #expect(refreshedTrack.sourceFileURL?.path == renamedURL.path)
+        #expect(refreshedTrack.tags[TagKey.filename] == renamedURL.lastPathComponent)
+        #expect(refreshedTrack.externalDifferences == nil)
+        #expect(!viewModel.hasDeletedFile(for: trackID))
+        let presentation = viewModel.trackStatusPresentation(
+            for: trackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+        #expect(presentation?.systemImageName == "fish.fill")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelRefreshRenameWithoutCurrentPathUsesBookmarkAndKeepsTrackActive() throws {
+        let originalURL = try Self.tempFixtureCopyURL(name: "rename-bookmark-source.flac")
+        let bookmarkData = try originalURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let renamedURL = originalURL.deletingLastPathComponent().appendingPathComponent("rename-bookmark-destination.flac")
+        try FileManager.default.moveItem(at: originalURL, to: renamedURL)
+
+        let metadata = try FlacMetadataService.readTags(for: renamedURL)
+        let importedPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+        let albumArtPictures = importedPicturesByType.map { pictureType, data in
+            FlacWritablePictureRecord(
+                type: pictureType,
+                mimeType: "image/png",
+                description: "",
+                data: data
+            )
+        }
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Test Album"
+        viewModel.albumArtist = "Test AlbumArtist"
+        viewModel.totalDiscs = "1"
+        viewModel.importedFlacPicturesByType = importedPicturesByType
+        viewModel.trackItems = [
+            Track(
+                tags: FlacImportMapper.mapTrackTags(
+                    sourceTags: metadata.tags,
+                    fileURL: originalURL,
+                    defaultDate: .now
+                ),
+                flacPicturesByType: importedPicturesByType,
+                sourceFileURL: originalURL,
+                securityScopedBookmarkData: bookmarkData,
+                latestFileSnapshot: TrackFileSnapshot(
+                    tags: Dictionary(
+                        uniqueKeysWithValues: metadata.tags.map { key, value in
+                            (TagNormalization.normalizeTagKey(key), value.trimmingCharacters(in: .whitespacesAndNewlines))
+                        }
+                    ),
+                    picturesByType: importedPicturesByType
+                )
+            )
+        ]
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let refreshedTrack = try #require(viewModel.trackItems.first)
+        #expect(refreshedTrack.sourceFileURL?.path == renamedURL.path)
+        #expect(refreshedTrack.tags[TagKey.filename] == renamedURL.lastPathComponent)
+        #expect(refreshedTrack.externalDifferences == nil)
+        #expect(!viewModel.hasDeletedFile(for: trackID))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelRefreshMultipleRenamesKeepsUpdatingFilename() throws {
+        let originalURL = try Self.tempFixtureCopyURL(name: "rename-twice-source.flac")
+        let bookmarkData = try originalURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let firstRenamedURL = originalURL.deletingLastPathComponent().appendingPathComponent("rename-twice-first.flac")
+        try FileManager.default.moveItem(at: originalURL, to: firstRenamedURL)
+
+        let metadata = try FlacMetadataService.readTags(for: firstRenamedURL)
+        let importedPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+        let albumArtPictures = importedPicturesByType.map { pictureType, data in
+            FlacWritablePictureRecord(
+                type: pictureType,
+                mimeType: "image/png",
+                description: "",
+                data: data
+            )
+        }
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Test Album"
+        viewModel.albumArtist = "Test AlbumArtist"
+        viewModel.totalDiscs = "1"
+        viewModel.importedFlacPicturesByType = importedPicturesByType
+        viewModel.trackItems = [
+            Track(
+                tags: FlacImportMapper.mapTrackTags(
+                    sourceTags: metadata.tags,
+                    fileURL: originalURL,
+                    defaultDate: .now
+                ),
+                flacPicturesByType: importedPicturesByType,
+                sourceFileURL: originalURL,
+                securityScopedBookmarkData: bookmarkData,
+                latestFileSnapshot: nil
+            )
+        ]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            currentPath: originalURL.path,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let secondRenamedURL = firstRenamedURL.deletingLastPathComponent().appendingPathComponent("rename-twice-second.flac")
+        try FileManager.default.moveItem(at: firstRenamedURL, to: secondRenamedURL)
+
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            currentPath: firstRenamedURL.path,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let refreshedTrack = try #require(viewModel.trackItems.first)
+        #expect(refreshedTrack.sourceFileURL?.path == secondRenamedURL.path)
+        #expect(refreshedTrack.tags[TagKey.filename] == secondRenamedURL.lastPathComponent)
+        #expect(refreshedTrack.externalDifferences == nil)
+        #expect(!viewModel.hasDeletedFile(for: trackID))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelRefreshMultipleRenamesWithoutCurrentPathKeepsUpdatingFilename() throws {
+        let originalURL = try Self.tempFixtureCopyURL(name: "rename-twice-bookmark-source.flac")
+        let bookmarkData = try originalURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let firstRenamedURL = originalURL.deletingLastPathComponent().appendingPathComponent("rename-twice-bookmark-first.flac")
+        try FileManager.default.moveItem(at: originalURL, to: firstRenamedURL)
+
+        let metadata = try FlacMetadataService.readTags(for: firstRenamedURL)
+        let importedPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+        let albumArtPictures = importedPicturesByType.map { pictureType, data in
+            FlacWritablePictureRecord(
+                type: pictureType,
+                mimeType: "image/png",
+                description: "",
+                data: data
+            )
+        }
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Test Album"
+        viewModel.albumArtist = "Test AlbumArtist"
+        viewModel.totalDiscs = "1"
+        viewModel.importedFlacPicturesByType = importedPicturesByType
+        viewModel.trackItems = [
+            Track(
+                tags: FlacImportMapper.mapTrackTags(
+                    sourceTags: metadata.tags,
+                    fileURL: originalURL,
+                    defaultDate: .now
+                ),
+                flacPicturesByType: importedPicturesByType,
+                sourceFileURL: originalURL,
+                securityScopedBookmarkData: bookmarkData,
+                latestFileSnapshot: TrackFileSnapshot(
+                    tags: Dictionary(
+                        uniqueKeysWithValues: metadata.tags.map { key, value in
+                            (TagNormalization.normalizeTagKey(key), value.trimmingCharacters(in: .whitespacesAndNewlines))
+                        }
+                    ),
+                    picturesByType: importedPicturesByType
+                )
+            )
+        ]
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let secondRenamedURL = firstRenamedURL.deletingLastPathComponent().appendingPathComponent("rename-twice-bookmark-second.flac")
+        try FileManager.default.moveItem(at: firstRenamedURL, to: secondRenamedURL)
+
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let refreshedTrack = try #require(viewModel.trackItems.first)
+        #expect(refreshedTrack.sourceFileURL?.path == secondRenamedURL.path)
+        #expect(refreshedTrack.tags[TagKey.filename] == secondRenamedURL.lastPathComponent)
+        #expect(refreshedTrack.externalDifferences == nil)
+        #expect(!viewModel.hasDeletedFile(for: trackID))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelRefreshAfterRewriteDoesNotMarkFileDeleted() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "rewrite-refresh.flac")
+        let bookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Rewrite Album"
+        viewModel.albumArtist = "Rewrite Artist"
+        viewModel.totalDiscs = "1"
+        viewModel.trackItems = [
+            Track(
+                tags: [
+                    TagKey.title: "Rewrite Title",
+                    TagKey.trackNumber: "1",
+                    TagKey.discNumber: "1",
+                    TagKey.filename: fileURL.lastPathComponent
+                ],
+                sourceFileURL: fileURL,
+                securityScopedBookmarkData: bookmarkData
+            )
+        ]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        _ = try await viewModel.save(
+            payload: .writeTags,
+            scope: .allTracks,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: [],
+            editorSessionID: UUID()
+        )
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(!viewModel.hasDeletedFile(for: trackID))
+        #expect(viewModel.trackItems.first?.sourceFileURL?.path == fileURL.path)
+    }
+
+    @Test
+    func trackFileMonitorUsesFilePathForObservation() {
+        let fileURL = URL(fileURLWithPath: "/tmp/test-folder/test.flac")
+        let monitoredURL = TrackFileMonitor.monitoredURL(for: fileURL)
+
+        #expect(monitoredURL.path == "/tmp/test-folder/test.flac")
+    }
+
+    @Test
+    @MainActor
+    func trackFileMonitorRenamesNeverInterpretTrackAsDeleted() async throws {
+        let originalURL = try Self.tempFixtureCopyURL(name: "rename-monitor-source.flac")
+        let bookmarkData = try originalURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let metadata = try FlacMetadataService.readTags(for: originalURL)
+        let importedPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+        let albumArtPictures = importedPicturesByType.map { pictureType, data in
+            FlacWritablePictureRecord(
+                type: pictureType,
+                mimeType: "image/png",
+                description: "",
+                data: data
+            )
+        }
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Test Album"
+        viewModel.albumArtist = "Test AlbumArtist"
+        viewModel.totalDiscs = "1"
+        viewModel.importedFlacPicturesByType = importedPicturesByType
+        viewModel.trackItems = [
+            Track(
+                tags: FlacImportMapper.mapTrackTags(
+                    sourceTags: metadata.tags,
+                    fileURL: originalURL,
+                    defaultDate: .now
+                ),
+                flacPicturesByType: importedPicturesByType,
+                sourceFileURL: originalURL,
+                securityScopedBookmarkData: bookmarkData,
+                latestFileSnapshot: nil
+            )
+        ]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        let monitor = TrackFileMonitor()
+        defer { monitor.stopAll() }
+
+        var sawDeleted = false
+        var eventCount = 0
+        var onChange: ((TrackFileMonitorEvent) -> Void)!
+        onChange = { event in
+            eventCount += 1
+            viewModel.refreshTrackFileState(
+                for: event.trackID,
+                currentPath: event.currentPath,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+            if viewModel.hasDeletedFile(for: trackID) {
+                sawDeleted = true
+            }
+            monitor.replaceObservations(for: viewModel.trackItems, onChange: onChange)
+        }
+
+        monitor.replaceObservations(for: viewModel.trackItems, onChange: onChange)
+
+        let firstRenamedURL = originalURL.deletingLastPathComponent().appendingPathComponent("rename-monitor-first.flac")
+        try FileManager.default.moveItem(at: originalURL, to: firstRenamedURL)
+
+        let firstRenameObserved = await Self.waitUntil {
+            viewModel.trackItems.first?.sourceFileURL?.path == firstRenamedURL.path
+        }
+        #expect(firstRenameObserved)
+        #expect(viewModel.trackItems.first?.tags[TagKey.filename] == firstRenamedURL.lastPathComponent)
+        #expect(!viewModel.hasDeletedFile(for: trackID))
+        #expect(!sawDeleted)
+
+        let secondRenamedURL = firstRenamedURL.deletingLastPathComponent().appendingPathComponent("rename-monitor-second.flac")
+        try FileManager.default.moveItem(at: firstRenamedURL, to: secondRenamedURL)
+
+        let secondRenameObserved = await Self.waitUntil {
+            viewModel.trackItems.first?.sourceFileURL?.path == secondRenamedURL.path
+        }
+        #expect(secondRenameObserved)
+        #expect(viewModel.trackItems.first?.tags[TagKey.filename] == secondRenamedURL.lastPathComponent)
+        #expect(!viewModel.hasDeletedFile(for: trackID))
+        #expect(!sawDeleted)
+        #expect(eventCount >= 2)
+    }
+
+    @Test
+    @MainActor
+    func trackFileMonitorDeleteMarksTrackDeletedAfterRetryWindow() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "delete-monitor-source.flac")
+        let bookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let metadata = try FlacMetadataService.readTags(for: fileURL)
+        let importedPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+        let albumArtPictures = importedPicturesByType.map { pictureType, data in
+            FlacWritablePictureRecord(
+                type: pictureType,
+                mimeType: "image/png",
+                description: "",
+                data: data
+            )
+        }
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Test Album"
+        viewModel.albumArtist = "Test AlbumArtist"
+        viewModel.totalDiscs = "1"
+        viewModel.importedFlacPicturesByType = importedPicturesByType
+        viewModel.trackItems = [
+            Track(
+                tags: FlacImportMapper.mapTrackTags(
+                    sourceTags: metadata.tags,
+                    fileURL: fileURL,
+                    defaultDate: .now
+                ),
+                flacPicturesByType: importedPicturesByType,
+                sourceFileURL: fileURL,
+                securityScopedBookmarkData: bookmarkData,
+                latestFileSnapshot: nil
+            )
+        ]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        let monitor = TrackFileMonitor()
+        defer { monitor.stopAll() }
+
+        var onChange: ((TrackFileMonitorEvent) -> Void)!
+        onChange = { event in
+            viewModel.refreshTrackFileState(
+                for: event.trackID,
+                currentPath: event.currentPath,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+            monitor.replaceObservations(for: viewModel.trackItems, onChange: onChange)
+        }
+
+        monitor.replaceObservations(for: viewModel.trackItems, onChange: onChange)
+        try FileManager.default.removeItem(at: fileURL)
+
+        let deleteObserved = await Self.waitUntil {
+            viewModel.hasDeletedFile(for: trackID)
+        }
+
+        #expect(deleteObserved)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelCanSaveWhenOnlyExternalTagDifferenceExists() {
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Album"
+        viewModel.albumArtist = "Artist"
+        viewModel.totalDiscs = "1"
+
+        viewModel.trackItems = [
+            Track(tags: [
+                TagKey.title: "Title",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1",
+                TagKey.filename: "test.flac"
+            ], sourceFileURL: URL(fileURLWithPath: "/tmp/test.flac"))
+        ]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        viewModel.trackItems[0].externalDifferences = TrackExternalDifferences(
+            isDeleted: false,
+            fileValuesByTag: [TagKey.title: "External Title"],
+            hasPictureDifference: false
+        )
+
+        #expect(
+            viewModel.canSave(
+                payload: .writeTags,
+                scope: .allTracks,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: []
+            )
+        )
+
+        viewModel.trackItems[0].externalDifferences = nil
+
+        #expect(
+            !viewModel.canSave(
+                payload: .writeTags,
+                scope: .allTracks,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: []
+            )
+        )
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelCanSaveWhenOnlyExternalPictureDifferenceExists() {
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Album"
+        viewModel.albumArtist = "Artist"
+        viewModel.totalDiscs = "1"
+
+        viewModel.trackItems = [
+            Track(tags: [
+                TagKey.title: "Title",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1",
+                TagKey.filename: "test.flac"
+            ], sourceFileURL: URL(fileURLWithPath: "/tmp/test.flac"))
+        ]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        viewModel.trackItems[0].externalDifferences = TrackExternalDifferences(
+            isDeleted: false,
+            fileValuesByTag: [:],
+            hasPictureDifference: true
+        )
+
+        #expect(
+            viewModel.canSave(
+                payload: .writePictures,
+                scope: .allTracks,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: []
+            )
+        )
+
+        viewModel.trackItems[0].externalDifferences = nil
+
+        #expect(
+            !viewModel.canSave(
+                payload: .writePictures,
+                scope: .allTracks,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: []
+            )
+        )
     }
 
     @Test

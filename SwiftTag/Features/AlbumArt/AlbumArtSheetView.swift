@@ -4,6 +4,8 @@ import UniformTypeIdentifiers
 
 struct AlbumArtSheetView: View {
     let isSaveOperationRunning: Bool
+    let isEditingEnabled: Bool
+    let showsPictureDifferenceOverlay: Bool
     let saveStatusPresentation: SaveStatusPresentation?
     let albumArtTypes: [AlbumArtType]
     @Binding var navigationPath: [AlbumArtSlot]
@@ -41,14 +43,16 @@ struct AlbumArtSheetView: View {
                             dimension: 480,
                             onDropProviders: { providers in
                                 onDropForSlot(providers, albumArtSlot)
-                            }
+                            },
+                            isEnabled: isEditingEnabled && !isSaveOperationRunning,
+                            showsExternalDifferenceOverlay: showsPictureDifferenceOverlay
                         )
-                        .disabled(isSaveOperationRunning)
+                        .disabled(!isEditingEnabled || isSaveOperationRunning)
                         .accessibilityElement(children: .ignore)
                         .accessibilityIdentifier("albumArt.sheet.imageWell")
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            guard !isSaveOperationRunning else {
+                            guard isEditingEnabled, !isSaveOperationRunning else {
                                 return
                             }
                             onOpenPicker(albumArtSlot)
@@ -58,13 +62,13 @@ struct AlbumArtSheetView: View {
                             Button("Import \(navigationLinkName)...") {
                                 onOpenPicker(albumArtSlot)
                             }
-                            .disabled(isSaveOperationRunning)
+                            .disabled(!isEditingEnabled || isSaveOperationRunning)
                             Button("Export \(navigationLinkName)...") {
                                 onPrepareExport(albumArtSlot)
                             }
                             .disabled(!hasImageForSlot(albumArtSlot))
                         }
-                        .allowsHitTesting(!isSaveOperationRunning)
+                        .allowsHitTesting(isEditingEnabled && !isSaveOperationRunning)
                         .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
 
                         Text(isSaveOperationRunning ? "disabled" : "enabled")

@@ -6,6 +6,9 @@ struct Track: Identifiable {
     var flacPicturesByType: [Int: Data]
     var sourceFileURL: URL?
     var securityScopedBookmarkData: Data?
+    var latestFileSnapshot: TrackFileSnapshot?
+    var externalDifferences: TrackExternalDifferences?
+    var isLocked: Bool
 
     var isImportedFlacTrack: Bool {
         sourceFileURL?.pathExtension.lowercased() == "flac"
@@ -27,12 +30,18 @@ struct Track: Identifiable {
         tags: [String: String],
         flacPicturesByType: [Int: Data] = [:],
         sourceFileURL: URL? = nil,
-        securityScopedBookmarkData: Data? = nil
+        securityScopedBookmarkData: Data? = nil,
+        latestFileSnapshot: TrackFileSnapshot? = nil,
+        externalDifferences: TrackExternalDifferences? = nil,
+        isLocked: Bool = false
     ) {
         self.id = id
         self.tags = tags
         self.flacPicturesByType = flacPicturesByType
         self.sourceFileURL = sourceFileURL
         self.securityScopedBookmarkData = securityScopedBookmarkData
+        self.latestFileSnapshot = latestFileSnapshot
+        self.externalDifferences = externalDifferences
+        self.isLocked = isLocked
     }
 }
