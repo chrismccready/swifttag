@@ -38,6 +38,7 @@ Out of scope:
 - In read-only mode, editable fields are disabled, album image wells are disabled, and save/write operations are not allowed.
 - Rows without an associated track file should render a fully blank status cell.
 - The status column can start without an explicit fixed width or height rule; initial implementation should rely on the system image drawing/containment behavior and refine sizing later only if needed.
+- The status column should intentionally use no header text (empty string) instead of `Status`.
 - When a macOS file change is detected, the app should immediately re-read the file to classify the resulting differences.
 - If a loaded file has been deleted, the corresponding filename text in the tracks table should render strikethrough and red.
 - If one or more tags differ from the file after a macOS-side change, the associated editor field text should render italic and red.
@@ -45,7 +46,7 @@ Out of scope:
 - If pictures differ from the file, a red overlay should be drawn in the album-art image well.
 - Status-icon hover help for macOS-side differences should list the differences as newline-separated `tag: value` entries, where `value` is the current file value.
 - Mixed writable and read-only tracks in one editor window should be supported.
-- The tracks table should add a context menu item labeled `Lock`, `Unlock`, or `Lock > < Unlock` based on the selected rows' lock state.
+- The tracks table should keep the current lock labels: `Lock Selected Track` / `Lock Selected Tracks`, `Unlock Selected Track` / `Unlock Selected Tracks`, and `Toggle Selected Tracks Lock` for mixed locked/unlocked selections.
 - Activating that context-menu item flips the lock state of each selected row.
 - The lock/unlock action should use shortcut Control-L.
 - When a locked row is unlocked, its icon returns to the appropriate non-locked status icon.
@@ -129,8 +130,8 @@ Out of scope:
   - picture differences
 - Preserve the latest file-side values needed for hover help and difference styling.
 
-### 3. Add the leftmost `Status` column
-- Update [TagEditorTrackFileView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift) to insert a new `TableColumn("Status")` before `Title`.
+### 3. Add the leftmost status-icon column
+- Update [TagEditorTrackFileView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift) to insert a new leftmost status `TableColumn` before `Title`, with an intentionally empty header string.
 - Render a square icon cell for rows whose status presentation is non-`nil`.
 - Keep the cell visually minimal so the column functions as a status indicator rather than a secondary content column.
 - Preserve existing title editing and filename display behavior.
@@ -178,9 +179,9 @@ Out of scope:
 ### 9. Add track-table lock/unlock controls
 - Add a context menu to the tracks table with a lock toggle item derived from the current selection.
 - Use these labels:
-  - `Lock` when all selected rows are unlocked
-  - `Unlock` when all selected rows are locked
-  - `Lock > < Unlock` when the selection contains a mix of locked and unlocked rows
+  - `Lock Selected Track` or `Lock Selected Tracks` when all selected rows are unlocked
+  - `Unlock Selected Track` or `Unlock Selected Tracks` when all selected rows are locked
+  - `Toggle Selected Tracks Lock` when the selection contains a mix of locked and unlocked rows
 - Apply the action to each selected row, flipping its current lock state.
 - Bind the action to Control-L.
 - Ensure locked rows are disabled while keeping the lock icon itself active unless save-in-progress state disables the whole interaction path.
@@ -240,15 +241,31 @@ Out of scope:
   - deleted filenames render strikethrough and red
   - externally changed title and tag fields render italic and red
   - picture differences render a red album-art overlay
-  - the tracks-table context menu shows `Lock`, `Unlock`, or `Lock > < Unlock` as appropriate
+  - the tracks-table context menu shows `Lock Selected Track` / `Lock Selected Tracks`, `Unlock Selected Track` / `Unlock Selected Tracks`, or `Toggle Selected Tracks Lock` as appropriate
   - hover help appears for a status icon once a test seam or stable state fixture exists
 - Use `BuildProject` for compile validation and prefer targeted tests over broad UI automation.
 
+## Current Implementation Status (2026-03-14)
+- Implemented:
+  - Per-track status model types are in place in `TrackStatus.swift` (`TrackFileSnapshot`, `TrackExternalDifferences`, `TrackStatusPresentation`, `TrackFileMonitorEvent`).
+  - `Track` now carries status-related state (`latestFileSnapshot`, `externalDifferences`, `isLocked`) in `Track.swift`.
+  - `DispatchSourceFileSystemObject` monitoring exists in `TrackFileMonitor.swift` with write/delete/rename handling and security-scoped URL support.
+  - `TagEditorViewModel` now computes status icon/help (`fish.fill`, `fish`, `exclamationmark.triangle`, `lock.fill`), refreshes file state on monitor events, and tracks external tag/picture differences.
+  - The tracks table has a new leftmost icon column, lock context menu wiring, title/file external-difference styling, and lock-driven row disablement in `TagEditorTrackFileView.swift`.
+  - Read-only import flow is wired end-to-end (`Load FLAC files (read-only)...`, Shift-Command-L, locked import path) across `SwiftTagApp.swift` and `ContentView.swift`.
+  - Save enablement now uses difference-aware gating in `ContentView.canSave(payload:)` via `TagEditorViewModel.canSave(...)`.
+  - External-difference visuals are in place for title, filename (red + strikethrough on delete), tag fields (italic + red), and album art overlay.
+  - Unit coverage for status mapping, save gating, lock behavior, and file-monitor refresh logic has been added in `SwiftTagTests.swift`.
+- Partially implemented:
+  - No additional partial implementation gaps identified for header/label wording after formalizing current behavior as intended.
+- Not fully covered yet:
+  - UI automation coverage for the new status column/icon/help behaviors and lock-menu label variants is still limited.
+
 ## Open Questions
-- No open questions at this time. Implementation should proceed with the confirmed decisions above.
+- No new product-behavior questions identified during this review.
 
 ## Acceptance Criteria
-- The tracks table includes a `Status` column at the far left.
+- The tracks table includes a leftmost status-icon column with an intentionally empty header.
 - The status column width matches the intended row height closely enough for the rendered icon area to be square.
 - Only rows with an associated track file can display a status icon.
 - Rows without an associated track file do not display a status icon or misleading hover help.
@@ -267,10 +284,18 @@ Out of scope:
 - The File menu contains `Load FLAC files (read-only)...` after `Load FLAC files...` with Shift-Command-L.
 - Read-only loads disable editable fields and album-art wells and prevent all write/save actions.
 - Mixed locked and unlocked tracks are supported in one editor window.
-- The tracks-table context menu exposes `Lock`, `Unlock`, or `Lock > < Unlock` based on the selected rows and toggles each selected row with Control-L.
+- The tracks-table context menu exposes `Lock Selected Track` / `Lock Selected Tracks`, `Unlock Selected Track` / `Unlock Selected Tracks`, or `Toggle Selected Tracks Lock` based on selected-row lock state and toggles each selected row with Control-L.
 - Locked rows are disabled while their lock icons remain enabled except during save operations.
 - On macOS-side file deletion, the corresponding filename renders red with strikethrough.
 - On macOS-side tag or title differences, the affected editor text renders italic and red.
 - On picture differences, the album-art image well renders a red overlay.
 - Status-icon hover help for macOS-side differences lists newline-separated `tag: value` entries using the current file values.
 - The implementation is covered by targeted tests for status visibility, difference tracking, save gating, read-only behavior, and compile verification.
+
+## Remaining Implementation Steps
+1. Add command-handler guard logic so save actions short-circuit when no relevant differences exist, ensuring behavior matches enablement rules even if a command path is invoked while menu state is stale.
+2. Add targeted UI verification for:
+   - leftmost status-icon column visibility and icon presence/absence by row type,
+   - lock-menu label variants for unlocked/locked/mixed selections using current implemented wording,
+   - read-only import command discoverability and disabled editing state.
+3. Run `BuildProject` and the affected targeted tests after the final behavior-alignment changes above.
