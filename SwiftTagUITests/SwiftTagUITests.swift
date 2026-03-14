@@ -64,6 +64,25 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testFileMenuContainsReadOnlyLoadCommand() throws {
+        let app = try launchApp()
+        let fileMenu = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
+        fileMenu.click()
+
+        let readOnlyMenuItem = app.menuItems["Load FLAC files (read-only)..."].firstMatch
+        XCTAssertTrue(readOnlyMenuItem.waitForExistence(timeout: 2.0))
+    }
+
+    @MainActor
+    func testReadOnlyFixtureImportDisablesEditing() throws {
+        let app = try launchApp(importFixture: true, importFixtureReadOnly: true)
+
+        XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: false, timeout: 4.0))
+        XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumArtistTextField], expectedValue: false, timeout: 4.0))
+    }
+
+    @MainActor
     func testMiscTagsAddAndDeleteRow() throws {
         let app = try launchApp()
 
@@ -326,6 +345,7 @@ final class SwiftTagUITests: XCTestCase {
 
     private func launchApp(
         importFixture: Bool = false,
+        importFixtureReadOnly: Bool = false,
         fixtureFileName: String = "test.flac",
         persistentFixtureName: String? = nil,
         reuseImportedFixture: Bool = false,
@@ -352,6 +372,10 @@ final class SwiftTagUITests: XCTestCase {
             let fixtureDataBase64 = try Data(contentsOf: URL(fileURLWithPath: fixturePath)).base64EncodedString()
             app.launchEnvironment["UITEST_FLAC_PATH"] = fixturePath
             app.launchEnvironment["UITEST_FLAC_DATA_BASE64"] = fixtureDataBase64
+            if importFixtureReadOnly {
+                app.launchEnvironment["UITEST_FLAC_READ_ONLY"] = "1"
+                app.launchArguments.append("-UITEST_FLAC_READ_ONLY")
+            }
             if let persistentFixtureName {
                 app.launchEnvironment["UITEST_FLAC_DESTINATION_NAME"] = persistentFixtureName
             }

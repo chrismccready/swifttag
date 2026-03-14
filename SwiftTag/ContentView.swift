@@ -654,6 +654,10 @@ struct ContentView: View {
 
         let settings = saveSettingsSnapshot
         let effectivePayload = payload ?? settings.payload
+        guard canSave(payload: effectivePayload) else {
+            return
+        }
+
         let scope = settings.scope
         let trackCount = viewModel.saveTrackCount(for: settings.scope)
 
@@ -885,10 +889,11 @@ struct ContentView: View {
             return
         }
 
+        let importsFixtureAsReadOnly = uiTestLaunchFlagEnabled("UITEST_FLAC_READ_ONLY")
         Task {
             do {
                 let fileURL = try uiTestImportFileURL(for: fixturePath)
-                try await importFlacFiles([fileURL])
+                try await importFlacFiles([fileURL], locked: importsFixtureAsReadOnly)
             } catch {
                 importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 isImportErrorPresented = true

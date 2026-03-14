@@ -11,6 +11,7 @@
 - For additional source of truth / authoritative guidance read files at Docs/Guides.
 - Use git commit message formatting rules from Docs/Guides/git-commit-message-guide.md.
 - When asked to create a git commit message use formatting rules from Docs/Guides/git-commit-message-guide.md.
+- For SwiftUI test design and harness selection, use Docs/Guides/testing-guide.md as the primary guide.
 
 ## Plans
 
@@ -82,6 +83,9 @@ If a feature writes back to files or otherwise changes persisted data, the plan 
 ### Testing Strategy
 
 - When implementing a plan try to break things down into smaller steps so that tests are written and not failing before continuing.
+- Prefer ViewInspector as the first-choice harness for SwiftUI behavior/state tests.
+- Reserve XCUI tests for end-to-end flows and app integration behaviors that ViewInspector cannot validate.
+- For `Table` / `TableColumn` views, prefer dynamic `find`/`findAll` queries and `actualView()` state checks.
 - Prefer this test order unless there is a strong reason not to:
   1. Pure unit tests
   2. Service or bridge tests using copied fixtures

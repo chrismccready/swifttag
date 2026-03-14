@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		72294DEE2F5AA04100840CFE /* test.flac in Resources */ = {isa = PBXBuildFile; fileRef = 72294DE42F5AA04100840CFE /* test.flac */; };
+		726B9C122F6B0001008FA111 /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = 726B9C112F6B0001008FA111 /* ViewInspector */; };
 		7279BF4E2F622E6E003BC32B /* test-with_padding.flac in Resources */ = {isa = PBXBuildFile; fileRef = 7279BF4D2F622E6E003BC32B /* test-with_padding.flac */; };
 		7279BF4F2F622E6E003BC32B /* test-with_padding.flac in Resources */ = {isa = PBXBuildFile; fileRef = 7279BF4D2F622E6E003BC32B /* test-with_padding.flac */; };
 		7279BF502F622E6E003BC32B /* test-with_padding.flac in Resources */ = {isa = PBXBuildFile; fileRef = 7279BF4D2F622E6E003BC32B /* test-with_padding.flac */; };
@@ -37,6 +38,7 @@
 		720E0CA12F4E5E99000DD6E1 /* SwiftTagTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftTagTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		720E0CAB2F4E5E99000DD6E1 /* SwiftTagUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftTagUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		72294DE42F5AA04100840CFE /* test.flac */ = {isa = PBXFileReference; lastKnownFileType = file; path = test.flac; sourceTree = "<group>"; };
+		725742B12F660DA200393914 /* testing-tools-review.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "testing-tools-review.md"; sourceTree = "<group>"; };
 		7268E8252F58C537009A1E37 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		7275A2332F521874001AE708 /* build-libflac.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-libflac.sh"; sourceTree = "<group>"; };
 		7275A3202F521E70001AE708 /* SwiftTag-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftTag-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				726B9C122F6B0001008FA111 /* ViewInspector in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -135,6 +138,7 @@
 				7268E7E02F58B69F009A1E37 /* Guides */,
 				7268E7DF2F58B67F009A1E37 /* Plans */,
 				7268E8252F58C537009A1E37 /* README.md */,
+				725742B12F660DA200393914 /* testing-tools-review.md */,
 			);
 			path = Docs;
 			sourceTree = "<group>";
@@ -191,6 +195,7 @@
 			);
 			name = SwiftTagTests;
 			packageProductDependencies = (
+				726B9C112F6B0001008FA111 /* ViewInspector */,
 			);
 			productName = SwiftTagTests;
 			productReference = 720E0CA12F4E5E99000DD6E1 /* SwiftTagTests.xctest */;
@@ -251,6 +256,9 @@
 			);
 			mainGroup = 720E0C8B2F4E5E98000DD6E1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				726B9C102F6B0001008FA111 /* XCLocalSwiftPackageReference "ThirdParty/ViewInspector" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 720E0C952F4E5E98000DD6E1 /* Products */;
 			projectDirPath = "";
@@ -721,6 +729,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		726B9C102F6B0001008FA111 /* XCLocalSwiftPackageReference "ThirdParty/ViewInspector" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ThirdParty/ViewInspector;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		726B9C112F6B0001008FA111 /* ViewInspector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 726B9C102F6B0001008FA111 /* XCLocalSwiftPackageReference "ThirdParty/ViewInspector" */;
+			productName = ViewInspector;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 720E0C8C2F4E5E98000DD6E1 /* Project object */;
 }
