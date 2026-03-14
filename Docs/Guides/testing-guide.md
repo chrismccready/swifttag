@@ -1,87 +1,118 @@
-# SwiftTag Testing Guide (ViewInspector First)
+# SwiftTag Testing Guide (Assistant-Oriented, ViewInspector-First)
 
 ## Goal
 
-Use fast, reliable tests for SwiftUI behavior without over-relying on long or flaky XCUI runs.
+Provide a deterministic testing workflow that lets assistant/AI contributors maximize ViewInspector coverage while preserving the harness order and constraints defined in `AGENTS.md`.
 
-## Harness Priority
+## Audience
+
+This guide is written for assistant/AI contributors and should be treated as the default testing playbook for SwiftTag changes.
+
+## Required Reading Before Writing Tests
+
+Read these in order for every non-trivial test task:
+
+1. `AGENTS.md` (project-level constraints and clarification triggers)
+2. This file (`Docs/Guides/testing-guide.md`)
+3. The current implementation files under test
+4. Relevant fixtures in `SwiftTagTestFiles` for FLAC import/write behavior
+5. ViewInspector upstream docs relevant to the target feature under test
+
+If a needed API or behavior is unclear after reading, stop and ask for clarification before writing brittle tests.
+
+## Harness Priority (Must Match `AGENTS.md`)
 
 1. Unit tests for pure logic and mapping.
-2. ViewInspector tests for SwiftUI structure/behavior and view-state assertions.
-3. Targeted XCUI tests for end-to-end flows only.
-4. Full UI suite only when explicitly needed or at release gates.
+2. Service or bridge tests using copied fixtures.
+3. SwiftUI behavior/state tests with ViewInspector (first choice for UI-level assertions).
+4. Targeted XCUI tests only for end-to-end integration behavior ViewInspector cannot validate.
+5. Full UI suite only when explicitly requested or at release gates.
 
-## ViewInspector First-Choice Rules
+## ViewInspector-First Rules
 
-- Use ViewInspector by default when validating SwiftUI view conditions:
-  - disabled/enabled state
-  - conditional rendering
-  - callback wiring
-  - bound value propagation
-  - context/menu command availability at view level
-- Prefer XCUI only for behaviors that require full app/runtime integration:
-  - menu command routing through app scene lifecycle
-  - sandbox/bookmark/file-system interactions
+- Use ViewInspector by default for SwiftUI behavior assertions:
+  - enabled/disabled state
+  - conditional rendering and modifiers
+  - callback wiring and closure forwarding
+  - binding value propagation
+  - view-local command/context-menu enablement decisions
+- Prefer XCUI only when behavior depends on full runtime integration:
+  - app/menu command routing through scene lifecycle
+  - sandbox or bookmark access
   - multi-window focus and responder-chain behavior
+  - drag/drop or OS-level event plumbing that is not inspectable with confidence
 
-## Core Terms
+## ViewInspector Capability Checklist (Use What Applies)
 
-- `SUT`: system under test (the view instance being tested).
-- `Inspectable`: protocol conformance that enables inspection.
-- `inspect()`: entry point into an inspected hierarchy.
-- `find` / `findAll`: dynamic query APIs for locating views by type/predicate.
-- `actualView()`: unwrap inspected node back to concrete view for property/closure assertions.
-- `callOnAppear()`: trigger lifecycle callback when needed.
-- `implicitAnyView()`: helper for call chains affected by implicit `AnyView` wrapping on newer Swift/Xcode.
+- Hierarchy access: `inspect()`, `find`, `findAll`, typed traversal.
+- Concrete-view assertions: `actualView()` for stored closures, flags, and injected dependencies.
+- State and bindings: read/write bindings where practical to verify propagation.
+- Lifecycle hooks: `callOnAppear()` and related callbacks when logic depends on lifecycle.
+- Interaction simulation: tap/gesture/value-entry helpers when available for the target control.
+- Conditional and optional content checks: assert both present and absent paths.
+- Modifier assertions: disabled state, help text, style-impacting modifiers where stable.
+- Dynamic query fallback: prefer type/predicate search over brittle positional paths.
+- Toolchain compatibility escape hatch: use `implicitAnyView()` when implicit wrapping breaks traversal.
+
+For `Table` / `TableColumn` specifically:
+- Assume dedicated inspection APIs are limited.
+- Prefer dynamic `find`/`findAll` queries.
+- When structural traversal is brittle, assert stable outcomes through `actualView()` and focused source-order assertions.
 
 ## Project Setup Notes
 
 - SwiftTag tests use Swift Testing (`import Testing`) and ViewInspector (`import ViewInspector`).
-- In tests, add local conformance where needed:
+- Add local `Inspectable` conformances only where needed by test scope, for example:
   - `extension TagEditorTrackFileView: Inspectable {}`
   - `extension TagEditorAlbumView: Inspectable {}`
   - `extension AlbumArtWellView: Inspectable {}`
-- Keep test fixtures small and deterministic. Prefer in-memory model creation over file I/O unless integration is required.
+- Keep fixtures deterministic; prefer in-memory setup unless integration with FLAC/filesystem behavior is the test target.
+- Prefer `@MainActor` for SwiftUI interaction tests.
 
-## Patterns For SwiftTag
+## SwiftTag Patterns
 
 ### `TagEditorTrackFileView`
 
-- Verify status presentation via injected closures and `actualView()`:
+- Verify status behavior through injected closures and `actualView()`:
   - `statusPresentationForTrack`
   - `isTrackLocked`
   - `hasDeletedFile`
   - `hasExternalTitleDifference`
-- Validate context-menu behavior through configured labels and enable/disable inputs.
-- `Table` / `TableColumn` caveat:
-  - ViewInspector does not provide rich dedicated `Table` inspection APIs.
-  - Use dynamic `find`/`findAll` when possible.
-  - When structural traversal is brittle, assert stable inputs and outcomes via `actualView()` and targeted source-order checks.
+- Validate lock context-menu title and enablement via explicit inputs.
 
 ### `TagEditorAlbumView`
 
-- Assert text-field enabled/disabled states under `isMetadataEditable`.
-- Assert `AlbumArtWellView` inputs (enabled state, difference overlay) via `actualView()`.
-- Validate gesture guards indirectly through boolean gating that determines whether callbacks can fire.
+- Assert metadata field enabled/disabled behavior under `isMetadataEditable`.
+- Assert `AlbumArtWellView` inputs (enabled state and external-difference overlay) via `actualView()`.
+- Prefer boolean gating assertions over brittle gesture-path traversal when gesture internals are unstable.
 
-## Recommended Assertion Style
+## Assertion Style
 
-- Prefer behavior-focused checks over brittle full-tree path assertions.
-- Assert one behavior per test where practical.
-- Name tests as scenario + expected result.
-- Keep tests `@MainActor` for SwiftUI view interaction consistency.
+- Prefer behavior assertions over full-tree snapshots.
+- Keep one behavior focus per test when practical.
+- Use scenario-style names: condition + expected outcome.
+- Cover positive and negative paths for each gate/flag.
 
-## Suggested Test Matrix For Track Status Work
+## Suggested Matrix For Track Status
 
-- Status icon presentation is supplied for track rows.
-- No icon path when status presentation is missing.
-- Album metadata fields disabled when metadata editing is off.
-- Album metadata fields enabled when metadata editing is on.
-- Album art overlay toggle wiring is forwarded.
-- Album art interactivity disabled while save operation runs.
-- Lock-state lookup wiring returns expected locked/unlocked value.
+- Status icon presentation exists for file-backed rows.
+- Status icon is absent when presentation is missing.
+- Album fields disable when metadata editing is off.
+- Album fields enable when metadata editing is on.
+- Album art overlay flag is forwarded.
+- Album art interactivity disables during save operations.
+- Lock lookup wiring reports expected locked/unlocked values.
 
-## Command Examples
+## Verification Workflow
+
+When available in this environment, prefer Xcode MCP tools:
+
+1. `XcodeRefreshCodeIssuesInFile` for fast diagnostics.
+2. `BuildProject` for compile validation.
+3. `RunSomeTests` for targeted tests.
+4. `RunAllTests` only when needed.
+
+Fallback command examples:
 
 ```sh
 # Build
@@ -95,19 +126,14 @@ xcodebuild -scheme SwiftTag -destination 'platform=macOS' test \
   -only-testing:SwiftTagTests/TrackStatusViewInspectorTests
 ```
 
-When available in this environment, prefer Xcode MCP tools for fast iteration:
-- `XcodeRefreshCodeIssuesInFile`
-- `BuildProject`
-- `RunSomeTests`
-
 ## Troubleshooting
 
-- If `find` chains fail after toolchain updates, try:
-  - adding `.implicitAnyView()` where needed
-  - using broader `find` queries and narrowing by count/content
-  - pivoting to `actualView()` assertions for stable logic checks
-- If tests require heavy stateful interaction (`@State`, environment objects), introduce small test seams instead of complex inspector chains.
-- If a behavior is expensive or unstable through XCUI, first attempt ViewInspector coverage at the composed-view level.
+- If traversal breaks after Swift/Xcode updates:
+  - add `.implicitAnyView()` where appropriate
+  - widen to `find`/`findAll` then narrow by content/count
+  - pivot to `actualView()` assertions for stable logic seams
+- If a test requires deep stateful orchestration, add a small test seam instead of overfitting inspector chains.
+- If XCUI appears necessary, document why ViewInspector coverage is insufficient.
 
 ## References
 
@@ -117,4 +143,3 @@ When available in this environment, prefer Xcode MCP tools for fast iteration:
 - Swift Testing framework docs: https://developer.apple.com/documentation/testing
 - XCTest docs: https://developer.apple.com/documentation/xctest
 - SwiftUI docs: https://developer.apple.com/documentation/swiftui
-
