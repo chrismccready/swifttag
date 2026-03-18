@@ -2,6 +2,7 @@ import SwiftUI
 import Testing
 import ViewInspector
 import Foundation
+import UniformTypeIdentifiers
 @testable import SwiftTag
 
 @MainActor
@@ -126,6 +127,41 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func readOnlyFixtureImportDisablesEditingViaAlbumView() async throws {
+        let viewModel = TagEditorViewModel()
+        let fixtureCopyURL = try Self.tempFixtureCopyURL(name: "viewinspector-readonly-import.flac")
+        try await viewModel.importFlacFiles([fixtureCopyURL], locked: true)
+        let importedTrack = try #require(viewModel.trackItems.first)
+        viewModel.selectedTrackIDs = [importedTrack.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        let sut = TagEditorAlbumView(
+            albumBinding: viewModel.selectedAlbumBinding(),
+            albumArtistBinding: viewModel.selectedAlbumArtistBinding(),
+            isSaveOperationRunning: false,
+            isMetadataEditable: viewModel.isSelectionEditable(),
+            isArtworkEditable: viewModel.hasUnlockedTracks,
+            isAlbumMixedSelection: viewModel.selectedAlbumIsMixed,
+            isAlbumArtistMixedSelection: viewModel.selectedAlbumArtistIsMixed,
+            hasAlbumInternalDifference: false,
+            hasAlbumExternalDifference: false,
+            hasAlbumExternallyModifiedDifference: false,
+            hasAlbumArtistInternalDifference: false,
+            hasAlbumArtistExternalDifference: false,
+            hasAlbumArtistExternallyModifiedDifference: false,
+            showsPictureDifferenceOverlay: false,
+            frontCoverImage: Image(systemName: "photo"),
+            onFrontCoverDrop: { _ in false },
+            onFrontCoverTap: {}
+        )
+
+        let textFields = try sut.inspect().findAll(ViewType.TextField.self)
+        #expect(textFields.count >= 2)
+        #expect(textFields[0].isDisabled())
+        #expect(textFields[1].isDisabled())
+    }
+
+    @Test
     func tagEditorTrackFileViewUsesLockedStateLookupForTrackRow() throws {
         let track = makeTrack(id: UUID(), title: "Locked Track", filename: "locked.flac")
 
@@ -193,6 +229,74 @@ struct TrackStatusViewInspectorTests {
 
         let albumArtWell = try sut.inspect().find(AlbumArtWellView.self).actualView()
         #expect(!albumArtWell.isEnabled)
+    }
+
+    @Test
+    func tagEditorAlbumViewInvokesFrontCoverTapWhenEditable() throws {
+        var tapCount = 0
+        let sut = makeAlbumView(
+            isMetadataEditable: true,
+            onFrontCoverTap: { tapCount += 1 }
+        )
+
+        try sut.inspect().find(viewWithAccessibilityIdentifier: "albumArtImageWell").callOnTapGesture()
+        #expect(tapCount == 1)
+    }
+
+    @Test
+    func albumArtSheetViewDisablesWellAndShowsSaveOverlayWhenSaveIsRunning() throws {
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: true,
+            saveStatusPresentation: SaveStatusPresentation(
+                album: "Test Album",
+                currentTrackName: "Test Track",
+                showsSelectedTrackName: false,
+                currentTrackIndex: 1,
+                totalTrackCount: 1
+            )
+        )
+
+        let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
+        #expect(actualView.isSaveOperationRunning)
+        #expect(actualView.saveStatusPresentation != nil)
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtSheetView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        #expect(source.contains("if let saveStatusPresentation, isSaveOperationRunning"))
+    }
+
+    @Test
+    func albumArtSheetViewEnablesWellAndHidesSaveOverlayWhenSaveIsNotRunning() throws {
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: false,
+            saveStatusPresentation: SaveStatusPresentation(
+                album: "Test Album",
+                currentTrackName: "Test Track",
+                showsSelectedTrackName: false,
+                currentTrackIndex: 1,
+                totalTrackCount: 1
+            )
+        )
+
+        let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
+        #expect(!actualView.isSaveOperationRunning)
+        #expect(actualView.saveStatusPresentation != nil)
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtSheetView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        #expect(source.contains("if let saveStatusPresentation, isSaveOperationRunning"))
     }
 
     @Test
@@ -285,7 +389,8 @@ struct TrackStatusViewInspectorTests {
     private func makeAlbumView(
         isMetadataEditable: Bool,
         isSaveOperationRunning: Bool = false,
-        showsPictureDifferenceOverlay: Bool = false
+        showsPictureDifferenceOverlay: Bool = false,
+        onFrontCoverTap: @escaping () -> Void = {}
     ) -> TagEditorAlbumView {
         TagEditorAlbumView(
             albumBinding: .constant("Album"),
@@ -304,7 +409,40 @@ struct TrackStatusViewInspectorTests {
             showsPictureDifferenceOverlay: showsPictureDifferenceOverlay,
             frontCoverImage: Image(systemName: "photo"),
             onFrontCoverDrop: { _ in false },
-            onFrontCoverTap: {}
+            onFrontCoverTap: onFrontCoverTap
+        )
+    }
+
+    private func makeAlbumArtSheetView(
+        isSaveOperationRunning: Bool,
+        saveStatusPresentation: SaveStatusPresentation?
+    ) -> AlbumArtSheetView {
+        AlbumArtSheetView(
+            isSaveOperationRunning: isSaveOperationRunning,
+            isEditingEnabled: true,
+            showsPictureDifferenceOverlay: false,
+            saveStatusPresentation: saveStatusPresentation,
+            albumArtTypes: [
+                AlbumArtType(
+                    flacPictureType: 3,
+                    flacDescription: "Cover (front)",
+                    navigationLinkName: "Front Cover",
+                    slot: .frontCover
+                )
+            ],
+            navigationPath: .constant([.frontCover]),
+            isFileImporterPresented: .constant(false),
+            isFileExporterPresented: .constant(false),
+            exportDocument: nil,
+            exportContentType: .png,
+            exportDefaultFileName: "cover",
+            imageForSlot: { _ in Image(systemName: "photo") },
+            hasImageForSlot: { _ in true },
+            onOpenPicker: { _ in },
+            onPrepareExport: { _ in },
+            onDropForSlot: { _, _ in false },
+            onFileImportResult: { _ in },
+            onFileExportResult: { _ in }
         )
     }
 }

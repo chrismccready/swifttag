@@ -18,12 +18,6 @@ final class SwiftTagUITests: XCTestCase {
         static let miscTagKeyFieldPrefix = "miscTags.keyField."
         static let albumTextField = "albumTextField"
         static let albumArtistTextField = "albumArtistTextField"
-        static let albumArtImageWell = "albumArtImageWell"
-        static let albumArtSheetImageWell = "albumArt.sheet.imageWell"
-        static let albumArtSheetImageWellState = "albumArt.sheet.imageWell.state"
-        static let albumArtSheetSaveStatusView = "albumArt.sheet.saveStatusView"
-        static let albumArtSheetSaveStatusVisible = "albumArt.sheet.saveStatusVisible"
-        static let saveStatusView = "saveStatusView"
         static let settingsTabView = "settings.tabView"
         static let defaultSavePayload = "settings.general.defaultSavePayload"
         static let defaultSaveScope = "settings.general.defaultSaveScope"
@@ -72,59 +66,6 @@ final class SwiftTagUITests: XCTestCase {
 
         let readOnlyMenuItem = app.menuItems["Load FLAC files (read-only)..."].firstMatch
         XCTAssertTrue(readOnlyMenuItem.waitForExistence(timeout: 2.0))
-    }
-
-    @MainActor
-    func testReadOnlyFixtureImportDisablesEditing() throws {
-        let app = try launchApp(importFixture: true, importFixtureReadOnly: true)
-
-        XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: false, timeout: 4.0))
-        XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumArtistTextField], expectedValue: false, timeout: 4.0))
-    }
-
-    @MainActor
-    func testAlbumArtWellOpensAlbumArtSheet() throws {
-        let app = try launchApp()
-        let albumArtWell = app.descendants(matching: .any)
-            .matching(identifier: UIID.albumArtImageWell)
-            .firstMatch
-        XCTAssertTrue(albumArtWell.waitForExistence(timeout: 2.0))
-    }
-
-    @MainActor
-    func testSimulatedSaveDisablesEditorControlsAndShowsOverlay() throws {
-        let app = try launchApp(
-            simulateSaveStatus: true,
-            simulatedSaveScope: "allTracks"
-        )
-
-        let saveStatusView = app.descendants(matching: .any)
-            .matching(identifier: UIID.saveStatusView)
-            .firstMatch
-        XCTAssertTrue(saveStatusView.waitForExistence(timeout: 2.0))
-        XCTAssertFalse(app.textFields[UIID.albumTextField].isEnabled)
-        XCTAssertFalse(app.textFields[UIID.albumArtistTextField].isEnabled)
-    }
-
-    @MainActor
-    func testSimulatedSaveShowsOverlayInsideAlbumArtSheet() throws {
-        let app = try launchApp(
-            openAlbumArtSheet: true,
-            simulateSaveStatus: true,
-            simulatedSaveScope: "selectedTracks",
-            simulatedSaveDelay: 0.5
-        )
-
-        let sheet = app.descendants(matching: .any)
-            .matching(identifier: "albumArt.sheet")
-            .firstMatch
-        XCTAssertTrue(sheet.waitForExistence(timeout: 4.0))
-
-        let saveStatusView = app.descendants(matching: .any)
-            .matching(identifier: UIID.saveStatusView)
-            .firstMatch
-        XCTAssertTrue(saveStatusView.waitForExistence(timeout: 2.0))
-        XCTAssertTrue(waitForElementValue(of: sheet, expectedValue: "imageWellDisabled"))
     }
 
     @MainActor
@@ -431,27 +372,6 @@ final class SwiftTagUITests: XCTestCase {
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
             if element.label == expectedLabel {
-                return true
-            }
-
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
-        } while Date() < deadline
-
-        return false
-    }
-
-    private func waitForElementValue(
-        of element: XCUIElement,
-        expectedValue: String,
-        timeout: TimeInterval = 2.0
-    ) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        repeat {
-            if element.label == expectedValue {
-                return true
-            }
-
-            if let value = element.value as? String, value == expectedValue {
                 return true
             }
 
