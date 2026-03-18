@@ -113,6 +113,12 @@ private struct AppCommands: Commands {
 @main
 struct SwiftTagApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @AppStorage(FeedbackSettingsKey.themePreference)
+    private var themePreferenceRawValue: String = FeedbackSettingsDefaults.themePreference.rawValue
+
+    private var preferredScheme: ColorScheme? {
+        (AppThemePreference(rawValue: themePreferenceRawValue) ?? FeedbackSettingsDefaults.themePreference).preferredColorScheme
+    }
 
     init() {
         resetUITestSaveSettingsIfNeeded()
@@ -132,10 +138,13 @@ struct SwiftTagApp: App {
         #if os(macOS)
         Settings {
             SettingsView()
+                .preferredColorScheme(preferredScheme)
         }
 
         UtilityWindow("Diff Tools", id: AppSceneID.diffTools) {
             DiffToolsView()
+                .frame(width: 322, height: 168)
+                .preferredColorScheme(preferredScheme)
         }
         .keyboardShortcut("d", modifiers: [.command])
         .windowResizability(.contentSize)

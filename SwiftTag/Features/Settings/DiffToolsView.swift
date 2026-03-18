@@ -17,25 +17,61 @@ struct DiffToolsView: View {
     private var formatOnExternallyModifiedDiff: Bool = FeedbackSettingsDefaults.formatOnExternallyModifiedDiff
 
     var body: some View {
-        Form {
-            Toggle("Format on Track Total Mismatch", isOn: $warnOnTrackTotalMismatch)
-                .accessibilityIdentifier("diffTools.warnOnTrackTotalMismatch")
-
-            Toggle("Format on Disc Total Mismatch", isOn: $warnOnDiscTotalMismatch)
-                .accessibilityIdentifier("diffTools.warnOnDiscTotalMismatch")
-
-            Toggle("Format on Track to File Diff", isOn: $formatOnTrackToFileDiff)
-                .accessibilityIdentifier("diffTools.formatOnTrackToFileDiff")
-
-            Toggle("Format on Track to Track Diff", isOn: $formatOnTrackToTrackDiff)
-                .accessibilityIdentifier("diffTools.formatOnTrackToTrackDiff")
-
-            Toggle("Format on Externally Modified Diff", isOn: $formatOnExternallyModifiedDiff)
-                .accessibilityIdentifier("diffTools.formatOnExternallyModifiedDiff")
+        VStack(spacing: 2){
+            DiffToolsToggleRow(
+                title: "Format on Track to File Diff",
+                isOn: $formatOnTrackToFileDiff,
+                accessibilityID: "diffTools.formatOnTrackToFileDiff"
+            )
+            DiffToolsToggleRow(
+                title: "Format on Track to Track Diff",
+                isOn: $formatOnTrackToTrackDiff,
+                accessibilityID: "diffTools.formatOnTrackToTrackDiff"
+            )
+            DiffToolsToggleRow(
+                title: "Format on Externally Modified Diff",
+                isOn: $formatOnExternallyModifiedDiff,
+                accessibilityID: "diffTools.formatOnExternallyModifiedDiff"
+            )
+            DiffToolsToggleRow(
+                title: "Format on Track Total Mismatch",
+                isOn: $warnOnTrackTotalMismatch,
+                accessibilityID: "diffTools.warnOnTrackTotalMismatch"
+            )
+            DiffToolsToggleRow(
+                title: "Format on Disc Total Mismatch",
+                isOn: $warnOnDiscTotalMismatch,
+                accessibilityID: "diffTools.warnOnDiscTotalMismatch"
+            )
         }
-        .formStyle(.grouped)
-        .frame(width: 308, height: 230, alignment: .init(horizontal: .center, vertical: .top))
-        .contentMargins([.horizontal, .top], -8, for: .automatic)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        Spacer()
     }
+}
 
+struct DiffToolsToggleRow: View {
+    let title: String
+    @Binding var isOn: Bool
+    let accessibilityID: String
+    let pad = 3.0
+    var body: some View {
+        HStack {
+            Text(title)
+                .padding(.bottom, pad)
+            Spacer()
+            Toggle("", isOn: $isOn)
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .padding(.bottom, pad)
+                .accessibilityIdentifier(accessibilityID)
+        }
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(.primary)
+                .opacity(0.08),
+            alignment: .bottom
+        )
+    }
 }

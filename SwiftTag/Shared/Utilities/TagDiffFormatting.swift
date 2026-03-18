@@ -110,7 +110,7 @@ struct TagDiffStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .foregroundStyle(presentation.foregroundColor)
-            .background(presentation.backgroundColor?.opacity(0.35))
+            .background(presentation.backgroundColor?.opacity(0.45))
             .fontWeight(presentation.isBold ? .bold : .regular)
             .italic(presentation.isItalic)
     }
