@@ -45,6 +45,16 @@
 		7279BF4D2F622E6E003BC32B /* test-with_padding.flac */ = {isa = PBXFileReference; lastKnownFileType = file; path = "test-with_padding.flac"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		72D2D7DF2F69068000A22F6F /* Exceptions for "Plans" folder in "SwiftTag" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"9-AddUIFeedbackSettings.md",
+			);
+			target = 720E0C932F4E5E98000DD6E1 /* SwiftTag */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		720E0C962F4E5E98000DD6E1 /* SwiftTag */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -63,6 +73,9 @@
 		};
 		7268E7DF2F58B67F009A1E37 /* Plans */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				72D2D7DF2F69068000A22F6F /* Exceptions for "Plans" folder in "SwiftTag" target */,
+			);
 			path = Plans;
 			sourceTree = "<group>";
 		};

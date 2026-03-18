@@ -25,67 +25,102 @@ enum TagEditorSaveError: LocalizedError {
 @MainActor
 @Observable
 final class TagEditorViewModel {
-    var album: String = ""
-    var albumArtist: String = ""
+    let mixedSelectionMarker: String = "*"
     var totalDiscs: String = ""
     var selectedTrackIDs: Set<UUID> = []
     var miscTagRows: [MiscTagRow] = []
     var selectedMiscTagRowIDs: Set<MiscTagRow.ID> = []
     var originalMiscTagKeyByRowID: [MiscTagRow.ID: String] = [:]
-    var trackItems: [Track]
+    var trackItems: [Track] {
+        didSet {
+            applyLegacySharedMetadataIfNeeded()
+        }
+    }
     var importedFlacPicturesByType: [Int: Data] = [:]
 
     private let totalTrackTagKeys: [String] = ["TOTALTRACKS", "TRACKTOTAL"]
     private let totalDiscTagKeys: [String] = ["TOTALDISCS", "DISCTOTAL"]
     private var pendingMissingRefreshTasks: [UUID: Task<Void, Never>] = [:]
+    private var pendingAlbumValue: String = ""
+    private var pendingAlbumArtistValue: String = ""
 
     init() {
         trackItems = []
     }
 
-    var totalTracks: String {
-        String(trackItems.count)
+    var album: String {
+        get { sharedDisplayValue(for: trackItems.map(\.album)) }
+        set {
+            pendingAlbumValue = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            for index in trackItems.indices {
+                trackItems[index].album = pendingAlbumValue
+            }
+        }
     }
 
+    var albumArtist: String {
+        get { sharedDisplayValue(for: trackItems.map(\.albumArtist)) }
+        set {
+            pendingAlbumArtistValue = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            for index in trackItems.indices {
+                trackItems[index].albumArtist = pendingAlbumArtistValue
+            }
+        }
+    }
+
+    var selectedAlbumIsMixed: Bool { isMixedSelectedTrackValue(\.album) }
+
+    var selectedAlbumArtistIsMixed: Bool { isMixedSelectedTrackValue(\.albumArtist) }
+
+    var selectedTotalTracksIsMixed: Bool { isMixedSelectedTrackValue(\.totalTracks) }
+
     var totalTracksHoverMessage: String {
-        if hasTotalTracksMismatch {
-            return "Track count mismatch: one or more TOTALTRACKS/TRACKTOTAL tag values do not match the current album track count. This value will overwrite any existing values."
+        if selectedTrackIDs.isEmpty {
+            return "Select track(s) to edit total tracks."
         }
 
-        return "Album track count is \(totalTracks)."
+        if hasTotalTracksMismatch {
+            return "Track count mismatch: one or more selected total-tracks values do not match the current loaded track count."
+        }
+
+        return "Loaded track count is \(trackItems.count)."
     }
 
     var hasTotalTracksMismatch: Bool {
-        let expectedValue = totalTracks
-
-        for track in trackItems {
-            for key in totalTrackTagKeys {
-                let rawValue = track.tags[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                guard !rawValue.isEmpty else {
-                    continue
-                }
-
-                let normalizedValue = Int(rawValue).map(String.init) ?? rawValue
-                if normalizedValue != expectedValue {
-                    return true
-                }
-            }
+        guard !trackItems.isEmpty else {
+            return false
         }
 
-        return false
+        let expectedValue = String(trackItems.count)
+        return trackItems.contains { track in
+            let normalizedValue = normalizedTagValue(track.totalTracks)
+            return !normalizedValue.isEmpty && normalizedValue != expectedValue
+        }
     }
 
     var hasTotalDiscsMismatch: Bool {
-        for track in trackItems {
-            let rawValue = track.tags["TOTALDISCS"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            guard !rawValue.isEmpty else {
-                continue
-            }
+        let totalDiscValues = trackItems.compactMap { track in
+            totalDiscTagKeys.lazy
+                .compactMap { self.normalizedTagValue(track.tags[$0] ?? "") }
+                .first(where: { !$0.isEmpty })
+        }
+        let distinctTotals = Set(totalDiscValues)
+        if distinctTotals.count > 1 {
+            return true
+        }
 
-            let normalizedValue = Int(rawValue).map(String.init) ?? rawValue
-            if normalizedValue != normalizedTotalDiscsValue {
-                return true
+        let maximumTotalDiscs = totalDiscValues.compactMap(Int.init).max()
+        guard let maximumTotalDiscs else {
+            return false
+        }
+
+        if trackItems.contains(where: { track in
+            guard let discNumber = Int(normalizedTagValue(track.tags[TagKey.discNumber] ?? "")) else {
+                return false
             }
+            return discNumber > maximumTotalDiscs
+        }) {
+            return true
         }
 
         return false
@@ -93,18 +128,20 @@ final class TagEditorViewModel {
 
     var totalDiscsHoverMessage: String {
         if hasTotalDiscsMismatch {
-            return "Disc count mismatch: one or more TOTALDISCS tag values do not match this total discs value."
+            return "Disc count mismatch: loaded tracks disagree on total discs, or a disc number exceeds the maximum total discs value."
         }
 
-        if totalDiscs.isEmpty {
+        let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
+        guard !selectedTracks.isEmpty else {
+            return "Select track(s) to edit total discs."
+        }
+
+        let selectedValues = selectedTracks.map(currentTotalDiscsValue(for:))
+        if selectedValues.allSatisfy({ $0.isEmpty }) {
             return "Set total discs. Empty TOTALDISCS values are ignored."
         }
 
-        return "Album disc count is \(normalizedTotalDiscsValue)."
-    }
-
-    private var normalizedTotalDiscsValue: String {
-        Int(totalDiscs).map(String.init) ?? totalDiscs
+        return "Selected total discs value updates selected tracks."
     }
 
     var hasImportedFlacTracks: Bool {
@@ -176,6 +213,49 @@ final class TagEditorViewModel {
         tagBinding(for: trackID, tagName: TagKey.title)
     }
 
+    func selectedAlbumBinding() -> Binding<String>? {
+        selectedTrackValueBinding(\.album)
+    }
+
+    func selectedAlbumArtistBinding() -> Binding<String>? {
+        selectedTrackValueBinding(\.albumArtist)
+    }
+
+    func selectedTotalTracksBinding() -> Binding<String>? {
+        selectedTrackValueBinding(\.totalTracks)
+    }
+
+    func selectedTotalDiscsBinding() -> Binding<String>? {
+        let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
+        guard !selectedTracks.isEmpty else {
+            return nil
+        }
+
+        return Binding(
+            get: {
+                self.sharedDisplayValue(
+                    for: self.trackItems
+                        .filter { self.selectedTrackIDs.contains($0.id) }
+                        .map { self.currentTotalDiscsValue(for: $0) }
+                )
+            },
+            set: { newValue in
+                guard newValue != self.mixedSelectionMarker else {
+                    return
+                }
+
+                let trimmedValue = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                for index in self.trackItems.indices where self.selectedTrackIDs.contains(self.trackItems[index].id) {
+                    guard !self.trackItems[index].isLocked else {
+                        continue
+                    }
+                    self.setCurrentTotalDiscsValue(trimmedValue, forTrackAt: index)
+                    self.clearExternallyModifiedDifference(forTrackAt: index, keys: self.totalDiscTagKeys)
+                }
+            }
+        )
+    }
+
     func tagBinding(for trackID: UUID, tagName: String) -> Binding<String>? {
         guard let index = trackItems.firstIndex(where: { $0.id == trackID }) else {
             return nil
@@ -188,6 +268,7 @@ final class TagEditorViewModel {
                     return
                 }
                 self.trackItems[index].tags[tagName] = newValue
+                self.clearExternallyModifiedDifference(forTrackAt: index, keys: [tagName])
             }
         )
     }
@@ -209,7 +290,7 @@ final class TagEditorViewModel {
                 }
 
                 let allMatch = selectedValues.allSatisfy { $0 == firstValue }
-                return allMatch ? firstValue : ""
+                return allMatch ? firstValue : self.mixedSelectionMarker
             },
             set: { newValue in
                 for index in self.trackItems.indices where self.selectedTrackIDs.contains(self.trackItems[index].id) {
@@ -217,9 +298,20 @@ final class TagEditorViewModel {
                         continue
                     }
                     self.trackItems[index].tags[tagName] = newValue
+                    self.clearExternallyModifiedDifference(forTrackAt: index, keys: [tagName])
                 }
             }
         )
+    }
+
+    func sharedAlbumDisplayText(in scope: SaveScopeOption) -> String {
+        let trackIndices = saveTrackIndices(for: scope)
+        guard !trackIndices.isEmpty else {
+            return ""
+        }
+
+        let values = trackIndices.map { trackItems[$0].album }
+        return sharedDisplayValue(for: values)
     }
 
     func selectedDateBinding() -> Binding<Date>? {
@@ -241,6 +333,41 @@ final class TagEditorViewModel {
                         continue
                     }
                     self.trackItems[index].tags[TagKey.date] = DateTagFormatter.format(newValue)
+                    self.clearExternallyModifiedDifference(forTrackAt: index, keys: [TagKey.date])
+                }
+            }
+        )
+    }
+
+    func selectedDateTextBinding() -> Binding<String>? {
+        let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
+        guard !selectedTracks.isEmpty else {
+            return nil
+        }
+
+        return Binding(
+            get: {
+                let selectedValues = self.trackItems
+                    .filter { self.selectedTrackIDs.contains($0.id) }
+                    .map { $0.tags[TagKey.date] ?? "" }
+
+                guard let firstValue = selectedValues.first else {
+                    return ""
+                }
+
+                let allMatch = selectedValues.allSatisfy { $0 == firstValue }
+                return allMatch ? firstValue : self.mixedSelectionMarker
+            },
+            set: { newValue in
+                guard newValue != self.mixedSelectionMarker else {
+                    return
+                }
+                for index in self.trackItems.indices where self.selectedTrackIDs.contains(self.trackItems[index].id) {
+                    guard !self.trackItems[index].isLocked else {
+                        continue
+                    }
+                    self.trackItems[index].tags[TagKey.date] = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                    self.clearExternallyModifiedDifference(forTrackAt: index, keys: [TagKey.date])
                 }
             }
         )
@@ -248,6 +375,90 @@ final class TagEditorViewModel {
 
     func normalizedTagKey(_ value: String) -> String {
         TagNormalization.normalizeTagKey(value)
+    }
+
+    func hasInternalTagDifference(for trackID: UUID, key: String) -> Bool {
+        hasTrackToFileTagDifference(for: trackID, key: key)
+    }
+
+    func hasTrackToFileTagDifference(for trackID: UUID, key: String) -> Bool {
+        guard let track = trackItems.first(where: { $0.id == trackID }) else {
+            return false
+        }
+
+        let normalizedKey = normalizedTagKey(key)
+        let currentValue = normalizedTagValue(currentValue(for: track, key: normalizedKey))
+        guard let snapshotValue = snapshotValue(for: track, key: normalizedKey) else {
+            return false
+        }
+
+        return currentValue != snapshotValue
+    }
+
+    func hasTrackToTrackDifference(forAnyOf keys: [String], in selection: Set<UUID>? = nil) -> Bool {
+        let trackIDs = selection ?? selectedTrackIDs
+        let selectedTracks = trackItems.filter { trackIDs.contains($0.id) }
+        guard selectedTracks.count >= 2 else {
+            return false
+        }
+
+        let normalizedKeys = keys.map(normalizedTagKey)
+        return normalizedKeys.contains { key in
+            let currentValues = selectedTracks.map { normalizedTagValue(currentValue(for: $0, key: key)) }
+            return Set(currentValues).count > 1
+        }
+    }
+
+    func hasTrackToFileDifference(forAnyOf keys: [String], in selection: Set<UUID>? = nil) -> Bool {
+        let trackIDs = selection ?? selectedTrackIDs
+        let selectedTracks = trackItems.filter { trackIDs.contains($0.id) }
+        guard !selectedTracks.isEmpty else {
+            return false
+        }
+
+        let normalizedKeys = keys.map(normalizedTagKey)
+
+        for key in normalizedKeys {
+            for track in selectedTracks {
+                let currentValue = normalizedTagValue(currentValue(for: track, key: key))
+                guard let snapshotValue = snapshotValue(for: track, key: key) else {
+                    continue
+                }
+
+                if currentValue != snapshotValue {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    func hasTrackToFileDifference(forMiscTagRow row: MiscTagRow) -> Bool {
+        let key = normalizedTagKey(row.key)
+        guard !key.isEmpty else {
+            return false
+        }
+
+        let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
+        guard !selectedTracks.isEmpty else {
+            return false
+        }
+
+        for track in selectedTracks {
+            let currentValue = normalizedTagValue(track.tags[key] ?? "")
+            let snapshotValue = normalizedTagValue(track.latestFileSnapshot?.tags[key] ?? "")
+            if currentValue != snapshotValue {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    func hasInternalDifference(forAnyOf keys: [String], in selection: Set<UUID>? = nil) -> Bool {
+        hasTrackToTrackDifference(forAnyOf: keys, in: selection) ||
+            hasTrackToFileDifference(forAnyOf: keys, in: selection)
     }
 
     func isExplicitTagKey(_ value: String) -> Bool {
@@ -294,7 +505,7 @@ final class TagEditorViewModel {
                     if let firstValue = selectedValues.first, selectedValues.allSatisfy({ $0 == firstValue }) {
                         value = firstValue
                     } else {
-                        value = ""
+                        value = mixedSelectionMarker
                     }
                 }
 
@@ -465,8 +676,8 @@ final class TagEditorViewModel {
         dateFormatter.dateFormat = "yyyy-MM-dd"
 
         var lines: [String] = [
-            "album = '''\(album)'''",
-            "album_artist = '''\(albumArtist)'''",
+            "album = '''\(sharedDisplayValue(for: trackItems.map(\.album)))'''",
+            "album_artist = '''\(sharedDisplayValue(for: trackItems.map(\.albumArtist)))'''",
             ""
         ]
 
@@ -512,22 +723,10 @@ final class TagEditorViewModel {
             let tags = metadata.tags
             let trackPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
             let bookmarkData = try fileURL.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+            let initialValues = FlacImportMapper.initialValues(from: tags)
 
             for (pictureType, pictureData) in trackPicturesByType where importedPicturesByType[pictureType] == nil {
                 importedPicturesByType[pictureType] = pictureData
-            }
-
-            if importedTracks.isEmpty {
-                let initialValues = FlacImportMapper.initialValues(from: tags)
-                if let albumValue = initialValues.album {
-                    album = albumValue
-                }
-                if let albumArtistValue = initialValues.albumArtist {
-                    albumArtist = albumArtistValue
-                }
-                if let totalDiscsValue = initialValues.totalDiscs {
-                    totalDiscs = totalDiscsValue
-                }
             }
 
             let trackTags = FlacImportMapper.mapTrackTags(
@@ -537,6 +736,9 @@ final class TagEditorViewModel {
             )
             importedTracks.append(
                 Track(
+                    album: initialValues.album,
+                    albumArtist: initialValues.albumArtist,
+                    totalTracks: initialValues.totalTracks,
                     tags: trackTags,
                     flacPicturesByType: trackPicturesByType,
                     sourceFileURL: fileURL,
@@ -580,10 +782,7 @@ final class TagEditorViewModel {
                     let tags = payload.writesTags
                         ? FlacWriteMapper.makeTags(
                             for: track,
-                            album: album,
-                            albumArtist: albumArtist,
-                            totalTracks: trackItems.count,
-                            totalDiscs: totalDiscs,
+                            totalDiscs: currentTotalDiscsValue(for: track),
                             options: tagWriteOptions
                         )
                         : [:]
@@ -801,6 +1000,7 @@ final class TagEditorViewModel {
 
         for index in trackItems.indices where selectedTrackIDs.contains(trackItems[index].id) {
             trackItems[index].tags[normalizedKey] = value
+            clearExternallyModifiedDifference(forTrackAt: index, keys: [normalizedKey])
         }
     }
 
@@ -1003,10 +1203,7 @@ final class TagEditorViewModel {
     private func expectedFileTags(forTrackAt index: Int, tagWriteOptions: TagWriteOptions) -> [String: String] {
         FlacWriteMapper.makeTags(
             for: trackItems[index],
-            album: album,
-            albumArtist: albumArtist,
-            totalTracks: trackItems.count,
-            totalDiscs: totalDiscs,
+            totalDiscs: currentTotalDiscsValue(for: trackItems[index]),
             options: tagWriteOptions
         )
     }
@@ -1032,24 +1229,24 @@ final class TagEditorViewModel {
             )
         }
 
-        let trimmedAlbum = album.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedAlbum = trackItems[index].album.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedAlbum.isEmpty {
-            tags["ALBUM"] = trimmedAlbum
+            tags[TagKey.album] = trimmedAlbum
         }
 
-        let trimmedAlbumArtist = albumArtist.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedAlbumArtist = trackItems[index].albumArtist.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedAlbumArtist.isEmpty {
-            tags["ALBUMARTIST"] = trimmedAlbumArtist
+            tags[TagKey.albumArtist] = trimmedAlbumArtist
         }
 
-        let normalizedTotalTracks = totalTracks.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedTotalTracks = trackItems[index].totalTracks.trimmingCharacters(in: .whitespacesAndNewlines)
         for key in totalTrackTagKeys {
             if let fileValue = fileTags[key], !fileValue.isEmpty {
                 tags[key] = formattedNumericComparisonValue(normalizedTotalTracks, matching: fileValue)
             }
         }
 
-        let normalizedTotalDiscs = normalizedTotalDiscsValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedTotalDiscs = currentTotalDiscsValue(for: trackItems[index])
         for key in totalDiscTagKeys {
             if let fileValue = fileTags[key], !fileValue.isEmpty {
                 tags[key] = formattedNumericComparisonValue(normalizedTotalDiscs, matching: fileValue)
@@ -1089,7 +1286,8 @@ final class TagEditorViewModel {
 
     private func differingFileValues(
         expectedTags: [String: String],
-        fileTags: [String: String]
+        fileTags: [String: String],
+        ignoreMissingFileValues: Bool = false
     ) -> [String: String] {
         let allKeys = Set(expectedTags.keys).union(fileTags.keys)
         var differences: [String: String] = [:]
@@ -1097,6 +1295,9 @@ final class TagEditorViewModel {
         for key in allKeys {
             let expectedValue = expectedTags[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let fileValue = fileTags[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if ignoreMissingFileValues, fileValue.isEmpty {
+                continue
+            }
             if expectedValue != fileValue {
                 differences[key] = fileValue.isEmpty ? "<missing>" : fileValue
             }
@@ -1116,7 +1317,8 @@ final class TagEditorViewModel {
                 at: index,
                 matching: fileSnapshot.tags
             ),
-            fileTags: fileSnapshot.tags
+            fileTags: fileSnapshot.tags,
+            ignoreMissingFileValues: true
         )
         let hasPictureDifference = writablePicturesByType(from: albumArtPictures) != fileSnapshot.picturesByType
 
@@ -1202,6 +1404,151 @@ final class TagEditorViewModel {
         return "Unknown track"
     }
 
+    private func selectedTrackValueBinding(
+        _ keyPath: WritableKeyPath<Track, String>
+    ) -> Binding<String>? {
+        let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
+        guard !selectedTracks.isEmpty else {
+            return nil
+        }
+
+        return Binding(
+            get: {
+                self.sharedDisplayValue(
+                    for: self.trackItems
+                        .filter { self.selectedTrackIDs.contains($0.id) }
+                        .map { $0[keyPath: keyPath] }
+                )
+            },
+            set: { newValue in
+                guard newValue != self.mixedSelectionMarker else {
+                    return
+                }
+
+                let trimmedValue = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                let keysToClear = self.keysForTrackProperty(keyPath)
+                for index in self.trackItems.indices where self.selectedTrackIDs.contains(self.trackItems[index].id) {
+                    guard !self.trackItems[index].isLocked else {
+                        continue
+                    }
+                    self.trackItems[index][keyPath: keyPath] = trimmedValue
+                    self.clearExternallyModifiedDifference(forTrackAt: index, keys: keysToClear)
+                }
+            }
+        )
+    }
+
+    private func isMixedSelectedTrackValue(_ keyPath: KeyPath<Track, String>) -> Bool {
+        let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
+        guard !selectedTracks.isEmpty else {
+            return false
+        }
+
+        let normalizedValues = selectedTracks.map { $0[keyPath: keyPath].trimmingCharacters(in: .whitespacesAndNewlines) }
+        return Set(normalizedValues).count > 1
+    }
+
+    private func sharedDisplayValue(for values: [String]) -> String {
+        let normalizedValues = values.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard let firstValue = normalizedValues.first else {
+            return ""
+        }
+
+        return normalizedValues.allSatisfy { $0 == firstValue }
+            ? firstValue
+            : mixedSelectionMarker
+    }
+
+    private func currentValue(for track: Track, key: String) -> String {
+        switch key {
+        case TagKey.album:
+            return track.album
+        case TagKey.albumArtist:
+            return track.albumArtist
+        case "TOTALTRACKS", "TRACKTOTAL":
+            return track.totalTracks
+        case "TOTALDISCS", "DISCTOTAL":
+            return currentTotalDiscsValue(for: track)
+        default:
+            return track.tags[key] ?? ""
+        }
+    }
+
+    private func snapshotValue(for track: Track, key: String) -> String? {
+        let rawValue = track.latestFileSnapshot?.tags[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !rawValue.isEmpty else {
+            return nil
+        }
+
+        return normalizedTagValue(rawValue)
+    }
+
+    private func normalizedTagValue(_ value: String) -> String {
+        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return Int(trimmedValue).map(String.init) ?? trimmedValue
+    }
+
+    private func currentTotalDiscsValue(for track: Track) -> String {
+        for key in totalDiscTagKeys {
+            let value = normalizedTagValue(track.tags[key] ?? "")
+            if !value.isEmpty {
+                return value
+            }
+        }
+
+        return normalizedTagValue(totalDiscs)
+    }
+
+    private func setCurrentTotalDiscsValue(_ value: String, forTrackAt index: Int) {
+        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let shouldWriteDiscTotal = !trackItems[index].tags["DISCTOTAL", default: ""].isEmpty
+        let shouldWriteTotalDiscs = !trackItems[index].tags["TOTALDISCS", default: ""].isEmpty || !shouldWriteDiscTotal
+
+        if trimmedValue.isEmpty {
+            trackItems[index].tags.removeValue(forKey: "TOTALDISCS")
+            trackItems[index].tags.removeValue(forKey: "DISCTOTAL")
+            return
+        }
+
+        if shouldWriteTotalDiscs {
+            trackItems[index].tags["TOTALDISCS"] = trimmedValue
+        }
+
+        if shouldWriteDiscTotal {
+            trackItems[index].tags["DISCTOTAL"] = trimmedValue
+        }
+    }
+
+    private func keysForTrackProperty(_ keyPath: WritableKeyPath<Track, String>) -> [String] {
+        if keyPath == \Track.album {
+            return [TagKey.album]
+        }
+        if keyPath == \Track.albumArtist {
+            return [TagKey.albumArtist]
+        }
+        if keyPath == \Track.totalTracks {
+            return totalTrackTagKeys
+        }
+        return []
+    }
+
+    private func clearExternallyModifiedDifference(forTrackAt index: Int, keys: [String]) {
+        guard !keys.isEmpty else {
+            return
+        }
+
+        guard var differences = trackItems[index].externalDifferences else {
+            return
+        }
+
+        let normalizedKeys = Set(keys.map(normalizedTagKey))
+        for key in normalizedKeys {
+            differences.fileValuesByTag.removeValue(forKey: key)
+        }
+
+        trackItems[index].externalDifferences = differences.hasDifferences ? differences : nil
+    }
+
     private func updateTrackFileURL(_ fileURL: URL, at index: Int) {
         trackItems[index].sourceFileURL = fileURL
         trackItems[index].securityScopedBookmarkData = try? fileURL.bookmarkData(
@@ -1209,6 +1556,24 @@ final class TagEditorViewModel {
             includingResourceValuesForKeys: nil,
             relativeTo: nil
         )
+    }
+
+    private func applyLegacySharedMetadataIfNeeded() {
+        let normalizedTrackCount = String(trackItems.count)
+
+        for index in trackItems.indices {
+            if trackItems[index].album.isEmpty, !pendingAlbumValue.isEmpty {
+                trackItems[index].album = pendingAlbumValue
+            }
+
+            if trackItems[index].albumArtist.isEmpty, !pendingAlbumArtistValue.isEmpty {
+                trackItems[index].albumArtist = pendingAlbumArtistValue
+            }
+
+            if trackItems[index].totalTracks.isEmpty {
+                trackItems[index].totalTracks = normalizedTrackCount
+            }
+        }
     }
 
     private func withAccessingSecurityScopedTrackURL<T>(

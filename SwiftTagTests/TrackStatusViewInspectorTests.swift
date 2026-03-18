@@ -6,6 +6,23 @@ import Foundation
 
 @MainActor
 struct TrackStatusViewInspectorTests {
+    private static var fixtureURL: URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTagTestFiles")
+            .appendingPathComponent("test.flac")
+    }
+
+    private static func tempFixtureCopyURL(name: String) throws -> URL {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        let copiedFileURL = directoryURL.appendingPathComponent(name)
+        try FileManager.default.copyItem(at: fixtureURL, to: copiedFileURL)
+        return copiedFileURL
+    }
+
     @Test
     func tagEditorTrackFileViewStatusPresentationProvidesIconForTrackRow() throws {
         let track = makeTrack(id: UUID(), title: "Track A", filename: "track-a.flac")
@@ -19,6 +36,7 @@ struct TrackStatusViewInspectorTests {
             },
             isTrackLocked: { _ in false },
             hasDeletedFile: { _ in false },
+            hasInternalTitleDifference: { _ in false },
             hasExternalTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Lock Selected Track",
@@ -40,6 +58,7 @@ struct TrackStatusViewInspectorTests {
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in false },
             hasDeletedFile: { _ in false },
+            hasInternalTitleDifference: { _ in false },
             hasExternalTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Lock Selected Track",
@@ -70,6 +89,39 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func fixtureImportBindsExpectedAlbumValuesViaAlbumView() async throws {
+        let viewModel = TagEditorViewModel()
+        let fixtureCopyURL = try Self.tempFixtureCopyURL(name: "viewinspector-import.flac")
+        try await viewModel.importFlacFiles([fixtureCopyURL])
+        let importedTrack = try #require(viewModel.trackItems.first)
+        viewModel.selectedTrackIDs = [importedTrack.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        let sut = TagEditorAlbumView(
+            albumBinding: viewModel.selectedAlbumBinding(),
+            albumArtistBinding: viewModel.selectedAlbumArtistBinding(),
+            isSaveOperationRunning: false,
+            isMetadataEditable: true,
+            isArtworkEditable: true,
+            isAlbumMixedSelection: viewModel.selectedAlbumIsMixed,
+            isAlbumArtistMixedSelection: viewModel.selectedAlbumArtistIsMixed,
+            hasAlbumInternalDifference: false,
+            hasAlbumExternalDifference: false,
+            hasAlbumArtistInternalDifference: false,
+            hasAlbumArtistExternalDifference: false,
+            showsPictureDifferenceOverlay: false,
+            frontCoverImage: Image(systemName: "photo"),
+            onFrontCoverDrop: { _ in false },
+            onFrontCoverTap: {}
+        )
+
+        let actualView = try sut.inspect().find(TagEditorAlbumView.self).actualView()
+        #expect(actualView.albumBinding?.wrappedValue == "Test Album")
+        #expect(actualView.albumArtistBinding?.wrappedValue == "Test AlbumArtist")
+        #expect(viewModel.miscTagRows.contains { viewModel.normalizedTagKey($0.key) == "ENCODED_BY" })
+    }
+
+    @Test
     func tagEditorTrackFileViewUsesLockedStateLookupForTrackRow() throws {
         let track = makeTrack(id: UUID(), title: "Locked Track", filename: "locked.flac")
 
@@ -80,6 +132,7 @@ struct TrackStatusViewInspectorTests {
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in true },
             hasDeletedFile: { _ in false },
+            hasInternalTitleDifference: { _ in false },
             hasExternalTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Unlock Selected Track",
@@ -101,6 +154,7 @@ struct TrackStatusViewInspectorTests {
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in false },
             hasDeletedFile: { _ in false },
+            hasInternalTitleDifference: { _ in false },
             hasExternalTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Lock Selected Track",
@@ -174,7 +228,12 @@ struct TrackStatusViewInspectorTests {
             albumArtistBinding: .constant("Album Artist"),
             isSaveOperationRunning: isSaveOperationRunning,
             isMetadataEditable: isMetadataEditable,
+            isArtworkEditable: isMetadataEditable,
+            isAlbumMixedSelection: false,
+            isAlbumArtistMixedSelection: false,
+            hasAlbumInternalDifference: false,
             hasAlbumExternalDifference: false,
+            hasAlbumArtistInternalDifference: false,
             hasAlbumArtistExternalDifference: false,
             showsPictureDifferenceOverlay: showsPictureDifferenceOverlay,
             frontCoverImage: Image(systemName: "photo"),

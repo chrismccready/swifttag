@@ -163,6 +163,69 @@ struct SwiftTagTests {
     }
 
     @Test
+    func feedbackSettingsDefaultsMatchPlan() {
+        #expect(FeedbackSettingsDefaults.saveNotificationMode == .whenNotFrontmost)
+        #expect(FeedbackSettingsDefaults.themePreference == .system)
+        #expect(FeedbackSettingsDefaults.formatOnTrackToFileDiff)
+        #expect(FeedbackSettingsDefaults.formatOnTrackToTrackDiff)
+        #expect(FeedbackSettingsDefaults.formatOnExternallyModifiedDiff)
+        #expect(FeedbackSettingsDefaults.warnOnTrackTotalMismatch)
+        #expect(FeedbackSettingsDefaults.warnOnDiscTotalMismatch)
+        #expect(!FeedbackSettingsDefaults.trackDiscTotalMismatchColor.isEmpty)
+    }
+
+    @Test
+    func appThemePreferenceMapsToExpectedColorScheme() {
+        #expect(AppThemePreference.system.preferredColorScheme == nil)
+        #expect(AppThemePreference.light.preferredColorScheme == .light)
+        #expect(AppThemePreference.dark.preferredColorScheme == .dark)
+    }
+
+    @Test
+    @MainActor
+    func tagDiffPresentationPrefersExternallyModifiedFormattingOverTrackDiffFormatting() {
+        let presentation = TagDiffPresentation.resolve(
+            tag: .album,
+            hasTrackToTrackDifference: true,
+            hasTrackToFileDifference: true,
+            hasExternallyModifiedDifference: true,
+            showsMismatchWarning: false,
+            isInvalid: false,
+            trackToTrackColor: .orange,
+            trackToFileColor: .primary,
+            externallyModifiedColor: .red,
+            mismatchColor: .red,
+            formatOnTrackToFileDiff: true,
+            formatOnTrackToTrackDiff: true,
+            formatOnExternallyModifiedDiff: true
+        )
+
+        #expect(presentation.foregroundColor == .red)
+        #expect(presentation.backgroundColor == nil)
+        #expect(presentation.isBold)
+        #expect(presentation.isItalic)
+    }
+
+    @Test
+    @MainActor
+    func saveNotificationCoordinatorRespectsWhenNotFrontmostMode() {
+        let defaults = UserDefaults.standard
+        let previousValue = defaults.string(forKey: FeedbackSettingsKey.saveNotificationMode)
+        defaults.set(SaveNotificationMode.whenNotFrontmost.rawValue, forKey: FeedbackSettingsKey.saveNotificationMode)
+        defer {
+            if let previousValue {
+                defaults.set(previousValue, forKey: FeedbackSettingsKey.saveNotificationMode)
+            } else {
+                defaults.removeObject(forKey: FeedbackSettingsKey.saveNotificationMode)
+            }
+        }
+
+        let coordinator = SaveNotificationCoordinator(notificationCenter: nil)
+        #expect(!coordinator.allowsNotificationDelivery(appIsFrontmost: true))
+        #expect(coordinator.allowsNotificationDelivery(appIsFrontmost: false))
+    }
+
+    @Test
     func flacImportMapperMapsFixtureValues() {
         let tags: [String: String] = [
             "ALBUM": "Test Album",
@@ -184,6 +247,7 @@ struct SwiftTagTests {
         let initialValues = FlacImportMapper.initialValues(from: tags)
         #expect(initialValues.album == "Test Album")
         #expect(initialValues.albumArtist == "Test AlbumArtist")
+        #expect(initialValues.totalTracks == "1")
         #expect(initialValues.totalDiscs == "1")
 
         let mapped = FlacImportMapper.mapTrackTags(
@@ -346,6 +410,263 @@ struct SwiftTagTests {
                 albumArtPictures: []
             )
         )
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSelectedAlbumBindingShowsMixedMarkerAndWritesSelection() throws {
+        let firstTrack = Track(
+            album: "Album A",
+            albumArtist: "Artist A",
+            totalTracks: "2",
+            tags: [TagKey.title: "One", TagKey.filename: "one.flac"]
+        )
+        let secondTrack = Track(
+            album: "Album B",
+            albumArtist: "Artist B",
+            totalTracks: "2",
+            tags: [TagKey.title: "Two", TagKey.filename: "two.flac"]
+        )
+        let unselectedTrack = Track(
+            album: "Keep Me",
+            albumArtist: "Artist C",
+            totalTracks: "2",
+            tags: [TagKey.title: "Three", TagKey.filename: "three.flac"]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack, secondTrack, unselectedTrack]
+        viewModel.selectedTrackIDs = Set([firstTrack.id, secondTrack.id])
+
+        let binding = try #require(viewModel.selectedAlbumBinding())
+        #expect(binding.wrappedValue == viewModel.mixedSelectionMarker)
+
+        binding.wrappedValue = "Shared Album"
+
+        #expect(viewModel.trackItems[0].album == "Shared Album")
+        #expect(viewModel.trackItems[1].album == "Shared Album")
+        #expect(viewModel.trackItems[2].album == "Keep Me")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelMiscTagsAddAndDeleteRow() throws {
+        let track = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+        let initialCount = viewModel.miscTagRows.count
+
+        let rowID = viewModel.addMiscTagRow()
+        #expect(viewModel.miscTagRows.count == initialCount + 1)
+        #expect(viewModel.selectedMiscTagRowIDs == [rowID])
+
+        let keyBinding = try #require(viewModel.miscTagKeyBinding(for: rowID))
+        keyBinding.wrappedValue = "CUSTOM_ROW_A"
+        viewModel.finalizeMiscTagKeyEditing(for: rowID)
+
+        let valueBinding = try #require(viewModel.miscTagValueBinding(for: rowID))
+        valueBinding.wrappedValue = "Custom Value A"
+        #expect(viewModel.trackItems[0].tags["CUSTOM_ROW_A"] == "Custom Value A")
+
+        viewModel.selectedMiscTagRowIDs = [rowID]
+        viewModel.deleteSelectedMiscTagRows()
+        #expect(viewModel.miscTagRows.count == initialCount)
+        #expect(!viewModel.miscTagRows.contains(where: { viewModel.normalizedTagKey($0.key) == "CUSTOM_ROW_A" }))
+        #expect(viewModel.trackItems[0].tags["CUSTOM_ROW_A"] == nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelMiscTagsRejectsExplicitKeyForNewRow() throws {
+        let track = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+        let initialCount = viewModel.miscTagRows.count
+
+        let rowID = viewModel.addMiscTagRow()
+        let keyBinding = try #require(viewModel.miscTagKeyBinding(for: rowID))
+        keyBinding.wrappedValue = "TITLE"
+        viewModel.finalizeMiscTagKeyEditing(for: rowID)
+
+        #expect(viewModel.miscTagRows.count == initialCount)
+        #expect(!viewModel.miscTagRows.contains(where: { viewModel.normalizedTagKey($0.key) == TagKey.title }))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelMiscTagsRejectsDuplicateKeyForNewRow() throws {
+        let track = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        let firstRowID = viewModel.addMiscTagRow()
+        let firstKeyBinding = try #require(viewModel.miscTagKeyBinding(for: firstRowID))
+        firstKeyBinding.wrappedValue = "DUPLICATE_BASE"
+        viewModel.finalizeMiscTagKeyEditing(for: firstRowID)
+        let committedCount = viewModel.miscTagRows.count
+
+        let duplicateRowID = viewModel.addMiscTagRow()
+        let duplicateKeyBinding = try #require(viewModel.miscTagKeyBinding(for: duplicateRowID))
+        duplicateKeyBinding.wrappedValue = "DUPLICATE_BASE"
+        viewModel.finalizeMiscTagKeyEditing(for: duplicateRowID)
+
+        #expect(viewModel.miscTagRows.count == committedCount)
+        #expect(viewModel.miscTagRows.filter { viewModel.normalizedTagKey($0.key) == "DUPLICATE_BASE" }.count == 1)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelMiscTagsRevertsDuplicateEditToOriginalKey() throws {
+        let track = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        let originalRowID = viewModel.addMiscTagRow()
+        let originalKeyBinding = try #require(viewModel.miscTagKeyBinding(for: originalRowID))
+        originalKeyBinding.wrappedValue = "ORIGINAL_KEY"
+        viewModel.finalizeMiscTagKeyEditing(for: originalRowID)
+
+        let editedRowID = viewModel.addMiscTagRow()
+        let editedKeyBinding = try #require(viewModel.miscTagKeyBinding(for: editedRowID))
+        editedKeyBinding.wrappedValue = "OTHER_KEY"
+        viewModel.finalizeMiscTagKeyEditing(for: editedRowID)
+
+        viewModel.recordOriginalMiscTagKeyIfNeeded(for: editedRowID)
+        editedKeyBinding.wrappedValue = "ORIGINAL_KEY"
+        viewModel.finalizeMiscTagKeyEditing(for: editedRowID)
+
+        let rowAfterFinalize = viewModel.miscTagRows.first(where: { $0.id == editedRowID })
+        #expect(rowAfterFinalize?.key == "OTHER_KEY")
+        #expect(viewModel.miscTagRows.filter { viewModel.normalizedTagKey($0.key) == "ORIGINAL_KEY" }.count == 1)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelInternalDifferenceIgnoresMissingSnapshotValueForAlbum() {
+        let track = Track(
+            album: "Album",
+            albumArtist: "Artist",
+            totalTracks: "1",
+            tags: [TagKey.title: "Title", TagKey.filename: "test.flac"],
+            latestFileSnapshot: TrackFileSnapshot(
+                tags: [TagKey.title: "Title"],
+                picturesByType: [:]
+            )
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = Set([track.id])
+
+        #expect(!viewModel.hasInternalDifference(forAnyOf: [TagKey.album]))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSelectedTotalDiscsBindingWritesSelectedTracksOnly() throws {
+        let firstTrack = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac",
+                "TOTALDISCS": "1"
+            ]
+        )
+        let secondTrack = Track(
+            tags: [
+                TagKey.title: "Two",
+                TagKey.filename: "two.flac",
+                "TOTALDISCS": "2"
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack, secondTrack]
+        viewModel.selectedTrackIDs = [firstTrack.id]
+
+        let binding = try #require(viewModel.selectedTotalDiscsBinding())
+        binding.wrappedValue = "3"
+
+        #expect(viewModel.trackItems[0].tags["TOTALDISCS"] == "3")
+        #expect(viewModel.trackItems[1].tags["TOTALDISCS"] == "2")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSelectedTotalDiscsBindingShowsMixedMarkerForDifferentValues() throws {
+        let firstTrack = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac",
+                "TOTALDISCS": "1"
+            ]
+        )
+        let secondTrack = Track(
+            tags: [
+                TagKey.title: "Two",
+                TagKey.filename: "two.flac",
+                "DISCTOTAL": "2"
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack, secondTrack]
+        viewModel.selectedTrackIDs = [firstTrack.id, secondTrack.id]
+
+        let binding = try #require(viewModel.selectedTotalDiscsBinding())
+        #expect(binding.wrappedValue == viewModel.mixedSelectionMarker)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelMiscRowTrackToFileDifferenceIncludesMissingSnapshotValues() {
+        let track = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac",
+                "CUSTOM": "Changed"
+            ],
+            latestFileSnapshot: TrackFileSnapshot(
+                tags: [
+                    TagKey.title: "One"
+                ],
+                picturesByType: [:]
+            )
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+
+        let row = MiscTagRow(id: UUID(), key: "CUSTOM", value: "Changed")
+        #expect(viewModel.hasTrackToFileDifference(forMiscTagRow: row))
     }
 
     @Test
@@ -1510,6 +1831,33 @@ struct SwiftTagTests {
         #expect(rewrittenRecord.pictures.count == 1)
         #expect(rewrittenRecord.pictures.first?.type == 3)
         #expect(rewrittenRecord.pictures.first?.data == pictureData)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSaveTagsPersistsAlbumEditsAcrossReimport() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "save-tags-reimport.flac")
+        let firstViewModel = TagEditorViewModel()
+        try await firstViewModel.importFlacFiles([fileURL])
+        let firstTrack = try #require(firstViewModel.trackItems.first)
+        firstViewModel.selectedTrackIDs = [firstTrack.id]
+        let albumBinding = try #require(firstViewModel.selectedAlbumBinding())
+        albumBinding.wrappedValue = "Saved By Menu Tags"
+
+        _ = try await firstViewModel.save(
+            payload: .writeTags,
+            scope: .allTracks,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: [],
+            editorSessionID: UUID()
+        )
+
+        let secondViewModel = TagEditorViewModel()
+        try await secondViewModel.importFlacFiles([fileURL])
+        let secondTrack = try #require(secondViewModel.trackItems.first)
+        secondViewModel.selectedTrackIDs = [secondTrack.id]
+        let reimportedAlbumBinding = try #require(secondViewModel.selectedAlbumBinding())
+        #expect(reimportedAlbumBinding.wrappedValue == "Saved By Menu Tags")
     }
 
     @Test

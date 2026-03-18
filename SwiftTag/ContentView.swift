@@ -59,16 +59,9 @@ struct ContentView: View {
     @AppStorage(SaveSettingsKey.trackCountKeyStrategy) private var trackCountKeyStrategyRawValue: String = SaveSettingsDefaults.trackCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.zeroPadDiscNumber) private var zeroPadDiscNumber: Bool = SaveSettingsDefaults.zeroPadDiscNumber
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
-
-    private var album: String {
-        get { viewModel.album }
-        set { viewModel.album = newValue }
-    }
-
-    private var albumArtist: String {
-        get { viewModel.albumArtist }
-        set { viewModel.albumArtist = newValue }
-    }
+    @AppStorage(FeedbackSettingsKey.themePreference) private var themePreferenceRawValue: String = FeedbackSettingsDefaults.themePreference.rawValue
+    @AppStorage(FeedbackSettingsKey.warnOnTrackTotalMismatch) private var warnOnTrackTotalMismatch: Bool = FeedbackSettingsDefaults.warnOnTrackTotalMismatch
+    @AppStorage(FeedbackSettingsKey.warnOnDiscTotalMismatch) private var warnOnDiscTotalMismatch: Bool = FeedbackSettingsDefaults.warnOnDiscTotalMismatch
 
     private var totalDiscs: String {
         get { viewModel.totalDiscs }
@@ -95,25 +88,32 @@ struct ContentView: View {
         set { viewModel.trackItems = newValue }
     }
 
-    private var albumBinding: Binding<String> {
-        Binding(
-            get: { viewModel.album },
-            set: { viewModel.album = $0 }
-        )
+    private var themePreference: AppThemePreference {
+        AppThemePreference(rawValue: themePreferenceRawValue) ?? FeedbackSettingsDefaults.themePreference
     }
 
-    private var albumArtistBinding: Binding<String> {
-        Binding(
-            get: { viewModel.albumArtist },
-            set: { viewModel.albumArtist = $0 }
-        )
+    private var trackCountKeyStrategy: TrackCountKeyStrategy {
+        TrackCountKeyStrategy(rawValue: trackCountKeyStrategyRawValue) ?? SaveSettingsDefaults.trackCountKeyStrategy
     }
 
-    private var totalDiscsBinding: Binding<String> {
-        Binding(
-            get: { viewModel.totalDiscs },
-            set: { viewModel.totalDiscs = $0 }
-        )
+    private var discCountKeyStrategy: DiscCountKeyStrategy {
+        DiscCountKeyStrategy(rawValue: discCountKeyStrategyRawValue) ?? SaveSettingsDefaults.discCountKeyStrategy
+    }
+
+    private var albumBinding: Binding<String>? {
+        viewModel.selectedAlbumBinding()
+    }
+
+    private var albumArtistBinding: Binding<String>? {
+        viewModel.selectedAlbumArtistBinding()
+    }
+
+    private var totalTracksBinding: Binding<String>? {
+        viewModel.selectedTotalTracksBinding()
+    }
+
+    private var totalDiscsBinding: Binding<String>? {
+        viewModel.selectedTotalDiscsBinding()
     }
 
     private var selectedTrackIDsBinding: Binding<Set<UUID>> {
@@ -150,8 +150,8 @@ struct ContentView: View {
         viewModel.selectedTagBinding(tagName: tagName)
     }
 
-    private var selectedDateBinding: Binding<Date>? {
-        viewModel.selectedDateBinding()
+    private var selectedDateBinding: Binding<String>? {
+        viewModel.selectedDateTextBinding()
     }
 
     private var selectedArtistBinding: Binding<String>? {
@@ -182,12 +182,10 @@ struct ContentView: View {
         selectedTagBinding(tagName: TagKey.genre)
     }
 
-    private var totalTracks: String {
-        viewModel.totalTracks
-    }
-
     private var hasTotalTracksMismatch: Bool {
-        viewModel.hasTotalTracksMismatch
+        warnOnTrackTotalMismatch &&
+            trackCountKeyStrategy != .none &&
+            viewModel.hasTotalTracksMismatch
     }
 
     private var totalTracksHoverMessage: String {
@@ -195,7 +193,9 @@ struct ContentView: View {
     }
 
     private var hasTotalDiscsMismatch: Bool {
-        viewModel.hasTotalDiscsMismatch
+        warnOnDiscTotalMismatch &&
+            discCountKeyStrategy != .none &&
+            viewModel.hasTotalDiscsMismatch
     }
 
     private var totalDiscsHoverMessage: String {
@@ -204,6 +204,10 @@ struct ContentView: View {
 
     private var isAlbumMetadataEditable: Bool {
         viewModel.hasUnlockedTracks && !isSaveOperationRunning
+    }
+
+    private var isSelectedAlbumMetadataEditable: Bool {
+        isSelectionEditable
     }
 
     private var isSelectionEditable: Bool {
@@ -215,11 +219,27 @@ struct ContentView: View {
     }
 
     private var hasAlbumExternalDifference: Bool {
-        viewModel.hasExternalDifferenceForAnyLoadedTrack(keys: ["ALBUM"])
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.album])
+    }
+
+    private var hasAlbumExternallyModifiedDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.album])
     }
 
     private var hasAlbumArtistExternalDifference: Bool {
-        viewModel.hasExternalDifferenceForAnyLoadedTrack(keys: ["ALBUMARTIST"])
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.albumArtist])
+    }
+
+    private var hasAlbumArtistExternallyModifiedDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.albumArtist])
+    }
+
+    private var hasAlbumInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.album])
+    }
+
+    private var hasAlbumArtistInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.albumArtist])
     }
 
     private var hasPictureDifference: Bool {
@@ -227,11 +247,33 @@ struct ContentView: View {
     }
 
     private var hasTotalTracksExternalDifference: Bool {
-        viewModel.hasExternalDifferenceForAnyLoadedTrack(keys: ["TOTALTRACKS", "TRACKTOTAL"])
+        viewModel.hasTrackToFileDifference(forAnyOf: ["TOTALTRACKS", "TRACKTOTAL"])
+    }
+
+    private var hasTotalTracksExternallyModifiedDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: ["TOTALTRACKS", "TRACKTOTAL"])
+    }
+
+    private var hasTotalTracksInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: ["TOTALTRACKS", "TRACKTOTAL"])
     }
 
     private var hasTotalDiscsExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(
+            forAnyOf: ["TOTALDISCS", "DISCTOTAL"],
+            in: Set(viewModel.trackItems.map(\.id))
+        )
+    }
+
+    private var hasTotalDiscsExternallyModifiedDifference: Bool {
         viewModel.hasExternalDifferenceForAnyLoadedTrack(keys: ["TOTALDISCS", "DISCTOTAL"])
+    }
+
+    private var hasTotalDiscsInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(
+            forAnyOf: ["TOTALDISCS", "DISCTOTAL"],
+            in: Set(viewModel.trackItems.map(\.id))
+        )
     }
 
     private var canToggleTrackLocks: Bool {
@@ -239,35 +281,99 @@ struct ContentView: View {
     }
 
     private var hasTrackNumberExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.trackNumber])
+    }
+
+    private var hasTrackNumberExternallyModifiedDifference: Bool {
         viewModel.hasExternalDifference(forAnyOf: [TagKey.trackNumber])
     }
 
+    private var hasTrackNumberInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.trackNumber])
+    }
+
     private var hasDiscNumberExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.discNumber])
+    }
+
+    private var hasDiscNumberExternallyModifiedDifference: Bool {
         viewModel.hasExternalDifference(forAnyOf: [TagKey.discNumber])
     }
 
+    private var hasDiscNumberInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.discNumber])
+    }
+
     private var hasGenreExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.genre])
+    }
+
+    private var hasGenreExternallyModifiedDifference: Bool {
         viewModel.hasExternalDifference(forAnyOf: [TagKey.genre])
     }
 
+    private var hasGenreInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.genre])
+    }
+
     private var hasArtistExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.artist])
+    }
+
+    private var hasArtistExternallyModifiedDifference: Bool {
         viewModel.hasExternalDifference(forAnyOf: [TagKey.artist])
     }
 
+    private var hasArtistInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.artist])
+    }
+
     private var hasComposerExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.composer])
+    }
+
+    private var hasComposerExternallyModifiedDifference: Bool {
         viewModel.hasExternalDifference(forAnyOf: [TagKey.composer])
     }
 
+    private var hasComposerInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.composer])
+    }
+
     private var hasLocationExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.location])
+    }
+
+    private var hasLocationExternallyModifiedDifference: Bool {
         viewModel.hasExternalDifference(forAnyOf: [TagKey.location])
     }
 
+    private var hasLocationInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.location])
+    }
+
     private var hasDateExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.date])
+    }
+
+    private var hasDateExternallyModifiedDifference: Bool {
         viewModel.hasExternalDifference(forAnyOf: [TagKey.date])
     }
 
+    private var hasDateInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.date])
+    }
+
     private var hasDescriptionExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.description])
+    }
+
+    private var hasDescriptionExternallyModifiedDifference: Bool {
         viewModel.hasExternalDifference(forAnyOf: [TagKey.description])
+    }
+
+    private var hasDescriptionInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.description])
     }
 
     private var trackStatusPresentationLookup: (UUID) -> TrackStatusPresentation? {
@@ -280,15 +386,39 @@ struct ContentView: View {
         }
     }
 
-    private var hasExternalTitleDifferenceLookup: (UUID) -> Bool {
+    private var hasExternallyModifiedTitleDifferenceLookup: (UUID) -> Bool {
         { trackID in
             viewModel.hasExternalTagDifference(for: trackID, key: TagKey.title)
         }
     }
 
+    private var hasTrackToFileTitleDifferenceLookup: (UUID) -> Bool {
+        { trackID in
+            viewModel.hasTrackToFileTagDifference(for: trackID, key: TagKey.title)
+        }
+    }
+
+    private var hasTrackToTrackTitleDifferenceLookup: (UUID) -> Bool {
+        { _ in
+            false
+        }
+    }
+
     private var hasExternalDifferenceForMiscTagRowLookup: (MiscTagRow) -> Bool {
         { row in
+            viewModel.hasTrackToFileDifference(forMiscTagRow: row)
+        }
+    }
+
+    private var hasExternallyModifiedDifferenceForMiscTagRowLookup: (MiscTagRow) -> Bool {
+        { row in
             viewModel.hasExternalDifference(forMiscTagRow: row)
+        }
+    }
+
+    private var hasInternalDifferenceForMiscTagRowLookup: (MiscTagRow) -> Bool {
+        { row in
+            viewModel.hasTrackToTrackDifference(forAnyOf: [row.key])
         }
     }
 
@@ -298,8 +428,15 @@ struct ContentView: View {
             albumArtistBinding: albumArtistBinding,
             isSaveOperationRunning: isSaveOperationRunning,
             isAlbumMetadataEditable: isAlbumMetadataEditable,
+            isSelectedAlbumMetadataEditable: isSelectedAlbumMetadataEditable,
+            isAlbumMixedSelection: viewModel.selectedAlbumIsMixed,
+            isAlbumArtistMixedSelection: viewModel.selectedAlbumArtistIsMixed,
+            hasAlbumInternalDifference: hasAlbumInternalDifference,
             hasAlbumExternalDifference: hasAlbumExternalDifference,
+            hasAlbumExternallyModifiedDifference: hasAlbumExternallyModifiedDifference,
+            hasAlbumArtistInternalDifference: hasAlbumArtistInternalDifference,
             hasAlbumArtistExternalDifference: hasAlbumArtistExternalDifference,
+            hasAlbumArtistExternallyModifiedDifference: hasAlbumArtistExternallyModifiedDifference,
             showsPictureDifferenceOverlay: hasPictureDifference,
             frontCoverImage: albumArtViewModel.imageForAlbumArtSlot(.frontCover),
             onFrontCoverDrop: { providers in
@@ -314,19 +451,26 @@ struct ContentView: View {
             statusPresentationForTrack: trackStatusPresentationLookup,
             isTrackLocked: viewModel.isTrackLocked(_:),
             hasDeletedFile: viewModel.hasDeletedFile(for:),
-            hasExternalTitleDifference: hasExternalTitleDifferenceLookup,
+            hasTrackToTrackTitleDifference: hasTrackToTrackTitleDifferenceLookup,
+            hasTrackToFileTitleDifference: hasTrackToFileTitleDifferenceLookup,
+            hasExternallyModifiedTitleDifference: hasExternallyModifiedTitleDifferenceLookup,
             onToggleTrackLocks: toggleSelectedTrackLocks,
             lockMenuTitle: lockMenuTitle,
             canToggleTrackLocks: canToggleTrackLocks,
-            totalTracks: totalTracks,
+            totalTracksBinding: totalTracksBinding,
+            isTotalTracksMixedSelection: viewModel.selectedTotalTracksIsMixed,
             hasTotalTracksMismatch: hasTotalTracksMismatch,
+            hasTotalTracksInternalDifference: hasTotalTracksInternalDifference,
             totalTracksHoverMessage: totalTracksHoverMessage,
             totalDiscsBinding: totalDiscsBinding,
             hasTotalDiscsMismatch: hasTotalDiscsMismatch,
             totalDiscsHoverMessage: totalDiscsHoverMessage,
             isSelectionEditable: isSelectionEditable,
             hasTotalTracksExternalDifference: hasTotalTracksExternalDifference,
+            hasTotalTracksExternallyModifiedDifference: hasTotalTracksExternallyModifiedDifference,
             hasTotalDiscsExternalDifference: hasTotalDiscsExternalDifference,
+            hasTotalDiscsExternallyModifiedDifference: hasTotalDiscsExternallyModifiedDifference,
+            hasTotalDiscsInternalDifference: hasTotalDiscsInternalDifference,
             selectedNumberBinding: selectedNumberBinding,
             selectedDiscBinding: selectedDiscBinding,
             selectedGenreBinding: selectedGenreBinding,
@@ -335,14 +479,30 @@ struct ContentView: View {
             selectedLocationBinding: selectedLocationBinding,
             selectedDateBinding: selectedDateBinding,
             selectedDescriptionsBinding: selectedDescriptionsBinding,
+            hasTrackNumberInternalDifference: hasTrackNumberInternalDifference,
             hasTrackNumberExternalDifference: hasTrackNumberExternalDifference,
+            hasTrackNumberExternallyModifiedDifference: hasTrackNumberExternallyModifiedDifference,
+            hasDiscNumberInternalDifference: hasDiscNumberInternalDifference,
             hasDiscNumberExternalDifference: hasDiscNumberExternalDifference,
+            hasDiscNumberExternallyModifiedDifference: hasDiscNumberExternallyModifiedDifference,
+            hasGenreInternalDifference: hasGenreInternalDifference,
             hasGenreExternalDifference: hasGenreExternalDifference,
+            hasGenreExternallyModifiedDifference: hasGenreExternallyModifiedDifference,
+            hasArtistInternalDifference: hasArtistInternalDifference,
             hasArtistExternalDifference: hasArtistExternalDifference,
+            hasArtistExternallyModifiedDifference: hasArtistExternallyModifiedDifference,
+            hasComposerInternalDifference: hasComposerInternalDifference,
             hasComposerExternalDifference: hasComposerExternalDifference,
+            hasComposerExternallyModifiedDifference: hasComposerExternallyModifiedDifference,
+            hasLocationInternalDifference: hasLocationInternalDifference,
             hasLocationExternalDifference: hasLocationExternalDifference,
+            hasLocationExternallyModifiedDifference: hasLocationExternallyModifiedDifference,
+            hasDateInternalDifference: hasDateInternalDifference,
             hasDateExternalDifference: hasDateExternalDifference,
+            hasDateExternallyModifiedDifference: hasDateExternallyModifiedDifference,
+            hasDescriptionInternalDifference: hasDescriptionInternalDifference,
             hasDescriptionExternalDifference: hasDescriptionExternalDifference,
+            hasDescriptionExternallyModifiedDifference: hasDescriptionExternallyModifiedDifference,
             positiveIntegerTransform: positiveIntegerStringBinding(_:),
             miscTagRowsBinding: miscTagRowsBinding,
             selectedMiscTagRowIDsBinding: selectedMiscTagRowIDsBinding,
@@ -353,7 +513,9 @@ struct ContentView: View {
             miscTagKeyBinding: miscTagKeyBinding(for:),
             miscTagValueBinding: miscTagValueBinding(for:),
             isInvalidMiscTagKeyInput: isInvalidMiscTagKeyInput(_:for:),
-            hasExternalDifferenceForMiscTagRow: hasExternalDifferenceForMiscTagRowLookup
+            hasInternalDifferenceForMiscTagRow: hasInternalDifferenceForMiscTagRowLookup,
+            hasExternalDifferenceForMiscTagRow: hasExternalDifferenceForMiscTagRowLookup,
+            hasExternallyModifiedDifferenceForMiscTagRow: hasExternallyModifiedDifferenceForMiscTagRowLookup
         )
     }
 
@@ -481,6 +643,7 @@ struct ContentView: View {
 
     private var presentedContent: some View {
         commandFocusedContent
+            .preferredColorScheme(themePreference.preferredColorScheme)
             .fileImporter(
                 isPresented: $isFlacImporterPresented,
                 allowedContentTypes: [.folder, UTType(filenameExtension: "flac") ?? .data],
@@ -701,7 +864,7 @@ struct ContentView: View {
         saveStatusState = SaveStatusState(
             startedAt: .now,
             presentation: SaveStatusPresentation(
-                album: viewModel.album,
+                album: viewModel.sharedAlbumDisplayText(in: scope),
                 currentTrackName: "",
                 showsSelectedTrackName: scope == .selectedTracks,
                 currentTrackIndex: min(1, totalTrackCount),
@@ -718,7 +881,7 @@ struct ContentView: View {
             return
         }
 
-        saveStatusState.presentation.album = viewModel.album
+        saveStatusState.presentation.album = viewModel.sharedAlbumDisplayText(in: saveSettingsSnapshot.scope)
         saveStatusState.presentation.currentTrackName = currentTrackName
         saveStatusState.presentation.currentTrackIndex = currentTrackIndex
         saveStatusState.presentation.totalTrackCount = totalTrackCount
@@ -930,7 +1093,6 @@ struct ContentView: View {
         let currentTrackName = uiTestLaunchValue(for: "UITEST_SIMULATED_SAVE_TRACK_NAME") ?? "Simulated Track"
         let albumValue = uiTestLaunchValue(for: "UITEST_SIMULATED_SAVE_ALBUM") ?? "Simulated Album"
 
-        viewModel.album = albumValue
         saveStatusState = SaveStatusState(
             startedAt: .now,
             presentation: SaveStatusPresentation(

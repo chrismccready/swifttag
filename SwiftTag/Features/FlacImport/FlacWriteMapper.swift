@@ -9,6 +9,22 @@ enum FlacWriteMapper {
         totalDiscs: String,
         options: TagWriteOptions
     ) -> [String: String] {
+        var track = track
+        track.album = album
+        track.albumArtist = albumArtist
+        track.totalTracks = String(totalTracks)
+        return makeTags(
+            for: track,
+            totalDiscs: totalDiscs,
+            options: options
+        )
+    }
+
+    static func makeTags(
+        for track: Track,
+        totalDiscs: String,
+        options: TagWriteOptions
+    ) -> [String: String] {
         var tags: [String: String] = [:]
 
         mergeNonEmptyTags(from: track.tags, into: &tags)
@@ -22,7 +38,7 @@ enum FlacWriteMapper {
 
         tags[TagKey.trackNumber] = paddedNumberString(
             track.tags[TagKey.trackNumber],
-            totalCountString: String(totalTracks),
+            totalCountString: track.totalTracks,
             zeroPad: options.zeroPadTrackNumber
         )
 
@@ -32,10 +48,10 @@ enum FlacWriteMapper {
             zeroPad: options.zeroPadDiscNumber
         )
 
-        writeSharedValue(album, forKey: "ALBUM", into: &tags)
-        writeSharedValue(albumArtist, forKey: "ALBUMARTIST", into: &tags)
+        writeSharedValue(track.album, forKey: TagKey.album, into: &tags)
+        writeSharedValue(track.albumArtist, forKey: TagKey.albumArtist, into: &tags)
         writeTrackCount(
-            totalTracks,
+            track.totalTracks,
             strategy: options.trackCountKeyStrategy,
             zeroPad: options.zeroPadTrackNumber,
             into: &tags
@@ -75,16 +91,17 @@ enum FlacWriteMapper {
     }
 
     private static func writeTrackCount(
-        _ totalTracks: Int,
+        _ totalTracks: String,
         strategy: TrackCountKeyStrategy,
         zeroPad: Bool,
         into tags: inout [String: String]
     ) {
-        guard totalTracks > 0 else {
+        let trimmedValue = totalTracks.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty else {
             return
         }
 
-        let totalTracksValue = formattedTotalCountString(String(totalTracks), zeroPad: zeroPad)
+        let totalTracksValue = formattedTotalCountString(trimmedValue, zeroPad: zeroPad)
         switch strategy {
         case .totalTracks:
             tags["TOTALTRACKS"] = totalTracksValue

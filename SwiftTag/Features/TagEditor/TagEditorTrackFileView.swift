@@ -7,7 +7,9 @@ struct TagEditorTrackFileView: View {
     let statusPresentationForTrack: (UUID) -> TrackStatusPresentation?
     let isTrackLocked: (UUID) -> Bool
     let hasDeletedFile: (UUID) -> Bool
-    let hasExternalTitleDifference: (UUID) -> Bool
+    let hasTrackToTrackTitleDifference: (UUID) -> Bool
+    let hasTrackToFileTitleDifference: (UUID) -> Bool
+    let hasExternallyModifiedTitleDifference: (UUID) -> Bool
     let onToggleLockSelection: () -> Void
     let lockMenuTitle: String
     let canToggleLockSelection: Bool
@@ -27,13 +29,21 @@ struct TagEditorTrackFileView: View {
             TableColumn("Title") { track in
                 if let title = titleBindingForTrack(track.id) {
                     TextField("Title", text: title)
-                        .foregroundStyle(hasExternalTitleDifference(track.id) ? .red : .primary)
-                        .if(hasExternalTitleDifference(track.id)) { view in view.italic() }
+                        .tagDiffStyle(
+                            tag: .title,
+                            hasTrackToTrackDifference: hasTrackToTrackTitleDifference(track.id),
+                            hasTrackToFileDifference: hasTrackToFileTitleDifference(track.id),
+                            hasExternallyModifiedDifference: hasExternallyModifiedTitleDifference(track.id)
+                        )
                         .disabled(isTrackLocked(track.id))
                 } else {
                     Text(track.tags[TagKey.title] ?? "")
-                        .foregroundStyle(hasExternalTitleDifference(track.id) ? .red : .primary)
-                        .if(hasExternalTitleDifference(track.id)) { view in view.italic() }
+                        .tagDiffStyle(
+                            tag: .title,
+                            hasTrackToTrackDifference: hasTrackToTrackTitleDifference(track.id),
+                            hasTrackToFileDifference: hasTrackToFileTitleDifference(track.id),
+                            hasExternallyModifiedDifference: hasExternallyModifiedTitleDifference(track.id)
+                        )
                 }
             }
             .width(min: 140, max: 800)
@@ -51,17 +61,6 @@ struct TagEditorTrackFileView: View {
                 onToggleLockSelection()
             }
             .disabled(!canToggleLockSelection)
-        }
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
-        if condition {
-            transform(self)
-        } else {
-            self
         }
     }
 }

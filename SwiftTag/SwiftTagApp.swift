@@ -24,7 +24,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        completionHandler([.list, .banner, .badge, .sound])
+        let options: UNNotificationPresentationOptions = SaveNotificationCoordinator.shared.allowsNotificationDelivery(
+            appIsFrontmost: NSApp.isActive
+        ) ? [.list, .banner, .badge, .sound] : []
+        completionHandler(options)
     }
 
     func userNotificationCenter(
@@ -130,6 +133,13 @@ struct SwiftTagApp: App {
         Settings {
             SettingsView()
         }
+
+        UtilityWindow("Diff Tools", id: AppSceneID.diffTools) {
+            DiffToolsView()
+        }
+        .keyboardShortcut("d", modifiers: [.command])
+        .windowResizability(.contentSize)
+        .windowIdealSize(.fitToContent)
         #endif
     }
 

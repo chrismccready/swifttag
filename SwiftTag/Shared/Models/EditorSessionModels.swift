@@ -2,6 +2,7 @@ import Foundation
 
 enum AppSceneID {
     static let editor = "editor"
+    static let diffTools = "diff-tools"
 }
 
 struct ImportedTrackReference: Codable, Hashable, Identifiable {

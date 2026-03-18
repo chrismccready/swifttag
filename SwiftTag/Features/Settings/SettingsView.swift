@@ -12,6 +12,11 @@ struct SettingsView: View {
                 TagWriteSettingsView()
             }
             .accessibilityIdentifier("settings.tab.tags")
+
+            Tab("Feedback", systemImage: "bell.badge") {
+                FeedbackSettingsView()
+            }
+            .accessibilityIdentifier("settings.tab.feedback")
         }
         .accessibilityIdentifier("settings.tabView")
         .padding(4)

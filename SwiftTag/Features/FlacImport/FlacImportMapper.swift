@@ -3,6 +3,7 @@ import Foundation
 struct FlacImportInitialization {
     let album: String?
     let albumArtist: String?
+    let totalTracks: String?
     let totalDiscs: String?
 }
 
@@ -16,9 +17,14 @@ enum FlacImportMapper {
         let normalizedTotalDiscs = Int(rawTotalDiscs).map(String.init) ?? rawTotalDiscs
         let totalDiscsValue = normalizedTotalDiscs.isEmpty ? nil : normalizedTotalDiscs
 
+        let rawTotalTracks = tags["TOTALTRACKS"] ?? tags["TRACKTOTAL"] ?? ""
+        let normalizedTotalTracks = Int(rawTotalTracks).map(String.init) ?? rawTotalTracks
+        let totalTracksValue = normalizedTotalTracks.isEmpty ? nil : normalizedTotalTracks
+
         return FlacImportInitialization(
             album: albumValue,
             albumArtist: albumArtistValue,
+            totalTracks: totalTracksValue,
             totalDiscs: totalDiscsValue
         )
     }

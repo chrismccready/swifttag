@@ -123,6 +123,22 @@ final class SaveNotificationCoordinator {
         self.notificationCenter = notificationCenter
     }
 
+    func currentNotificationMode() -> SaveNotificationMode {
+        let rawValue = UserDefaults.standard.string(forKey: FeedbackSettingsKey.saveNotificationMode)
+        return SaveNotificationMode(rawValue: rawValue ?? "") ?? FeedbackSettingsDefaults.saveNotificationMode
+    }
+
+    func allowsNotificationDelivery(appIsFrontmost: Bool) -> Bool {
+        switch currentNotificationMode() {
+        case .always:
+            return true
+        case .whenNotFrontmost:
+            return !appIsFrontmost
+        case .never:
+            return false
+        }
+    }
+
     func prepareSuccessNotification(for result: SaveOperationResult) -> SaveNotificationPayload {
         let reopenRecord = result.reopenRecord
         saveReopenRecord(reopenRecord)
@@ -141,6 +157,10 @@ final class SaveNotificationCoordinator {
 
     func schedulePreparedSuccessNotification(_ payload: SaveNotificationPayload) async {
         do {
+            guard allowsNotificationDelivery(appIsFrontmost: NSApp.isActive) else {
+                return
+            }
+
             guard let notificationCenter else {
                 return
             }

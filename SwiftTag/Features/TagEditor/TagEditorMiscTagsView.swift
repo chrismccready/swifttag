@@ -11,7 +11,9 @@ struct TagEditorMiscTagsView: View {
     let keyBindingForRow: (MiscTagRow.ID) -> Binding<String>?
     let valueBindingForRow: (MiscTagRow.ID) -> Binding<String>?
     let isInvalidKeyInput: (String, MiscTagRow.ID) -> Bool
+    let hasInternalDifferenceForRow: (MiscTagRow) -> Bool
     let hasExternalDifferenceForRow: (MiscTagRow) -> Bool
+    let hasExternallyModifiedDifferenceForRow: (MiscTagRow) -> Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -43,8 +45,13 @@ struct TagEditorMiscTagsView: View {
                 TableColumn("Key") { row in
                     if let keyBinding = keyBindingForRow(row.id) {
                         TextField("Key", text: keyBinding)
-                            .foregroundStyle(isInvalidKeyInput(row.key, row.id) || hasExternalDifferenceForRow(row) ? .red : .primary)
-                            .if(hasExternalDifferenceForRow(row)) { view in view.italic() }
+                            .tagDiffStyle(
+                                tag: .misc,
+                                hasTrackToTrackDifference: false,
+                                hasTrackToFileDifference: hasExternalDifferenceForRow(row),
+                                hasExternallyModifiedDifference: hasExternallyModifiedDifferenceForRow(row),
+                                isInvalid: isInvalidKeyInput(row.key, row.id)
+                            )
                             .focused(focusedRowID, equals: row.id)
                             .disabled(!isEditingEnabled)
                             .accessibilityIdentifier("miscTags.keyField.\(row.id.uuidString)")
@@ -55,8 +62,12 @@ struct TagEditorMiscTagsView: View {
                 TableColumn("Value") { row in
                     if let valueBinding = valueBindingForRow(row.id) {
                         TextField("Value", text: valueBinding)
-                            .foregroundStyle(hasExternalDifferenceForRow(row) ? .red : .primary)
-                            .if(hasExternalDifferenceForRow(row)) { view in view.italic() }
+                            .tagDiffStyle(
+                                tag: .misc,
+                                hasTrackToTrackDifference: hasInternalDifferenceForRow(row),
+                                hasTrackToFileDifference: hasExternalDifferenceForRow(row),
+                                hasExternallyModifiedDifference: hasExternallyModifiedDifferenceForRow(row)
+                            )
                             .disabled(!isEditingEnabled)
                     }
                 }
@@ -66,16 +77,5 @@ struct TagEditorMiscTagsView: View {
             .accessibilityIdentifier("miscTags.table")
         }
         .padding(.top, 22)
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
-        if condition {
-            transform(self)
-        } else {
-            self
-        }
     }
 }

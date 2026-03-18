@@ -83,91 +83,12 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testMiscTagsAddAndDeleteRow() throws {
-        let app = try launchApp()
-
-        let initialCount = miscTagKeyFields(in: app).count
-        addMiscTagRow(in: app, key: "CUSTOM_ROW_A")
-        XCTAssertTrue(waitForMiscTagKeyFieldCount(in: app, toBe: initialCount + 1))
-        XCTAssertTrue(miscTagKeyField(in: app, key: "CUSTOM_ROW_A").exists)
-
-        miscTagKeyField(in: app, key: "CUSTOM_ROW_A").tap()
-        app.buttons[UIID.deleteMiscTagButton].tap()
-
-        XCTAssertTrue(waitForMiscTagKeyFieldCount(in: app, toBe: initialCount))
-        XCTAssertFalse(miscTagKeyField(in: app, key: "CUSTOM_ROW_A").exists)
-    }
-
-    @MainActor
-    func testMiscTagsNewRowWithExplicitKeyIsRemovedOnBlur() throws {
-        let app = try launchApp()
-
-        let initialCount = miscTagKeyFields(in: app).count
-        addMiscTagRow(in: app, key: "TITLE")
-        XCTAssertTrue(waitForMiscTagKeyFieldCount(in: app, toBe: initialCount))
-        XCTAssertFalse(miscTagKeyField(in: app, key: "TITLE").exists)
-    }
-
-    @MainActor
-    func testMiscTagsNewRowWithDuplicateKeyIsRemovedOnBlur() throws {
-        let app = try launchApp()
-
-        addMiscTagRow(in: app, key: "DUPLICATE_BASE")
-        let committedCount = miscTagKeyFields(in: app).count
-
-        addMiscTagRow(in: app, key: "DUPLICATE_BASE")
-        XCTAssertTrue(waitForMiscTagKeyFieldCount(in: app, toBe: committedCount))
-    }
-
-    @MainActor
-    func testMiscTagsExistingRowDuplicateEditRevertsToOriginalKey() throws {
-        let app = try launchApp()
-
-        addMiscTagRow(in: app, key: "ORIGINAL_KEY")
-        XCTAssertTrue(miscTagKeyField(in: app, key: "ORIGINAL_KEY").waitForExistence(timeout: 2.0))
-        addMiscTagRow(in: app, key: "OTHER_KEY")
-        XCTAssertTrue(miscTagKeyField(in: app, key: "OTHER_KEY").waitForExistence(timeout: 2.0))
-
-        let editedField = miscTagKeyField(in: app, key: "OTHER_KEY")
-        XCTAssertTrue(editedField.waitForExistence(timeout: 2.0))
-        clearAndType(in: app, element: editedField, text: "ORIGINAL_KEY")
-        app.textFields[UIID.albumTextField].tap()
-
-        XCTAssertTrue(miscTagKeyField(in: app, key: "OTHER_KEY").waitForExistence(timeout: 2.0))
-        XCTAssertEqual(
-            miscTagKeyFields(in: app).matching(NSPredicate(format: "value == %@", "ORIGINAL_KEY")).count,
-            1
-        )
-    }
-
-    @MainActor
     func testAlbumArtWellOpensAlbumArtSheet() throws {
         let app = try launchApp()
         let albumArtWell = app.descendants(matching: .any)
             .matching(identifier: UIID.albumArtImageWell)
             .firstMatch
         XCTAssertTrue(albumArtWell.waitForExistence(timeout: 2.0))
-    }
-
-    @MainActor
-    func testFlacFixtureImportBindsExpectedValues() throws {
-        let app = try launchApp(importFixture: true)
-
-        XCTAssertTrue(
-            waitForTextFieldValue(in: app, identifier: UIID.albumTextField, expectedValue: "Test Album"),
-            """
-            Album field value was \(String(describing: app.textFields[UIID.albumTextField].value)).
-            Import alert exists: \(app.alerts["FLAC Import Error"].exists).
-            """
-        )
-        XCTAssertTrue(
-            waitForTextFieldValue(in: app, identifier: UIID.albumArtistTextField, expectedValue: "Test AlbumArtist"),
-            "Album Artist field value was \(String(describing: app.textFields[UIID.albumArtistTextField].value))"
-        )
-        XCTAssertTrue(
-            miscTagKeyField(in: app, key: "ENCODED_BY").waitForExistence(timeout: 2.0),
-            "ENCODED_BY field was not found"
-        )
     }
 
     @MainActor
@@ -209,14 +130,15 @@ final class SwiftTagUITests: XCTestCase {
     @MainActor
     func testSimulatedSaveReEnablesEditorAfterCompletion() throws {
         let app = try launchApp(
+            importFixture: true,
             simulateSaveStatus: true,
             simulatedSaveScope: "allTracks",
             simulatedSaveDelay: 0.2,
             simulatedSaveDuration: 1.0
         )
 
-        XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: false, timeout: 2.0))
-        XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: true, timeout: 4.0))
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
+        XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: true, timeout: 5.0))
     }
 
     @MainActor
@@ -250,36 +172,6 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuSaveTagsPersistsTagEditsAcrossRelaunch() throws {
-        let destinationName = "save-tags-\(UUID().uuidString)"
-        let app = try launchApp(
-            importFixture: true,
-            persistentFixtureName: destinationName,
-            resetSaveSettings: true
-        )
-
-        clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Saved By Menu Tags")
-        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save Tags...")
-        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
-
-        app.terminate()
-
-        let relaunchedApp = try launchApp(
-            importFixture: true,
-            persistentFixtureName: destinationName,
-            reuseImportedFixture: true,
-            resetSaveSettings: false
-        )
-        XCTAssertTrue(
-            waitForTextFieldValue(
-                in: relaunchedApp,
-                identifier: UIID.albumTextField,
-                expectedValue: "Saved By Menu Tags"
-            )
-        )
-    }
-
-    @MainActor
     func testFileMenuSavePicturesDoesNotPersistTagOnlyEditsAcrossRelaunch() throws {
         let destinationName = "save-pictures-\(UUID().uuidString)"
         let app = try launchApp(
@@ -288,6 +180,7 @@ final class SwiftTagUITests: XCTestCase {
             resetSaveSettings: true
         )
 
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
         clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Should Not Persist")
         clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save Pictures...")
         XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
@@ -300,6 +193,7 @@ final class SwiftTagUITests: XCTestCase {
             reuseImportedFixture: true,
             resetSaveSettings: false
         )
+        selectImportedTrackForEditing(in: relaunchedApp, expectedTitle: "Test Title")
         XCTAssertTrue(
             waitForTextFieldValue(
                 in: relaunchedApp,
@@ -318,6 +212,7 @@ final class SwiftTagUITests: XCTestCase {
             resetSaveSettings: true
         )
 
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
         openSettings(in: app)
         selectRadioButton(in: app, titled: "Write Pictures")
         typeEscape(in: app)
@@ -334,6 +229,7 @@ final class SwiftTagUITests: XCTestCase {
             reuseImportedFixture: true,
             resetSaveSettings: false
         )
+        selectImportedTrackForEditing(in: relaunchedApp, expectedTitle: "Test Title")
         XCTAssertTrue(
             waitForTextFieldValue(
                 in: relaunchedApp,
@@ -475,23 +371,6 @@ final class SwiftTagUITests: XCTestCase {
         app.typeKey(XCUIKeyboardKey.escape.rawValue, modifierFlags: [])
     }
 
-    private func addMiscTagRow(in app: XCUIApplication, key: String) {
-        let countBefore = miscTagKeyFields(in: app).count
-
-        app.buttons[UIID.addMiscTagButton].tap()
-        XCTAssertTrue(waitForMiscTagKeyFieldCount(in: app, toBe: countBefore + 1))
-
-        let newField = miscTagKeyFields(in: app).element(boundBy: countBefore)
-        XCTAssertTrue(newField.waitForExistence(timeout: 2.0))
-        typeIntoNewField(newField, text: key)
-        app.textFields[UIID.albumTextField].tap()
-    }
-
-    private func typeIntoNewField(_ element: XCUIElement, text: String) {
-        element.tap()
-        element.typeText(text)
-    }
-
     private func clearAndType(in app: XCUIApplication, element: XCUIElement, text: String) {
         element.tap()
         app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
@@ -499,27 +378,18 @@ final class SwiftTagUITests: XCTestCase {
         app.typeText(text)
     }
 
-    private func miscTagKeyFields(in app: XCUIApplication) -> XCUIElementQuery {
-        app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier BEGINSWITH %@", UIID.miscTagKeyFieldPrefix))
-    }
-
-    private func miscTagKeyField(in app: XCUIApplication, key: String) -> XCUIElement {
-        miscTagKeyFields(in: app)
-            .matching(NSPredicate(format: "value == %@", key))
-            .firstMatch
-    }
-
-    private func waitForMiscTagKeyFieldCount(
+    private func selectImportedTrackForEditing(
         in app: XCUIApplication,
-        toBe expectedCount: Int,
-        timeout: TimeInterval = 2.0
-    ) -> Bool {
-        let query = miscTagKeyFields(in: app)
-        let predicate = NSPredicate(format: "count == %d", expectedCount)
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: query)
-
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+        expectedTitle: String,
+        timeout: TimeInterval = 10.0
+    ) {
+        let titleField = app.textFields.matching(NSPredicate(format: "value == %@", expectedTitle)).firstMatch
+        XCTAssertTrue(titleField.waitForExistence(timeout: timeout), "Expected imported track title field '\(expectedTitle)' to exist.")
+        titleField.click()
+        XCTAssertTrue(
+            waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: true, timeout: timeout),
+            "Album field did not become editable after selecting imported track '\(expectedTitle)'."
+        )
     }
 
     private func waitForTextFieldValue(

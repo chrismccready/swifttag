@@ -1,16 +1,21 @@
 import SwiftUI
 
 struct TagEditorCoreTagsView: View {
-    let totalTracks: String
+    var totalTracksBinding: Binding<String>?
+    let isTotalTracksMixedSelection: Bool
     let hasTotalTracksMismatch: Bool
+    let hasTotalTracksInternalDifference: Bool
     let totalTracksHoverMessage: String
-    var totalDiscsBinding: Binding<String>
+    var totalDiscsBinding: Binding<String>?
     let hasTotalDiscsMismatch: Bool
     let totalDiscsHoverMessage: String
     let isSelectionEditable: Bool
     let isAlbumMetadataEditable: Bool
     let hasTotalTracksExternalDifference: Bool
+    let hasTotalTracksExternallyModifiedDifference: Bool
     let hasTotalDiscsExternalDifference: Bool
+    let hasTotalDiscsExternallyModifiedDifference: Bool
+    let hasTotalDiscsInternalDifference: Bool
 
     let selectedNumberBinding: Binding<String>?
     let selectedDiscBinding: Binding<String>?
@@ -18,16 +23,32 @@ struct TagEditorCoreTagsView: View {
     let selectedArtistBinding: Binding<String>?
     let selectedComposerBinding: Binding<String>?
     let selectedLocationBinding: Binding<String>?
-    let selectedDateBinding: Binding<Date>?
+    let selectedDateBinding: Binding<String>?
     let selectedDescriptionsBinding: Binding<String>?
+    let hasTrackNumberInternalDifference: Bool
     let hasTrackNumberExternalDifference: Bool
+    let hasTrackNumberExternallyModifiedDifference: Bool
+    let hasDiscNumberInternalDifference: Bool
     let hasDiscNumberExternalDifference: Bool
+    let hasDiscNumberExternallyModifiedDifference: Bool
+    let hasGenreInternalDifference: Bool
     let hasGenreExternalDifference: Bool
+    let hasGenreExternallyModifiedDifference: Bool
+    let hasArtistInternalDifference: Bool
     let hasArtistExternalDifference: Bool
+    let hasArtistExternallyModifiedDifference: Bool
+    let hasComposerInternalDifference: Bool
     let hasComposerExternalDifference: Bool
+    let hasComposerExternallyModifiedDifference: Bool
+    let hasLocationInternalDifference: Bool
     let hasLocationExternalDifference: Bool
+    let hasLocationExternallyModifiedDifference: Bool
+    let hasDateInternalDifference: Bool
     let hasDateExternalDifference: Bool
+    let hasDateExternallyModifiedDifference: Bool
+    let hasDescriptionInternalDifference: Bool
     let hasDescriptionExternalDifference: Bool
+    let hasDescriptionExternallyModifiedDifference: Bool
 
     let positiveIntegerTransform: (Binding<String>) -> Binding<String>
 
@@ -37,7 +58,12 @@ struct TagEditorCoreTagsView: View {
                 Text("Number")
                 if let selectedNumberBinding {
                     TextField("Number", text: positiveIntegerTransform(selectedNumberBinding))
-                        .externalDifferenceStyle(hasTrackNumberExternalDifference)
+                        .tagDiffStyle(
+                            tag: .trackNumber,
+                            hasTrackToTrackDifference: hasTrackNumberInternalDifference,
+                            hasTrackToFileDifference: hasTrackNumberExternalDifference,
+                            hasExternallyModifiedDifference: hasTrackNumberExternallyModifiedDifference
+                        )
                         .multilineTextAlignment(.center)
                         .frame(width: 30)
                         .disabled(!isSelectionEditable)
@@ -47,19 +73,41 @@ struct TagEditorCoreTagsView: View {
                         .frame(width: 30)
                         .disabled(true)
                 }
+
                 Text("of")
-                Text(totalTracks)
-                    .fontWeight(hasTotalTracksMismatch ? .bold : .regular)
-                    .foregroundStyle(hasTotalTracksMismatch || hasTotalTracksExternalDifference ? .red : .primary)
-                    .multilineTextAlignment(.center)
-                    .if(hasTotalTracksExternalDifference) { view in view.italic() }
-                    .help(totalTracksHoverMessage)
-                    .padding(.trailing, 14)
+                if let totalTracksBinding {
+                    TextField("#", text: positiveIntegerTransform(totalTracksBinding))
+                        .tagDiffStyle(
+                            tag: .totalTracks,
+                            hasTrackToTrackDifference: hasTotalTracksInternalDifference,
+                            hasTrackToFileDifference: hasTotalTracksExternalDifference,
+                            hasExternallyModifiedDifference: hasTotalTracksExternallyModifiedDifference,
+                            showsMismatchWarning: hasTotalTracksMismatch
+                        )
+                        .fontWeight(isTotalTracksMixedSelection ? .bold : .regular)
+                        .multilineTextAlignment(.center)
+                        .frame(width: 30)
+                        .help(totalTracksHoverMessage)
+                        .padding(.trailing, 14)
+                        .disabled(!isSelectionEditable)
+                } else {
+                    TextField("#", text: .constant(""))
+                        .multilineTextAlignment(.center)
+                        .frame(width: 30)
+                        .help(totalTracksHoverMessage)
+                        .padding(.trailing, 14)
+                        .disabled(true)
+                }
 
                 Text("Disc")
                 if let selectedDiscBinding {
                     TextField("#", text: positiveIntegerTransform(selectedDiscBinding))
-                        .externalDifferenceStyle(hasDiscNumberExternalDifference)
+                        .tagDiffStyle(
+                            tag: .discNumber,
+                            hasTrackToTrackDifference: hasDiscNumberInternalDifference,
+                            hasTrackToFileDifference: hasDiscNumberExternalDifference,
+                            hasExternallyModifiedDifference: hasDiscNumberExternallyModifiedDifference
+                        )
                         .multilineTextAlignment(.center)
                         .frame(width: 30)
                         .disabled(!isSelectionEditable)
@@ -69,21 +117,40 @@ struct TagEditorCoreTagsView: View {
                         .frame(width: 30)
                         .disabled(true)
                 }
+
                 Text("of")
-                TextField("#", text: positiveIntegerTransform(totalDiscsBinding))
-                    .fontWeight(hasTotalDiscsMismatch ? .bold : .regular)
-                    .foregroundStyle(hasTotalDiscsMismatch || hasTotalDiscsExternalDifference ? .red : .primary)
-                    .if(hasTotalDiscsExternalDifference) { view in view.italic() }
-                    .multilineTextAlignment(.center)
-                    .frame(width: 30)
-                    .help(totalDiscsHoverMessage)
-                    .padding(.trailing, 40)
-                    .disabled(!isAlbumMetadataEditable)
+                if let totalDiscsBinding {
+                    TextField("#", text: positiveIntegerTransform(totalDiscsBinding))
+                        .tagDiffStyle(
+                            tag: .totalDiscs,
+                            hasTrackToTrackDifference: hasTotalDiscsInternalDifference,
+                            hasTrackToFileDifference: hasTotalDiscsExternalDifference,
+                            hasExternallyModifiedDifference: hasTotalDiscsExternallyModifiedDifference,
+                            showsMismatchWarning: hasTotalDiscsMismatch
+                        )
+                        .multilineTextAlignment(.center)
+                        .frame(width: 30)
+                        .help(totalDiscsHoverMessage)
+                        .padding(.trailing, 40)
+                        .disabled(!isAlbumMetadataEditable)
+                } else {
+                    TextField("#", text: .constant(""))
+                        .multilineTextAlignment(.center)
+                        .frame(width: 30)
+                        .help(totalDiscsHoverMessage)
+                        .padding(.trailing, 40)
+                        .disabled(true)
+                }
 
                 Text("Genre")
                 if let selectedGenreBinding {
                     TextField("Genre", text: selectedGenreBinding)
-                        .externalDifferenceStyle(hasGenreExternalDifference)
+                        .tagDiffStyle(
+                            tag: .genre,
+                            hasTrackToTrackDifference: hasGenreInternalDifference,
+                            hasTrackToFileDifference: hasGenreExternalDifference,
+                            hasExternallyModifiedDifference: hasGenreExternallyModifiedDifference
+                        )
                         .disabled(!isSelectionEditable)
                 } else {
                     TextField("Genre", text: .constant("Select track(s) to edit genre."))
@@ -95,7 +162,12 @@ struct TagEditorCoreTagsView: View {
                 Text("Artist")
                 if let selectedArtistBinding {
                     TextField("Artist", text: selectedArtistBinding)
-                        .externalDifferenceStyle(hasArtistExternalDifference)
+                        .tagDiffStyle(
+                            tag: .artist,
+                            hasTrackToTrackDifference: hasArtistInternalDifference,
+                            hasTrackToFileDifference: hasArtistExternalDifference,
+                            hasExternallyModifiedDifference: hasArtistExternallyModifiedDifference
+                        )
                         .disabled(!isSelectionEditable)
                 } else {
                     TextField("Artist", text: .constant("Select track(s) to edit artist."))
@@ -107,7 +179,12 @@ struct TagEditorCoreTagsView: View {
                 Text("Composer")
                 if let selectedComposerBinding {
                     TextField("Composer", text: selectedComposerBinding)
-                        .externalDifferenceStyle(hasComposerExternalDifference)
+                        .tagDiffStyle(
+                            tag: .composer,
+                            hasTrackToTrackDifference: hasComposerInternalDifference,
+                            hasTrackToFileDifference: hasComposerExternalDifference,
+                            hasExternallyModifiedDifference: hasComposerExternallyModifiedDifference
+                        )
                         .disabled(!isSelectionEditable)
                 } else {
                     TextField("Composer", text: .constant("Select track(s) to edit composer."))
@@ -119,7 +196,12 @@ struct TagEditorCoreTagsView: View {
                 Text("Location")
                 if let selectedLocationBinding {
                     TextField("Location", text: selectedLocationBinding)
-                        .externalDifferenceStyle(hasLocationExternalDifference)
+                        .tagDiffStyle(
+                            tag: .location,
+                            hasTrackToTrackDifference: hasLocationInternalDifference,
+                            hasTrackToFileDifference: hasLocationExternalDifference,
+                            hasExternallyModifiedDifference: hasLocationExternallyModifiedDifference
+                        )
                         .disabled(!isSelectionEditable)
                 } else {
                     TextField("Location", text: .constant("Select track(s) to edit location."))
@@ -128,12 +210,17 @@ struct TagEditorCoreTagsView: View {
 
                 Text("Date")
                 if let selectedDateBinding {
-                    TextField("Date", value: selectedDateBinding, format: .dateTime.year().month().day())
-                        .externalDifferenceStyle(hasDateExternalDifference)
+                    TextField("Date", text: selectedDateBinding)
+                        .tagDiffStyle(
+                            tag: .date,
+                            hasTrackToTrackDifference: hasDateInternalDifference,
+                            hasTrackToFileDifference: hasDateExternalDifference,
+                            hasExternallyModifiedDifference: hasDateExternallyModifiedDifference
+                        )
                         .frame(width: 130)
                         .disabled(!isSelectionEditable)
                 } else {
-                    TextField("Date", value: .constant(.now), format: .dateTime.year().month().day())
+                    TextField("Date", text: .constant(""))
                         .frame(width: 130)
                         .disabled(true)
                 }
@@ -143,8 +230,12 @@ struct TagEditorCoreTagsView: View {
                 Text("Description")
                 if let selectedDescriptionsBinding {
                     TextEditor(text: selectedDescriptionsBinding)
-                        .font(hasDescriptionExternalDifference ? .body.italic() : .body)
-                        .foregroundStyle(hasDescriptionExternalDifference ? .red : .primary)
+                        .tagDiffStyle(
+                            tag: .description,
+                            hasTrackToTrackDifference: hasDescriptionInternalDifference,
+                            hasTrackToFileDifference: hasDescriptionExternalDifference,
+                            hasExternallyModifiedDifference: hasDescriptionExternallyModifiedDifference
+                        )
                         .frame(minHeight: 60, idealHeight: 60)
                         .disabled(!isSelectionEditable)
                 } else {
@@ -155,28 +246,6 @@ struct TagEditorCoreTagsView: View {
             }
             .padding(.top, 22)
             .frame(height: 60)
-        }
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func externalDifferenceStyle(_ isHighlighted: Bool) -> some View {
-        if isHighlighted {
-            self
-                .foregroundStyle(.red)
-                .italic()
-        } else {
-            self
-        }
-    }
-
-    @ViewBuilder
-    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
-        if condition {
-            transform(self)
-        } else {
-            self
         }
     }
 }
