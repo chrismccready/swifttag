@@ -1270,8 +1270,8 @@ struct SwiftTagTests {
 
         var sawDeleted = false
         var eventCount = 0
-        var onChange: ((TrackFileMonitorEvent) -> Void)!
-        onChange = { event in
+        @MainActor
+        func onChange(_ event: TrackFileMonitorEvent) {
             eventCount += 1
             viewModel.refreshTrackFileState(
                 for: event.trackID,
@@ -1358,8 +1358,8 @@ struct SwiftTagTests {
         let monitor = TrackFileMonitor()
         defer { monitor.stopAll() }
 
-        var onChange: ((TrackFileMonitorEvent) -> Void)!
-        onChange = { event in
+        @MainActor
+        func onChange(_ event: TrackFileMonitorEvent) {
             viewModel.refreshTrackFileState(
                 for: event.trackID,
                 currentPath: event.currentPath,

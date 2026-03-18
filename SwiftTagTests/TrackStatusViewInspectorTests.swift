@@ -76,8 +76,8 @@ struct TrackStatusViewInspectorTests {
 
         let textFields = try sut.inspect().findAll(ViewType.TextField.self)
         #expect(textFields.count >= 2)
-        #expect(try textFields[0].isDisabled())
-        #expect(try textFields[1].isDisabled())
+        #expect(textFields[0].isDisabled())
+        #expect(textFields[1].isDisabled())
     }
 
     @Test
@@ -86,8 +86,8 @@ struct TrackStatusViewInspectorTests {
 
         let textFields = try sut.inspect().findAll(ViewType.TextField.self)
         #expect(textFields.count >= 2)
-        #expect(!(try textFields[0].isDisabled()))
-        #expect(!(try textFields[1].isDisabled()))
+        #expect(!textFields[0].isDisabled())
+        #expect(!textFields[1].isDisabled())
     }
 
     @Test
@@ -204,7 +204,7 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("Features")
             .appendingPathComponent("TagEditor")
             .appendingPathComponent("TagEditorTrackFileView.swift")
-        let source = try String(contentsOf: sourceURL)
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
         let statusRange = try #require(source.range(of: "TableColumn(\"\")"))
         let titleRange = try #require(source.range(of: "TableColumn(\"Title\")"))
         let filenameRange = try #require(source.range(of: "TableColumn(\"Filename\")"))
@@ -244,7 +244,7 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("Features")
             .appendingPathComponent("Settings")
             .appendingPathComponent("FeedbackSettingsView.swift")
-        let source = try String(contentsOf: sourceURL)
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
         #expect(source.contains("settings.feedback.saveNotifications"))
         #expect(source.contains("settings.feedback.theme"))
@@ -265,7 +265,7 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("Features")
             .appendingPathComponent("Settings")
             .appendingPathComponent("SettingsView.swift")
-        let source = try String(contentsOf: sourceURL)
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
         #expect(source.contains("Tab(\"Feedback\""))
         #expect(source.contains("settings.tab.feedback"))
@@ -308,10 +308,3 @@ struct TrackStatusViewInspectorTests {
         )
     }
 }
-
-extension TagEditorTrackFileView: Inspectable {}
-extension TagEditorAlbumView: Inspectable {}
-extension AlbumArtWellView: Inspectable {}
-extension DiffToolsView: Inspectable {}
-extension DiffToolsToggleRow: Inspectable {}
-extension FeedbackSettingsView: Inspectable {}
