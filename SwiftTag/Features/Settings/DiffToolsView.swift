@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct DiffToolsView: View {
-    @AppStorage(FeedbackSettingsKey.warnOnTrackTotalMismatch)
-    private var warnOnTrackTotalMismatch: Bool = FeedbackSettingsDefaults.warnOnTrackTotalMismatch
+    @AppStorage(FeedbackSettingsKey.formatOnTrackTotalMismatch)
+    private var formatOnTrackTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnTrackTotalMismatch
 
-    @AppStorage(FeedbackSettingsKey.warnOnDiscTotalMismatch)
-    private var warnOnDiscTotalMismatch: Bool = FeedbackSettingsDefaults.warnOnDiscTotalMismatch
+    @AppStorage(FeedbackSettingsKey.formatOnDiscTotalMismatch)
+    private var formatOnDiscTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnDiscTotalMismatch
 
     @AppStorage(FeedbackSettingsKey.formatOnTrackToFileDiff)
     private var formatOnTrackToFileDiff: Bool = FeedbackSettingsDefaults.formatOnTrackToFileDiff
@@ -35,13 +35,13 @@ struct DiffToolsView: View {
             )
             DiffToolsToggleRow(
                 title: "Format on Track Total Mismatch",
-                isOn: $warnOnTrackTotalMismatch,
-                accessibilityID: "diffTools.warnOnTrackTotalMismatch"
+                isOn: $formatOnTrackTotalMismatch,
+                accessibilityID: "diffTools.formatOnTrackTotalMismatch"
             )
             DiffToolsToggleRow(
                 title: "Format on Disc Total Mismatch",
-                isOn: $warnOnDiscTotalMismatch,
-                accessibilityID: "diffTools.warnOnDiscTotalMismatch"
+                isOn: $formatOnDiscTotalMismatch,
+                accessibilityID: "diffTools.formatOnDiscTotalMismatch"
             )
         }
         .padding(.horizontal, 14)

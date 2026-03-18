@@ -169,8 +169,8 @@ struct SwiftTagTests {
         #expect(FeedbackSettingsDefaults.formatOnTrackToFileDiff)
         #expect(FeedbackSettingsDefaults.formatOnTrackToTrackDiff)
         #expect(FeedbackSettingsDefaults.formatOnExternallyModifiedDiff)
-        #expect(FeedbackSettingsDefaults.warnOnTrackTotalMismatch)
-        #expect(FeedbackSettingsDefaults.warnOnDiscTotalMismatch)
+        #expect(FeedbackSettingsDefaults.formatOnTrackTotalMismatch)
+        #expect(FeedbackSettingsDefaults.formatOnDiscTotalMismatch)
         #expect(!FeedbackSettingsDefaults.trackDiscTotalMismatchColor.isEmpty)
     }
 
@@ -204,6 +204,30 @@ struct SwiftTagTests {
         #expect(presentation.backgroundColor == nil)
         #expect(presentation.isBold)
         #expect(presentation.isItalic)
+    }
+
+    @Test
+    @MainActor
+    func tagDiffPresentationUsesMismatchColorWhenMismatchWarningIsShown() {
+        let mismatchColor = Color.red
+        let presentation = TagDiffPresentation.resolve(
+            tag: .totalDiscs,
+            hasTrackToTrackDifference: true,
+            hasTrackToFileDifference: true,
+            hasExternallyModifiedDifference: true,
+            showsMismatchWarning: true,
+            isInvalid: false,
+            trackToTrackColor: .orange,
+            trackToFileColor: .primary,
+            externallyModifiedColor: .green,
+            mismatchColor: mismatchColor,
+            formatOnTrackToFileDiff: true,
+            formatOnTrackToTrackDiff: true,
+            formatOnExternallyModifiedDiff: true
+        )
+
+        #expect(presentation.foregroundColor == mismatchColor)
+        #expect(presentation.backgroundColor == mismatchColor)
     }
 
     @Test

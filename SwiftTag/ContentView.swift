@@ -60,8 +60,8 @@ struct ContentView: View {
     @AppStorage(SaveSettingsKey.zeroPadDiscNumber) private var zeroPadDiscNumber: Bool = SaveSettingsDefaults.zeroPadDiscNumber
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
     @AppStorage(FeedbackSettingsKey.themePreference) private var themePreferenceRawValue: String = FeedbackSettingsDefaults.themePreference.rawValue
-    @AppStorage(FeedbackSettingsKey.warnOnTrackTotalMismatch) private var warnOnTrackTotalMismatch: Bool = FeedbackSettingsDefaults.warnOnTrackTotalMismatch
-    @AppStorage(FeedbackSettingsKey.warnOnDiscTotalMismatch) private var warnOnDiscTotalMismatch: Bool = FeedbackSettingsDefaults.warnOnDiscTotalMismatch
+    @AppStorage(FeedbackSettingsKey.formatOnTrackTotalMismatch) private var formatOnTrackTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnTrackTotalMismatch
+    @AppStorage(FeedbackSettingsKey.formatOnDiscTotalMismatch) private var formatOnDiscTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnDiscTotalMismatch
 
     private var totalDiscs: String {
         get { viewModel.totalDiscs }
@@ -183,7 +183,7 @@ struct ContentView: View {
     }
 
     private var hasTotalTracksMismatch: Bool {
-        warnOnTrackTotalMismatch &&
+        formatOnTrackTotalMismatch &&
             trackCountKeyStrategy != .none &&
             viewModel.hasTotalTracksMismatch
     }
@@ -193,7 +193,7 @@ struct ContentView: View {
     }
 
     private var hasTotalDiscsMismatch: Bool {
-        warnOnDiscTotalMismatch &&
+        formatOnDiscTotalMismatch &&
             discCountKeyStrategy != .none &&
             viewModel.hasTotalDiscsMismatch
     }

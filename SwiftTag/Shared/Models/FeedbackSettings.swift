@@ -112,8 +112,8 @@ enum FeedbackSettingsKey {
     static let formatOnTrackToFileDiff = "settings.diffTools.formatOnTrackToFileDiff"
     static let formatOnTrackToTrackDiff = "settings.diffTools.formatOnTrackToTrackDiff"
     static let formatOnExternallyModifiedDiff = "settings.diffTools.formatOnExternallyModifiedDiff"
-    static let warnOnTrackTotalMismatch = "settings.diffTools.warnOnTrackTotalMismatch"
-    static let warnOnDiscTotalMismatch = "settings.diffTools.warnOnDiscTotalMismatch"
+    static let formatOnTrackTotalMismatch = "settings.diffTools.formatOnTrackTotalMismatch"
+    static let formatOnDiscTotalMismatch = "settings.diffTools.formatOnDiscTotalMismatch"
 }
 
 enum FeedbackSettingsDefaults {
@@ -126,8 +126,8 @@ enum FeedbackSettingsDefaults {
     static let formatOnTrackToFileDiff = true
     static let formatOnTrackToTrackDiff = true
     static let formatOnExternallyModifiedDiff = true
-    static let warnOnTrackTotalMismatch = true
-    static let warnOnDiscTotalMismatch = true
+    static let formatOnTrackTotalMismatch = true
+    static let formatOnDiscTotalMismatch = true
 }
 
 enum AppColorStorage {

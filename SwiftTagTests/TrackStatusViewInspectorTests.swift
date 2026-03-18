@@ -36,8 +36,9 @@ struct TrackStatusViewInspectorTests {
             },
             isTrackLocked: { _ in false },
             hasDeletedFile: { _ in false },
-            hasInternalTitleDifference: { _ in false },
-            hasExternalTitleDifference: { _ in false },
+            hasTrackToTrackTitleDifference: { _ in false },
+            hasTrackToFileTitleDifference: { _ in false },
+            hasExternallyModifiedTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Lock Selected Track",
             canToggleLockSelection: true
@@ -58,8 +59,9 @@ struct TrackStatusViewInspectorTests {
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in false },
             hasDeletedFile: { _ in false },
-            hasInternalTitleDifference: { _ in false },
-            hasExternalTitleDifference: { _ in false },
+            hasTrackToTrackTitleDifference: { _ in false },
+            hasTrackToFileTitleDifference: { _ in false },
+            hasExternallyModifiedTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Lock Selected Track",
             canToggleLockSelection: true
@@ -107,8 +109,10 @@ struct TrackStatusViewInspectorTests {
             isAlbumArtistMixedSelection: viewModel.selectedAlbumArtistIsMixed,
             hasAlbumInternalDifference: false,
             hasAlbumExternalDifference: false,
+            hasAlbumExternallyModifiedDifference: false,
             hasAlbumArtistInternalDifference: false,
             hasAlbumArtistExternalDifference: false,
+            hasAlbumArtistExternallyModifiedDifference: false,
             showsPictureDifferenceOverlay: false,
             frontCoverImage: Image(systemName: "photo"),
             onFrontCoverDrop: { _ in false },
@@ -132,8 +136,9 @@ struct TrackStatusViewInspectorTests {
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in true },
             hasDeletedFile: { _ in false },
-            hasInternalTitleDifference: { _ in false },
-            hasExternalTitleDifference: { _ in false },
+            hasTrackToTrackTitleDifference: { _ in false },
+            hasTrackToFileTitleDifference: { _ in false },
+            hasExternallyModifiedTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Unlock Selected Track",
             canToggleLockSelection: true
@@ -154,8 +159,9 @@ struct TrackStatusViewInspectorTests {
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in false },
             hasDeletedFile: { _ in false },
-            hasInternalTitleDifference: { _ in false },
-            hasExternalTitleDifference: { _ in false },
+            hasTrackToTrackTitleDifference: { _ in false },
+            hasTrackToFileTitleDifference: { _ in false },
+            hasExternallyModifiedTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Lock Selected Track",
             canToggleLockSelection: true
@@ -207,6 +213,64 @@ struct TrackStatusViewInspectorTests {
         #expect(titleRange.lowerBound < filenameRange.lowerBound)
     }
 
+    @Test
+    func diffToolsViewRendersExpectedToggleRows() throws {
+        let sut = DiffToolsView()
+
+        let rows = try sut.inspect().findAll(DiffToolsToggleRow.self)
+        #expect(rows.count == 5)
+
+        let actualRows = try rows.map { try $0.actualView() }
+        #expect(actualRows[0].title == "Format on Track to File Diff")
+        #expect(actualRows[0].accessibilityID == "diffTools.formatOnTrackToFileDiff")
+        #expect(actualRows[1].title == "Format on Track to Track Diff")
+        #expect(actualRows[1].accessibilityID == "diffTools.formatOnTrackToTrackDiff")
+        #expect(actualRows[2].title == "Format on Externally Modified Diff")
+        #expect(actualRows[2].accessibilityID == "diffTools.formatOnExternallyModifiedDiff")
+        #expect(actualRows[3].title == "Format on Track Total Mismatch")
+        #expect(actualRows[3].accessibilityID == "diffTools.formatOnTrackTotalMismatch")
+        #expect(actualRows[4].title == "Format on Disc Total Mismatch")
+        #expect(actualRows[4].accessibilityID == "diffTools.formatOnDiscTotalMismatch")
+    }
+
+    @Test
+    func feedbackSettingsViewExposesExpectedAccessibilityIdentifiers() throws {
+        let sut = FeedbackSettingsView()
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("Settings")
+            .appendingPathComponent("FeedbackSettingsView.swift")
+        let source = try String(contentsOf: sourceURL)
+
+        #expect(source.contains("settings.feedback.saveNotifications"))
+        #expect(source.contains("settings.feedback.theme"))
+        #expect(source.contains("settings.feedback.trackToTrackDiffColor"))
+        #expect(source.contains("settings.feedback.trackToFileDiffColor"))
+        #expect(source.contains("settings.feedback.externallyModifiedDiffColor"))
+        #expect(source.contains("settings.feedback.trackDiscTotalMismatchColor"))
+
+        let _ = try sut.inspect().find(ViewType.Form.self)
+    }
+
+    @Test
+    func settingsViewDeclaresFeedbackTabInSource() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("Settings")
+            .appendingPathComponent("SettingsView.swift")
+        let source = try String(contentsOf: sourceURL)
+
+        #expect(source.contains("Tab(\"Feedback\""))
+        #expect(source.contains("settings.tab.feedback"))
+    }
+
     private func makeTrack(id: UUID, title: String, filename: String) -> Track {
         Track(
             id: id,
@@ -233,8 +297,10 @@ struct TrackStatusViewInspectorTests {
             isAlbumArtistMixedSelection: false,
             hasAlbumInternalDifference: false,
             hasAlbumExternalDifference: false,
+            hasAlbumExternallyModifiedDifference: false,
             hasAlbumArtistInternalDifference: false,
             hasAlbumArtistExternalDifference: false,
+            hasAlbumArtistExternallyModifiedDifference: false,
             showsPictureDifferenceOverlay: showsPictureDifferenceOverlay,
             frontCoverImage: Image(systemName: "photo"),
             onFrontCoverDrop: { _ in false },
@@ -246,3 +312,6 @@ struct TrackStatusViewInspectorTests {
 extension TagEditorTrackFileView: Inspectable {}
 extension TagEditorAlbumView: Inspectable {}
 extension AlbumArtWellView: Inspectable {}
+extension DiffToolsView: Inspectable {}
+extension DiffToolsToggleRow: Inspectable {}
+extension FeedbackSettingsView: Inspectable {}
