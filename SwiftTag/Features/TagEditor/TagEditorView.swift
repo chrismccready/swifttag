@@ -31,6 +31,19 @@ struct TagEditorView: View {
     let onToggleTrackLocks: () -> Void
     let lockMenuTitle: String
     let canToggleTrackLocks: Bool
+    let onSetTrackTotalToCount: () -> Void
+    let setTrackTotalMenuTitle: String
+    let canSetTrackTotal: Bool
+    let onAddFlacFiles: () -> Void
+    let onAddReadOnlyFlacFiles: () -> Void
+    let canAddFlacFiles: Bool
+    let onReloadSelectedTracks: () -> Void
+    let reloadSelectedTracksTitle: String
+    let canReloadSelectedTracks: Bool
+    let onRemoveSelectedTracks: () -> Void
+    let removeSelectedTracksTitle: String
+    let canRemoveSelectedTracks: Bool
+    let onDropFlacFiles: ([NSItemProvider]) -> Bool
 
     var totalTracksBinding: Binding<String>?
     let isTotalTracksMixedSelection: Bool
@@ -78,6 +91,7 @@ struct TagEditorView: View {
     let hasDescriptionInternalDifference: Bool
     let hasDescriptionExternalDifference: Bool
     let hasDescriptionExternallyModifiedDifference: Bool
+    let isTrackTotalAutoUpdateEnabled: Bool
     let positiveIntegerTransform: (Binding<String>) -> Binding<String>
 
     var miscTagRowsBinding: Binding<[MiscTagRow]>
@@ -127,7 +141,20 @@ struct TagEditorView: View {
                 hasExternallyModifiedTitleDifference: hasExternallyModifiedTitleDifference,
                 onToggleLockSelection: onToggleTrackLocks,
                 lockMenuTitle: lockMenuTitle,
-                canToggleLockSelection: canToggleTrackLocks
+                canToggleLockSelection: canToggleTrackLocks,
+                onSetTrackTotalToCount: onSetTrackTotalToCount,
+                setTrackTotalMenuTitle: setTrackTotalMenuTitle,
+                canSetTrackTotal: canSetTrackTotal,
+                onAddFlacFiles: onAddFlacFiles,
+                onAddReadOnlyFlacFiles: onAddReadOnlyFlacFiles,
+                canAddFlacFiles: canAddFlacFiles,
+                onReloadSelectedTracks: onReloadSelectedTracks,
+                reloadSelectedTracksTitle: reloadSelectedTracksTitle,
+                canReloadSelectedTracks: canReloadSelectedTracks,
+                onRemoveSelectedTracks: onRemoveSelectedTracks,
+                removeSelectedTracksTitle: removeSelectedTracksTitle,
+                canRemoveSelectedTracks: canRemoveSelectedTracks,
+                onDropFlacFiles: onDropFlacFiles
             )
 
             TagEditorCoreTagsView(
@@ -178,6 +205,10 @@ struct TagEditorView: View {
                 hasDescriptionInternalDifference: hasDescriptionInternalDifference,
                 hasDescriptionExternalDifference: hasDescriptionExternalDifference,
                 hasDescriptionExternallyModifiedDifference: hasDescriptionExternallyModifiedDifference,
+                onSetTrackTotalToCount: onSetTrackTotalToCount,
+                setTrackTotalMenuTitle: setTrackTotalMenuTitle,
+                canSetTrackTotal: canSetTrackTotal,
+                isTrackTotalAutoUpdateEnabled: isTrackTotalAutoUpdateEnabled,
                 positiveIntegerTransform: positiveIntegerTransform
             )
 

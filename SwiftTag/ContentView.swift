@@ -8,8 +8,22 @@
 import SwiftUI
 import Foundation
 import UniformTypeIdentifiers
+import AppKit
 
 struct ContentView: View {
+    private enum DestructiveAction {
+        case loadFiles
+        case reloadSelectedTracks
+        case removeSelectedTracks
+    }
+
+    private struct DestructiveAlertContext {
+        let title: String
+        let message: String
+        let confirmTitle: String
+        let action: DestructiveAction
+    }
+
     @Binding private var sessionValue: EditorSessionValue
     private let albumArtTypes: [AlbumArtType] = [
         AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
@@ -38,11 +52,15 @@ struct ContentView: View {
     @State private var isTomlSheetPresented: Bool = false
     @State private var isFlacImporterPresented: Bool = false
     @State private var pendingImporterLockedState: Bool = false
+    @State private var pendingImporterAddsFiles: Bool = false
     @State private var isImportErrorPresented: Bool = false
     @State private var isSaveErrorPresented: Bool = false
+    @State private var isDestructiveAlertPresented: Bool = false
     @State private var isAlbumArtSheetPresented: Bool = false
     @State private var importErrorMessage: String = ""
     @State private var saveErrorMessage: String = ""
+    @State private var destructiveAlertContext: DestructiveAlertContext?
+    @State private var pendingDestructiveAction: (() -> Void)?
     @State private var viewModel: TagEditorViewModel = .init()
     @State private var albumArtViewModel: AlbumArtViewModel = .init()
     @State private var saveStatusState: SaveStatusState?
@@ -59,6 +77,8 @@ struct ContentView: View {
     @AppStorage(SaveSettingsKey.trackCountKeyStrategy) private var trackCountKeyStrategyRawValue: String = SaveSettingsDefaults.trackCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.zeroPadDiscNumber) private var zeroPadDiscNumber: Bool = SaveSettingsDefaults.zeroPadDiscNumber
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
+    @AppStorage(SaveSettingsKey.autoUpdateTrackTotal) private var autoUpdateTrackTotal: Bool = SaveSettingsDefaults.autoUpdateTrackTotal
+    @AppStorage(SaveSettingsKey.updateTrackTotalOnLockedTracks) private var updateTrackTotalOnLockedTracks: Bool = SaveSettingsDefaults.updateTrackTotalOnLockedTracks
     @AppStorage(FeedbackSettingsKey.themePreference) private var themePreferenceRawValue: String = FeedbackSettingsDefaults.themePreference.rawValue
     @AppStorage(FeedbackSettingsKey.formatOnTrackTotalMismatch) private var formatOnTrackTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnTrackTotalMismatch
     @AppStorage(FeedbackSettingsKey.formatOnDiscTotalMismatch) private var formatOnDiscTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnDiscTotalMismatch
@@ -280,6 +300,41 @@ struct ContentView: View {
         !selectedTrackIDs.isEmpty && !isSaveOperationRunning
     }
 
+    private var setTrackTotalMenuTitle: String {
+        "Set Track Total (\(viewModel.nonDeletedTrackCount))"
+    }
+
+    private var canSetTrackTotal: Bool {
+        !isSaveOperationRunning && viewModel.nonDeletedTrackCount > 0 && !autoUpdateTrackTotal
+    }
+
+    private var canAddFlacFiles: Bool {
+        !isSaveOperationRunning
+    }
+
+    private var reloadSelectedTracksTitle: String {
+        selectedTrackIDs.count == 1 ? "Reload Selected Track" : "Reload Selected Tracks"
+    }
+
+    private var canReloadSelectedTracks: Bool {
+        guard !isSaveOperationRunning, !selectedTrackIDs.isEmpty else {
+            return false
+        }
+        return viewModel.hasDifferences(
+            in: selectedTrackIDs,
+            tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures
+        )
+    }
+
+    private var removeSelectedTracksTitle: String {
+        selectedTrackIDs.count == 1 ? "Remove Selected Track" : "Remove Selected Tracks"
+    }
+
+    private var canRemoveSelectedTracks: Bool {
+        !isSaveOperationRunning && !selectedTrackIDs.isEmpty
+    }
+
     private var hasTrackNumberExternalDifference: Bool {
         viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.trackNumber])
     }
@@ -457,6 +512,19 @@ struct ContentView: View {
             onToggleTrackLocks: toggleSelectedTrackLocks,
             lockMenuTitle: lockMenuTitle,
             canToggleTrackLocks: canToggleTrackLocks,
+            onSetTrackTotalToCount: setTrackTotalToCurrentCount,
+            setTrackTotalMenuTitle: setTrackTotalMenuTitle,
+            canSetTrackTotal: canSetTrackTotal,
+            onAddFlacFiles: showAddWritableImporter,
+            onAddReadOnlyFlacFiles: showAddReadOnlyImporter,
+            canAddFlacFiles: canAddFlacFiles,
+            onReloadSelectedTracks: reloadSelectedTracks,
+            reloadSelectedTracksTitle: reloadSelectedTracksTitle,
+            canReloadSelectedTracks: canReloadSelectedTracks,
+            onRemoveSelectedTracks: removeSelectedTracks,
+            removeSelectedTracksTitle: removeSelectedTracksTitle,
+            canRemoveSelectedTracks: canRemoveSelectedTracks,
+            onDropFlacFiles: handleDroppedFlacFileProviders,
             totalTracksBinding: totalTracksBinding,
             isTotalTracksMixedSelection: viewModel.selectedTotalTracksIsMixed,
             hasTotalTracksMismatch: hasTotalTracksMismatch,
@@ -503,6 +571,7 @@ struct ContentView: View {
             hasDescriptionInternalDifference: hasDescriptionInternalDifference,
             hasDescriptionExternalDifference: hasDescriptionExternalDifference,
             hasDescriptionExternallyModifiedDifference: hasDescriptionExternallyModifiedDifference,
+            isTrackTotalAutoUpdateEnabled: autoUpdateTrackTotal,
             positiveIntegerTransform: positiveIntegerStringBinding(_:),
             miscTagRowsBinding: miscTagRowsBinding,
             selectedMiscTagRowIDsBinding: selectedMiscTagRowIDsBinding,
@@ -579,6 +648,9 @@ struct ContentView: View {
                 refreshTrackMonitoring()
                 loadUITestStateIfNeeded()
                 loadReopenRecordIfNeeded()
+                UnsavedChangesCoordinator.shared.register(sessionID: sessionValue.sessionID) {
+                    currentUnsavedEditCountsForLoadedTracks()
+                }
             }
             .onChange(of: sessionValue.reopenRecordID) { _, _ in
                 loadReopenRecordIfNeeded()
@@ -592,6 +664,15 @@ struct ContentView: View {
                     trackReferences: viewModel.importedTrackReferences
                 )
                 refreshTrackMonitoring()
+            }
+            .onChange(of: autoUpdateTrackTotal) { _, _ in
+                applyAutoTrackTotalIfNeeded()
+            }
+            .onChange(of: updateTrackTotalOnLockedTracks) { _, _ in
+                applyAutoTrackTotalIfNeeded()
+            }
+            .onChange(of: viewModel.nonDeletedTrackCount) { _, _ in
+                applyAutoTrackTotalIfNeeded()
             }
             .onChange(of: focusedMiscTagKeyRowID) { oldValue, newValue in
                 if let oldValue {
@@ -615,6 +696,12 @@ struct ContentView: View {
             .focusedSceneValue(\.showReadOnlyFlacImporter) {
                 showReadOnlyImporter()
             }
+            .focusedSceneValue(\.showAddFlacImporter) {
+                showAddWritableImporter()
+            }
+            .focusedSceneValue(\.showAddReadOnlyFlacImporter) {
+                showAddReadOnlyImporter()
+            }
             .focusedSceneValue(\.performDefaultSave) {
                 save()
             }
@@ -629,11 +716,27 @@ struct ContentView: View {
                 toggleSelectedTrackLocks()
             }
             .focusedSceneValue(\.canPerformToggleSelectedTrackLocks, canToggleTrackLocks)
+            .focusedSceneValue(\.setTrackTotalTitle, setTrackTotalMenuTitle)
+            .focusedSceneValue(\.performSetTrackTotal) {
+                setTrackTotalToCurrentCount()
+            }
+            .focusedSceneValue(\.canPerformSetTrackTotal, canSetTrackTotal)
+            .focusedSceneValue(\.reloadSelectedTracksTitle, reloadSelectedTracksTitle)
+            .focusedSceneValue(\.performReloadSelectedTracks) {
+                reloadSelectedTracks()
+            }
+            .focusedSceneValue(\.canPerformReloadSelectedTracks, canReloadSelectedTracks)
+            .focusedSceneValue(\.removeSelectedTracksTitle, removeSelectedTracksTitle)
+            .focusedSceneValue(\.performRemoveSelectedTracks) {
+                removeSelectedTracks()
+            }
+            .focusedSceneValue(\.canPerformRemoveSelectedTracks, canRemoveSelectedTracks)
             .focusedSceneValue(\.canPerformDefaultSave, canSave(payload: saveSettingsSnapshot.payload))
             .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
             .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
             .onDisappear {
                 EditorWindowCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
+                UnsavedChangesCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
                 trackFileMonitor.stopAll()
                 saveStatusState = nil
                 isSaveStatusVisible = false
@@ -644,6 +747,11 @@ struct ContentView: View {
     private var presentedContent: some View {
         commandFocusedContent
             .preferredColorScheme(themePreference.preferredColorScheme)
+            .background(
+                WindowCloseGuardRepresentable(sessionID: sessionValue.sessionID) {
+                    UnsavedChangesCoordinator.shared.confirmCloseWindowIfNeeded(for: sessionValue.sessionID)
+                }
+            )
             .fileImporter(
                 isPresented: $isFlacImporterPresented,
                 allowedContentTypes: [.folder, UTType(filenameExtension: "flac") ?? .data],
@@ -665,6 +773,19 @@ struct ContentView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(saveErrorMessage)
+            }
+            .alert(
+                destructiveAlertContext?.title ?? "Unsaved Changes",
+                isPresented: $isDestructiveAlertPresented
+            ) {
+                Button("Cancel", role: .cancel) {
+                    destructiveAlertContext = nil
+                }
+                Button(destructiveAlertContext?.confirmTitle ?? "Continue", role: .destructive) {
+                    performDestructiveActionFromAlert()
+                }
+            } message: {
+                Text(destructiveAlertContext?.message ?? "")
             }
     }
 
@@ -717,7 +838,9 @@ struct ContentView: View {
         }
 
         let shouldLockImportedTracks = pendingImporterLockedState
+        let shouldAddImportedTracks = pendingImporterAddsFiles
         pendingImporterLockedState = false
+        pendingImporterAddsFiles = false
 
         Task {
             let scopedURLs = selectedURLs.filter { $0.startAccessingSecurityScopedResource() }
@@ -729,7 +852,12 @@ struct ContentView: View {
 
             let flacFiles = collectFlacFiles(from: scopedURLs)
             do {
-                try await importFlacFiles(flacFiles, locked: shouldLockImportedTracks)
+                if shouldAddImportedTracks {
+                    let filteredFiles = viewModel.removeDuplicateImportURLsByBookmarkIdentity(flacFiles)
+                    try await importFlacFiles(filteredFiles, locked: shouldLockImportedTracks, append: true)
+                } else {
+                    try await importFlacFiles(flacFiles, locked: shouldLockImportedTracks, append: false)
+                }
             } catch {
                 importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 isImportErrorPresented = true
@@ -767,8 +895,13 @@ struct ContentView: View {
         }
     }
 
-    private func importFlacFiles(_ flacFiles: [URL], locked: Bool = false) async throws {
-        try await viewModel.importFlacFiles(flacFiles, locked: locked)
+    private func importFlacFiles(_ flacFiles: [URL], locked: Bool = false, append: Bool = false) async throws {
+        try await viewModel.importFlacFiles(flacFiles, locked: locked, append: append)
+
+        if !append {
+            albumArtViewModel.albumArtImages.removeAll()
+        }
+
         albumArtViewModel.applyImportedFlacPictures(
             viewModel.importedFlacPicturesByType,
             albumArtTypes: albumArtTypes
@@ -777,6 +910,7 @@ struct ContentView: View {
             tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
             albumArtPictures: currentAlbumArtPictures
         )
+        applyAutoTrackTotalIfNeeded()
         refreshTrackMonitoring()
     }
 
@@ -973,6 +1107,7 @@ struct ContentView: View {
                 albumArtPictures: currentAlbumArtPictures
             )
             DispatchQueue.main.async {
+                applyAutoTrackTotalIfNeeded()
                 refreshTrackMonitoring()
             }
         }
@@ -980,15 +1115,195 @@ struct ContentView: View {
 
     private func toggleSelectedTrackLocks() {
         viewModel.toggleLockState(for: selectedTrackIDs)
+        applyAutoTrackTotalIfNeeded()
+    }
+
+    private func setTrackTotalToCurrentCount() {
+        guard canSetTrackTotal else {
+            return
+        }
+        viewModel.setTrackTotalToCurrentCount(includeLockedTracks: updateTrackTotalOnLockedTracks)
+    }
+
+    private func reloadSelectedTracks() {
+        guard canReloadSelectedTracks else {
+            return
+        }
+        confirmBeforeDestructiveAction(.reloadSelectedTracks) {
+            Task { @MainActor in
+                do {
+                    try viewModel.reloadTracksWithDifferences(
+                        in: selectedTrackIDs,
+                        tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+                        albumArtPictures: currentAlbumArtPictures
+                    )
+                    applyAutoTrackTotalIfNeeded()
+                    refreshTrackMonitoring()
+                } catch {
+                    importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                    isImportErrorPresented = true
+                }
+            }
+        }
+    }
+
+    private func removeSelectedTracks() {
+        guard canRemoveSelectedTracks else {
+            return
+        }
+        confirmBeforeDestructiveAction(.removeSelectedTracks) {
+            viewModel.removeTracks(withIDs: selectedTrackIDs)
+            applyAutoTrackTotalIfNeeded()
+            refreshTrackMonitoring()
+        }
+    }
+
+    private func applyAutoTrackTotalIfNeeded() {
+        guard autoUpdateTrackTotal else {
+            return
+        }
+        viewModel.setTrackTotalToCurrentCount(includeLockedTracks: updateTrackTotalOnLockedTracks)
+    }
+
+    private func handleDroppedFlacFileProviders(_ providers: [NSItemProvider]) -> Bool {
+        guard canAddFlacFiles else {
+            return false
+        }
+
+        let lockDroppedFiles = NSEvent.modifierFlags.contains(.option)
+        Task { @MainActor in
+            let droppedURLs = await loadDroppedFileURLs(from: providers)
+            let flacFiles = collectFlacFiles(from: droppedURLs)
+            let filteredFiles = viewModel.removeDuplicateImportURLsByBookmarkIdentity(flacFiles)
+            do {
+                try await importFlacFiles(filteredFiles, locked: lockDroppedFiles, append: true)
+            } catch {
+                importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                isImportErrorPresented = true
+            }
+        }
+        return true
+    }
+
+    private func loadDroppedFileURLs(from providers: [NSItemProvider]) async -> [URL] {
+        await withTaskGroup(of: URL?.self) { group in
+            for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                group.addTask {
+                    await withCheckedContinuation { continuation in
+                        provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
+                            if let data = item as? Data,
+                               let url = URL(dataRepresentation: data, relativeTo: nil) {
+                                continuation.resume(returning: url)
+                                return
+                            }
+                            if let url = item as? URL {
+                                continuation.resume(returning: url)
+                                return
+                            }
+                            continuation.resume(returning: nil)
+                        }
+                    }
+                }
+            }
+
+            var urls: [URL] = []
+            for await url in group {
+                if let url {
+                    urls.append(url)
+                }
+            }
+            return urls
+        }
+    }
+
+    private func confirmBeforeDestructiveAction(_ action: DestructiveAction, perform: @escaping () -> Void) {
+        let affectedTrackIDs: Set<UUID>
+        switch action {
+        case .loadFiles:
+            affectedTrackIDs = Set(viewModel.trackItems.map(\.id))
+        case .reloadSelectedTracks, .removeSelectedTracks:
+            affectedTrackIDs = selectedTrackIDs
+        }
+
+        let editCounts = viewModel.editorDifferenceCounts(
+            for: affectedTrackIDs,
+            tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures
+        )
+        let hasInEditorEdits = editCounts.tagEdits > 0 || editCounts.pictureEdits > 0
+        guard hasInEditorEdits else {
+            perform()
+            return
+        }
+
+        let title: String
+        let confirmTitle: String
+        switch action {
+        case .loadFiles:
+            title = "Load Files?"
+            confirmTitle = "Load File(s)"
+        case .reloadSelectedTracks:
+            title = "Reload Selected Track(s)?"
+            confirmTitle = "Reload File(s)"
+        case .removeSelectedTracks:
+            title = "Remove Selected Track(s)?"
+            confirmTitle = "Remove Track(s)"
+        }
+
+        let message = "There are pending changes that have not been saved: \(editCounts.tagEdits) tag edits, \(editCounts.pictureEdits) picture edits."
+        destructiveAlertContext = DestructiveAlertContext(
+            title: title,
+            message: message,
+            confirmTitle: confirmTitle,
+            action: action
+        )
+        pendingDestructiveAction = perform
+        isDestructiveAlertPresented = true
+    }
+
+    private func currentUnsavedEditCountsForLoadedTracks() -> (tagEdits: Int, pictureEdits: Int) {
+        viewModel.editorDifferenceCounts(
+            for: Set(viewModel.trackItems.map(\.id)),
+            tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures
+        )
+    }
+
+    private func performDestructiveActionFromAlert() {
+        guard let action = pendingDestructiveAction else {
+            destructiveAlertContext = nil
+            return
+        }
+        pendingDestructiveAction = nil
+        destructiveAlertContext = nil
+        action()
     }
 
     private func showWritableImporter() {
-        pendingImporterLockedState = false
-        isFlacImporterPresented = true
+        confirmBeforeDestructiveAction(.loadFiles) {
+            pendingImporterLockedState = false
+            pendingImporterAddsFiles = false
+            isFlacImporterPresented = true
+        }
     }
 
     private func showReadOnlyImporter() {
+        confirmBeforeDestructiveAction(.loadFiles) {
+            pendingImporterLockedState = true
+            pendingImporterAddsFiles = false
+            isFlacImporterPresented = true
+        }
+    }
+
+    private func showAddWritableImporter() {
+        pendingImporterLockedState = false
+        pendingImporterAddsFiles = true
+        isFlacImporterPresented = true
+    }
+
+    private func showAddReadOnlyImporter() {
         pendingImporterLockedState = true
+        pendingImporterAddsFiles = true
         isFlacImporterPresented = true
     }
 
@@ -1204,15 +1519,83 @@ extension FocusedValues {
     @Entry var showTomlSheet: (() -> Void)?
     @Entry var showFlacImporter: (() -> Void)?
     @Entry var showReadOnlyFlacImporter: (() -> Void)?
+    @Entry var showAddFlacImporter: (() -> Void)?
+    @Entry var showAddReadOnlyFlacImporter: (() -> Void)?
     @Entry var performDefaultSave: (() -> Void)?
     @Entry var performSaveTagsOnly: (() -> Void)?
     @Entry var performSavePicturesOnly: (() -> Void)?
     @Entry var performToggleSelectedTrackLocks: (() -> Void)?
     @Entry var toggleSelectedTrackLocksTitle: String?
+    @Entry var performSetTrackTotal: (() -> Void)?
+    @Entry var setTrackTotalTitle: String?
+    @Entry var canPerformSetTrackTotal: Bool?
+    @Entry var performReloadSelectedTracks: (() -> Void)?
+    @Entry var reloadSelectedTracksTitle: String?
+    @Entry var canPerformReloadSelectedTracks: Bool?
+    @Entry var performRemoveSelectedTracks: (() -> Void)?
+    @Entry var removeSelectedTracksTitle: String?
+    @Entry var canPerformRemoveSelectedTracks: Bool?
     @Entry var canPerformDefaultSave: Bool?
     @Entry var canPerformSaveTagsOnly: Bool?
     @Entry var canPerformSavePicturesOnly: Bool?
     @Entry var canPerformToggleSelectedTrackLocks: Bool?
+}
+
+private struct WindowCloseGuardRepresentable: NSViewRepresentable {
+    let sessionID: UUID
+    let shouldAllowClose: () -> Bool
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(sessionID: sessionID, shouldAllowClose: shouldAllowClose)
+    }
+
+    func makeNSView(context: Context) -> WindowCloseGuardHostView {
+        let view = WindowCloseGuardHostView()
+        view.delegateCoordinator = context.coordinator
+        return view
+    }
+
+    func updateNSView(_ nsView: WindowCloseGuardHostView, context: Context) {
+        context.coordinator.sessionID = sessionID
+        context.coordinator.shouldAllowClose = shouldAllowClose
+        nsView.delegateCoordinator = context.coordinator
+        nsView.attachDelegateIfNeeded()
+    }
+
+    final class Coordinator: NSObject, NSWindowDelegate {
+        var sessionID: UUID
+        var shouldAllowClose: () -> Bool
+
+        init(sessionID: UUID, shouldAllowClose: @escaping () -> Bool) {
+            self.sessionID = sessionID
+            self.shouldAllowClose = shouldAllowClose
+        }
+
+        func windowShouldClose(_ sender: NSWindow) -> Bool {
+            shouldAllowClose()
+        }
+    }
+}
+
+private final class WindowCloseGuardHostView: NSView {
+    weak var delegateCoordinator: WindowCloseGuardRepresentable.Coordinator?
+    private weak var delegatedWindow: NSWindow?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        attachDelegateIfNeeded()
+    }
+
+    func attachDelegateIfNeeded() {
+        guard let window, let delegateCoordinator else {
+            return
+        }
+        guard delegatedWindow !== window else {
+            return
+        }
+        delegatedWindow = window
+        window.delegate = delegateCoordinator
+    }
 }
 
 #if DEBUG
@@ -1242,4 +1625,3 @@ private struct PreviewCanvasRouterView: View {
     PreviewCanvasRouterView(destination: .settings)
 }
 #endif
-

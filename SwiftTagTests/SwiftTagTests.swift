@@ -144,6 +144,94 @@ struct SwiftTagTests {
         #expect(SaveSettingsDefaults.trackCountKeyStrategy == .both)
         #expect(SaveSettingsDefaults.zeroPadDiscNumber)
         #expect(SaveSettingsDefaults.discCountKeyStrategy == .totalDiscs)
+        #expect(!SaveSettingsDefaults.autoUpdateTrackTotal)
+        #expect(!SaveSettingsDefaults.updateTrackTotalOnLockedTracks)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSetTrackTotalToCurrentCountExcludesDeletedAndRespectsLockedSetting() {
+        let editableTrack = Track(
+            totalTracks: "1",
+            tags: [
+                TagKey.title: "Editable",
+                TagKey.filename: "editable.flac"
+            ],
+            isLocked: false
+        )
+        let lockedTrack = Track(
+            totalTracks: "1",
+            tags: [
+                TagKey.title: "Locked",
+                TagKey.filename: "locked.flac"
+            ],
+            isLocked: true
+        )
+        let deletedTrack = Track(
+            totalTracks: "1",
+            tags: [
+                TagKey.title: "Deleted",
+                TagKey.filename: "deleted.flac"
+            ],
+            externalDifferences: TrackExternalDifferences(
+                isDeleted: true,
+                fileValuesByTag: [:],
+                hasPictureDifference: false
+            ),
+            isLocked: false
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [editableTrack, lockedTrack, deletedTrack]
+
+        viewModel.setTrackTotalToCurrentCount(includeLockedTracks: false)
+
+        #expect(viewModel.nonDeletedTrackCount == 2)
+        let firstPassEditable = viewModel.trackItems.first(where: { $0.id == editableTrack.id })
+        let firstPassLocked = viewModel.trackItems.first(where: { $0.id == lockedTrack.id })
+        let firstPassDeleted = viewModel.trackItems.first(where: { $0.id == deletedTrack.id })
+        #expect(firstPassEditable?.totalTracks == "2")
+        #expect(firstPassLocked?.totalTracks == "1")
+        #expect(firstPassDeleted?.totalTracks == "1")
+
+        viewModel.setTrackTotalToCurrentCount(includeLockedTracks: true)
+
+        let secondPassLocked = viewModel.trackItems.first(where: { $0.id == lockedTrack.id })
+        let secondPassDeleted = viewModel.trackItems.first(where: { $0.id == deletedTrack.id })
+        #expect(secondPassLocked?.totalTracks == "2")
+        #expect(secondPassDeleted?.totalTracks == "1")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelAddDuplicateFilteringUsesBookmarkIdentity() throws {
+        let loadedFileURL = try Self.tempFixtureCopyURL(name: "dedupe-loaded.flac")
+        let newFileURL = try Self.tempFixtureCopyURL(name: "dedupe-new.flac")
+        let loadedBookmarkData = try loadedFileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+
+        let alreadyLoadedTrack = Track(
+            tags: [
+                TagKey.title: "Loaded",
+                TagKey.filename: loadedFileURL.lastPathComponent
+            ],
+            sourceFileURL: nil,
+            securityScopedBookmarkData: loadedBookmarkData
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [alreadyLoadedTrack]
+
+        let dedupedURLs = viewModel.removeDuplicateImportURLsByBookmarkIdentity([
+            loadedFileURL,
+            newFileURL,
+            newFileURL
+        ])
+
+        #expect(dedupedURLs.count == 1)
+        #expect(dedupedURLs.first?.path == newFileURL.path)
     }
 
     @Test
@@ -1932,6 +2020,37 @@ struct SwiftTagTests {
         #expect(secondRecord.tags["ALBUM"] == "All Tracks Album")
         #expect(firstRecord.tags["ALBUMARTIST"] == "All Tracks Artist")
         #expect(secondRecord.tags["ALBUMARTIST"] == "All Tracks Artist")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSaveSkipsUnchangedFiles() async throws {
+        let changedFileURL = try Self.tempFixtureCopyURL(name: "save-changed.flac")
+        let unchangedFileURL = try Self.tempFixtureCopyURL(name: "save-unchanged.flac")
+
+        let viewModel = TagEditorViewModel()
+        try await viewModel.importFlacFiles([changedFileURL, unchangedFileURL])
+        let saveOptions = TagWriteOptions(
+            zeroPadTrackNumber: true,
+            trackCountKeyStrategy: .none,
+            zeroPadDiscNumber: true,
+            discCountKeyStrategy: .none
+        )
+        viewModel.syncCurrentStateAsSaved(tagWriteOptions: saveOptions, albumArtPictures: [])
+        let changedTrack = try #require(viewModel.trackItems.first(where: { $0.sourceFileURL?.path == changedFileURL.path }))
+        let changedTitleBinding = try #require(viewModel.tagBinding(for: changedTrack.id, tagName: TagKey.title))
+        changedTitleBinding.wrappedValue = "Changed Title"
+
+        let result = try await viewModel.save(
+            payload: .writeTags,
+            scope: .allTracks,
+            tagWriteOptions: saveOptions,
+            albumArtPictures: [],
+            editorSessionID: UUID()
+        )
+
+        #expect(result.trackReferences.count == 1)
+        #expect(result.trackReferences.first?.filePath == changedFileURL.path)
     }
 
     @Test

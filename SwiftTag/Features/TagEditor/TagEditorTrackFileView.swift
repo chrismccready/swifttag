@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct TagEditorTrackFileView: View {
     let trackItems: [Track]
@@ -13,9 +14,45 @@ struct TagEditorTrackFileView: View {
     let onToggleLockSelection: () -> Void
     let lockMenuTitle: String
     let canToggleLockSelection: Bool
+    let onSetTrackTotalToCount: () -> Void
+    let setTrackTotalMenuTitle: String
+    let canSetTrackTotal: Bool
+    let onAddFlacFiles: () -> Void
+    let onAddReadOnlyFlacFiles: () -> Void
+    let canAddFlacFiles: Bool
+    let onReloadSelectedTracks: () -> Void
+    let reloadSelectedTracksTitle: String
+    let canReloadSelectedTracks: Bool
+    let onRemoveSelectedTracks: () -> Void
+    let removeSelectedTracksTitle: String
+    let canRemoveSelectedTracks: Bool
+    let onDropFlacFiles: ([NSItemProvider]) -> Bool
+
+    private var sortedTrackItems: [Track] {
+        trackItems.sorted {
+            let lhsNumber = Int($0.tags[TagKey.trackNumber] ?? "")
+            let rhsNumber = Int($1.tags[TagKey.trackNumber] ?? "")
+            switch (lhsNumber, rhsNumber) {
+            case let (lhs?, rhs?):
+                if lhs != rhs {
+                    return lhs < rhs
+                }
+            case (_?, nil):
+                return true
+            case (nil, _?):
+                return false
+            case (nil, nil):
+                break
+            }
+
+            let lhsFilename = $0.tags[TagKey.filename] ?? ""
+            let rhsFilename = $1.tags[TagKey.filename] ?? ""
+            return lhsFilename.localizedStandardCompare(rhsFilename) == .orderedAscending
+        }
+    }
 
     var body: some View {
-        Table(trackItems, selection: selection) {
+        Table(sortedTrackItems, selection: selection) {
             TableColumn("") { track in
                 if let statusPresentation = statusPresentationForTrack(track.id) {
                     Image(systemName: statusPresentation.systemImageName)
@@ -25,6 +62,13 @@ struct TagEditorTrackFileView: View {
                 }
             }
             .width(16)
+
+            TableColumn("#") { track in
+                Text(Int(track.tags[TagKey.trackNumber] ?? "").map(String.init) ?? "")
+                    .foregroundStyle(.primary)
+            }
+            .width(24)
+            .alignment(.center)
 
             TableColumn("Title") { track in
                 if let title = titleBindingForTrack(track.id) {
@@ -57,10 +101,42 @@ struct TagEditorTrackFileView: View {
         }
         .frame(minHeight: 64, idealHeight: .infinity)
         .contextMenu {
+            Button("Add FLAC files...") {
+                onAddFlacFiles()
+            }
+            .disabled(!canAddFlacFiles)
+
+            Button("Add FLAC files (read-only)...") {
+                onAddReadOnlyFlacFiles()
+            }
+            .disabled(!canAddFlacFiles)
+
+            Divider()
+            
             Button(lockMenuTitle) {
                 onToggleLockSelection()
             }
             .disabled(!canToggleLockSelection)
+
+            Divider()
+
+            Button(setTrackTotalMenuTitle) {
+                onSetTrackTotalToCount()
+            }
+            .disabled(!canSetTrackTotal)
+
+            Divider()
+
+            Button(reloadSelectedTracksTitle) {
+                onReloadSelectedTracks()
+            }
+            .disabled(!canReloadSelectedTracks)
+
+            Button(removeSelectedTracksTitle) {
+                onRemoveSelectedTracks()
+            }
+            .disabled(!canRemoveSelectedTracks)
         }
+        .onDrop(of: [.fileURL], isTargeted: nil, perform: onDropFlacFiles)
     }
 }

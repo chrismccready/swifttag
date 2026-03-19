@@ -156,6 +156,10 @@ final class TagEditorViewModel {
         trackItems.contains { $0.isImportedFlacTrack && !$0.isLocked }
     }
 
+    var nonDeletedTrackCount: Int {
+        trackItems.count(where: { !$0.isDeletedInTable })
+    }
+
     func canSave(scope: SaveScopeOption) -> Bool {
         saveTrackCount(for: scope) > 0
     }
@@ -257,13 +261,21 @@ final class TagEditorViewModel {
     }
 
     func tagBinding(for trackID: UUID, tagName: String) -> Binding<String>? {
-        guard let index = trackItems.firstIndex(where: { $0.id == trackID }) else {
+        guard trackItems.contains(where: { $0.id == trackID }) else {
             return nil
         }
 
         return Binding(
-            get: { self.trackItems[index].tags[tagName] ?? "" },
+            get: {
+                guard let index = self.trackItems.firstIndex(where: { $0.id == trackID }) else {
+                    return ""
+                }
+                return self.trackItems[index].tags[tagName] ?? ""
+            },
             set: { newValue in
+                guard let index = self.trackItems.firstIndex(where: { $0.id == trackID }) else {
+                    return
+                }
                 guard !self.trackItems[index].isLocked else {
                     return
                 }
@@ -710,7 +722,7 @@ final class TagEditorViewModel {
         return lines.joined(separator: "\n")
     }
 
-    func importFlacFiles(_ flacFiles: [URL], locked: Bool = false) async throws {
+    func importFlacFiles(_ flacFiles: [URL], locked: Bool = false, append: Bool = false) async throws {
         guard !flacFiles.isEmpty else {
             return
         }
@@ -749,10 +761,61 @@ final class TagEditorViewModel {
             )
         }
 
-        importedFlacPicturesByType = importedPicturesByType
-        trackItems = importedTracks
-        selectedTrackIDs.removeAll()
+        if append {
+            trackItems.append(contentsOf: importedTracks)
+            importedFlacPicturesByType.merge(importedPicturesByType) { existing, _ in existing }
+        } else {
+            importedFlacPicturesByType = importedPicturesByType
+            trackItems = importedTracks
+            selectedTrackIDs.removeAll()
+        }
         reloadMiscTagRowsFromSelection()
+    }
+
+    func setTrackTotal(_ total: Int, includeLockedTracks: Bool) {
+        let normalizedTotal = String(max(0, total))
+        for index in trackItems.indices {
+            guard !trackItems[index].isDeletedInTable else {
+                continue
+            }
+            if trackItems[index].isLocked && !includeLockedTracks {
+                continue
+            }
+            trackItems[index].totalTracks = normalizedTotal
+            clearExternallyModifiedDifference(forTrackAt: index, keys: totalTrackTagKeys)
+        }
+    }
+
+    func setTrackTotalToCurrentCount(includeLockedTracks: Bool) {
+        setTrackTotal(nonDeletedTrackCount, includeLockedTracks: includeLockedTracks)
+    }
+
+    func removeTracks(withIDs trackIDs: Set<UUID>) {
+        guard !trackIDs.isEmpty else {
+            return
+        }
+        trackItems.removeAll(where: { trackIDs.contains($0.id) })
+        selectedTrackIDs.subtract(trackIDs)
+        reloadMiscTagRowsFromSelection()
+    }
+
+    func removeDuplicateImportURLsByBookmarkIdentity(_ urls: [URL]) -> [URL] {
+        guard !urls.isEmpty else {
+            return []
+        }
+
+        var existingIdentities = Set(trackItems.compactMap(bookmarkIdentity(for:)))
+        var uniqueURLs: [URL] = []
+        for fileURL in urls {
+            let identity = bookmarkIdentity(for: fileURL)
+            guard !existingIdentities.contains(identity) else {
+                continue
+            }
+            existingIdentities.insert(identity)
+            uniqueURLs.append(fileURL)
+        }
+
+        return uniqueURLs
     }
 
     func save(
@@ -763,7 +826,14 @@ final class TagEditorViewModel {
         editorSessionID: UUID,
         progress: ((Int, Int, String) -> Void)? = nil
     ) async throws -> SaveOperationResult {
-        let trackIndices = saveTrackIndices(for: scope)
+        let trackIndices = saveTrackIndices(for: scope).filter { index in
+            hasDifferencesForSavePayload(
+                at: index,
+                payload: payload,
+                tagWriteOptions: tagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+        }
         guard !trackIndices.isEmpty else {
             throw TagEditorSaveError.noTracksToSave
         }
@@ -837,20 +907,12 @@ final class TagEditorViewModel {
         }
 
         return trackIndices.contains { index in
-            let differences = differencesForTrack(
+            hasDifferencesForSavePayload(
                 at: index,
+                payload: payload,
                 tagWriteOptions: tagWriteOptions,
                 albumArtPictures: albumArtPictures
             )
-
-            switch payload {
-            case .writeTagsAndPictures:
-                return differences.hasTagDifferences || differences.hasPictureDifferences
-            case .writeTags:
-                return differences.hasTagDifferences
-            case .writePictures:
-                return differences.hasPictureDifferences
-            }
         }
     }
 
@@ -970,6 +1032,98 @@ final class TagEditorViewModel {
                 picturesByType: picturesByType
             )
             trackItems[index].externalDifferences = nil
+        }
+    }
+
+    func editorDifferenceCounts(
+        for trackIDs: Set<UUID>,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) -> (tagEdits: Int, pictureEdits: Int) {
+        var tagEditCount = 0
+        var pictureEditCount = 0
+
+        for index in trackItems.indices where trackIDs.contains(trackItems[index].id) {
+            let differences = editorDifferencesForTrack(
+                at: index,
+                tagWriteOptions: tagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+            if differences.hasTagDifferences {
+                tagEditCount += 1
+            }
+            if differences.hasPictureDifferences {
+                pictureEditCount += 1
+            }
+        }
+
+        return (tagEditCount, pictureEditCount)
+    }
+
+    func hasDifferences(
+        in trackIDs: Set<UUID>,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) -> Bool {
+        for index in trackItems.indices where trackIDs.contains(trackItems[index].id) {
+            let differences = differencesForTrack(
+                at: index,
+                tagWriteOptions: tagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+            if differences.hasTagDifferences || differences.hasPictureDifferences {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    func reloadTracksWithDifferences(
+        in trackIDs: Set<UUID>,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) throws {
+        guard !trackIDs.isEmpty else {
+            return
+        }
+
+        for index in trackItems.indices where trackIDs.contains(trackItems[index].id) {
+            let differences = differencesForTrack(
+                at: index,
+                tagWriteOptions: tagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+            guard differences.hasTagDifferences || differences.hasPictureDifferences else {
+                continue
+            }
+
+            try withAccessingSecurityScopedTrackURL(for: index) { fileURL in
+                let metadata = try FlacMetadataService.readTags(for: fileURL)
+                let initialValues = FlacImportMapper.initialValues(from: metadata.tags)
+                let mappedTrackTags = FlacImportMapper.mapTrackTags(
+                    sourceTags: metadata.tags,
+                    fileURL: fileURL,
+                    defaultDate: .now
+                )
+                let picturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+                let snapshot = makeFileSnapshot(tags: metadata.tags, picturesByType: picturesByType)
+                let refreshedBookmarkData = try fileURL.bookmarkData(
+                    options: .withSecurityScope,
+                    includingResourceValuesForKeys: nil,
+                    relativeTo: nil
+                )
+
+                trackItems[index].album = (initialValues.album ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                trackItems[index].albumArtist = (initialValues.albumArtist ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                trackItems[index].totalTracks = Int(initialValues.totalTracks ?? "").map(String.init) ?? (initialValues.totalTracks ?? "")
+                trackItems[index].tags = mappedTrackTags
+                trackItems[index].flacPicturesByType = picturesByType
+                trackItems[index].sourceFileURL = fileURL
+                trackItems[index].securityScopedBookmarkData = refreshedBookmarkData
+                trackItems[index].latestFileSnapshot = snapshot
+                trackItems[index].externalDifferences = nil
+            }
         }
     }
 
@@ -1348,7 +1502,7 @@ final class TagEditorViewModel {
         return lines.joined(separator: "\n")
     }
 
-    private func differencesForTrack(
+    private func editorDifferencesForTrack(
         at index: Int,
         tagWriteOptions: TagWriteOptions,
         albumArtPictures: [FlacWritablePictureRecord]
@@ -1363,14 +1517,53 @@ final class TagEditorViewModel {
         ).isEmpty
         let pictureDifferences = writablePicturesByType(from: albumArtPictures) != latestFileSnapshot.picturesByType
 
+        return (tagDifferences, pictureDifferences)
+    }
+
+    private func differencesForTrack(
+        at index: Int,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) -> (hasTagDifferences: Bool, hasPictureDifferences: Bool) {
+        let editorDifferences = editorDifferencesForTrack(
+            at: index,
+            tagWriteOptions: tagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
         let externalDifferences = trackItems[index].externalDifferences
         let hasExternalTagDifferences = !(externalDifferences?.fileValuesByTag.isEmpty ?? true)
         let hasExternalPictureDifferences = externalDifferences?.hasPictureDifference ?? false
 
         return (
-            tagDifferences || hasExternalTagDifferences,
-            pictureDifferences || hasExternalPictureDifferences
+            editorDifferences.hasTagDifferences || hasExternalTagDifferences,
+            editorDifferences.hasPictureDifferences || hasExternalPictureDifferences
         )
+    }
+
+    private func hasDifferencesForSavePayload(
+        at index: Int,
+        payload: SavePayloadOption,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) -> Bool {
+        if trackItems[index].latestFileSnapshot == nil {
+            return true
+        }
+
+        let differences = differencesForTrack(
+            at: index,
+            tagWriteOptions: tagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        switch payload {
+        case .writeTagsAndPictures:
+            return differences.hasTagDifferences || differences.hasPictureDifferences
+        case .writeTags:
+            return differences.hasTagDifferences
+        case .writePictures:
+            return differences.hasPictureDifferences
+        }
     }
 
     private func saveTrackIndices(for scope: SaveScopeOption) -> [Int] {
@@ -1556,6 +1749,52 @@ final class TagEditorViewModel {
             includingResourceValuesForKeys: nil,
             relativeTo: nil
         )
+    }
+
+    private func bookmarkIdentity(for track: Track) -> String {
+        if let bookmarkData = track.securityScopedBookmarkData,
+           let resolvedPath = resolvedPathFromBookmarkData(bookmarkData) {
+            return resolvedPath
+        }
+
+        return bookmarkIdentity(for: track.sourceFileURL)
+    }
+
+    private func bookmarkIdentity(for fileURL: URL?) -> String {
+        guard let fileURL else {
+            return ""
+        }
+        if let bookmarkData = try? fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        ),
+           let resolvedPath = resolvedPathFromBookmarkData(bookmarkData) {
+            return resolvedPath
+        }
+
+        return fileURL.standardizedFileURL.resolvingSymlinksInPath().path
+    }
+
+    private func resolvedPathFromBookmarkData(_ bookmarkData: Data) -> String? {
+        do {
+            var isStale = false
+            let resolvedURL = try URL(
+                resolvingBookmarkData: bookmarkData,
+                options: [.withSecurityScope, .withoutUI],
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            )
+            let didAccess = resolvedURL.startAccessingSecurityScopedResource()
+            defer {
+                if didAccess {
+                    resolvedURL.stopAccessingSecurityScopedResource()
+                }
+            }
+            return resolvedURL.standardizedFileURL.resolvingSymlinksInPath().path
+        } catch {
+            return nil
+        }
     }
 
     private func applyLegacySharedMetadataIfNeeded() {

@@ -19,6 +19,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         SaveNotificationCoordinator.shared.handlePendingUITestRouteIfNeeded()
     }
 
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        UnsavedChangesCoordinator.shared.confirmQuitIfNeeded() ? .terminateNow : .terminateCancel
+    }
+
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
@@ -48,15 +52,26 @@ private struct AppCommands: Commands {
     @FocusedValue(\.showTomlSheet) private var showTomlSheet
     @FocusedValue(\.showFlacImporter) private var showFlacImporter
     @FocusedValue(\.showReadOnlyFlacImporter) private var showReadOnlyFlacImporter
+    @FocusedValue(\.showAddFlacImporter) private var showAddFlacImporter
+    @FocusedValue(\.showAddReadOnlyFlacImporter) private var showAddReadOnlyFlacImporter
     @FocusedValue(\.performDefaultSave) private var performDefaultSave
     @FocusedValue(\.performSaveTagsOnly) private var performSaveTagsOnly
     @FocusedValue(\.performSavePicturesOnly) private var performSavePicturesOnly
     @FocusedValue(\.performToggleSelectedTrackLocks) private var performToggleSelectedTrackLocks
+    @FocusedValue(\.performSetTrackTotal) private var performSetTrackTotal
+    @FocusedValue(\.performReloadSelectedTracks) private var performReloadSelectedTracks
+    @FocusedValue(\.performRemoveSelectedTracks) private var performRemoveSelectedTracks
     @FocusedValue(\.toggleSelectedTrackLocksTitle) private var toggleSelectedTrackLocksTitle
+    @FocusedValue(\.setTrackTotalTitle) private var setTrackTotalTitle
+    @FocusedValue(\.reloadSelectedTracksTitle) private var reloadSelectedTracksTitle
+    @FocusedValue(\.removeSelectedTracksTitle) private var removeSelectedTracksTitle
     @FocusedValue(\.canPerformDefaultSave) private var canPerformDefaultSave
     @FocusedValue(\.canPerformSaveTagsOnly) private var canPerformSaveTagsOnly
     @FocusedValue(\.canPerformSavePicturesOnly) private var canPerformSavePicturesOnly
     @FocusedValue(\.canPerformToggleSelectedTrackLocks) private var canPerformToggleSelectedTrackLocks
+    @FocusedValue(\.canPerformSetTrackTotal) private var canPerformSetTrackTotal
+    @FocusedValue(\.canPerformReloadSelectedTracks) private var canPerformReloadSelectedTracks
+    @FocusedValue(\.canPerformRemoveSelectedTracks) private var canPerformRemoveSelectedTracks
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
@@ -69,8 +84,22 @@ private struct AppCommands: Commands {
             Button("Load FLAC files (read-only)...") {
                 showReadOnlyFlacImporter?()
             }
-            .keyboardShortcut("l", modifiers: [.command, .shift])
+            .keyboardShortcut("l", modifiers: [.command, .option])
             .disabled(showReadOnlyFlacImporter == nil)
+
+            Divider()
+
+            Button("Add FLAC files...") {
+                showAddFlacImporter?()
+            }
+            .keyboardShortcut("l", modifiers: [.command, .shift])
+            .disabled(showAddFlacImporter == nil)
+
+            Button("Add FLAC files (read-only)...") {
+                showAddReadOnlyFlacImporter?()
+            }
+            .keyboardShortcut("l", modifiers: [.command, .shift, .option])
+            .disabled(showAddReadOnlyFlacImporter == nil)
 
             Divider()
 
@@ -79,6 +108,25 @@ private struct AppCommands: Commands {
             }
             .keyboardShortcut("l", modifiers: [.control])
             .disabled(!(canPerformToggleSelectedTrackLocks ?? false))
+
+            Divider()
+
+            Button(setTrackTotalTitle ?? "Set Track Total (0)") {
+                performSetTrackTotal?()
+            }
+            .disabled(!(canPerformSetTrackTotal ?? false))
+
+            Divider()
+
+            Button(reloadSelectedTracksTitle ?? "Reload Selected Tracks") {
+                performReloadSelectedTracks?()
+            }
+            .disabled(!(canPerformReloadSelectedTracks ?? false))
+
+            Button(removeSelectedTracksTitle ?? "Remove Selected Tracks") {
+                performRemoveSelectedTracks?()
+            }
+            .disabled(!(canPerformRemoveSelectedTracks ?? false))
 
             Divider()
 

@@ -49,6 +49,10 @@ struct TagEditorCoreTagsView: View {
     let hasDescriptionInternalDifference: Bool
     let hasDescriptionExternalDifference: Bool
     let hasDescriptionExternallyModifiedDifference: Bool
+    let onSetTrackTotalToCount: () -> Void
+    let setTrackTotalMenuTitle: String
+    let canSetTrackTotal: Bool
+    let isTrackTotalAutoUpdateEnabled: Bool
 
     let positiveIntegerTransform: (Binding<String>) -> Binding<String>
 
@@ -89,7 +93,13 @@ struct TagEditorCoreTagsView: View {
                         .frame(width: 30)
                         .help(totalTracksHoverMessage)
                         .padding(.trailing, 14)
-                        .disabled(!isSelectionEditable)
+                        .disabled(!isSelectionEditable || isTrackTotalAutoUpdateEnabled)
+                        .contextMenu {
+                            Button(setTrackTotalMenuTitle) {
+                                onSetTrackTotalToCount()
+                            }
+                            .disabled(!canSetTrackTotal)
+                        }
                 } else {
                     TextField("#", text: .constant(""))
                         .multilineTextAlignment(.center)
@@ -97,6 +107,12 @@ struct TagEditorCoreTagsView: View {
                         .help(totalTracksHoverMessage)
                         .padding(.trailing, 14)
                         .disabled(true)
+                        .contextMenu {
+                            Button(setTrackTotalMenuTitle) {
+                                onSetTrackTotalToCount()
+                            }
+                            .disabled(!canSetTrackTotal)
+                        }
                 }
 
                 Text("Disc")

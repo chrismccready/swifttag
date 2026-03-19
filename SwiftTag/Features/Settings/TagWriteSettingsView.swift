@@ -5,6 +5,8 @@ struct TagWriteSettingsView: View {
     @AppStorage(SaveSettingsKey.trackCountKeyStrategy) private var trackCountKeyStrategyRawValue: String = SaveSettingsDefaults.trackCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.zeroPadDiscNumber) private var zeroPadDiscNumber: Bool = SaveSettingsDefaults.zeroPadDiscNumber
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
+    @AppStorage(SaveSettingsKey.autoUpdateTrackTotal) private var autoUpdateTrackTotal: Bool = SaveSettingsDefaults.autoUpdateTrackTotal
+    @AppStorage(SaveSettingsKey.updateTrackTotalOnLockedTracks) private var updateTrackTotalOnLockedTracks: Bool = SaveSettingsDefaults.updateTrackTotalOnLockedTracks
 
     private var trackCountKeyStrategy: Binding<TrackCountKeyStrategy> {
         Binding(
@@ -109,6 +111,14 @@ struct TagWriteSettingsView: View {
             Toggle("Zero pad Disc Number/Total", isOn: $zeroPadDiscNumber)
                 .accessibilityIdentifier("settings.tags.zeroPadDiscNumber")
                 .accessibilityValue(zeroPadDiscNumber ? "On" : "Off")
+
+            Toggle("Auto update Track Total", isOn: $autoUpdateTrackTotal)
+                .accessibilityIdentifier("settings.tags.autoUpdateTrackTotal")
+                .accessibilityValue(autoUpdateTrackTotal ? "On" : "Off")
+
+            Toggle("Update Track Total on Locked Tracks", isOn: $updateTrackTotalOnLockedTracks)
+                .accessibilityIdentifier("settings.tags.updateTrackTotalOnLockedTracks")
+                .accessibilityValue(updateTrackTotalOnLockedTracks ? "On" : "Off")
 
             LabeledContent("Write Track Total key") {
                 VStack(alignment: .leading, spacing: 8) {

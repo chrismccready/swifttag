@@ -42,7 +42,20 @@ struct TrackStatusViewInspectorTests {
             hasExternallyModifiedTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Lock Selected Track",
-            canToggleLockSelection: true
+            canToggleLockSelection: true,
+            onSetTrackTotalToCount: {},
+            setTrackTotalMenuTitle: "Set Track Total (1)",
+            canSetTrackTotal: true,
+            onAddFlacFiles: {},
+            onAddReadOnlyFlacFiles: {},
+            canAddFlacFiles: true,
+            onReloadSelectedTracks: {},
+            reloadSelectedTracksTitle: "Reload Selected Track",
+            canReloadSelectedTracks: false,
+            onRemoveSelectedTracks: {},
+            removeSelectedTracksTitle: "Remove Selected Track",
+            canRemoveSelectedTracks: false,
+            onDropFlacFiles: { _ in false }
         )
 
         let inspectedView = try sut.inspect().find(TagEditorTrackFileView.self).actualView()
@@ -65,7 +78,20 @@ struct TrackStatusViewInspectorTests {
             hasExternallyModifiedTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Lock Selected Track",
-            canToggleLockSelection: true
+            canToggleLockSelection: true,
+            onSetTrackTotalToCount: {},
+            setTrackTotalMenuTitle: "Set Track Total (1)",
+            canSetTrackTotal: true,
+            onAddFlacFiles: {},
+            onAddReadOnlyFlacFiles: {},
+            canAddFlacFiles: true,
+            onReloadSelectedTracks: {},
+            reloadSelectedTracksTitle: "Reload Selected Track",
+            canReloadSelectedTracks: false,
+            onRemoveSelectedTracks: {},
+            removeSelectedTracksTitle: "Remove Selected Track",
+            canRemoveSelectedTracks: false,
+            onDropFlacFiles: { _ in false }
         )
 
         #expect((try? sut.inspect().find(ViewType.Image.self)) == nil)
@@ -177,7 +203,20 @@ struct TrackStatusViewInspectorTests {
             hasExternallyModifiedTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Unlock Selected Track",
-            canToggleLockSelection: true
+            canToggleLockSelection: true,
+            onSetTrackTotalToCount: {},
+            setTrackTotalMenuTitle: "Set Track Total (1)",
+            canSetTrackTotal: true,
+            onAddFlacFiles: {},
+            onAddReadOnlyFlacFiles: {},
+            canAddFlacFiles: true,
+            onReloadSelectedTracks: {},
+            reloadSelectedTracksTitle: "Reload Selected Track",
+            canReloadSelectedTracks: false,
+            onRemoveSelectedTracks: {},
+            removeSelectedTracksTitle: "Remove Selected Track",
+            canRemoveSelectedTracks: false,
+            onDropFlacFiles: { _ in false }
         )
 
         let inspectedView = try sut.inspect().find(TagEditorTrackFileView.self).actualView()
@@ -200,7 +239,20 @@ struct TrackStatusViewInspectorTests {
             hasExternallyModifiedTitleDifference: { _ in false },
             onToggleLockSelection: {},
             lockMenuTitle: "Lock Selected Track",
-            canToggleLockSelection: true
+            canToggleLockSelection: true,
+            onSetTrackTotalToCount: {},
+            setTrackTotalMenuTitle: "Set Track Total (1)",
+            canSetTrackTotal: true,
+            onAddFlacFiles: {},
+            onAddReadOnlyFlacFiles: {},
+            canAddFlacFiles: true,
+            onReloadSelectedTracks: {},
+            reloadSelectedTracksTitle: "Reload Selected Track",
+            canReloadSelectedTracks: false,
+            onRemoveSelectedTracks: {},
+            removeSelectedTracksTitle: "Remove Selected Track",
+            canRemoveSelectedTracks: false,
+            onDropFlacFiles: { _ in false }
         )
 
         let inspectedView = try sut.inspect().find(TagEditorTrackFileView.self).actualView()
@@ -300,7 +352,7 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
-    func tagEditorTrackFileViewDeclaresStatusColumnBeforeTitleAndFilenameInSource() throws {
+    func tagEditorTrackFileViewDeclaresStatusColumnBeforeTrackNumberTitleAndFilenameInSource() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -310,11 +362,32 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("TagEditorTrackFileView.swift")
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
         let statusRange = try #require(source.range(of: "TableColumn(\"\")"))
+        let trackNumberRange = try #require(source.range(of: "TableColumn(\"#\")"))
         let titleRange = try #require(source.range(of: "TableColumn(\"Title\")"))
         let filenameRange = try #require(source.range(of: "TableColumn(\"Filename\")"))
 
+        #expect(statusRange.lowerBound < trackNumberRange.lowerBound)
+        #expect(trackNumberRange.lowerBound < titleRange.lowerBound)
         #expect(statusRange.lowerBound < titleRange.lowerBound)
         #expect(titleRange.lowerBound < filenameRange.lowerBound)
+    }
+
+    @Test
+    func tagEditorCoreTagsViewDisablesTotalTracksWhenAutoUpdateIsEnabled() throws {
+        let sut = makeCoreTagsView(isTrackTotalAutoUpdateEnabled: true)
+
+        let textFields = try sut.inspect().findAll(ViewType.TextField.self)
+        #expect(textFields.count >= 2)
+        #expect(textFields[1].isDisabled())
+    }
+
+    @Test
+    func tagEditorCoreTagsViewEnablesTotalTracksWhenAutoUpdateIsDisabled() throws {
+        let sut = makeCoreTagsView(isTrackTotalAutoUpdateEnabled: false)
+
+        let textFields = try sut.inspect().findAll(ViewType.TextField.self)
+        #expect(textFields.count >= 2)
+        #expect(!textFields[1].isDisabled())
     }
 
     @Test
@@ -443,6 +516,63 @@ struct TrackStatusViewInspectorTests {
             onDropForSlot: { _, _ in false },
             onFileImportResult: { _ in },
             onFileExportResult: { _ in }
+        )
+    }
+
+    private func makeCoreTagsView(isTrackTotalAutoUpdateEnabled: Bool) -> TagEditorCoreTagsView {
+        TagEditorCoreTagsView(
+            totalTracksBinding: .constant("2"),
+            isTotalTracksMixedSelection: false,
+            hasTotalTracksMismatch: false,
+            hasTotalTracksInternalDifference: false,
+            totalTracksHoverMessage: "",
+            totalDiscsBinding: .constant("1"),
+            hasTotalDiscsMismatch: false,
+            totalDiscsHoverMessage: "",
+            isSelectionEditable: true,
+            isAlbumMetadataEditable: true,
+            hasTotalTracksExternalDifference: false,
+            hasTotalTracksExternallyModifiedDifference: false,
+            hasTotalDiscsExternalDifference: false,
+            hasTotalDiscsExternallyModifiedDifference: false,
+            hasTotalDiscsInternalDifference: false,
+            selectedNumberBinding: .constant("1"),
+            selectedDiscBinding: .constant("1"),
+            selectedGenreBinding: .constant("Genre"),
+            selectedArtistBinding: .constant("Artist"),
+            selectedComposerBinding: .constant("Composer"),
+            selectedLocationBinding: .constant("Location"),
+            selectedDateBinding: .constant("2026-03-19"),
+            selectedDescriptionsBinding: .constant("Description"),
+            hasTrackNumberInternalDifference: false,
+            hasTrackNumberExternalDifference: false,
+            hasTrackNumberExternallyModifiedDifference: false,
+            hasDiscNumberInternalDifference: false,
+            hasDiscNumberExternalDifference: false,
+            hasDiscNumberExternallyModifiedDifference: false,
+            hasGenreInternalDifference: false,
+            hasGenreExternalDifference: false,
+            hasGenreExternallyModifiedDifference: false,
+            hasArtistInternalDifference: false,
+            hasArtistExternalDifference: false,
+            hasArtistExternallyModifiedDifference: false,
+            hasComposerInternalDifference: false,
+            hasComposerExternalDifference: false,
+            hasComposerExternallyModifiedDifference: false,
+            hasLocationInternalDifference: false,
+            hasLocationExternalDifference: false,
+            hasLocationExternallyModifiedDifference: false,
+            hasDateInternalDifference: false,
+            hasDateExternalDifference: false,
+            hasDateExternallyModifiedDifference: false,
+            hasDescriptionInternalDifference: false,
+            hasDescriptionExternalDifference: false,
+            hasDescriptionExternallyModifiedDifference: false,
+            onSetTrackTotalToCount: {},
+            setTrackTotalMenuTitle: "Set Track Total (2)",
+            canSetTrackTotal: true,
+            isTrackTotalAutoUpdateEnabled: isTrackTotalAutoUpdateEnabled,
+            positiveIntegerTransform: { $0 }
         )
     }
 }

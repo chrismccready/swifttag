@@ -40,6 +40,7 @@ struct GeneralSettingsView: View {
                     }
                     .accessibilityIdentifier("settings.general.defaultSaveScope")
                 }
+                .padding(.top, 1)
             }
             .pickerStyle(.segmented)
         }

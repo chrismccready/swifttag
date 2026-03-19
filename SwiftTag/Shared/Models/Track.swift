@@ -17,6 +17,10 @@ struct Track: Identifiable {
         sourceFileURL?.pathExtension.lowercased() == "flac"
     }
 
+    var isDeletedInTable: Bool {
+        externalDifferences?.isDeleted ?? false
+    }
+
     var importedTrackReference: ImportedTrackReference? {
         guard let sourceFileURL else {
             return nil

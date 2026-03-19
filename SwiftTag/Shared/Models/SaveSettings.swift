@@ -104,6 +104,8 @@ enum SaveSettingsKey {
     static let trackCountKeyStrategy = "settings.trackCountKeyStrategy"
     static let zeroPadDiscNumber = "settings.zeroPadDiscNumber"
     static let discCountKeyStrategy = "settings.discCountKeyStrategy"
+    static let autoUpdateTrackTotal = "settings.autoUpdateTrackTotal"
+    static let updateTrackTotalOnLockedTracks = "settings.updateTrackTotalOnLockedTracks"
 }
 
 enum SaveSettingsDefaults {
@@ -113,6 +115,8 @@ enum SaveSettingsDefaults {
     static let trackCountKeyStrategy = TrackCountKeyStrategy.both
     static let zeroPadDiscNumber = true
     static let discCountKeyStrategy = DiscCountKeyStrategy.totalDiscs
+    static let autoUpdateTrackTotal = false
+    static let updateTrackTotalOnLockedTracks = false
 }
 
 struct TagWriteOptions {
