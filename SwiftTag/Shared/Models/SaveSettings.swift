@@ -10,11 +10,11 @@ enum SavePayloadOption: String, CaseIterable, Identifiable, Codable {
     var displayName: String {
         switch self {
         case .writeTags:
-            return "Write Tags"
+            return "Tags"
         case .writePictures:
-            return "Write Pictures"
+            return "Pictures"
         case .writeTagsAndPictures:
-            return "Write Tags and Pictures"
+            return "Tags & Pictures"
         }
     }
 
@@ -46,9 +46,9 @@ enum SaveScopeOption: String, CaseIterable, Identifiable, Codable {
     var displayName: String {
         switch self {
         case .selectedTracks:
-            return "Write to Selected Tracks"
+            return "Selected Tracks"
         case .allTracks:
-            return "Write to All Tracks"
+            return "All Tracks"
         }
     }
 }

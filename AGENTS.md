@@ -3,6 +3,7 @@
 ## Overview
 
 - This is a macOS Swift/SwiftUI project.
+- The root working directory is where this file, `AGENTS.md`, and this project's Xocde project file, `SwiftTag.xcodeproj`, reside. Relative paths given later in this document are from here.
 - Use Swift and SwiftUI and follow best practices accordingly.
 - Unless otherwise instructed, if asked to create a plan/guide/information file and a name for the file is not given, then create an appropriate name prepended with an underscore and save to Docs folder.
 

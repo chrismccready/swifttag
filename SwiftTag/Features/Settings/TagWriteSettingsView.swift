@@ -20,32 +20,150 @@ struct TagWriteSettingsView: View {
         )
     }
 
+    private var writeTotalTracksKey: Binding<Bool> {
+        Binding(
+            get: {
+                switch trackCountKeyStrategy.wrappedValue {
+                case .totalTracks, .both:
+                    return true
+                case .trackTotal, .none:
+                    return false
+                }
+            },
+            set: { isOn in
+                let writesTrackTotalKey = writeTrackTotalKey.wrappedValue
+                trackCountKeyStrategy.wrappedValue = strategyForTrackCountKeys(
+                    writesTotalTracksKey: isOn,
+                    writesTrackTotalKey: writesTrackTotalKey
+                )
+            }
+        )
+    }
+
+    private var writeTrackTotalKey: Binding<Bool> {
+        Binding(
+            get: {
+                switch trackCountKeyStrategy.wrappedValue {
+                case .trackTotal, .both:
+                    return true
+                case .totalTracks, .none:
+                    return false
+                }
+            },
+            set: { isOn in
+                let writesTotalTracksKey = writeTotalTracksKey.wrappedValue
+                trackCountKeyStrategy.wrappedValue = strategyForTrackCountKeys(
+                    writesTotalTracksKey: writesTotalTracksKey,
+                    writesTrackTotalKey: isOn
+                )
+            }
+        )
+    }
+
+    private var writeTotalDiscsKey: Binding<Bool> {
+        Binding(
+            get: {
+                switch discCountKeyStrategy.wrappedValue {
+                case .totalDiscs, .both:
+                    return true
+                case .discTotal, .none:
+                    return false
+                }
+            },
+            set: { isOn in
+                let writesDiscTotalKey = writeDiscTotalKey.wrappedValue
+                discCountKeyStrategy.wrappedValue = strategyForDiscCountKeys(
+                    writesTotalDiscsKey: isOn,
+                    writesDiscTotalKey: writesDiscTotalKey
+                )
+            }
+        )
+    }
+
+    private var writeDiscTotalKey: Binding<Bool> {
+        Binding(
+            get: {
+                switch discCountKeyStrategy.wrappedValue {
+                case .discTotal, .both:
+                    return true
+                case .totalDiscs, .none:
+                    return false
+                }
+            },
+            set: { isOn in
+                let writesTotalDiscsKey = writeTotalDiscsKey.wrappedValue
+                discCountKeyStrategy.wrappedValue = strategyForDiscCountKeys(
+                    writesTotalDiscsKey: writesTotalDiscsKey,
+                    writesDiscTotalKey: isOn
+                )
+            }
+        )
+    }
+
     var body: some View {
         Form {
-            Toggle("Zero Pad Track Number", isOn: $zeroPadTrackNumber)
+            Toggle("Zero pad Track Number/Total", isOn: $zeroPadTrackNumber)
                 .accessibilityIdentifier("settings.tags.zeroPadTrackNumber")
                 .accessibilityValue(zeroPadTrackNumber ? "On" : "Off")
             
-            Toggle("Zero Pad Disc Number", isOn: $zeroPadDiscNumber)
+            Toggle("Zero pad Disc Number/Total", isOn: $zeroPadDiscNumber)
                 .accessibilityIdentifier("settings.tags.zeroPadDiscNumber")
                 .accessibilityValue(zeroPadDiscNumber ? "On" : "Off")
 
-            Picker("Write track count key as", selection: trackCountKeyStrategy) {
-                ForEach(TrackCountKeyStrategy.allCases) { strategy in
-                    Text(strategy.displayName).tag(strategy)
+            LabeledContent("Write Track Total key") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("TOTALTRACKS", isOn: writeTotalTracksKey)
+                        .accessibilityIdentifier("settings.tags.trackCountKey.totalTracks")
+                    Toggle("TRACKTOTAL", isOn: writeTrackTotalKey)
+                        .accessibilityIdentifier("settings.tags.trackCountKey.trackTotal")
                 }
+                .toggleStyle(.switch)
             }
-            .pickerStyle(.radioGroup)
             .accessibilityIdentifier("settings.tags.trackCountKeyStrategy")
 
-            Picker("Write disc count key as", selection: discCountKeyStrategy) {
-                ForEach(DiscCountKeyStrategy.allCases) { strategy in
-                    Text(strategy.displayName).tag(strategy)
+            LabeledContent("Write Disc Total key") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("TOTALDISCS", isOn: writeTotalDiscsKey)
+                        .accessibilityIdentifier("settings.tags.discCountKey.totalDiscs")
+                    Toggle("DISCTOTAL", isOn: writeDiscTotalKey)
+                        .accessibilityIdentifier("settings.tags.discCountKey.discTotal")
                 }
+                .toggleStyle(.switch)
             }
-            .pickerStyle(.radioGroup)
             .accessibilityIdentifier("settings.tags.discCountKeyStrategy")
         }
         .formStyle(.grouped)
+    }
+
+    private func strategyForTrackCountKeys(
+        writesTotalTracksKey: Bool,
+        writesTrackTotalKey: Bool
+    ) -> TrackCountKeyStrategy {
+        switch (writesTotalTracksKey, writesTrackTotalKey) {
+        case (true, true):
+            return .both
+        case (true, false):
+            return .totalTracks
+        case (false, true):
+            return .trackTotal
+        case (false, false):
+            return .none
+        }
+    }
+
+    private func strategyForDiscCountKeys(
+        writesTotalDiscsKey: Bool,
+        writesDiscTotalKey: Bool
+    ) -> DiscCountKeyStrategy {
+        switch (writesTotalDiscsKey, writesDiscTotalKey) {
+        case (true, true):
+            return .both
+        case (true, false):
+            return .totalDiscs
+        case (false, true):
+            return .discTotal
+        case (false, false):
+            return .none
+        }
     }
 }

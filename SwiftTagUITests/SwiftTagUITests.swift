@@ -89,13 +89,13 @@ final class SwiftTagUITests: XCTestCase {
         openSettings(in: app)
         XCTAssertTrue(settingsControl(in: app, identifier: UIID.settingsTabView).waitForExistence(timeout: 2.0))
 
-        selectRadioButton(in: app, titled: "Write Pictures")
-        selectRadioButton(in: app, titled: "Write to Selected Tracks")
+        selectOption(in: app, titled: "Pictures")
+        selectOption(in: app, titled: "Selected Tracks")
         clickSettingsTab(in: app, named: "Tags")
         XCTAssertTrue(settingsControl(in: app, identifier: UIID.zeroPadTrackNumber).waitForExistence(timeout: 2.0))
-        selectRadioButton(in: app, titled: "TRACKTOTAL")
+        setToggle(in: app, identifier: UIID.zeroPadTrackNumber, isOn: false)
         XCTAssertTrue(settingsControl(in: app, identifier: UIID.zeroPadDiscNumber).waitForExistence(timeout: 2.0))
-        selectRadioButton(in: app, titled: "DISCTOTAL")
+        setToggle(in: app, identifier: UIID.zeroPadDiscNumber, isOn: false)
 
         app.terminate()
 
@@ -103,13 +103,13 @@ final class SwiftTagUITests: XCTestCase {
         openSettings(in: relaunchedApp)
         clickSettingsTab(in: relaunchedApp, named: "General")
 
-        XCTAssertTrue(radioButton(in: relaunchedApp, titled: "Write Pictures").isSelected)
-        XCTAssertTrue(radioButton(in: relaunchedApp, titled: "Write to Selected Tracks").isSelected)
+        XCTAssertTrue(settingsControl(in: relaunchedApp, identifier: UIID.defaultSavePayload).waitForExistence(timeout: 2.0))
+        XCTAssertTrue(settingsControl(in: relaunchedApp, identifier: UIID.defaultSaveScope).waitForExistence(timeout: 2.0))
         clickSettingsTab(in: relaunchedApp, named: "Tags")
         XCTAssertTrue(settingsControl(in: relaunchedApp, identifier: UIID.zeroPadTrackNumber).waitForExistence(timeout: 2.0))
-        XCTAssertTrue(radioButton(in: relaunchedApp, titled: "TRACKTOTAL").isSelected)
+        XCTAssertFalse(isToggleOn(in: relaunchedApp, identifier: UIID.zeroPadTrackNumber))
         XCTAssertTrue(settingsControl(in: relaunchedApp, identifier: UIID.zeroPadDiscNumber).waitForExistence(timeout: 2.0))
-        XCTAssertTrue(radioButton(in: relaunchedApp, titled: "DISCTOTAL").isSelected)
+        XCTAssertFalse(isToggleOn(in: relaunchedApp, identifier: UIID.zeroPadDiscNumber))
     }
 
     @MainActor
@@ -155,7 +155,7 @@ final class SwiftTagUITests: XCTestCase {
 
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
         openSettings(in: app)
-        selectRadioButton(in: app, titled: "Write Pictures")
+        selectOption(in: app, titled: "Pictures")
         typeEscape(in: app)
 
         clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Default Save Should Not Persist")
@@ -292,6 +292,104 @@ final class SwiftTagUITests: XCTestCase {
         button.tap()
     }
 
+    private func optionControl(in app: XCUIApplication, titled title: String) -> XCUIElement {
+        let radioButton = app.radioButtons[title].firstMatch
+        if radioButton.waitForExistence(timeout: 0.5) {
+            return radioButton
+        }
+
+        return app.buttons[title].firstMatch
+    }
+
+    private func selectOption(in app: XCUIApplication, titled title: String) {
+        let control = optionControl(in: app, titled: title)
+        XCTAssertTrue(control.waitForExistence(timeout: 2.0))
+        control.tap()
+    }
+
+    private func isOptionSelected(in app: XCUIApplication, titled title: String) -> Bool {
+        let control = optionControl(in: app, titled: title)
+        guard control.waitForExistence(timeout: 2.0) else {
+            return false
+        }
+
+        if control.elementType == .radioButton {
+            return control.isSelected
+        }
+
+        if control.isSelected {
+            return true
+        }
+
+        if let rawValue = control.value as? String {
+            return rawValue == "1" || rawValue.lowercased() == "selected"
+        }
+
+        if let rawValue = control.value as? NSNumber {
+            return rawValue.intValue == 1
+        }
+
+        return false
+    }
+
+    private func toggle(in app: XCUIApplication, titled title: String) -> XCUIElement {
+        app.switches[title].firstMatch
+    }
+
+    private func setToggle(in app: XCUIApplication, titled title: String, isOn: Bool) {
+        let toggle = toggle(in: app, titled: title)
+        XCTAssertTrue(toggle.waitForExistence(timeout: 2.0))
+        let currentValue = (toggle.value as? String) == "1"
+        if currentValue != isOn {
+            toggle.tap()
+        }
+    }
+
+    private func isToggleOn(in app: XCUIApplication, titled title: String) -> Bool {
+        let control = toggle(in: app, titled: title)
+        guard control.waitForExistence(timeout: 2.0) else {
+            return false
+        }
+
+        if let rawValue = control.value as? String {
+            let normalizedValue = rawValue.lowercased()
+            return normalizedValue == "1" || normalizedValue == "on" || normalizedValue == "selected"
+        }
+
+        if let rawValue = control.value as? NSNumber {
+            return rawValue.intValue == 1
+        }
+
+        return control.isSelected
+    }
+
+    private func setToggle(in app: XCUIApplication, identifier: String, isOn: Bool) {
+        let toggle = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+        XCTAssertTrue(toggle.waitForExistence(timeout: 2.0))
+        let currentValue = isToggleOn(in: app, identifier: identifier)
+        if currentValue != isOn {
+            toggle.tap()
+        }
+    }
+
+    private func isToggleOn(in app: XCUIApplication, identifier: String) -> Bool {
+        let control = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+        guard control.waitForExistence(timeout: 2.0) else {
+            return false
+        }
+
+        if let rawValue = control.value as? String {
+            let normalizedValue = rawValue.lowercased()
+            return normalizedValue == "1" || normalizedValue == "on" || normalizedValue == "selected"
+        }
+
+        if let rawValue = control.value as? NSNumber {
+            return rawValue.intValue == 1
+        }
+
+        return control.isSelected
+    }
+
     private func settingsControl(in app: XCUIApplication, identifier: String) -> XCUIElement {
         app.descendants(matching: .any)
             .matching(identifier: identifier)
@@ -371,7 +469,7 @@ final class SwiftTagUITests: XCTestCase {
 
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
-            if element.label == expectedLabel {
+            if element.label.localizedCaseInsensitiveContains(expectedLabel) {
                 return true
             }
 

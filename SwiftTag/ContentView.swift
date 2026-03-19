@@ -1215,6 +1215,31 @@ extension FocusedValues {
     @Entry var canPerformToggleSelectedTrackLocks: Bool?
 }
 
-#Preview {
-    ContentView()
+#if DEBUG
+private enum PreviewCanvasView {
+    case content
+    case settings
+    case diffTools
 }
+
+private struct PreviewCanvasRouterView: View {
+    let destination: PreviewCanvasView
+
+    var body: some View {
+        switch destination {
+        case .content:
+            NavigationStack {
+                ContentView()
+            }
+        case .settings:
+            SettingsView()
+        case .diffTools:
+            DiffToolsView()
+        }
+    }
+}
+#Preview {
+    PreviewCanvasRouterView(destination: .settings)
+}
+#endif
+
