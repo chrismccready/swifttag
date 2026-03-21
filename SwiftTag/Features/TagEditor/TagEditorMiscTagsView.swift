@@ -5,6 +5,7 @@ struct TagEditorMiscTagsView: View {
     @Binding var selectedRowIDs: Set<MiscTagRow.ID>
     var focusedRowID: FocusState<MiscTagRow.ID?>.Binding
     let isEditingEnabled: Bool
+    let plusMinusButtonSize = CGSize(width: 20, height: 20)
 
     let onAdd: () -> Void
     let onDelete: () -> Void
@@ -16,16 +17,20 @@ struct TagEditorMiscTagsView: View {
     let hasExternallyModifiedDifferenceForRow: (MiscTagRow) -> Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 2) {
                 Text("Misc Tags")
                 Spacer()
                 Button {
                     onAdd()
                 } label: {
                     Image(systemName: "plus")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .buttonStyle(.borderless)
+                .frame(width: plusMinusButtonSize.width, height: plusMinusButtonSize.height, alignment: .bottom)
+                .buttonStyle(.bordered)
                 .disabled(!isEditingEnabled)
                 .help("Add Tag")
                 .accessibilityIdentifier("miscTags.addButton")
@@ -34,8 +39,12 @@ struct TagEditorMiscTagsView: View {
                     onDelete()
                 } label: {
                     Image(systemName: "minus")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .buttonStyle(.borderless)
+                .frame(width: plusMinusButtonSize.width, height: plusMinusButtonSize.height, alignment: .bottom)
+                .buttonStyle(.bordered)
                 .help("Delete Selected Tags")
                 .disabled(selectedRowIDs.isEmpty || !isEditingEnabled)
                 .accessibilityIdentifier("miscTags.deleteButton")

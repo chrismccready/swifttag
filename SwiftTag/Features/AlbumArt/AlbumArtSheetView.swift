@@ -80,6 +80,7 @@ struct AlbumArtSheetView: View {
                     .navigationTitle(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art")
                 }
             }
+            .controlSize(.regular)
 
             if let saveStatusPresentation, isSaveOperationRunning {
                 SaveStatusView(presentation: saveStatusPresentation)

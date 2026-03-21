@@ -1603,6 +1603,170 @@ private enum PreviewCanvasView {
     case content
     case settings
     case diffTools
+    case uView
+}
+private let uniqueToolbarAccessoryBarID = "com.swifttag.preview.uniqueToolbarAccessory"
+
+private extension ToolbarItemPlacement {
+    static let uniqueToolbarAccessory = Self.accessoryBar(id: uniqueToolbarAccessoryBarID)
+}
+
+private extension ToolbarPlacement {
+    static let uniqueToolbarAccessory = Self.accessoryBar(id: uniqueToolbarAccessoryBarID)
+}
+
+struct IconToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Button {
+            // This action is essential to flip the state manually in a custom style
+            configuration.isOn.toggle()
+        } label: {
+            Image(systemName: configuration.isOn ? "pin.fill" : "pin.slash.fill") // Change icon based on state
+                //.foregroundColor(configuration.isOn ? .blue : .secondary) // Change color based on state
+                //.imageScale(.large)
+                //.accessibilityLabel(configuration.label) // Maintain accessibility
+        }
+//        .buttonStyle(.plain) // Use a plain button style to avoid default button backgrounds
+    }
+}
+
+private struct UniqueToolbarView: View {
+    @State private var selectedItemForAccessory = 0
+    @State private var isPinned = true // The state variable
+    @State private var isFavorite = false
+
+    var body: some View {
+        NavigationStack {
+            List(0..<3, id: \.self) { item in
+                NavigationLink(value: item) {
+                    Text("Item \(item)")
+                }
+            }
+            .navigationTitle("Dashboard")
+            .navigationDestination(for: Int.self) { item in
+                Text("Destination for item \(item)")
+                    .font(.title3)
+                    .padding()
+                    .navigationTitle("Item \(item)")
+                    .toolbar {
+                        ToolbarItem(placement: .uniqueToolbarAccessory) {
+                            Form {
+                                ControlGroup {
+                                    Toggle("Pin", isOn: $isPinned)
+                                        .toggleStyle(IconToggleStyle())
+                                        .disabled(true)
+                                    Text("Selected Tracks")
+                                    
+                                    Spacer(minLength: 2)
+                                    
+                                    Button("First", systemImage: "backward.end.fill", action: { print("First tapped!") })
+                                        .labelStyle(.iconOnly)
+                                    Button("Backward", systemImage: "arrowtriangle.backward.fill", action: { print("Backward tapped!") })
+                                        .labelStyle(.iconOnly)
+                                    Button("Forward", systemImage: "arrowtriangle.forward.fill", action: { print("Forward tapped!") })
+                                        .labelStyle(.iconOnly)
+                                    Button("Last", systemImage: "forward.end.fill", action: { print("Last tapped!") })
+                                        .labelStyle(.iconOnly)
+                                    
+                                    Spacer(minLength: 2)
+                                    
+                                    Button("Last", systemImage: "plus", action: { print("Last tapped!") })
+                                        .labelStyle(.iconOnly)
+                                    Button("Last", systemImage: "minus", action: { print("Last tapped!") })
+                                        .labelStyle(.iconOnly)
+                                    Button("Last", systemImage: "xmark.app.fill", action: { print("Last tapped!") })
+                                        .labelStyle(.iconOnly)
+                                    Button("Last", systemImage: "arrow.down", action: { print("Last tapped!") })
+                                        .labelStyle(.iconOnly)
+                                    Button("Last", systemImage: "arrow.down.app", action: { print("Last tapped!") })
+                                        .labelStyle(.iconOnly)
+                                    
+                                    Toggle(isOn: $isPinned) {
+                                        Label("Favorite", systemImage: true ? "heart.fill" : "heart")
+                                    }
+                                    .toggleStyle(.button)
+                                    .labelStyle(.iconOnly)
+                                    
+                                    Toggle(isOn: $isFavorite) {
+                                        // 2. Use a Label with a title (for accessibility) and an SF Symbol icon.
+                                        Label("Favorite", systemImage: isFavorite ? "heart.fill" : "heart")
+                                    }
+                                    // 3. Apply the .button toggle style.
+                                    .toggleStyle(.button)
+                                    // 4. Use .tint() to customize the color when the toggle is 'on'.
+                                    .tint(.red)
+                                    // 5. Optionally, make it an icon-only button for a compact design.
+                                    .labelStyle(.iconOnly) // Displays only the icon
+                                    // 6. Add standard button modifiers for styling
+                                    .padding()
+                                    .background(Color.secondary.opacity(0.2))
+                                    .clipShape(Circle())
+                                    .shadow(radius: 2)
+                                    // Optional: add animation for a smoother icon change
+                                    .animation(.easeInOut, value: isFavorite)
+                                    
+                                }
+                                .controlSize(.regular)
+                                .frame(maxWidth:.infinity, alignment: .center)
+                            }
+                        }
+                    }
+                    .toolbar(.visible, for: .uniqueToolbarAccessory)
+            }
+            .toolbar {
+                ToolbarItem(placement: .uniqueToolbarAccessory) {
+                    if true {
+                        Form {
+                            ControlGroup {
+                                Button(action: {
+                                    // action 1
+                                }) {
+                                    // checkmark.rectangle.stack.fill
+                                    // pin.fill
+                                    // plus.app.fill
+                                    // photo.badge.plus.fill
+                                    // plus
+                                    // plus.rectangle.fill, plus.square.fill, minus.square.fill
+                                    // plus.capsule.fill
+                                    // photo.badge.plus.fill, photo.badge.arrow.down.fill,
+                                    Label("Pin", systemImage: "checkmark.rectangle.stack.fill")
+                                }
+                                Button(action: {
+                                    // action 2
+                                }) {
+                                    Label("Copy", systemImage: "pin.slash.fill")
+                                }
+                                Text("Selected Tracks")
+                            }
+                            .controlSize(.regular)
+                            .frame(maxWidth:.infinity, alignment: .center)
+                        }
+                    } else {
+                        HStack(spacing: 8) {
+                            Text("Accessory Bar")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            
+                            Picker("Item", selection: $selectedItemForAccessory) {
+                                Text("0").tag(0)
+                                Text("1").tag(1)
+                                Text("2").tag(2)
+                            }
+                            .labelsHidden()
+                            .frame(width: 80)
+                            
+                            NavigationLink(value: selectedItemForAccessory) {
+                                Label("Open", systemImage: "arrow.right.circle")
+                            }
+                        }
+                    }
+                }
+            }
+            .toolbar(.visible, for: .uniqueToolbarAccessory)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.regular)
+    }
 }
 
 private struct PreviewCanvasRouterView: View {
@@ -1618,10 +1782,12 @@ private struct PreviewCanvasRouterView: View {
             SettingsView()
         case .diffTools:
             DiffToolsView()
+        case .uView:
+            UniqueToolbarView()
         }
     }
 }
 #Preview {
-    PreviewCanvasRouterView(destination: .settings)
+    PreviewCanvasRouterView(destination: .uView)
 }
 #endif
