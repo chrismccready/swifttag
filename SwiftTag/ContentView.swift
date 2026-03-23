@@ -451,6 +451,21 @@ struct ContentView: View {
         }
     }
 
+    private var trackStatusRefreshID: String {
+        viewModel.trackItems
+            .map(\.id)
+            .sorted { $0.uuidString < $1.uuidString }
+            .map { trackID in
+                let presentation = trackStatusPresentationLookup(trackID)
+                return [
+                    trackID.uuidString,
+                    presentation?.systemImageName ?? "none",
+                    presentation?.help ?? ""
+                ].joined(separator: "|")
+            }
+            .joined(separator: "||")
+    }
+
     private var hasExternallyModifiedTitleDifferenceLookup: (UUID) -> Bool {
         { trackID in
             viewModel.hasExternalTagDifference(for: trackID, key: TagKey.title)
@@ -518,6 +533,7 @@ struct ContentView: View {
                 isAlbumArtSheetPresented = true
             },
             trackItems: trackItems,
+            trackStatusRefreshID: trackStatusRefreshID,
             selectedTrackIDsBinding: selectedTrackIDsBinding,
             titleBindingForTrack: titleBinding(for:),
             statusPresentationForTrack: trackStatusPresentationLookup,
@@ -670,11 +686,8 @@ struct ContentView: View {
             pictureCountForSlot: { slot in
                 albumArtViewModel.uniquePictureCount(for: slot)
             },
-            infoOverlayTextForSlot: { slot in
-                albumArtViewModel.infoOverlayText(for: slot)
-            },
-            duplicateOverlayTextForSlot: { slot in
-                albumArtViewModel.duplicateOverlayText(for: slot, albumArtTypes: albumArtTypes)
+            infoOverlayMessagesForSlot: { slot in
+                albumArtViewModel.infoOverlayMessages(for: slot, albumArtTypes: albumArtTypes)
             },
             metadataTextForSlot: { slot in
                 albumArtViewModel.currentPictureMetadataText(for: slot, albumArtTypes: albumArtTypes)

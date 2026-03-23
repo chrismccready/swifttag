@@ -20,6 +20,7 @@ struct TagEditorView: View {
     let onFrontCoverTap: () -> Void
 
     let trackItems: [Track]
+    let trackStatusRefreshID: String
     var selectedTrackIDsBinding: Binding<Set<UUID>>
     let titleBindingForTrack: (UUID) -> Binding<String>?
     let statusPresentationForTrack: (UUID) -> TrackStatusPresentation?
@@ -131,6 +132,7 @@ struct TagEditorView: View {
 
             TagEditorTrackFileView(
                 trackItems: trackItems,
+                statusRefreshID: trackStatusRefreshID,
                 selection: selectedTrackIDsBinding,
                 titleBindingForTrack: titleBindingForTrack,
                 statusPresentationForTrack: statusPresentationForTrack,

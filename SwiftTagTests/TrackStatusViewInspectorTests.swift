@@ -30,6 +30,7 @@ struct TrackStatusViewInspectorTests {
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
+            statusRefreshID: "status-refresh",
             selection: .constant(Set([track.id])),
             titleBindingForTrack: { _ in .constant("Track A") },
             statusPresentationForTrack: { _ in
@@ -59,6 +60,7 @@ struct TrackStatusViewInspectorTests {
         )
 
         let inspectedView = try sut.inspect().find(TagEditorTrackFileView.self).actualView()
+        #expect(inspectedView.statusRefreshID == "status-refresh")
         #expect(inspectedView.statusPresentationForTrack(track.id)?.systemImageName == "fish.fill")
     }
 
@@ -68,6 +70,7 @@ struct TrackStatusViewInspectorTests {
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
+            statusRefreshID: "status-refresh",
             selection: .constant(Set([track.id])),
             titleBindingForTrack: { _ in .constant("Track A") },
             statusPresentationForTrack: { _ in nil },
@@ -193,6 +196,7 @@ struct TrackStatusViewInspectorTests {
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
+            statusRefreshID: "status-refresh",
             selection: .constant(Set([track.id])),
             titleBindingForTrack: { _ in .constant("Locked Track") },
             statusPresentationForTrack: { _ in nil },
@@ -229,6 +233,7 @@ struct TrackStatusViewInspectorTests {
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
+            statusRefreshID: "status-refresh",
             selection: .constant(Set([track.id])),
             titleBindingForTrack: { _ in .constant("Unlocked Track") },
             statusPresentationForTrack: { _ in nil },
@@ -356,10 +361,11 @@ struct TrackStatusViewInspectorTests {
         let sut = makeAlbumArtSheetView(
             isSaveOperationRunning: false,
             saveStatusPresentation: nil,
-            pictureCount: 3
+            pictureCount: 3,
+            pinCount: 2
         )
 
-        let _ = try sut.inspect().find(text: "Front Cover (3)")
+        let _ = try sut.inspect().find(text: "Front Cover • 3 • 2")
     }
 
     @Test
@@ -367,12 +373,18 @@ struct TrackStatusViewInspectorTests {
         let sut = makeAlbumArtSheetView(
             isSaveOperationRunning: false,
             saveStatusPresentation: nil,
-            infoOverlayText: "Removed from selected tracks. Re-pin to add it back.",
+            infoOverlayMessages: [
+                AlbumArtInfoOverlayMessage(
+                    messageType: .hasOutOfScopeReference,
+                    message: "Removed from selected tracks. Re-pin to add it back."
+                )
+            ],
             metadataText: "In file: Mixed 1 of 3"
         )
 
         let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
-        #expect(actualView.infoOverlayTextForSlot(.frontCover) == "Removed from selected tracks. Re-pin to add it back.")
+        #expect(actualView.infoOverlayMessagesForSlot(.frontCover).count == 1)
+        #expect(actualView.infoOverlayMessagesForSlot(.frontCover).first?.message == "Removed from selected tracks. Re-pin to add it back.")
         #expect(actualView.metadataTextForSlot(.frontCover) == "In file: Mixed 1 of 3")
 
         let sourceURL = URL(fileURLWithPath: #filePath)
@@ -383,7 +395,8 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("AlbumArt")
             .appendingPathComponent("AlbumArtSheetView.swift")
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
-        #expect(source.contains("if let infoOverlayText = infoOverlayTextForSlot(albumArtSlot)"))
+        #expect(source.contains("let infoOverlayMessages = infoOverlayMessagesForSlot(albumArtSlot)"))
+        #expect(source.contains("ForEach(Array(infoOverlayMessages.enumerated()), id: \\.offset)"))
         #expect(source.contains("if let metadataText = metadataTextForSlot(albumArtSlot)"))
     }
 
@@ -590,7 +603,8 @@ struct TrackStatusViewInspectorTests {
         isSaveOperationRunning: Bool,
         saveStatusPresentation: SaveStatusPresentation?,
         pictureCount: Int = 1,
-        infoOverlayText: String? = nil,
+        pinCount: Int = 0,
+        infoOverlayMessages: [AlbumArtInfoOverlayMessage] = [],
         metadataText: String? = nil,
         trackPictureScope: AlbumArtPictureScope = .allTrackPictures,
         typePictureScope: AlbumArtPictureScope = .allTrackPictures,
@@ -623,9 +637,8 @@ struct TrackStatusViewInspectorTests {
             onDropForSlot: { _, _ in false },
             onFileImportResult: { _ in },
             onFileExportResult: { _ in },
-            pictureCountForSlot: { _ in pictureCount },
-            infoOverlayTextForSlot: { _ in infoOverlayText },
-            duplicateOverlayTextForSlot: { _ in nil },
+            pictureCountForSlot: { _ in (pictureCount, pinCount) },
+            infoOverlayMessagesForSlot: { _ in infoOverlayMessages },
             metadataTextForSlot: { _ in metadataText },
             hasCrossTypeDuplicateForSlot: { _ in false },
             pinAlbumPictures: false,

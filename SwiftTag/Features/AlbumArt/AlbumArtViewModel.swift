@@ -30,9 +30,19 @@ enum AlbumArtPictureScope: String, CaseIterable, Identifiable {
     }
 }
 
-struct AlbumArtInfoOverlayState {
-    let poolItemID: UUID
+enum AlbumArtInfoOverlayMessageType: Equatable {
+    case hasOutOfScopeReference
+    case hasDuplicateInOtherSlot
+}
+
+struct AlbumArtInfoOverlayMessage: Equatable {
+    let messageType: AlbumArtInfoOverlayMessageType
     let message: String
+}
+
+struct AlbumArtInfoOverlayState: Equatable {
+    let poolItemID: UUID
+    let messages: [AlbumArtInfoOverlayMessage]
 }
 
 @MainActor
@@ -68,7 +78,7 @@ final class AlbumArtViewModel {
     var currentReferenceIndexBySlot: [AlbumArtSlot: Int] = [:]
     var infoOverlayStateBySlot: [AlbumArtSlot: AlbumArtInfoOverlayState] = [:]
     var pinAlbumPictures: Bool = false
-    var trackPictureScope: AlbumArtPictureScope = .allTrackPictures
+    var trackPictureScope: AlbumArtPictureScope = .selectedTrackPictures
     var typePictureScopeBySlot: [AlbumArtSlot: AlbumArtPictureScope] = [:]
 
     private var saveFrontCoverToAllTracks: Bool = SaveSettingsDefaults.saveFrontCoverToAllTracks
@@ -105,7 +115,7 @@ final class AlbumArtViewModel {
     }
 
     func typePictureScope(for slot: AlbumArtSlot) -> AlbumArtPictureScope {
-        typePictureScopeBySlot[slot] ?? .allTrackPictures
+        typePictureScopeBySlot[slot] ?? .selectedTrackPictures
     }
 
     func setTrackPictureScope(_ scope: AlbumArtPictureScope, albumArtTypes: [AlbumArtType]) {
@@ -140,14 +150,18 @@ final class AlbumArtViewModel {
         saveAllPicturesToAllTracks || hasLockedTrackInScope(trackPictureScope)
     }
 
-    func uniquePictureCount(for albumArtSlot: AlbumArtSlot) -> Int {
+    func uniquePictureCount(for albumArtSlot: AlbumArtSlot) -> (count: Int, pinCount: Int) {
         var uniquePoolIDs: Set<UUID> = []
+        var pinCount = 0
         for trackID in visibleTrackIDs(for: trackPictureScope) {
             for reference in trackReferencesByTrackID[trackID, default: []] where reference.slot == albumArtSlot {
                 uniquePoolIDs.insert(reference.poolItemID)
+                if isReferencePinned(reference, for: trackID) {
+                    pinCount += 1
+                }
             }
         }
-        return uniquePoolIDs.count
+        return (uniquePoolIDs.count, pinCount)
     }
 
     func hasCrossTypeDuplicate(for slot: AlbumArtSlot) -> Bool {
@@ -163,30 +177,24 @@ final class AlbumArtViewModel {
         return false
     }
 
-    func duplicateOverlayText(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> String? {
-        guard let currentReference = currentReference(for: slot) else {
-            return nil
-        }
-
+    private func duplicateTwinNames(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> [String] {
         let slotNameByValue = Dictionary(uniqueKeysWithValues: albumArtTypes.map { ($0.slot, $0.navigationLinkName) })
         var twinNames: Set<String> = []
 
-        for trackID in allTrackIDs {
-            let refs = trackReferencesByTrackID[trackID, default: []]
-            guard refs.contains(where: { $0.slot == slot && $0.poolItemID == currentReference.poolItemID }) else {
-                continue
-            }
+        for reference in allReferences(for: slot) {
+            for trackID in allTrackIDs {
+                let refs = trackReferencesByTrackID[trackID, default: []]
+                guard refs.contains(where: { $0.slot == slot && $0.poolItemID == reference.poolItemID }) else {
+                    continue
+                }
 
-            for twin in refs where twin.poolItemID == currentReference.poolItemID && twin.slot != slot {
-                twinNames.insert(slotNameByValue[twin.slot] ?? "Other")
+                for twin in refs where twin.poolItemID == reference.poolItemID && twin.slot != slot {
+                    twinNames.insert(slotNameByValue[twin.slot] ?? "Other")
+                }
             }
         }
 
-        guard !twinNames.isEmpty else {
-            return nil
-        }
-        let names = twinNames.sorted().joined(separator: ", ")
-        return "This picture is duplicated across types. Twin type(s): \(names)."
+        return twinNames.sorted()
     }
 
     func currentPictureMetadataText(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> String? {
@@ -215,18 +223,11 @@ final class AlbumArtViewModel {
         let descriptionText = reference.description.isEmpty ? "None" : reference.description
         let mimeText = reference.mimeType.isEmpty ? "unknown" : reference.mimeType
         let byteCount = ByteCountFormatter.string(fromByteCount: Int64(poolItem.data.count), countStyle: .file)
-//        let inFileStatus = inFileStatusText(for: reference)
         return "\(descriptionText) \(reference.poolItemIDShort()) \(refCount.inSlot) \(refCount.outSlot) \(refCount.pinCount) · \(mimeText) · \(byteCount) · \(currentIndex) of \(typeImageCount)"
     }
 
-    func infoOverlayText(for slot: AlbumArtSlot) -> String? {
-        guard let overlayState = infoOverlayStateBySlot[slot],
-              let currentReference = currentReference(for: slot),
-              currentReference.poolItemID == overlayState.poolItemID else {
-            return nil
-        }
-
-        return overlayState.message
+    func infoOverlayMessages(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> [AlbumArtInfoOverlayMessage] {
+        resolvedInfoOverlayState(for: slot, albumArtTypes: albumArtTypes)?.messages ?? []
     }
 
     func scopeLabelText() -> String {
@@ -397,7 +398,12 @@ final class AlbumArtViewModel {
         if outOfScopeReferenceExists {
             infoOverlayStateBySlot[slot] = AlbumArtInfoOverlayState(
                 poolItemID: currentReference.poolItemID,
-                message: "Removed from selected tracks. Still visible because other tracks reference this picture. Re-pin to add it back."
+                messages: [
+                    AlbumArtInfoOverlayMessage(
+                        messageType: .hasOutOfScopeReference,
+                        message: "Removed from selected tracks. Still visible because other tracks reference this picture. Re-pin to add it back."
+                    )
+                ]
             )
         } else {
             infoOverlayStateBySlot.removeValue(forKey: slot)
@@ -667,6 +673,21 @@ final class AlbumArtViewModel {
             return
         }
 
+        let targetTracksWithMatchingReference = targetTrackIDs.filter { trackID in
+            trackReferencesByTrackID[trackID, default: []]
+                .contains(where: { $0.slot == slot && $0.poolItemID == poolID })
+        }
+
+        if targetTracksWithMatchingReference.count == targetTrackIDs.count {
+            focusSlotAfterAddingPicture(
+                poolID: poolID,
+                for: slot,
+                addedExistingPicture: true
+            )
+            syncLegacySlotImages(albumArtTypes: albumArtTypes)
+            return
+        }
+
         if slot == .frontCover {
             let targetTracksWithFrontCover = targetTrackIDs.filter { trackID in
                 trackReferencesByTrackID[trackID, default: []].contains(where: { $0.slot == .frontCover })
@@ -678,6 +699,11 @@ final class AlbumArtViewModel {
                 }
 
                 if alreadyFirstEverywhere {
+                    focusSlotAfterAddingPicture(
+                        poolID: poolID,
+                        for: slot,
+                        addedExistingPicture: true
+                    )
                     syncLegacySlotImages(albumArtTypes: albumArtTypes)
                     return
                 }
@@ -688,6 +714,11 @@ final class AlbumArtViewModel {
                 }
 
                 applyFrontCoverDrop(poolID: poolID, mimeType: mimeType, targetTrackIDs: targetTrackIDs, action: action)
+                focusSlotAfterAddingPicture(
+                    poolID: poolID,
+                    for: slot,
+                    addedExistingPicture: existingPoolID != nil
+                )
                 syncLegacySlotImages(albumArtTypes: albumArtTypes)
                 return
             }
@@ -698,6 +729,11 @@ final class AlbumArtViewModel {
                     return
                 }
                 applyFrontCoverDrop(poolID: poolID, mimeType: mimeType, targetTrackIDs: targetTrackIDs, action: action)
+                focusSlotAfterAddingPicture(
+                    poolID: poolID,
+                    for: slot,
+                    addedExistingPicture: false
+                )
                 syncLegacySlotImages(albumArtTypes: albumArtTypes)
                 return
             }
@@ -705,6 +741,12 @@ final class AlbumArtViewModel {
 
         for trackID in targetTrackIDs {
             var refs = trackReferencesByTrackID[trackID, default: []]
+            let alreadyHasMatchingReference = refs.contains(where: { $0.slot == slot && $0.poolItemID == poolID })
+            guard !alreadyHasMatchingReference else {
+                trackReferencesByTrackID[trackID] = refs
+                continue
+            }
+
             if slot == .frontCover {
                 refs.insert(
                     AlbumArtTrackReference(
@@ -728,7 +770,32 @@ final class AlbumArtViewModel {
             trackReferencesByTrackID[trackID] = refs
         }
 
+        focusSlotAfterAddingPicture(
+            poolID: poolID,
+            for: slot,
+            addedExistingPicture: existingPoolID != nil
+        )
         syncLegacySlotImages(albumArtTypes: albumArtTypes)
+    }
+
+    private func focusSlotAfterAddingPicture(
+        poolID: UUID,
+        for slot: AlbumArtSlot,
+        addedExistingPicture: Bool
+    ) {
+        let refs = presentedReferences(for: slot)
+        guard !refs.isEmpty else {
+            currentReferenceIndexBySlot[slot] = 0
+            return
+        }
+
+        if addedExistingPicture,
+           let matchIndex = refs.firstIndex(where: { $0.poolItemID == poolID }) {
+            currentReferenceIndexBySlot[slot] = matchIndex
+            return
+        }
+
+        currentReferenceIndexBySlot[slot] = refs.count - 1
     }
 
     private func chooseFrontCoverDropAction() -> FrontCoverDropAction {
@@ -915,6 +982,65 @@ final class AlbumArtViewModel {
         return refs[index]
     }
 
+    private func resolvedInfoOverlayState(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> AlbumArtInfoOverlayState? {
+        var messages: [AlbumArtInfoOverlayMessage] = []
+        var poolItemID = currentReference(for: slot)?.poolItemID
+
+        let duplicateTwinNames = duplicateTwinNames(for: slot, albumArtTypes: albumArtTypes)
+        if !duplicateTwinNames.isEmpty {
+            messages.append(
+                AlbumArtInfoOverlayMessage(
+                    messageType: .hasDuplicateInOtherSlot,
+                    message: "This picture is duplicated across types. Twin type(s): \(duplicateTwinNames.joined(separator: ", "))."
+                )
+            )
+        }
+
+        if let storedState = infoOverlayStateBySlot[slot] {
+            let activeStoredMessages = storedState.messages.filter { message in
+                switch message.messageType {
+                case .hasOutOfScopeReference:
+                    return hasOutOfScopeReference(for: slot, poolItemID: storedState.poolItemID)
+                case .hasDuplicateInOtherSlot:
+                    return !duplicateTwinNames.isEmpty
+                }
+            }
+
+            if !activeStoredMessages.isEmpty {
+                if poolItemID == nil {
+                    poolItemID = storedState.poolItemID
+                }
+                messages.append(contentsOf: activeStoredMessages.filter { $0.messageType != .hasDuplicateInOtherSlot })
+            } else if storedState.messages.contains(where: { $0.messageType == .hasOutOfScopeReference }) {
+                infoOverlayStateBySlot.removeValue(forKey: slot)
+            }
+        }
+
+        guard !messages.isEmpty, let resolvedPoolItemID = poolItemID else {
+            return nil
+        }
+
+        return AlbumArtInfoOverlayState(
+            poolItemID: resolvedPoolItemID,
+            messages: messages
+        )
+    }
+
+    private func hasOutOfScopeReference(for slot: AlbumArtSlot, poolItemID: UUID) -> Bool {
+        let inScopeTrackIDs = Set(removalTargetTrackIDs())
+        let hasInScopeReference = inScopeTrackIDs.contains { trackID in
+            trackReferencesByTrackID[trackID, default: []]
+                .contains(where: { $0.slot == slot && $0.poolItemID == poolItemID })
+        }
+        let hasOutOfScopeReference = allTrackIDs.contains { trackID in
+            !inScopeTrackIDs.contains(trackID) &&
+                trackReferencesByTrackID[trackID, default: []]
+                .contains(where: { $0.slot == slot && $0.poolItemID == poolItemID })
+        }
+
+        return hasOutOfScopeReference && !hasInScopeReference
+    }
+
     private func visibleTrackIDs(for scope: AlbumArtPictureScope) -> [UUID] {
         switch scope {
         case .allTrackPictures:
@@ -981,28 +1107,6 @@ final class AlbumArtViewModel {
 
     private func hasAnyPicture(for slot: AlbumArtSlot) -> Bool {
         !allReferences(for: slot).isEmpty
-    }
-
-    private func inFileStatusText(for reference: AlbumArtTrackReference) -> String {
-        let trackIDs = activeTrackIDs()
-        guard !trackIDs.isEmpty else {
-            return "No"
-        }
-
-        let count = trackIDs.count(where: { trackID in
-            trackReferencesByTrackID[trackID, default: []].contains(where: {
-                $0.slot == reference.slot && $0.poolItemID == reference.poolItemID
-            })
-        })
-
-        switch count {
-        case 0:
-            return "No"
-        case trackIDs.count:
-            return "Yes"
-        default:
-            return "Mixed"
-        }
     }
 
     private func effectivePinnedReferences(for trackID: UUID, slot: AlbumArtSlot) -> [AlbumArtTrackReference] {

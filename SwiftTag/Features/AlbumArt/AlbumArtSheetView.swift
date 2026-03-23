@@ -22,9 +22,8 @@ struct AlbumArtSheetView: View {
     let onDropForSlot: ([NSItemProvider], AlbumArtSlot) -> Bool
     let onFileImportResult: (Result<[URL], Error>) -> Void
     let onFileExportResult: (Result<URL, Error>) -> Void
-    let pictureCountForSlot: (AlbumArtSlot) -> Int
-    let infoOverlayTextForSlot: (AlbumArtSlot) -> String?
-    let duplicateOverlayTextForSlot: (AlbumArtSlot) -> String?
+    let pictureCountForSlot: (AlbumArtSlot) -> (count: Int, pinCount: Int)
+    let infoOverlayMessagesForSlot: (AlbumArtSlot) -> [AlbumArtInfoOverlayMessage]
     let metadataTextForSlot: (AlbumArtSlot) -> String?
     let hasCrossTypeDuplicateForSlot: (AlbumArtSlot) -> Bool
     let pinAlbumPictures: Bool
@@ -59,9 +58,9 @@ struct AlbumArtSheetView: View {
             NavigationStack(path: $navigationPath) {
                 List {
                     ForEach(albumArtTypes) { albumArtType in
-                        let count = pictureCountForSlot(albumArtType.slot)
+                        let countSummary = pictureCountForSlot(albumArtType.slot)
                         NavigationLink(value: albumArtType.slot) {
-                            Text("\(albumArtType.navigationLinkName) (\(count))")
+                            Text("\(albumArtType.navigationLinkName) • \(countSummary.count) • \(countSummary.pinCount)")
                                 .italic(hasCrossTypeDuplicateForSlot(albumArtType.slot))
                                 .foregroundStyle(
                                     hasCrossTypeDuplicateForSlot(albumArtType.slot)
@@ -145,7 +144,8 @@ struct AlbumArtSheetView: View {
                             .allowsHitTesting(isEditingEnabled && !isSaveOperationRunning)
                             .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
 
-                            if let infoOverlayText = infoOverlayTextForSlot(albumArtSlot) {
+                            let infoOverlayMessages = infoOverlayMessagesForSlot(albumArtSlot)
+                            if !infoOverlayMessages.isEmpty {
                                 Rectangle()
                                     .fill(
                                         AppColorStorage.color(
@@ -155,38 +155,20 @@ struct AlbumArtSheetView: View {
                                         .opacity(0.25)
                                     )
                                     .overlay(alignment: .bottomLeading) {
-                                        Text(infoOverlayText)
-                                            .font(.caption)
-                                            .foregroundStyle(.primary)
-                                            .backgroundStyle(.ultraThickMaterial)
-                                            .padding(10)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            ForEach(Array(infoOverlayMessages.enumerated()), id: \.offset) { _, overlayMessage in
+                                                Text(overlayMessage.message)
+                                                    .font(.caption)
+                                                    .foregroundStyle(.primary)
+                                            }
+                                        }
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 8)
+                                        .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                        .padding(10)
                                     }
                                     .allowsHitTesting(false)
-                                    .background(.ultraThickMaterial)
                             }
-                        }
-
-                        if let duplicateOverlayText = duplicateOverlayTextForSlot(albumArtSlot) {
-                            Text(duplicateOverlayText)
-                                .font(.caption)
-                                .italic()
-                                .foregroundStyle(
-                                    AppColorStorage.color(
-                                        from: trackDiscTotalMismatchColorRawValue,
-                                        fallback: .systemRed
-                                    )
-                                )
-                                .padding(8)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    AppColorStorage.color(
-                                        from: trackDiscTotalMismatchColorRawValue,
-                                        fallback: .systemRed
-                                    )
-                                    .opacity(0.25)
-                                )
-                                .cornerRadius(6)
-                                .padding(.top, 8)
                         }
 
                         if let metadataText = metadataTextForSlot(albumArtSlot) {

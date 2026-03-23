@@ -59,6 +59,16 @@ struct SwiftTagTests {
         return fileURL
     }
 
+    private static func tempPNGFileURL(name: String, color: NSColor) throws -> URL {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+
+        let fileURL = directoryURL.appendingPathComponent(name).appendingPathExtension("png")
+        try pngData(color: color).write(to: fileURL)
+        return fileURL
+    }
+
     private static func importedTrack(fileURL: URL, tags: [String: String]) -> Track {
         Track(
             tags: tags,
@@ -549,6 +559,45 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func albumArtViewModelUniquePictureCountIncludesPinCount() throws {
+        let frontData = try Self.pngData(color: .brown)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let firstTrack = Track(
+            tags: [TagKey.title: "A"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: frontData)
+            ]
+        )
+        let secondTrack = Track(
+            tags: [TagKey.title: "B"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: frontData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(
+            trackItems: [firstTrack, secondTrack],
+            selectedTrackIDs: [firstTrack.id, secondTrack.id],
+            albumArtTypes: albumArtTypes
+        )
+        viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: false)
+
+        let initialCounts = viewModel.uniquePictureCount(for: .frontCover)
+        #expect(initialCounts.count == 1)
+        #expect(initialCounts.pinCount == 2)
+
+        viewModel.setCurrentPicturePinned(false, for: .frontCover, albumArtTypes: albumArtTypes)
+
+        let updatedCounts = viewModel.uniquePictureCount(for: .frontCover)
+        #expect(updatedCounts.count == 1)
+        #expect(updatedCounts.pinCount == 0)
+    }
+
+    @Test
+    @MainActor
     func albumArtViewModelDepinKeepsPictureAvailableAfterContextRefresh() throws {
         let frontData = try Self.pngData(color: .brown)
         let albumArtTypes: [AlbumArtType] = [
@@ -573,7 +622,7 @@ struct SwiftTagTests {
         )
         viewModel.configureTrackContext(trackItems: [updatedTrack], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
 
-        #expect(viewModel.uniquePictureCount(for: .frontCover) == 1)
+        #expect(viewModel.uniquePictureCount(for: .frontCover).count == 1)
         #expect(viewModel.hasImage(for: .frontCover))
         #expect(!viewModel.isCurrentPicturePinned(for: .frontCover))
         #expect(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).isEmpty)
@@ -638,7 +687,7 @@ struct SwiftTagTests {
         )
         viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: false)
 
-        #expect(viewModel.uniquePictureCount(for: .frontCover) == 1)
+        #expect(viewModel.uniquePictureCount(for: .frontCover).count == 1)
         #expect(viewModel.hasImage(for: .frontCover))
         #expect(!viewModel.isCurrentPicturePinned(for: .frontCover))
 
@@ -677,13 +726,14 @@ struct SwiftTagTests {
             albumArtTypes: albumArtTypes
         )
         viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: false)
+        viewModel.setTypePictureScope(.allTrackPictures, for: .frontCover, albumArtTypes: albumArtTypes)
 
         viewModel.removeCurrentPicture(for: .frontCover, albumArtTypes: albumArtTypes)
 
         #expect(viewModel.trackReferencesByTrackID[selectedTrack.id, default: []].isEmpty)
         #expect(!viewModel.trackReferencesByTrackID[otherTrack.id, default: []].isEmpty)
-        let overlayText = viewModel.infoOverlayText(for: .frontCover) ?? ""
-        #expect(overlayText.localizedCaseInsensitiveContains("pin"))
+        let overlayMessages = viewModel.infoOverlayMessages(for: .frontCover, albumArtTypes: albumArtTypes)
+        #expect(overlayMessages.contains(where: { $0.message.localizedCaseInsensitiveContains("pin") }))
         #expect(viewModel.hasImage(for: .frontCover))
         #expect(!viewModel.canNavigatePictures(for: .frontCover))
     }
@@ -708,8 +758,48 @@ struct SwiftTagTests {
         viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
 
         #expect(viewModel.hasCrossTypeDuplicate(for: .frontCover))
-        let warning = viewModel.duplicateOverlayText(for: .frontCover, albumArtTypes: albumArtTypes) ?? ""
-        #expect(warning.contains("Back Cover"))
+        let overlayMessages = viewModel.infoOverlayMessages(for: .frontCover, albumArtTypes: albumArtTypes)
+        #expect(overlayMessages.first?.messageType == .hasDuplicateInOtherSlot)
+        #expect(overlayMessages.first?.message.contains("Back Cover") == true)
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelOutOfScopeOverlayClearsAfterRepin() throws {
+        let sharedData = try Self.pngData(color: .purple)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let selectedTrack = Track(
+            tags: [TagKey.title: "Selected"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: sharedData)
+            ]
+        )
+        let otherTrack = Track(
+            tags: [TagKey.title: "Other"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: sharedData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(
+            trackItems: [selectedTrack, otherTrack],
+            selectedTrackIDs: [selectedTrack.id],
+            albumArtTypes: albumArtTypes
+        )
+        viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: false)
+        viewModel.setTypePictureScope(.allTrackPictures, for: .frontCover, albumArtTypes: albumArtTypes)
+
+        viewModel.removeCurrentPicture(for: .frontCover, albumArtTypes: albumArtTypes)
+        let messagesAfterRemove = viewModel.infoOverlayMessages(for: .frontCover, albumArtTypes: albumArtTypes)
+        #expect(messagesAfterRemove.contains(where: { $0.messageType == .hasOutOfScopeReference }))
+
+        viewModel.setCurrentPicturePinned(true, for: .frontCover, albumArtTypes: albumArtTypes)
+
+        let messagesAfterRepin = viewModel.infoOverlayMessages(for: .frontCover, albumArtTypes: albumArtTypes)
+        #expect(!messagesAfterRepin.contains(where: { $0.messageType == .hasOutOfScopeReference }))
     }
 
     @Test
@@ -775,6 +865,118 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func albumArtViewModelDropNewPictureSelectsLastPosition() async throws {
+        let firstData = try Self.pngData(color: .red)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 4, mimeType: "image/png", description: "Existing", data: firstData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let addedData = try Self.pngData(color: .green)
+        let addedURL = try Self.tempPNGFileURL(name: "album-art-added", color: .green)
+        guard let provider = NSItemProvider(contentsOf: addedURL) else {
+            Issue.record("Failed to create item provider for new picture test")
+            return
+        }
+
+        #expect(viewModel.handleAlbumArtDrop([provider], for: .backCover, albumArtTypes: albumArtTypes))
+        let didSelectAddedPicture = await Self.waitUntil {
+            viewModel.albumArtImages[.backCover]?.data == addedData
+        }
+
+        #expect(didSelectAddedPicture)
+        let metadata = viewModel.currentPictureMetadataText(for: .backCover, albumArtTypes: albumArtTypes) ?? ""
+        #expect(metadata.contains("2 of 2"))
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelDropExistingPictureSelectsMatchingPosition() async throws {
+        let firstData = try Self.pngData(color: .red)
+        let secondData = try Self.pngData(color: .blue)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let firstTrack = Track(
+            tags: [TagKey.title: "A"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 4, mimeType: "image/png", description: "First", data: firstData)
+            ]
+        )
+        let secondTrack = Track(
+            tags: [TagKey.title: "B"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 4, mimeType: "image/png", description: "Second", data: secondData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [firstTrack, secondTrack], selectedTrackIDs: [], albumArtTypes: albumArtTypes)
+
+        let duplicateURL = try Self.tempPNGFileURL(name: "album-art-duplicate", color: .blue)
+        guard let provider = NSItemProvider(contentsOf: duplicateURL) else {
+            Issue.record("Failed to create item provider for duplicate picture test")
+            return
+        }
+
+        #expect(viewModel.handleAlbumArtDrop([provider], for: .backCover, albumArtTypes: albumArtTypes))
+        let didSelectMatchingPicture = await Self.waitUntil {
+            viewModel.albumArtImages[.backCover]?.data == secondData
+        }
+
+        #expect(didSelectMatchingPicture)
+        let metadata = viewModel.currentPictureMetadataText(for: .backCover, albumArtTypes: albumArtTypes) ?? ""
+        #expect(metadata.contains("1 of 2") || metadata.contains("2 of 2"))
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelDropExistingPictureInSameTrackAndSlotDoesNotAddDuplicateReference() async throws {
+        let existingData = try Self.pngData(color: .orange)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 4, mimeType: "image/png", description: "Existing", data: existingData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let duplicateURL = try Self.tempPNGFileURL(name: "album-art-same-track-duplicate", color: .orange)
+        guard let provider = NSItemProvider(contentsOf: duplicateURL) else {
+            Issue.record("Failed to create item provider for same-track duplicate picture test")
+            return
+        }
+
+        let initialTrackReferenceCount = viewModel.trackReferencesByTrackID[track.id, default: []].count
+        let initialWritableCount = viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).count
+
+        #expect(viewModel.handleAlbumArtDrop([provider], for: .backCover, albumArtTypes: albumArtTypes))
+        let didSelectExistingPicture = await Self.waitUntil {
+            viewModel.albumArtImages[.backCover]?.data == existingData
+        }
+
+        #expect(didSelectExistingPicture)
+        #expect(viewModel.trackReferencesByTrackID[track.id, default: []].count == initialTrackReferenceCount)
+        #expect(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).count == initialWritableCount)
+        let metadata = viewModel.currentPictureMetadataText(for: .backCover, albumArtTypes: albumArtTypes) ?? ""
+        #expect(metadata.contains("1 of 1"))
+    }
+
+    @Test
+    @MainActor
     func albumArtViewModelWritesFirstFrontCoverLastPerTrack() throws {
         let firstFront = try Self.pngData(color: .orange)
         let secondFront = try Self.pngData(color: .green)
@@ -828,11 +1030,11 @@ struct SwiftTagTests {
             albumArtTypes: albumArtTypes
         )
 
-        #expect(viewModel.uniquePictureCount(for: .frontCover) == 2)
+        #expect(viewModel.uniquePictureCount(for: .frontCover).count == 2)
 
         viewModel.setTrackPictureScope(.selectedTrackPictures, albumArtTypes: albumArtTypes)
 
-        #expect(viewModel.uniquePictureCount(for: .frontCover) == 1)
+        #expect(viewModel.uniquePictureCount(for: .frontCover).count == 1)
     }
 
     @Test

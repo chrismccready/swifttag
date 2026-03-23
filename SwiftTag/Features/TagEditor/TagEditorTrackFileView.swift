@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 struct TagEditorTrackFileView: View {
     let trackItems: [Track]
+    let statusRefreshID: String
     var selection: Binding<Set<UUID>>
     let titleBindingForTrack: (UUID) -> Binding<String>?
     let statusPresentationForTrack: (UUID) -> TrackStatusPresentation?
@@ -99,6 +100,7 @@ struct TagEditorTrackFileView: View {
             }
             .width(min: 52)
         }
+        .id(statusRefreshID)
         .frame(minHeight: 64, idealHeight: .infinity)
         .contextMenu {
             Button("Add FLAC files...") {
