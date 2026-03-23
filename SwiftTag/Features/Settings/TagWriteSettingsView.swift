@@ -7,6 +7,8 @@ struct TagWriteSettingsView: View {
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.autoUpdateTrackTotal) private var autoUpdateTrackTotal: Bool = SaveSettingsDefaults.autoUpdateTrackTotal
     @AppStorage(SaveSettingsKey.updateTrackTotalOnLockedTracks) private var updateTrackTotalOnLockedTracks: Bool = SaveSettingsDefaults.updateTrackTotalOnLockedTracks
+    @AppStorage(SaveSettingsKey.saveFrontCoverToAllTracks) private var saveFrontCoverToAllTracks: Bool = SaveSettingsDefaults.saveFrontCoverToAllTracks
+    @AppStorage(SaveSettingsKey.saveAllPicturesToAllTracks) private var saveAllPicturesToAllTracks: Bool = SaveSettingsDefaults.saveAllPicturesToAllTracks
 
     private var trackCountKeyStrategy: Binding<TrackCountKeyStrategy> {
         Binding(
@@ -141,6 +143,14 @@ struct TagWriteSettingsView: View {
                 .toggleStyle(.switch)
             }
             .accessibilityIdentifier("settings.tags.discCountKeyStrategy")
+
+            Toggle("Save Front Cover to all Tracks", isOn: $saveFrontCoverToAllTracks)
+                .accessibilityIdentifier("settings.tags.saveFrontCoverToAllTracks")
+                .accessibilityValue(saveFrontCoverToAllTracks ? "On" : "Off")
+
+            Toggle("Save all Pictures to all Tracks", isOn: $saveAllPicturesToAllTracks)
+                .accessibilityIdentifier("settings.tags.saveAllPicturesToAllTracks")
+                .accessibilityValue(saveAllPicturesToAllTracks ? "On" : "Off")
         }
         .formStyle(.grouped)
     }

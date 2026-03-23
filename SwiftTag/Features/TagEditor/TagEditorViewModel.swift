@@ -734,6 +734,7 @@ final class TagEditorViewModel {
             let metadata = try FlacMetadataService.readTags(for: fileURL)
             let tags = metadata.tags
             let trackPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+            let trackPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
             let bookmarkData = try fileURL.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
             let initialValues = FlacImportMapper.initialValues(from: tags)
 
@@ -753,9 +754,14 @@ final class TagEditorViewModel {
                     totalTracks: initialValues.totalTracks,
                     tags: trackTags,
                     flacPicturesByType: trackPicturesByType,
+                    flacPictureRecords: trackPictureRecords,
                     sourceFileURL: fileURL,
                     securityScopedBookmarkData: bookmarkData,
-                    latestFileSnapshot: makeFileSnapshot(tags: tags, picturesByType: trackPicturesByType),
+                    latestFileSnapshot: makeFileSnapshot(
+                        tags: tags,
+                        picturesByType: trackPicturesByType,
+                        pictureRecords: trackPictureRecords
+                    ),
                     isLocked: locked
                 )
             )
@@ -797,6 +803,23 @@ final class TagEditorViewModel {
         trackItems.removeAll(where: { trackIDs.contains($0.id) })
         selectedTrackIDs.subtract(trackIDs)
         reloadMiscTagRowsFromSelection()
+    }
+
+    func setPictureRecordsByTrackID(_ recordsByTrackID: [UUID: [FlacWritablePictureRecord]]) {
+        guard !recordsByTrackID.isEmpty else {
+            return
+        }
+
+        var updatedTrackItems = trackItems
+        for index in updatedTrackItems.indices {
+            guard let records = recordsByTrackID[updatedTrackItems[index].id] else {
+                continue
+            }
+            updatedTrackItems[index].flacPictureRecords = records
+            updatedTrackItems[index].flacPicturesByType = writablePicturesByType(from: records)
+        }
+
+        trackItems = updatedTrackItems
     }
 
     func removeDuplicateImportURLsByBookmarkIdentity(_ urls: [URL]) -> [URL] {
@@ -856,10 +879,11 @@ final class TagEditorViewModel {
                             options: tagWriteOptions
                         )
                         : [:]
+                    let picturesForTrack = picturesForTrack(at: index, fallback: albumArtPictures)
 
                     try FlacMetadataService.writeMetadata(
                         tags: tags,
-                        pictures: payload.writesPictures ? albumArtPictures : [],
+                        pictures: payload.writesPictures ? picturesForTrack : [],
                         to: fileURL,
                         writeTags: payload.writesTags,
                         writePictures: payload.writesPictures
@@ -873,7 +897,7 @@ final class TagEditorViewModel {
                         for: index,
                         fileURL: fileURL,
                         tagWriteOptions: tagWriteOptions,
-                        albumArtPictures: albumArtPictures
+                        albumArtPictures: picturesForTrack
                     )
                     savedTrackReferences.append(refreshedTrackReference)
                 }
@@ -1024,12 +1048,12 @@ final class TagEditorViewModel {
         tagWriteOptions: TagWriteOptions,
         albumArtPictures: [FlacWritablePictureRecord]
     ) {
-        let picturesByType = writablePicturesByType(from: albumArtPictures)
-
         for index in trackItems.indices {
+            let picturesForTrack = picturesForTrack(at: index, fallback: albumArtPictures)
             trackItems[index].latestFileSnapshot = TrackFileSnapshot(
                 tags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
-                picturesByType: picturesByType
+                picturesByType: writablePicturesByType(from: picturesForTrack),
+                pictureRecords: picturesForTrack
             )
             trackItems[index].externalDifferences = nil
         }
@@ -1088,7 +1112,10 @@ final class TagEditorViewModel {
             return
         }
 
-        for index in trackItems.indices where trackIDs.contains(trackItems[index].id) {
+        var updatedTrackItems = trackItems
+        var didUpdateTrackItems = false
+
+        for index in updatedTrackItems.indices where trackIDs.contains(updatedTrackItems[index].id) {
             let differences = differencesForTrack(
                 at: index,
                 tagWriteOptions: tagWriteOptions,
@@ -1107,23 +1134,37 @@ final class TagEditorViewModel {
                     defaultDate: .now
                 )
                 let picturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
-                let snapshot = makeFileSnapshot(tags: metadata.tags, picturesByType: picturesByType)
+                let pictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
                 let refreshedBookmarkData = try fileURL.bookmarkData(
                     options: .withSecurityScope,
                     includingResourceValuesForKeys: nil,
                     relativeTo: nil
                 )
 
-                trackItems[index].album = (initialValues.album ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                trackItems[index].albumArtist = (initialValues.albumArtist ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                trackItems[index].totalTracks = Int(initialValues.totalTracks ?? "").map(String.init) ?? (initialValues.totalTracks ?? "")
-                trackItems[index].tags = mappedTrackTags
-                trackItems[index].flacPicturesByType = picturesByType
-                trackItems[index].sourceFileURL = fileURL
-                trackItems[index].securityScopedBookmarkData = refreshedBookmarkData
-                trackItems[index].latestFileSnapshot = snapshot
-                trackItems[index].externalDifferences = nil
+                updatedTrackItems[index].album = (initialValues.album ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                updatedTrackItems[index].albumArtist = (initialValues.albumArtist ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                updatedTrackItems[index].totalTracks = Int(initialValues.totalTracks ?? "").map(String.init) ?? (initialValues.totalTracks ?? "")
+                updatedTrackItems[index].tags = mappedTrackTags
+                updatedTrackItems[index].flacPictureRecords = pictureRecords
+                updatedTrackItems[index].flacPicturesByType = picturesByType
+                updatedTrackItems[index].sourceFileURL = fileURL
+                updatedTrackItems[index].securityScopedBookmarkData = refreshedBookmarkData
+                updatedTrackItems[index].latestFileSnapshot = TrackFileSnapshot(
+                    tags: FlacWriteMapper.makeTags(
+                        for: updatedTrackItems[index],
+                        totalDiscs: currentTotalDiscsValue(for: updatedTrackItems[index]),
+                        options: tagWriteOptions
+                    ),
+                    picturesByType: writablePicturesByType(from: pictureRecords),
+                    pictureRecords: pictureRecords
+                )
+                updatedTrackItems[index].externalDifferences = nil
+                didUpdateTrackItems = true
             }
+        }
+
+        if didUpdateTrackItems {
+            trackItems = updatedTrackItems
         }
     }
 
@@ -1178,8 +1219,10 @@ final class TagEditorViewModel {
         let picturesByType = writablePicturesByType(from: albumArtPictures)
         trackItems[index].latestFileSnapshot = TrackFileSnapshot(
             tags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
-            picturesByType: picturesByType
+            picturesByType: picturesByType,
+            pictureRecords: albumArtPictures
         )
+        trackItems[index].flacPictureRecords = albumArtPictures
         trackItems[index].flacPicturesByType = picturesByType
         trackItems[index].externalDifferences = nil
     }
@@ -1253,10 +1296,13 @@ final class TagEditorViewModel {
 
         do {
             let metadata = try FlacMetadataService.readTags(for: fileURL)
+            let pictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
             let fileSnapshot = makeFileSnapshot(
                 tags: metadata.tags,
-                picturesByType: FlacImportMapper.mapPicturesByType(metadata.pictures)
+                picturesByType: FlacImportMapper.mapPicturesByType(metadata.pictures),
+                pictureRecords: pictureRecords
             )
+            trackItems[index].flacPictureRecords = pictureRecords
             trackItems[index].externalDifferences = externalDifferences(
                 for: index,
                 fileSnapshot: fileSnapshot,
@@ -1335,10 +1381,15 @@ final class TagEditorViewModel {
         pendingMissingRefreshTasks.removeValue(forKey: trackID)?.cancel()
     }
 
-    private func makeFileSnapshot(tags: [String: String], picturesByType: [Int: Data]) -> TrackFileSnapshot {
+    private func makeFileSnapshot(
+        tags: [String: String],
+        picturesByType: [Int: Data],
+        pictureRecords: [FlacWritablePictureRecord] = []
+    ) -> TrackFileSnapshot {
         TrackFileSnapshot(
             tags: normalizeFileTags(tags),
-            picturesByType: picturesByType
+            picturesByType: picturesByType,
+            pictureRecords: pictureRecords
         )
     }
 
@@ -1435,7 +1486,22 @@ final class TagEditorViewModel {
     }
 
     private func writablePicturesByType(from pictures: [FlacWritablePictureRecord]) -> [Int: Data] {
-        Dictionary(uniqueKeysWithValues: pictures.map { ($0.type, $0.data) })
+        var byType: [Int: Data] = [:]
+        for picture in pictures where byType[picture.type] == nil {
+            byType[picture.type] = picture.data
+        }
+        return byType
+    }
+
+    private func pictureRecordsDiffer(
+        currentPictures: [FlacWritablePictureRecord],
+        snapshot: TrackFileSnapshot
+    ) -> Bool {
+        if !snapshot.pictureRecords.isEmpty || !currentPictures.isEmpty {
+            return currentPictures != snapshot.pictureRecords
+        }
+
+        return writablePicturesByType(from: currentPictures) != snapshot.picturesByType
     }
 
     private func differingFileValues(
@@ -1474,7 +1540,8 @@ final class TagEditorViewModel {
             fileTags: fileSnapshot.tags,
             ignoreMissingFileValues: true
         )
-        let hasPictureDifference = writablePicturesByType(from: albumArtPictures) != fileSnapshot.picturesByType
+        let picturesForTrack = picturesForTrack(at: index, fallback: albumArtPictures)
+        let hasPictureDifference = pictureRecordsDiffer(currentPictures: picturesForTrack, snapshot: fileSnapshot)
 
         let result = TrackExternalDifferences(
             isDeleted: false,
@@ -1515,9 +1582,20 @@ final class TagEditorViewModel {
             expectedTags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
             fileTags: latestFileSnapshot.tags
         ).isEmpty
-        let pictureDifferences = writablePicturesByType(from: albumArtPictures) != latestFileSnapshot.picturesByType
+        let picturesForTrack = picturesForTrack(at: index, fallback: albumArtPictures)
+        let pictureDifferences = pictureRecordsDiffer(currentPictures: picturesForTrack, snapshot: latestFileSnapshot)
 
         return (tagDifferences, pictureDifferences)
+    }
+
+    private func picturesForTrack(at index: Int, fallback: [FlacWritablePictureRecord]) -> [FlacWritablePictureRecord] {
+        guard trackItems.indices.contains(index) else {
+            return fallback
+        }
+
+        return trackItems[index].flacPictureRecords.isEmpty
+            ? fallback
+            : trackItems[index].flacPictureRecords
     }
 
     private func differencesForTrack(

@@ -3,6 +3,17 @@ import Foundation
 struct TrackFileSnapshot: Equatable {
     var tags: [String: String]
     var picturesByType: [Int: Data]
+    var pictureRecords: [FlacWritablePictureRecord]
+
+    init(
+        tags: [String: String],
+        picturesByType: [Int: Data],
+        pictureRecords: [FlacWritablePictureRecord] = []
+    ) {
+        self.tags = tags
+        self.picturesByType = picturesByType
+        self.pictureRecords = pictureRecords
+    }
 }
 
 struct TrackExternalDifferences: Equatable {

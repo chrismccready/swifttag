@@ -352,6 +352,106 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func albumArtSheetViewRendersScopedTypeCountLabel() throws {
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: false,
+            saveStatusPresentation: nil,
+            pictureCount: 3
+        )
+
+        let _ = try sut.inspect().find(text: "Front Cover (3)")
+    }
+
+    @Test
+    func albumArtSheetViewProvidesOverlayAndMetadataForPresentedPicture() throws {
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: false,
+            saveStatusPresentation: nil,
+            infoOverlayText: "Removed from selected tracks. Re-pin to add it back.",
+            metadataText: "In file: Mixed 1 of 3"
+        )
+
+        let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
+        #expect(actualView.infoOverlayTextForSlot(.frontCover) == "Removed from selected tracks. Re-pin to add it back.")
+        #expect(actualView.metadataTextForSlot(.frontCover) == "In file: Mixed 1 of 3")
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtSheetView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        #expect(source.contains("if let infoOverlayText = infoOverlayTextForSlot(albumArtSlot)"))
+        #expect(source.contains("if let metadataText = metadataTextForSlot(albumArtSlot)"))
+    }
+
+    @Test
+    func albumArtSheetViewExposesScopePickersWithConfiguredScopes() throws {
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: false,
+            saveStatusPresentation: nil,
+            trackPictureScope: .selectedTrackPictures,
+            typePictureScope: .selectedTrackPictures
+        )
+
+        let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
+        #expect(actualView.trackPictureScope == .selectedTrackPictures)
+        #expect(actualView.typePictureScopeForSlot(.frontCover) == .selectedTrackPictures)
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtSheetView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        #expect(source.contains("albumArt.sheet.trackPictureScopePicker"))
+        #expect(source.contains("albumArt.sheet.typePictureScopePicker"))
+    }
+
+    @Test
+    func albumArtSheetViewDisablesNavigationButtonsAtLeadingAndTrailingBounds() throws {
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: false,
+            saveStatusPresentation: nil,
+            canGoToPreviousPicture: false,
+            canGoToNextPicture: false
+        )
+
+        let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
+        #expect(!actualView.canGoToPreviousPictureForSlot(.frontCover))
+        #expect(!actualView.canGoToNextPictureForSlot(.frontCover))
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtSheetView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        #expect(source.contains(".disabled(!canGoToPreviousPictureForSlot(albumArtSlot))"))
+        #expect(source.contains(".disabled(!canGoToNextPictureForSlot(albumArtSlot))"))
+    }
+
+    @Test
+    func albumArtSheetViewEnablesNavigationButtonsWhenScopedNavigationIsAvailable() throws {
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: false,
+            saveStatusPresentation: nil,
+            canGoToPreviousPicture: true,
+            canGoToNextPicture: true
+        )
+
+        let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
+        #expect(actualView.canGoToPreviousPictureForSlot(.frontCover))
+        #expect(actualView.canGoToNextPictureForSlot(.frontCover))
+    }
+
+    @Test
     func tagEditorTrackFileViewDeclaresStatusColumnBeforeTrackNumberTitleAndFilenameInSource() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -488,7 +588,14 @@ struct TrackStatusViewInspectorTests {
 
     private func makeAlbumArtSheetView(
         isSaveOperationRunning: Bool,
-        saveStatusPresentation: SaveStatusPresentation?
+        saveStatusPresentation: SaveStatusPresentation?,
+        pictureCount: Int = 1,
+        infoOverlayText: String? = nil,
+        metadataText: String? = nil,
+        trackPictureScope: AlbumArtPictureScope = .allTrackPictures,
+        typePictureScope: AlbumArtPictureScope = .allTrackPictures,
+        canGoToPreviousPicture: Bool = false,
+        canGoToNextPicture: Bool = false
     ) -> AlbumArtSheetView {
         AlbumArtSheetView(
             isSaveOperationRunning: isSaveOperationRunning,
@@ -515,7 +622,31 @@ struct TrackStatusViewInspectorTests {
             onPrepareExport: { _ in },
             onDropForSlot: { _, _ in false },
             onFileImportResult: { _ in },
-            onFileExportResult: { _ in }
+            onFileExportResult: { _ in },
+            pictureCountForSlot: { _ in pictureCount },
+            infoOverlayTextForSlot: { _ in infoOverlayText },
+            duplicateOverlayTextForSlot: { _ in nil },
+            metadataTextForSlot: { _ in metadataText },
+            hasCrossTypeDuplicateForSlot: { _ in false },
+            pinAlbumPictures: false,
+            isPinAlbumPicturesDisabled: false,
+            onSetPinAlbumPictures: { _ in },
+            trackPictureScope: trackPictureScope,
+            onSetTrackPictureScope: { _ in },
+            scopeLabelText: "All Tracks",
+            typePictureScopeForSlot: { _ in typePictureScope },
+            onSetTypePictureScope: { _, _ in },
+            isPinTrackPictureOn: { _ in false },
+            onSetPinTrackPicture: { _, _ in },
+            isPinTrackPictureDisabled: { _ in false },
+            canNavigateForSlot: { _ in false },
+            canGoToPreviousPictureForSlot: { _ in canGoToPreviousPicture },
+            canGoToNextPictureForSlot: { _ in canGoToNextPicture },
+            onFirstPicture: { _ in },
+            onPreviousPicture: { _ in },
+            onNextPicture: { _ in },
+            onLastPicture: { _ in },
+            onRemovePicture: { _ in }
         )
     }
 

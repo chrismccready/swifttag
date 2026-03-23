@@ -73,13 +73,19 @@ struct TagEditorAlbumView: View {
                 showsExternalDifferenceOverlay: showsPictureDifferenceOverlay
             )
             .contentShape(Rectangle())
-            .onTapGesture {
+            .onTapGesture(count: 2) {
                 guard isArtworkEditable, !isSaveOperationRunning else {
                     return
                 }
                 onFrontCoverTap()
             }
-            .help("Click to edit album art or drag and drop an image to set album Front Cover.")
+            .contextMenu {
+                Button("Show Picture Browser") {
+                    onFrontCoverTap()
+                }
+                .disabled(!isArtworkEditable || isSaveOperationRunning)
+            }
+            .help("Double-click to edit album art or drag and drop an image to set album Front Cover.")
             .accessibilityIdentifier("albumArtImageWell")
         }
     }

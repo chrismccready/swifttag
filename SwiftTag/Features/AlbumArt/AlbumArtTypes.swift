@@ -41,6 +41,38 @@ struct AlbumArtImageAsset {
     let data: Data
 }
 
+struct AlbumArtPoolItem: Identifiable, Equatable {
+    let id: UUID
+    let data: Data
+    let image: NSImage
+}
+
+struct AlbumArtTrackReference: Identifiable, Equatable {
+    let id: UUID
+    let poolItemID: UUID
+    let slot: AlbumArtSlot
+    let mimeType: String
+    let description: String
+
+    init(
+        id: UUID = UUID(),
+        poolItemID: UUID,
+        slot: AlbumArtSlot,
+        mimeType: String,
+        description: String
+    ) {
+        self.id = id
+        self.poolItemID = poolItemID
+        self.slot = slot
+        self.mimeType = mimeType
+        self.description = description
+    }
+    
+    func poolItemIDShort() -> String {
+        return String(self.poolItemID.uuidString.prefix(8))
+    }
+}
+
 struct AlbumArtExportDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.png, .jpeg] }
 

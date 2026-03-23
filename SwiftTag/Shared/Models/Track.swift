@@ -6,7 +6,8 @@ struct Track: Identifiable {
     var albumArtist: String
     var totalTracks: String
     var tags: [String: String]
-    var flacPicturesByType: [Int: Data]
+    private var storedFlacPicturesByType: [Int: Data]
+    var flacPictureRecords: [FlacWritablePictureRecord]
     var sourceFileURL: URL?
     var securityScopedBookmarkData: Data?
     var latestFileSnapshot: TrackFileSnapshot?
@@ -32,6 +33,34 @@ struct Track: Identifiable {
         )
     }
 
+    var flacPicturesByType: [Int: Data] {
+        get {
+            if !flacPictureRecords.isEmpty {
+                var byType: [Int: Data] = [:]
+                for record in flacPictureRecords where byType[record.type] == nil {
+                    byType[record.type] = record.data
+                }
+                return byType
+            }
+            return storedFlacPicturesByType
+        }
+        set {
+            storedFlacPicturesByType = newValue
+            if flacPictureRecords.isEmpty {
+                flacPictureRecords = newValue
+                    .sorted { $0.key < $1.key }
+                    .map { type, data in
+                        FlacWritablePictureRecord(
+                            type: type,
+                            mimeType: "image/png",
+                            description: "",
+                            data: data
+                        )
+                    }
+            }
+        }
+    }
+
     init(
         id: UUID = UUID(),
         album: String? = nil,
@@ -39,6 +68,7 @@ struct Track: Identifiable {
         totalTracks: String? = nil,
         tags: [String: String],
         flacPicturesByType: [Int: Data] = [:],
+        flacPictureRecords: [FlacWritablePictureRecord] = [],
         sourceFileURL: URL? = nil,
         securityScopedBookmarkData: Data? = nil,
         latestFileSnapshot: TrackFileSnapshot? = nil,
@@ -50,7 +80,19 @@ struct Track: Identifiable {
         self.albumArtist = Track.normalizedSharedValue(albumArtist ?? tags[TagKey.albumArtist] ?? tags["ALBUM ARTIST"] ?? "")
         self.totalTracks = Track.normalizedNumericValue(totalTracks ?? tags["TOTALTRACKS"] ?? tags["TRACKTOTAL"] ?? "")
         self.tags = tags
-        self.flacPicturesByType = flacPicturesByType
+        self.storedFlacPicturesByType = flacPicturesByType
+        self.flacPictureRecords = flacPictureRecords.isEmpty
+            ? flacPicturesByType
+                .sorted { $0.key < $1.key }
+                .map { type, data in
+                    FlacWritablePictureRecord(
+                        type: type,
+                        mimeType: "image/png",
+                        description: "",
+                        data: data
+                    )
+                }
+            : flacPictureRecords
         self.sourceFileURL = sourceFileURL
         self.securityScopedBookmarkData = securityScopedBookmarkData
         self.latestFileSnapshot = latestFileSnapshot

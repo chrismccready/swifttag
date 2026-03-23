@@ -79,6 +79,8 @@ struct ContentView: View {
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.autoUpdateTrackTotal) private var autoUpdateTrackTotal: Bool = SaveSettingsDefaults.autoUpdateTrackTotal
     @AppStorage(SaveSettingsKey.updateTrackTotalOnLockedTracks) private var updateTrackTotalOnLockedTracks: Bool = SaveSettingsDefaults.updateTrackTotalOnLockedTracks
+    @AppStorage(SaveSettingsKey.saveFrontCoverToAllTracks) private var saveFrontCoverToAllTracks: Bool = SaveSettingsDefaults.saveFrontCoverToAllTracks
+    @AppStorage(SaveSettingsKey.saveAllPicturesToAllTracks) private var saveAllPicturesToAllTracks: Bool = SaveSettingsDefaults.saveAllPicturesToAllTracks
     @AppStorage(FeedbackSettingsKey.themePreference) private var themePreferenceRawValue: String = FeedbackSettingsDefaults.themePreference.rawValue
     @AppStorage(FeedbackSettingsKey.formatOnTrackTotalMismatch) private var formatOnTrackTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnTrackTotalMismatch
     @AppStorage(FeedbackSettingsKey.formatOnDiscTotalMismatch) private var formatOnDiscTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnDiscTotalMismatch
@@ -312,6 +314,14 @@ struct ContentView: View {
         !isSaveOperationRunning
     }
 
+    private var pictureBrowserMenuTitle: String {
+        isAlbumArtSheetPresented ? "Hide Picture Browser" : "Show Picture Browser"
+    }
+
+    private var canTogglePictureBrowser: Bool {
+        true
+    }
+
     private var reloadSelectedTracksTitle: String {
         selectedTrackIDs.count == 1 ? "Reload Selected Track" : "Reload Selected Tracks"
     }
@@ -495,7 +505,14 @@ struct ContentView: View {
             showsPictureDifferenceOverlay: hasPictureDifference,
             frontCoverImage: albumArtViewModel.imageForAlbumArtSlot(.frontCover),
             onFrontCoverDrop: { providers in
-                albumArtViewModel.handleAlbumArtDrop(providers, for: .frontCover)
+                albumArtViewModel.handleAlbumArtDrop(
+                    providers,
+                    for: .frontCover,
+                    albumArtTypes: albumArtTypes
+                ) {
+                    syncTrackPictureRecordsFromAlbumArt()
+                    syncAlbumArtContext()
+                }
             },
             onFrontCoverTap: {
                 isAlbumArtSheetPresented = true
@@ -634,9 +651,99 @@ struct ContentView: View {
             onPrepareExport: { slot in
                 albumArtViewModel.prepareAlbumArtExport(for: slot, albumArtTypes: albumArtTypes)
             },
-            onDropForSlot: { providers, slot in albumArtViewModel.handleAlbumArtDrop(providers, for: slot) },
-            onFileImportResult: albumArtViewModel.handleAlbumArtFileImportResult(_:),
-            onFileExportResult: albumArtViewModel.handleAlbumArtFileExportResult(_:)
+            onDropForSlot: { providers, slot in
+                albumArtViewModel.handleAlbumArtDrop(
+                    providers,
+                    for: slot,
+                    albumArtTypes: albumArtTypes
+                ) {
+                    syncTrackPictureRecordsFromAlbumArt()
+                    syncAlbumArtContext()
+                }
+            },
+            onFileImportResult: { result in
+                albumArtViewModel.handleAlbumArtFileImportResult(result, albumArtTypes: albumArtTypes)
+                syncTrackPictureRecordsFromAlbumArt()
+                syncAlbumArtContext()
+            },
+            onFileExportResult: albumArtViewModel.handleAlbumArtFileExportResult(_:),
+            pictureCountForSlot: { slot in
+                albumArtViewModel.uniquePictureCount(for: slot)
+            },
+            infoOverlayTextForSlot: { slot in
+                albumArtViewModel.infoOverlayText(for: slot)
+            },
+            duplicateOverlayTextForSlot: { slot in
+                albumArtViewModel.duplicateOverlayText(for: slot, albumArtTypes: albumArtTypes)
+            },
+            metadataTextForSlot: { slot in
+                albumArtViewModel.currentPictureMetadataText(for: slot, albumArtTypes: albumArtTypes)
+            },
+            hasCrossTypeDuplicateForSlot: { slot in
+                albumArtViewModel.hasCrossTypeDuplicate(for: slot)
+            },
+            pinAlbumPictures: albumArtViewModel.isPinAlbumPicturesOn(),
+            isPinAlbumPicturesDisabled: albumArtViewModel.isPinAlbumPicturesDisabled() || isSaveOperationRunning,
+            onSetPinAlbumPictures: { isOn in
+                albumArtViewModel.setAlbumPicturesPinned(isOn, albumArtTypes: albumArtTypes)
+                syncTrackPictureRecordsFromAlbumArt()
+                syncAlbumArtContext()
+            },
+            trackPictureScope: albumArtViewModel.trackPictureScope,
+            onSetTrackPictureScope: { scope in
+                albumArtViewModel.setTrackPictureScope(scope, albumArtTypes: albumArtTypes)
+                syncTrackPictureRecordsFromAlbumArt()
+                syncAlbumArtContext()
+            },
+            scopeLabelText: albumArtViewModel.scopeLabelText(),
+            typePictureScopeForSlot: { slot in
+                albumArtViewModel.typePictureScope(for: slot)
+            },
+            onSetTypePictureScope: { slot, scope in
+                albumArtViewModel.setTypePictureScope(scope, for: slot, albumArtTypes: albumArtTypes)
+                syncTrackPictureRecordsFromAlbumArt()
+                syncAlbumArtContext()
+            },
+            isPinTrackPictureOn: { slot in
+                return albumArtViewModel.isCurrentPicturePinned(for: slot)
+            },
+            onSetPinTrackPicture: { slot, isOn in
+                albumArtViewModel.setCurrentPicturePinned(isOn, for: slot, albumArtTypes: albumArtTypes)
+                syncTrackPictureRecordsFromAlbumArt()
+                syncAlbumArtContext()
+            },
+            isPinTrackPictureDisabled: { slot in
+                albumArtViewModel.isTrackPinForced(for: slot) ||
+                    !albumArtViewModel.hasImage(for: slot) ||
+                    albumArtViewModel.hasLockedTrackInActiveSelection() ||
+                    isSaveOperationRunning
+            },
+            canNavigateForSlot: { slot in
+                albumArtViewModel.canNavigatePictures(for: slot)
+            },
+            canGoToPreviousPictureForSlot: { slot in
+                albumArtViewModel.canGoToPreviousPicture(for: slot)
+            },
+            canGoToNextPictureForSlot: { slot in
+                albumArtViewModel.canGoToNextPicture(for: slot)
+            },
+            onFirstPicture: { slot in
+                albumArtViewModel.goToFirstPicture(for: slot, albumArtTypes: albumArtTypes)
+            },
+            onPreviousPicture: { slot in
+                albumArtViewModel.goToPreviousPicture(for: slot, albumArtTypes: albumArtTypes)
+            },
+            onNextPicture: { slot in
+                albumArtViewModel.goToNextPicture(for: slot, albumArtTypes: albumArtTypes)
+            },
+            onLastPicture: { slot in
+                albumArtViewModel.goToLastPicture(for: slot, albumArtTypes: albumArtTypes)
+            },
+            onRemovePicture: { slot in
+                albumArtViewModel.removeCurrentPicture(for: slot, albumArtTypes: albumArtTypes)
+                syncTrackPictureRecordsFromAlbumArt()
+                syncAlbumArtContext()
+            }
         )
     }
 
@@ -644,6 +751,7 @@ struct ContentView: View {
         contentStack
             .onAppear {
                 reloadMiscTagRowsFromSelection()
+                syncAlbumArtContext()
                 configureWindowRouting()
                 refreshTrackMonitoring()
                 loadUITestStateIfNeeded()
@@ -657,6 +765,16 @@ struct ContentView: View {
             }
             .onChange(of: selectedTrackIDs) { _, _ in
                 reloadMiscTagRowsFromSelection()
+                syncAlbumArtContext()
+            }
+            .onChange(of: viewModel.trackItems.map(\.id)) { _, _ in
+                syncAlbumArtContext()
+            }
+            .onChange(of: saveFrontCoverToAllTracks) { _, _ in
+                syncAlbumArtContext()
+            }
+            .onChange(of: saveAllPicturesToAllTracks) { _, _ in
+                syncAlbumArtContext()
             }
             .onChange(of: TrackSetFingerprint.make(from: viewModel.importedTrackReferences)) { _, _ in
                 EditorWindowCoordinator.shared.register(
@@ -702,6 +820,11 @@ struct ContentView: View {
             .focusedSceneValue(\.showAddReadOnlyFlacImporter) {
                 showAddReadOnlyImporter()
             }
+            .focusedSceneValue(\.pictureBrowserMenuTitle, pictureBrowserMenuTitle)
+            .focusedSceneValue(\.togglePictureBrowser) {
+                togglePictureBrowser()
+            }
+            .focusedSceneValue(\.canTogglePictureBrowser, canTogglePictureBrowser)
             .focusedSceneValue(\.performDefaultSave) {
                 save()
             }
@@ -897,15 +1020,8 @@ struct ContentView: View {
 
     private func importFlacFiles(_ flacFiles: [URL], locked: Bool = false, append: Bool = false) async throws {
         try await viewModel.importFlacFiles(flacFiles, locked: locked, append: append)
-
-        if !append {
-            albumArtViewModel.albumArtImages.removeAll()
-        }
-
-        albumArtViewModel.applyImportedFlacPictures(
-            viewModel.importedFlacPicturesByType,
-            albumArtTypes: albumArtTypes
-        )
+        syncAlbumArtContext()
+        syncTrackPictureRecordsFromAlbumArt()
         viewModel.syncCurrentStateAsSaved(
             tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
             albumArtPictures: currentAlbumArtPictures
@@ -948,6 +1064,7 @@ struct ContentView: View {
         guard !isSaveOperationRunning else {
             return
         }
+        syncTrackPictureRecordsFromAlbumArt()
 
         let settings = saveSettingsSnapshot
         let effectivePayload = payload ?? settings.payload
@@ -1099,6 +1216,7 @@ struct ContentView: View {
     }
 
     private func refreshTrackMonitoring() {
+        syncTrackPictureRecordsFromAlbumArt()
         trackFileMonitor.replaceObservations(for: viewModel.trackItems) { event in
             viewModel.refreshTrackFileState(
                 for: event.trackID,
@@ -1137,6 +1255,8 @@ struct ContentView: View {
                         tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
                         albumArtPictures: currentAlbumArtPictures
                     )
+                    albumArtViewModel.discardTransientState(for: selectedTrackIDs, albumArtTypes: albumArtTypes)
+                    syncAlbumArtContext()
                     applyAutoTrackTotalIfNeeded()
                     refreshTrackMonitoring()
                 } catch {
@@ -1217,6 +1337,7 @@ struct ContentView: View {
     }
 
     private func confirmBeforeDestructiveAction(_ action: DestructiveAction, perform: @escaping () -> Void) {
+        syncTrackPictureRecordsFromAlbumArt()
         let affectedTrackIDs: Set<UUID>
         switch action {
         case .loadFiles:
@@ -1305,6 +1426,42 @@ struct ContentView: View {
         pendingImporterLockedState = true
         pendingImporterAddsFiles = true
         isFlacImporterPresented = true
+    }
+
+    private func syncAlbumArtContext() {
+        albumArtViewModel.configurePinSettings(
+            saveFrontCoverToAllTracks: saveFrontCoverToAllTracks,
+            saveAllPicturesToAllTracks: saveAllPicturesToAllTracks
+        )
+        albumArtViewModel.configureTrackContext(
+            trackItems: viewModel.trackItems,
+            selectedTrackIDs: selectedTrackIDs,
+            albumArtTypes: albumArtTypes
+        )
+        syncTrackPictureRecordsFromAlbumArt()
+    }
+
+    private func syncTrackPictureRecordsFromAlbumArt() {
+        guard !viewModel.trackItems.isEmpty else {
+            return
+        }
+
+        var recordsByTrackID: [UUID: [FlacWritablePictureRecord]] = [:]
+        for track in viewModel.trackItems {
+            let records = albumArtViewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes)
+            if records != track.flacPictureRecords {
+                recordsByTrackID[track.id] = records
+            }
+        }
+
+        guard !recordsByTrackID.isEmpty else {
+            return
+        }
+        viewModel.setPictureRecordsByTrackID(recordsByTrackID)
+    }
+
+    private func togglePictureBrowser() {
+        isAlbumArtSheetPresented.toggle()
     }
 
     private func resolveTrackURLs(
@@ -1521,6 +1678,9 @@ extension FocusedValues {
     @Entry var showReadOnlyFlacImporter: (() -> Void)?
     @Entry var showAddFlacImporter: (() -> Void)?
     @Entry var showAddReadOnlyFlacImporter: (() -> Void)?
+    @Entry var togglePictureBrowser: (() -> Void)?
+    @Entry var pictureBrowserMenuTitle: String?
+    @Entry var canTogglePictureBrowser: Bool?
     @Entry var performDefaultSave: (() -> Void)?
     @Entry var performSaveTagsOnly: (() -> Void)?
     @Entry var performSavePicturesOnly: (() -> Void)?

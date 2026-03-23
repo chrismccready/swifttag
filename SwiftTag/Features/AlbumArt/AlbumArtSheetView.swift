@@ -22,6 +22,33 @@ struct AlbumArtSheetView: View {
     let onDropForSlot: ([NSItemProvider], AlbumArtSlot) -> Bool
     let onFileImportResult: (Result<[URL], Error>) -> Void
     let onFileExportResult: (Result<URL, Error>) -> Void
+    let pictureCountForSlot: (AlbumArtSlot) -> Int
+    let infoOverlayTextForSlot: (AlbumArtSlot) -> String?
+    let duplicateOverlayTextForSlot: (AlbumArtSlot) -> String?
+    let metadataTextForSlot: (AlbumArtSlot) -> String?
+    let hasCrossTypeDuplicateForSlot: (AlbumArtSlot) -> Bool
+    let pinAlbumPictures: Bool
+    let isPinAlbumPicturesDisabled: Bool
+    let onSetPinAlbumPictures: (Bool) -> Void
+    let trackPictureScope: AlbumArtPictureScope
+    let onSetTrackPictureScope: (AlbumArtPictureScope) -> Void
+    let scopeLabelText: String
+    let typePictureScopeForSlot: (AlbumArtSlot) -> AlbumArtPictureScope
+    let onSetTypePictureScope: (AlbumArtSlot, AlbumArtPictureScope) -> Void
+    let isPinTrackPictureOn: (AlbumArtSlot) -> Bool
+    let onSetPinTrackPicture: (AlbumArtSlot, Bool) -> Void
+    let isPinTrackPictureDisabled: (AlbumArtSlot) -> Bool
+    let canNavigateForSlot: (AlbumArtSlot) -> Bool
+    let canGoToPreviousPictureForSlot: (AlbumArtSlot) -> Bool
+    let canGoToNextPictureForSlot: (AlbumArtSlot) -> Bool
+    let onFirstPicture: (AlbumArtSlot) -> Void
+    let onPreviousPicture: (AlbumArtSlot) -> Void
+    let onNextPicture: (AlbumArtSlot) -> Void
+    let onLastPicture: (AlbumArtSlot) -> Void
+    let onRemovePicture: (AlbumArtSlot) -> Void
+
+    @AppStorage(FeedbackSettingsKey.trackDiscTotalMismatchColor)
+    private var trackDiscTotalMismatchColorRawValue: String = FeedbackSettingsDefaults.trackDiscTotalMismatchColor
 
     private func albumArtType(for slot: AlbumArtSlot) -> AlbumArtType? {
         albumArtTypes.first { $0.slot == slot }
@@ -32,44 +59,143 @@ struct AlbumArtSheetView: View {
             NavigationStack(path: $navigationPath) {
                 List {
                     ForEach(albumArtTypes) { albumArtType in
-                        NavigationLink(albumArtType.navigationLinkName, value: albumArtType.slot)
+                        let count = pictureCountForSlot(albumArtType.slot)
+                        NavigationLink(value: albumArtType.slot) {
+                            Text("\(albumArtType.navigationLinkName) (\(count))")
+                                .italic(hasCrossTypeDuplicateForSlot(albumArtType.slot))
+                                .foregroundStyle(
+                                    hasCrossTypeDuplicateForSlot(albumArtType.slot)
+                                    ? AnyShapeStyle(
+                                        AppColorStorage.color(
+                                            from: trackDiscTotalMismatchColorRawValue,
+                                            fallback: .systemRed
+                                        )
+                                    )
+                                    : AnyShapeStyle(.primary)
+                                )
+                        }
                     }
                 }
                 .navigationTitle("Album Art")
+                .toolbar {
+                    ToolbarItem(placement: .automatic) {
+                        Toggle(isOn: Binding(
+                            get: { pinAlbumPictures },
+                            set: { onSetPinAlbumPictures($0) }
+                        )) {
+                            Label("Pin Album Pictures", systemImage: "pin.fill")
+                        }
+                        .toggleStyle(.button)
+                        .labelStyle(.iconOnly)
+                        .disabled(isPinAlbumPicturesDisabled)
+                    }
+
+                    ToolbarItem(placement: .automatic) {
+                        Picker("", selection: Binding(
+                            get: { trackPictureScope },
+                            set: { onSetTrackPictureScope($0) }
+                        )) {
+                            ForEach(AlbumArtPictureScope.allCases) { scope in
+                                Image(systemName: scope.systemImage)
+                                    .tag(scope)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .accessibilityIdentifier("albumArt.sheet.trackPictureScopePicker")
+                    }
+
+                    ToolbarItem(placement: .automatic) {
+                        Text(scopeLabelText)
+                            .font(.caption)
+                    }
+                }
                 .navigationDestination(for: AlbumArtSlot.self) { albumArtSlot in
                     VStack(alignment: .leading, spacing: 0) {
-                        AlbumArtWellView(
-                            image: imageForSlot(albumArtSlot),
-                            dimension: 480,
-                            onDropProviders: { providers in
-                                onDropForSlot(providers, albumArtSlot)
-                            },
-                            isEnabled: isEditingEnabled && !isSaveOperationRunning,
-                            showsExternalDifferenceOverlay: showsPictureDifferenceOverlay
-                        )
-                        .disabled(!isEditingEnabled || isSaveOperationRunning)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityIdentifier("albumArt.sheet.imageWell")
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            guard isEditingEnabled, !isSaveOperationRunning else {
-                                return
-                            }
-                            onOpenPicker(albumArtSlot)
-                        }
-                        .contextMenu {
-                            let navigationLinkName = albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art"
-                            Button("Import \(navigationLinkName)...") {
+                        ZStack(alignment: .bottomLeading) {
+                            AlbumArtWellView(
+                                image: imageForSlot(albumArtSlot),
+                                dimension: 480,
+                                onDropProviders: { providers in
+                                    onDropForSlot(providers, albumArtSlot)
+                                },
+                                isEnabled: isEditingEnabled && !isSaveOperationRunning,
+                                showsExternalDifferenceOverlay: showsPictureDifferenceOverlay
+                            )
+                            .disabled(!isEditingEnabled || isSaveOperationRunning)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityIdentifier("albumArt.sheet.imageWell")
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                guard isEditingEnabled, !isSaveOperationRunning else {
+                                    return
+                                }
                                 onOpenPicker(albumArtSlot)
                             }
-                            .disabled(!isEditingEnabled || isSaveOperationRunning)
-                            Button("Export \(navigationLinkName)...") {
-                                onPrepareExport(albumArtSlot)
+                            .contextMenu {
+                                let navigationLinkName = albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art"
+                                Button("Import \(navigationLinkName)...") {
+                                    onOpenPicker(albumArtSlot)
+                                }
+                                .disabled(!isEditingEnabled || isSaveOperationRunning)
+                                Button("Export \(navigationLinkName)...") {
+                                    onPrepareExport(albumArtSlot)
+                                }
+                                .disabled(!hasImageForSlot(albumArtSlot))
                             }
-                            .disabled(!hasImageForSlot(albumArtSlot))
+                            .allowsHitTesting(isEditingEnabled && !isSaveOperationRunning)
+                            .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
+
+                            if let infoOverlayText = infoOverlayTextForSlot(albumArtSlot) {
+                                Rectangle()
+                                    .fill(
+                                        AppColorStorage.color(
+                                            from: trackDiscTotalMismatchColorRawValue,
+                                            fallback: .systemRed
+                                        )
+                                        .opacity(0.25)
+                                    )
+                                    .overlay(alignment: .bottomLeading) {
+                                        Text(infoOverlayText)
+                                            .font(.caption)
+                                            .foregroundStyle(.primary)
+                                            .backgroundStyle(.ultraThickMaterial)
+                                            .padding(10)
+                                    }
+                                    .allowsHitTesting(false)
+                                    .background(.ultraThickMaterial)
+                            }
                         }
-                        .allowsHitTesting(isEditingEnabled && !isSaveOperationRunning)
-                        .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
+
+                        if let duplicateOverlayText = duplicateOverlayTextForSlot(albumArtSlot) {
+                            Text(duplicateOverlayText)
+                                .font(.caption)
+                                .italic()
+                                .foregroundStyle(
+                                    AppColorStorage.color(
+                                        from: trackDiscTotalMismatchColorRawValue,
+                                        fallback: .systemRed
+                                    )
+                                )
+                                .padding(8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    AppColorStorage.color(
+                                        from: trackDiscTotalMismatchColorRawValue,
+                                        fallback: .systemRed
+                                    )
+                                    .opacity(0.25)
+                                )
+                                .cornerRadius(6)
+                                .padding(.top, 8)
+                        }
+
+                        if let metadataText = metadataTextForSlot(albumArtSlot) {
+                            Text(metadataText)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 8)
+                        }
 
                         Text(isSaveOperationRunning ? "disabled" : "enabled")
                             .font(.system(size: 1))
@@ -78,6 +204,76 @@ struct AlbumArtSheetView: View {
                     }
                     .padding(22)
                     .navigationTitle(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art")
+                    .toolbar {
+                        ToolbarItemGroup(placement: .automatic) {
+                            Toggle(isOn: Binding(
+                                get: { isPinTrackPictureOn(albumArtSlot) },
+                                set: { onSetPinTrackPicture(albumArtSlot, $0) }
+                            )) {
+                                Label("Pin Track Pictures", systemImage: "pin.fill")
+                            }
+                            .toggleStyle(.button)
+                            .labelStyle(.iconOnly)
+                            .disabled(isPinTrackPictureDisabled(albumArtSlot))
+
+                            Picker("", selection: Binding(
+                                get: { typePictureScopeForSlot(albumArtSlot) },
+                                set: { onSetTypePictureScope(albumArtSlot, $0) }
+                            )) {
+                                ForEach(AlbumArtPictureScope.allCases) { scope in
+                                    Image(systemName: scope.systemImage)
+                                        .tag(scope)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .accessibilityIdentifier("albumArt.sheet.typePictureScopePicker")
+
+                            Text(scopeLabelText)
+                                .font(.caption)
+
+                            Button("First Picture", systemImage: "backward.end.fill") {
+                                onFirstPicture(albumArtSlot)
+                            }
+                            .labelStyle(.iconOnly)
+                            .disabled(!canGoToPreviousPictureForSlot(albumArtSlot))
+
+                            Button("Previous Picture", systemImage: "arrowtriangle.backward.fill") {
+                                onPreviousPicture(albumArtSlot)
+                            }
+                            .labelStyle(.iconOnly)
+                            .disabled(!canGoToPreviousPictureForSlot(albumArtSlot))
+
+                            Button("Next Picture", systemImage: "arrowtriangle.forward.fill") {
+                                onNextPicture(albumArtSlot)
+                            }
+                            .labelStyle(.iconOnly)
+                            .disabled(!canGoToNextPictureForSlot(albumArtSlot))
+
+                            Button("Last Picture", systemImage: "forward.end.fill") {
+                                onLastPicture(albumArtSlot)
+                            }
+                            .labelStyle(.iconOnly)
+                            .disabled(!canGoToNextPictureForSlot(albumArtSlot))
+
+                            Button("Import Picture", systemImage: "plus") {
+                                onOpenPicker(albumArtSlot)
+                            }
+                            .labelStyle(.iconOnly)
+                            .disabled(!isEditingEnabled || isSaveOperationRunning)
+
+                            Button("Remove Picture", systemImage: "minus") {
+                                onRemovePicture(albumArtSlot)
+                            }
+                            .labelStyle(.iconOnly)
+                            .disabled(!hasImageForSlot(albumArtSlot) || isPinTrackPictureDisabled(albumArtSlot))
+
+                            Button("Export Picture", systemImage: "arrow.down") {
+                                onPrepareExport(albumArtSlot)
+                            }
+                            .labelStyle(.iconOnly)
+                            .disabled(!hasImageForSlot(albumArtSlot))
+                        }
+                    }
                 }
             }
             .controlSize(.regular)

@@ -24,7 +24,7 @@ struct FlacPictureRecord {
     let data: Data
 }
 
-struct FlacWritablePictureRecord {
+struct FlacWritablePictureRecord: Equatable {
     let type: Int
     let mimeType: String
     let description: String

@@ -54,6 +54,9 @@ private struct AppCommands: Commands {
     @FocusedValue(\.showReadOnlyFlacImporter) private var showReadOnlyFlacImporter
     @FocusedValue(\.showAddFlacImporter) private var showAddFlacImporter
     @FocusedValue(\.showAddReadOnlyFlacImporter) private var showAddReadOnlyFlacImporter
+    @FocusedValue(\.togglePictureBrowser) private var togglePictureBrowser
+    @FocusedValue(\.pictureBrowserMenuTitle) private var pictureBrowserMenuTitle
+    @FocusedValue(\.canTogglePictureBrowser) private var canTogglePictureBrowser
     @FocusedValue(\.performDefaultSave) private var performDefaultSave
     @FocusedValue(\.performSaveTagsOnly) private var performSaveTagsOnly
     @FocusedValue(\.performSavePicturesOnly) private var performSavePicturesOnly
@@ -134,6 +137,16 @@ private struct AppCommands: Commands {
                 showTomlSheet?()
             }
             .disabled(showTomlSheet == nil)
+        }
+
+        CommandGroup(before: .toolbar) {
+            Button(pictureBrowserMenuTitle ?? "Show Picture Browser") {
+                togglePictureBrowser?()
+            }
+            .keyboardShortcut("1")
+            .disabled(!(canTogglePictureBrowser ?? false))
+
+            Divider()
         }
 
         CommandGroup(replacing: .saveItem) {

@@ -72,4 +72,19 @@ enum FlacImportMapper {
 
         return picturesByType
     }
+
+    static func mapWritablePictureRecords(_ pictures: [FlacPictureRecord]) -> [FlacWritablePictureRecord] {
+        pictures.compactMap { picture in
+            guard !picture.data.isEmpty else {
+                return nil
+            }
+
+            return FlacWritablePictureRecord(
+                type: picture.type,
+                mimeType: picture.mimeType,
+                description: picture.description,
+                data: picture.data
+            )
+        }
+    }
 }
