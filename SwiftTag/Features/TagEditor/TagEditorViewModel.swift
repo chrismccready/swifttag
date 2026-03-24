@@ -1053,7 +1053,7 @@ final class TagEditorViewModel {
             trackItems[index].latestFileSnapshot = TrackFileSnapshot(
                 tags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
                 picturesByType: writablePicturesByType(from: picturesForTrack),
-                pictureRecords: picturesForTrack
+                pictureRecords: canonicalPictureRecords(picturesForTrack)
             )
             trackItems[index].externalDifferences = nil
         }
@@ -1156,7 +1156,7 @@ final class TagEditorViewModel {
                         options: tagWriteOptions
                     ),
                     picturesByType: writablePicturesByType(from: pictureRecords),
-                    pictureRecords: pictureRecords
+                    pictureRecords: canonicalPictureRecords(pictureRecords)
                 )
                 updatedTrackItems[index].externalDifferences = nil
                 didUpdateTrackItems = true
@@ -1220,7 +1220,7 @@ final class TagEditorViewModel {
         trackItems[index].latestFileSnapshot = TrackFileSnapshot(
             tags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
             picturesByType: picturesByType,
-            pictureRecords: albumArtPictures
+            pictureRecords: canonicalPictureRecords(albumArtPictures)
         )
         trackItems[index].flacPictureRecords = albumArtPictures
         trackItems[index].flacPicturesByType = picturesByType
@@ -1498,10 +1498,24 @@ final class TagEditorViewModel {
         snapshot: TrackFileSnapshot
     ) -> Bool {
         if !snapshot.pictureRecords.isEmpty || !currentPictures.isEmpty {
-            return currentPictures != snapshot.pictureRecords
+            return canonicalPictureRecords(currentPictures) != canonicalPictureRecords(snapshot.pictureRecords)
         }
 
         return writablePicturesByType(from: currentPictures) != snapshot.picturesByType
+    }
+
+    private func canonicalPictureRecords(_ pictures: [FlacWritablePictureRecord]) -> [FlacWritablePictureRecord] {
+        pictures.enumerated()
+            .sorted { lhs, rhs in
+                let lhsType = lhs.element.type == 3 ? Int.max : lhs.element.type
+                let rhsType = rhs.element.type == 3 ? Int.max : rhs.element.type
+                if lhsType != rhsType {
+                    return lhsType < rhsType
+                }
+
+                return lhs.offset < rhs.offset
+            }
+            .map(\.element)
     }
 
     private func differingFileValues(
@@ -1593,9 +1607,17 @@ final class TagEditorViewModel {
             return fallback
         }
 
-        return trackItems[index].flacPictureRecords.isEmpty
+        let track = trackItems[index]
+
+        // Imported tracks own picture state per track. An empty record array can be
+        // an intentional editor change, so do not mask it with the shared fallback.
+        if track.sourceFileURL != nil || track.latestFileSnapshot != nil {
+            return track.flacPictureRecords
+        }
+
+        return track.flacPictureRecords.isEmpty
             ? fallback
-            : trackItems[index].flacPictureRecords
+            : track.flacPictureRecords
     }
 
     private func differencesForTrack(
