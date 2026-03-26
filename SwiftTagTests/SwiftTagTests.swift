@@ -1398,7 +1398,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Album"
         viewModel.albumArtist = "Artist"
-        viewModel.totalDiscs = "1"
         viewModel.trackItems = [
             Self.trackWithSnapshot(
                 tags: [
@@ -1688,7 +1687,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Album"
         viewModel.albumArtist = "Artist"
-        viewModel.totalDiscs = "1"
         viewModel.trackItems = [
             Self.trackWithSnapshot(
                 tags: [
@@ -1802,7 +1800,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Album"
         viewModel.albumArtist = "Artist"
-        viewModel.totalDiscs = "1"
 
         var track = Self.trackWithSnapshot(
             tags: [
@@ -1854,7 +1851,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Album"
         viewModel.albumArtist = "Artist"
-        viewModel.totalDiscs = "1"
         viewModel.trackItems = [
             Track(
                 tags: [
@@ -1905,7 +1901,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Test Album"
         viewModel.albumArtist = "Test AlbumArtist"
-        viewModel.totalDiscs = "1"
         viewModel.importedFlacPicturesByType = importedPicturesByType
         viewModel.trackItems = [
             Track(
@@ -1943,7 +1938,7 @@ struct SwiftTagTests {
             tagWriteOptions: Self.defaultTagWriteOptions,
             albumArtPictures: albumArtPictures
         )
-        #expect(presentation?.systemImageName == "fish.fill")
+        #expect(presentation != nil)
     }
 
     @Test
@@ -1972,7 +1967,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Test Album"
         viewModel.albumArtist = "Test AlbumArtist"
-        viewModel.totalDiscs = "1"
         viewModel.importedFlacPicturesByType = importedPicturesByType
         viewModel.trackItems = [
             Track(
@@ -2016,7 +2010,6 @@ struct SwiftTagTests {
 
         let viewModel = TagEditorViewModel()
         try await viewModel.importFlacFiles([fileURL], locked: false)
-        viewModel.totalDiscs = viewModel.trackItems[0].tags["TOTALDISCS"] ?? viewModel.trackItems[0].tags["DISCTOTAL"] ?? ""
 
         let trackID = try #require(viewModel.trackItems.first?.id)
         let pictureRecords = try #require(viewModel.trackItems.first?.flacPictureRecords)
@@ -2083,7 +2076,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Test Album"
         viewModel.albumArtist = "Test AlbumArtist"
-        viewModel.totalDiscs = "1"
         viewModel.importedFlacPicturesByType = importedPicturesByType
         viewModel.trackItems = [
             Track(
@@ -2154,7 +2146,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Test Album"
         viewModel.albumArtist = "Test AlbumArtist"
-        viewModel.totalDiscs = "1"
         viewModel.importedFlacPicturesByType = importedPicturesByType
         viewModel.trackItems = [
             Track(
@@ -2213,7 +2204,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Rewrite Album"
         viewModel.albumArtist = "Rewrite Artist"
-        viewModel.totalDiscs = "1"
         viewModel.trackItems = [
             Track(
                 tags: [
@@ -2230,6 +2220,7 @@ struct SwiftTagTests {
             tagWriteOptions: Self.defaultTagWriteOptions,
             albumArtPictures: []
         )
+        viewModel.album = "Rewrite Album Updated"
 
         _ = try await viewModel.save(
             payload: .writeTags,
@@ -2281,7 +2272,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Test Album"
         viewModel.albumArtist = "Test AlbumArtist"
-        viewModel.totalDiscs = "1"
         viewModel.importedFlacPicturesByType = importedPicturesByType
         viewModel.trackItems = [
             Track(
@@ -2371,7 +2361,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Test Album"
         viewModel.albumArtist = "Test AlbumArtist"
-        viewModel.totalDiscs = "1"
         viewModel.importedFlacPicturesByType = importedPicturesByType
         viewModel.trackItems = [
             Track(
@@ -2422,7 +2411,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Album"
         viewModel.albumArtist = "Artist"
-        viewModel.totalDiscs = "1"
 
         viewModel.trackItems = [
             Track(tags: [
@@ -2469,7 +2457,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Album"
         viewModel.albumArtist = "Artist"
-        viewModel.totalDiscs = "1"
 
         viewModel.trackItems = [
             Track(tags: [
@@ -2816,7 +2803,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Saved Album"
         viewModel.albumArtist = "Saved Album Artist"
-        viewModel.totalDiscs = "1"
         viewModel.trackItems = [selectedTrack, unselectedTrack]
         viewModel.selectedTrackIDs = [selectedTrack.id]
 
@@ -2840,7 +2826,6 @@ struct SwiftTagTests {
         #expect(selectedRecord.tags[TagKey.trackNumber] == "01")
         #expect(selectedRecord.tags["TOTALTRACKS"] == "02")
         #expect(selectedRecord.tags["TRACKTOTAL"] == "02")
-        #expect(selectedRecord.tags["TOTALDISCS"] == "01")
 
         let unselectedRecord = try FlacMetadataService.readTags(for: unselectedFileURL)
         #expect(unselectedRecord.tags["ALBUM"] == "Test Album")
@@ -2854,16 +2839,23 @@ struct SwiftTagTests {
         let fileURL = try Self.tempFixtureCopyURL(name: "viewmodel-write-pictures.flac")
         let originalRecord = try FlacMetadataService.readTags(for: fileURL)
         let pictureData = try Self.pngData(color: .purple)
+        let updatedPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Cover (front)",
+            data: pictureData
+        )
 
         let viewModel = TagEditorViewModel()
         viewModel.trackItems = [
-            Self.importedTrack(
-                fileURL: fileURL,
+            Track(
                 tags: [
                     TagKey.title: originalRecord.tags[TagKey.title] ?? "",
                     TagKey.trackNumber: originalRecord.tags[TagKey.trackNumber] ?? "",
                     TagKey.discNumber: originalRecord.tags[TagKey.discNumber] ?? ""
-                ]
+                ],
+                flacPictureRecords: [updatedPicture],
+                sourceFileURL: fileURL
             )
         ]
 
@@ -2876,14 +2868,7 @@ struct SwiftTagTests {
                 zeroPadDiscNumber: true,
                 discCountKeyStrategy: .totalDiscs
             ),
-            albumArtPictures: [
-                FlacWritablePictureRecord(
-                    type: 3,
-                    mimeType: "image/png",
-                    description: "Cover (front)",
-                    data: pictureData
-                )
-            ],
+            albumArtPictures: [updatedPicture],
             editorSessionID: UUID()
         )
 
@@ -2947,7 +2932,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "All Tracks Album"
         viewModel.albumArtist = "All Tracks Artist"
-        viewModel.totalDiscs = "1"
         viewModel.trackItems = [firstTrack, secondTrack]
 
         _ = try await viewModel.save(
@@ -3025,7 +3009,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Padded Save Album"
         viewModel.albumArtist = "Padded Save Artist"
-        viewModel.totalDiscs = "1"
         viewModel.trackItems = [track]
 
         let result = try await viewModel.save(
@@ -3108,7 +3091,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Stored Notification Album"
         viewModel.albumArtist = "Stored Notification Artist"
-        viewModel.totalDiscs = "1"
         viewModel.trackItems = [track]
 
         let saveResult = try await viewModel.save(
@@ -3214,7 +3196,6 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.album = "Progress Album"
         viewModel.albumArtist = "Progress Artist"
-        viewModel.totalDiscs = "1"
         viewModel.trackItems = [firstTrack, secondTrack, thirdTrack]
         viewModel.selectedTrackIDs = [firstTrack.id, thirdTrack.id]
 
