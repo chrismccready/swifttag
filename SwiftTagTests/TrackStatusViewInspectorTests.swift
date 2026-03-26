@@ -375,13 +375,17 @@ struct TrackStatusViewInspectorTests {
         let sut = makeAlbumArtSheetView(
             isSaveOperationRunning: false,
             saveStatusPresentation: nil,
-            infoOverlayMessages: [
-                AlbumArtInfoOverlayMessage(
-                    messageType: .hasOutOfScopeReference,
-                    message: "Removed from selected tracks. Re-pin to add it back."
-                )
-            ],
+            infoOverlayState: AlbumArtInfoOverlayState(
+                poolItemID: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+                messages: [
+                    AlbumArtInfoOverlayMessage(
+                        messageType: .hasOutOfScopeReference,
+                        message: "Removed from selected tracks. Re-pin to add it back."
+                    )
+                ]
+            ),
             metadata: AlbumArtPictureMetadata(
+                poolItemID: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
                 description: "Front Cover",
                 poolItemIDShort: "ABC123",
                 inSlotReferenceCount: 2,
@@ -395,8 +399,8 @@ struct TrackStatusViewInspectorTests {
         )
 
         let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
-        #expect(actualView.infoOverlayMessagesForSlot(.frontCover).count == 1)
-        #expect(actualView.infoOverlayMessagesForSlot(.frontCover).first?.message == "Removed from selected tracks. Re-pin to add it back.")
+        #expect(actualView.infoOverlayStateForSlot(.frontCover)?.messages.count == 1)
+        #expect(actualView.infoOverlayStateForSlot(.frontCover)?.messages.first?.message == "Removed from selected tracks. Re-pin to add it back.")
         #expect(actualView.metadataForSlot(.frontCover)?.currentIndex == 1)
         #expect(actualView.metadataForSlot(.frontCover)?.totalCount == 3)
 
@@ -408,8 +412,9 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("AlbumArt")
             .appendingPathComponent("AlbumArtSheetView.swift")
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
-        #expect(source.contains("let infoOverlayMessages = infoOverlayMessagesForSlot(albumArtSlot)"))
-        #expect(source.contains("ForEach(Array(infoOverlayMessages.enumerated()), id: \\.offset)"))
+        #expect(source.contains("let infoOverlayState = infoOverlayStateForSlot(albumArtSlot)"))
+        #expect(source.contains("let shouldShowInfoOverlay = metadataForSlot(albumArtSlot)?.poolItemID == infoOverlayState?.poolItemID"))
+        #expect(source.contains("ForEach(Array(infoOverlayState.messages.enumerated()), id: \\.offset)"))
         #expect(source.contains("if let metadata = metadataForSlot(albumArtSlot)"))
     }
 
@@ -631,7 +636,7 @@ struct TrackStatusViewInspectorTests {
         saveStatusPresentation: SaveStatusPresentation?,
         pictureCount: Int = 1,
         pinCount: Int = 0,
-        infoOverlayMessages: [AlbumArtInfoOverlayMessage] = [],
+        infoOverlayState: AlbumArtInfoOverlayState? = nil,
         metadata: AlbumArtPictureMetadata? = nil,
         typePictureScope: AlbumArtPictureScope = .allTrackPictures,
         isTypePictureScopeDisabled: Bool = false,
@@ -665,7 +670,7 @@ struct TrackStatusViewInspectorTests {
             onFileImportResult: { _ in },
             onFileExportResult: { _ in },
             pictureCountForSlot: { _ in (pictureCount, pinCount) },
-            infoOverlayMessagesForSlot: { _ in infoOverlayMessages },
+            infoOverlayStateForSlot: { _ in infoOverlayState },
             metadataForSlot: { _ in metadata },
             hasCrossTypeDuplicateForSlot: { _ in false },
             scopeLabelText: "All Tracks",

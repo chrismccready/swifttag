@@ -23,7 +23,7 @@ struct AlbumArtSheetView: View {
     let onFileImportResult: (Result<[URL], Error>) -> Void
     let onFileExportResult: (Result<URL, Error>) -> Void
     let pictureCountForSlot: (AlbumArtSlot) -> (count: Int, pinCount: Int)
-    let infoOverlayMessagesForSlot: (AlbumArtSlot) -> [AlbumArtInfoOverlayMessage]
+    let infoOverlayStateForSlot: (AlbumArtSlot) -> AlbumArtInfoOverlayState?
     let metadataForSlot: (AlbumArtSlot) -> AlbumArtPictureMetadata?
     let hasCrossTypeDuplicateForSlot: (AlbumArtSlot) -> Bool
     let scopeLabelText: String
@@ -137,8 +137,9 @@ struct AlbumArtSheetView: View {
                             .allowsHitTesting(isEditingEnabled && !isSaveOperationRunning)
                             .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
 
-                            let infoOverlayMessages = infoOverlayMessagesForSlot(albumArtSlot)
-                            if !infoOverlayMessages.isEmpty {
+                            let infoOverlayState = infoOverlayStateForSlot(albumArtSlot)
+                            let shouldShowInfoOverlay = metadataForSlot(albumArtSlot)?.poolItemID == infoOverlayState?.poolItemID
+                            if let infoOverlayState, shouldShowInfoOverlay {
                                 Rectangle()
                                     .fill(
                                         AppColorStorage.color(
@@ -149,7 +150,7 @@ struct AlbumArtSheetView: View {
                                     )
                                     .overlay(alignment: .bottomLeading) {
                                         VStack(alignment: .leading, spacing: 4) {
-                                            ForEach(Array(infoOverlayMessages.enumerated()), id: \.offset) { _, overlayMessage in
+                                            ForEach(Array(infoOverlayState.messages.enumerated()), id: \.offset) { _, overlayMessage in
                                                 Text(overlayMessage.message)
                                                     .font(.caption)
                                                     .foregroundStyle(.primary)

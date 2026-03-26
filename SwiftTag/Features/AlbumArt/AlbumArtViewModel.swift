@@ -46,6 +46,7 @@ struct AlbumArtInfoOverlayState: Equatable {
 }
 
 struct AlbumArtPictureMetadata: Equatable {
+    let poolItemID: UUID
     let description: String
     let poolItemIDShort: String
     let inSlotReferenceCount: Int
@@ -195,36 +196,37 @@ final class AlbumArtViewModel {
     }
 
     func hasCrossTypeDuplicate(for slot: AlbumArtSlot) -> Bool {
-        for trackID in allTrackIDs {
-            let refs = trackReferencesByTrackID[trackID, default: []]
-            let slotRefs = refs.filter { $0.slot == slot }
-            for slotRef in slotRefs {
-                if refs.contains(where: { $0.poolItemID == slotRef.poolItemID && $0.slot != slot }) {
-                    return true
-                }
-            }
+        let visibleTrackIDs = visibleTrackIDs(for: typePictureScope(for: slot))
+        let slotPoolItemIDs = Set(
+            references(for: slot, trackIDs: visibleTrackIDs).map(\.poolItemID)
+        )
+
+        guard !slotPoolItemIDs.isEmpty else {
+            return false
         }
-        return false
+
+        return trackReferencesByTrackID
+            .filter { visibleTrackIDs.contains($0.key) }
+            .values
+            .joined()
+            .contains { reference in
+                reference.slot != slot && slotPoolItemIDs.contains(reference.poolItemID)
+            }
     }
 
-    private func duplicateTwinNames(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> [String] {
+    private func duplicateTwinNames(for slot: AlbumArtSlot, poolItemID: UUID, albumArtTypes: [AlbumArtType]) -> [String] {
         let slotNameByValue = Dictionary(uniqueKeysWithValues: albumArtTypes.map { ($0.slot, $0.navigationLinkName) })
-        var twinNames: Set<String> = []
+        let visibleTrackIDs = visibleTrackIDs(for: typePictureScope(for: slot))
 
-        for reference in allReferences(for: slot) {
-            for trackID in allTrackIDs {
-                let refs = trackReferencesByTrackID[trackID, default: []]
-                guard refs.contains(where: { $0.slot == slot && $0.poolItemID == reference.poolItemID }) else {
-                    continue
-                }
-
-                for twin in refs where twin.poolItemID == reference.poolItemID && twin.slot != slot {
-                    twinNames.insert(slotNameByValue[twin.slot] ?? "Other")
-                }
-            }
-        }
-
-        return twinNames.sorted()
+        return Set(
+            trackReferencesByTrackID
+                .filter { visibleTrackIDs.contains($0.key) }
+                .values
+                .joined()
+                .filter { $0.poolItemID == poolItemID && $0.slot != slot }
+                .map { slotNameByValue[$0.slot] ?? "Other" }
+        )
+        .sorted()
     }
 
     func currentPictureMetadata(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> AlbumArtPictureMetadata? {
@@ -252,6 +254,7 @@ final class AlbumArtViewModel {
         let currentIndex = min(currentReferenceIndexBySlot[slot, default: 0], max(typeImageCount - 1, 0)) + 1
 
         return AlbumArtPictureMetadata(
+            poolItemID: reference.poolItemID,
             description: reference.description,
             poolItemIDShort: reference.poolItemIDShort(),
             inSlotReferenceCount: refCount.inSlot,
@@ -266,6 +269,10 @@ final class AlbumArtViewModel {
 
     func infoOverlayMessages(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> [AlbumArtInfoOverlayMessage] {
         resolvedInfoOverlayState(for: slot, albumArtTypes: albumArtTypes)?.messages ?? []
+    }
+
+    func infoOverlayState(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> AlbumArtInfoOverlayState? {
+        resolvedInfoOverlayState(for: slot, albumArtTypes: albumArtTypes)
     }
 
     func scopeLabelText() -> String {
@@ -1019,14 +1026,18 @@ final class AlbumArtViewModel {
 
     private func resolvedInfoOverlayState(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> AlbumArtInfoOverlayState? {
         var messages: [AlbumArtInfoOverlayMessage] = []
-        var poolItemID = currentReference(for: slot)?.poolItemID
+        let currentPoolItemID = currentReference(for: slot)?.poolItemID
+        var resolvedPoolItemID: UUID?
 
-        let duplicateTwinNames = duplicateTwinNames(for: slot, albumArtTypes: albumArtTypes)
-        if !duplicateTwinNames.isEmpty {
+        let duplicateTwinNamesList = currentPoolItemID.map {
+            duplicateTwinNames(for: slot, poolItemID: $0, albumArtTypes: albumArtTypes)
+        } ?? []
+        if !duplicateTwinNamesList.isEmpty {
+            resolvedPoolItemID = currentPoolItemID
             messages.append(
                 AlbumArtInfoOverlayMessage(
                     messageType: .hasDuplicateInOtherSlot,
-                    message: "This picture is duplicated across types. Twin type(s): \(duplicateTwinNames.joined(separator: ", "))."
+                    message: "This picture is duplicated across types. Twin type(s): \(duplicateTwinNamesList.joined(separator: ", "))."
                 )
             )
         }
@@ -1037,21 +1048,19 @@ final class AlbumArtViewModel {
                 case .hasOutOfScopeReference:
                     return hasOutOfScopeReference(for: slot, poolItemID: storedState.poolItemID)
                 case .hasDuplicateInOtherSlot:
-                    return !duplicateTwinNames.isEmpty
+                    return !duplicateTwinNamesList.isEmpty
                 }
             }
 
             if !activeStoredMessages.isEmpty {
-                if poolItemID == nil {
-                    poolItemID = storedState.poolItemID
-                }
+                resolvedPoolItemID = storedState.poolItemID
                 messages.append(contentsOf: activeStoredMessages.filter { $0.messageType != .hasDuplicateInOtherSlot })
             } else if storedState.messages.contains(where: { $0.messageType == .hasOutOfScopeReference }) {
                 infoOverlayStateBySlot.removeValue(forKey: slot)
             }
         }
 
-        guard !messages.isEmpty, let resolvedPoolItemID = poolItemID else {
+        guard !messages.isEmpty, let resolvedPoolItemID else {
             return nil
         }
 

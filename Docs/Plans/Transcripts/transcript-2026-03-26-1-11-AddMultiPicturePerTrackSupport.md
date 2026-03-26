@@ -158,4 +158,105 @@ Verification:
 
 [ 2026-03-26T16:24:39Z (2m 17s since Assistant start) ]
 
+## User 2026-03-26T16:51:21Z (28m 59s since previous Assistant start) 
+
+- [ ] Update infoOverlayMessagesForSlot so that the poolItemId is returned and the AlbumArtSheetView can choose when to display with more granularity. And update AlbumArtSheetView to on apply overlay on specifically affected picture rather than the whole slot.
+
+## Assistant 2026-03-26T16:51:21Z (0s since User start)
+
+I’m updating the album art overlay behavior so apply feedback can target the affected picture instead of the entire slot. I’ll inspect the album art view/model flow first, then patch the minimal set of files and verify the impacted Swift files.
+
+I found the current shape: the view only gets [​Album​Art​Info​Overlay​Message], while the view model already tracks pool​Item​ID in Album​Art​Info​Overlay​State. I’m reading the resolver and the affected tests now so I can change the API without widening the edit beyond album art and its assertions.
+
+I’ve narrowed the behavioral gap: duplicate overlays are currently slot-wide because the resolver builds duplicate messages from all references in the slot, then binds them to the currently displayed picture. I’m patching that so the overlay state is picture-specific and the sheet consumes the full overlay state instead of only the messages.
+
+I’m making two related edits before validation: Album​Art​Sheet​View will take overlay state instead of raw messages, and Album​Art​View​Model will resolve duplicate warnings against the current picture only. I’m also adding the full pool​Item​ID to picture metadata so the sheet can suppress overlays when the user is looking at a different image in the same slot.
+
+The first patch missed the exact current context, so I’m re-reading the affected spans and applying a tighter diff. The intended change set is unchanged.
+
+I’ve finished the app-side edits. I’m updating the test fixtures and assertions to reflect the new overlay-state API and the added pool​Item​ID in metadata, then I’ll run targeted diagnostics/build validation.
+
+The source and tests are patched. I’m running Xcode diagnostics on the touched Swift files first to catch type mismatches quickly, then a project build if those come back clean.
+
+Validation is clean. I’ve got zero live diagnostics on the changed files and a successful full project build; I’m pulling a quick diff summary and UTC timestamp for the handoff.
+
+The overlay logic is now picture-specific instead of slot-wide.
+
+I changed AlbumArtViewModel.swift so duplicate warnings resolve against the current picture’s pool​Item​ID, added a public info​Overlay​State(for:), and included the full pool​Item​ID in Album​Art​Picture​Metadata. In AlbumArtSheetView.swift, the sheet now receives Album​Art​Info​Overlay​State? via info​Overlay​State​For​Slot and only shows the overlay when the displayed picture’s pool​Item​ID matches the overlay target. ContentView.swift was updated to pass that state through.
+
+I also updated the affected tests in TrackStatusViewInspectorTests.swift and added coverage in SwiftTagTests.swift to verify that a cross-type duplicate overlay disappears when navigating to a different, unaffected picture in the same slot.
+
+Validation: Xcode live diagnostics on the touched files reported no issues, and Build​Project completed successfully.
+
+[ 2026-03-26T16:57:24Z (6m 3s since Assistant start) ]
+
+## User 2026-03-26T17:23:55Z (32m 34s since previous Assistant start) 
+
+The duplicate across slot is not being found. Maybe the issue has to do with newly added pictures not in the pool before check?
+
+## Assistant 2026-03-26T17:23:55Z (0s since User start)
+
+I’m checking the duplicate-resolution path against how new pictures are inserted into the pool and references. The likely failure mode is that the slot-level duplicate lookup depends on track references that haven’t been synchronized the way imported/dropped pictures are represented.
+
+I found the insertion path. New images are upserted into picture​Pool before references are attached, so the pool itself is not the weak point. The duplicate lookup is more likely missing because it only sees duplicates once there is a same-track cross-slot reference, and that needs to be validated against the drop/import flow that adds references asynchronously.
+
+The duplicate check is not gated on the pool; it’s gated on track​References​By​Track​ID. If a reused picture is added into a second slot, the detection should work immediately after apply​Dropped​Image because references are appended before sync​Legacy​Slot​Images. I’m adding a focused regression test around “drop existing picture into a different slot on the same track” to reproduce the miss, then I’ll fix the resolver based on that failure mode.
+
+I reproduced the exact path you were worried about and it does not point to the pool.
+
+apply​Dropped​Image upserts the image into picture​Pool before any duplicate logic relies on it in AlbumArtViewModel.swift. The cross-slot detection itself only depends on track​References​By​Track​ID, and those references are appended before sync​Legacy​Slot​Images in the same method. I added a regression test for “drop an existing picture into a different slot on the same track and expect the cross-type duplicate overlay” in SwiftTagTests.swift, and it passes along with the other duplicate-overlay tests.
+
+So the pool timing is not the issue. The more likely causes are:
+- The duplicate exists across different tracks, not within the same track. The current logic intentionally treats “cross-slot duplicate” as same-track reuse.
+- The picture is only present in out-of-scope tracks relative to the current slot scope/selection, so the currently presented picture is not the one you expect.
+- The mismatch is in the user expectation about which slot should show the overlay after the last change.
+
+I did not change app logic in this pass; I only added the targeted regression test and confirmed the existing code handles newly added/reused pictures across slots as written.
+
+Validation: targeted tests passed for:
+- Swift​Tag​Tests​/album​Art​View​Model​Drop​Existing​Picture​Into​Other​Slot​Shows​Cross​Type​Duplicate​Overlay()
+- Swift​Tag​Tests​/album​Art​View​Model​Cross​Type​Duplicate​Overlay​Tracks​Current​Picture()
+- Swift​Tag​Tests​/album​Art​View​Model​Cross​Type​Duplicate​Warning​Uses​Twin​Type​Names()
+
+This does not look like a pool timing bug.
+
+apply​Dropped​Image inserts the image into picture​Pool first in AlbumArtViewModel.swift, then adds track​References​By​Track​ID, and the duplicate lookup uses those references rather than the pool itself. I added a focused regression test in SwiftTagTests.swift for “drop an existing picture into another slot on the same track and expect the cross-slot duplicate overlay,” and it passes.
+
+So the likely issue is elsewhere:
+- the duplicate is across different tracks, not within the same track
+- the current slot scope/selection means you are not viewing the expected picture
+- the expected slot for showing the warning differs from the current implementation
+
+I only added the test in this pass. Targeted duplicate-overlay tests all passed.
+
+[ 2026-03-26T17:25:25Z (1m 30s since Assistant start) ]
+
+## User 2026-03-26T17:48:39Z (24m 44s since previous Assistant start) 
+
+I see, let’s update the code to detect duplicates if they exist across different tracks as well. The duplicate check should be per scope selection (selectedTrackPictures/allTrackPictures) as well. So if there is a duplicate that is not in the selected tracks, but is in one or more tracks outside of selection and the allTrackPictures scope is selected the overlay should be seen. Ask questions if not clear.
+
+## Assistant 2026-03-26T17:48:39Z (0s since User start)
+
+I’m updating duplicate detection semantics so they’re scope-aware and can match across different tracks, not just within the same track. I’ll change the resolver in Album​Art​View​Model, then add targeted tests for selected-scope vs all-tracks-scope behavior before rebuilding.
+
+I’ve got the change shape: both the list-level duplicate indicator and the overlay resolver need to use the slot’s active picture scope, and the actual twin lookup needs to be based on “same pool​Item​ID exists in another slot anywhere within the visible tracks,” not “same track contains both slots.” I’m patching that now and adding scope-specific tests.
+
+The logic change is in place. I’ve made duplicate detection scope-aware and cross-track-aware, and I’m running live diagnostics plus targeted tests for the new selected-scope vs all-tracks cases before building.
+
+The code is fine; the new tests just used NSColor values that aren’t available here. I’m swapping those to existing colors and then rerunning the targeted tests.
+
+The scope-aware duplicate behavior is verified. I’m grabbing the final diff summary and UTC timestamp for handoff.
+
+I updated duplicate detection in AlbumArtViewModel.swift so it now works across different tracks and respects the slot’s current scope. has​Cross​Type​Duplicate(for:) and the overlay twin-name lookup now evaluate only the tracks visible under selected​Track​Pictures or all​Track​Pictures, and they treat a duplicate as “same pool​Item​ID exists in another slot anywhere in that visible scope.”
+
+I added targeted coverage in SwiftTagTests.swift for:
+- duplicate across different tracks only appearing when all​Track​Pictures is active
+- no overlay when the duplicate exists only outside the selected track scope
+- existing same-track cross-slot duplicate behavior still working
+- overlay staying tied to the current picture
+
+Validation passed: 5 targeted tests passed and the project build succeeded.
+
+[ 2026-03-26T17:50:47Z (2m 8s since Assistant start) ]
+
 End of Transcription.

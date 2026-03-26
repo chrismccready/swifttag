@@ -686,8 +686,8 @@ struct ContentView: View {
             pictureCountForSlot: { slot in
                 albumArtViewModel.uniquePictureCount(for: slot)
             },
-            infoOverlayMessagesForSlot: { slot in
-                albumArtViewModel.infoOverlayMessages(for: slot, albumArtTypes: albumArtTypes)
+            infoOverlayStateForSlot: { slot in
+                albumArtViewModel.infoOverlayState(for: slot, albumArtTypes: albumArtTypes)
             },
             metadataForSlot: { slot in
                 albumArtViewModel.currentPictureMetadata(for: slot, albumArtTypes: albumArtTypes)

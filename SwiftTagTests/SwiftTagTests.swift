@@ -868,6 +868,146 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func albumArtViewModelCrossTypeDuplicateOverlayTracksCurrentPicture() throws {
+        let duplicateData = try Self.pngData(color: .cyan)
+        let uniqueData = try Self.pngData(color: .orange)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front Duplicate", data: duplicateData),
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front Unique", data: uniqueData),
+                FlacWritablePictureRecord(type: 4, mimeType: "image/png", description: "Back Duplicate", data: duplicateData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let firstOverlayState = viewModel.infoOverlayState(for: .frontCover, albumArtTypes: albumArtTypes)
+        #expect(firstOverlayState?.messages.contains(where: { $0.messageType == .hasDuplicateInOtherSlot }) == true)
+
+        viewModel.goToNextPicture(for: .frontCover, albumArtTypes: albumArtTypes)
+
+        let secondOverlayState = viewModel.infoOverlayState(for: .frontCover, albumArtTypes: albumArtTypes)
+        #expect(secondOverlayState == nil)
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelDropExistingPictureIntoOtherSlotShowsCrossTypeDuplicateOverlay() async throws {
+        let sharedData = try Self.pngData(color: .blue)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: sharedData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let duplicateURL = try Self.tempPNGFileURL(name: "album-art-cross-slot-duplicate", color: .blue)
+        guard let provider = NSItemProvider(contentsOf: duplicateURL) else {
+            Issue.record("Failed to create item provider for cross-slot duplicate picture test")
+            return
+        }
+
+        #expect(viewModel.handleAlbumArtDrop([provider], for: .backCover, albumArtTypes: albumArtTypes))
+        let didSelectDroppedPicture = await Self.waitUntil {
+            viewModel.albumArtImages[.backCover]?.data == sharedData
+        }
+
+        #expect(didSelectDroppedPicture)
+        let overlayState = viewModel.infoOverlayState(for: .backCover, albumArtTypes: albumArtTypes)
+        #expect(overlayState?.messages.contains(where: { $0.messageType == .hasDuplicateInOtherSlot }) == true)
+        #expect(overlayState?.messages.first?.message.contains("Front Cover") == true)
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelCrossTypeDuplicateUsesSelectedTrackScope() throws {
+        let sharedData = try Self.pngData(color: .systemTeal)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let selectedTrack = Track(
+            tags: [TagKey.title: "Selected"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: sharedData)
+            ]
+        )
+        let otherTrack = Track(
+            tags: [TagKey.title: "Other"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 4, mimeType: "image/png", description: "Back", data: sharedData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(
+            trackItems: [selectedTrack, otherTrack],
+            selectedTrackIDs: [selectedTrack.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        #expect(!viewModel.hasCrossTypeDuplicate(for: .frontCover))
+        #expect(viewModel.infoOverlayState(for: .frontCover, albumArtTypes: albumArtTypes) == nil)
+
+        viewModel.setTypePictureScope(.allTrackPictures, for: .frontCover, albumArtTypes: albumArtTypes)
+
+        #expect(viewModel.hasCrossTypeDuplicate(for: .frontCover))
+        let overlayState = viewModel.infoOverlayState(for: .frontCover, albumArtTypes: albumArtTypes)
+        #expect(overlayState?.messages.contains(where: { $0.messageType == .hasDuplicateInOtherSlot }) == true)
+        #expect(overlayState?.messages.first?.message.contains("Back Cover") == true)
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelCrossTypeDuplicateAcrossDifferentTracksUsesAllTrackScope() throws {
+        let sharedData = try Self.pngData(color: .systemIndigo)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let firstTrack = Track(
+            tags: [TagKey.title: "A"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: sharedData)
+            ]
+        )
+        let secondTrack = Track(
+            tags: [TagKey.title: "B"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 4, mimeType: "image/png", description: "Back", data: sharedData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(
+            trackItems: [firstTrack, secondTrack],
+            selectedTrackIDs: [],
+            albumArtTypes: albumArtTypes
+        )
+
+        viewModel.setTypePictureScope(.allTrackPictures, for: .frontCover, albumArtTypes: albumArtTypes)
+
+        #expect(viewModel.hasCrossTypeDuplicate(for: .frontCover))
+        let overlayState = viewModel.infoOverlayState(for: .frontCover, albumArtTypes: albumArtTypes)
+        #expect(overlayState?.messages.contains(where: { $0.messageType == .hasDuplicateInOtherSlot }) == true)
+        #expect(overlayState?.messages.first?.message.contains("Back Cover") == true)
+    }
+
+    @Test
+    @MainActor
     func albumArtViewModelOutOfScopeOverlayClearsAfterRepin() throws {
         let sharedData = try Self.pngData(color: .purple)
         let albumArtTypes: [AlbumArtType] = [
