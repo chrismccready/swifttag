@@ -416,7 +416,59 @@ struct TrackStatusViewInspectorTests {
         #expect(source.contains("let overlayMessages = filteredInfoOverlayMessages(from: infoOverlayState)"))
         #expect(source.contains("let shouldShowInfoOverlay = metadataForSlot(albumArtSlot)?.poolItemID == infoOverlayState?.poolItemID"))
         #expect(source.contains("ForEach(Array(overlayMessages.enumerated()), id: \\.offset)"))
+        #expect(source.contains("Button(\"Copy \\(navigationLinkName)\")"))
+        #expect(source.contains("Button(\"Paste \\(navigationLinkName)\")"))
+        #expect(source.contains("allowedContentTypes: [.image]"))
         #expect(source.contains("if let metadata = metadataForSlot(albumArtSlot)"))
+    }
+
+    @Test
+    func albumArtWellViewDeclaresCopyAndPasteCommandsInSource() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtWellView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains(".onCopyCommand"))
+        #expect(source.contains(".onPasteCommand(of: Self.supportedPasteContentTypes)"))
+        #expect(source.contains("static func pasteProvidersFromPasteboard() -> [NSItemProvider]"))
+        #expect(source.contains("utType.conforms(to: .image)"))
+        #expect(source.contains("itemProvider(for: data, typeIdentifier: typeIdentifier)"))
+        #expect(source.contains(".focusable(isEnabled, interactions: .activate)"))
+    }
+
+    @Test
+    func albumArtViewModelPrefersOriginalImageTypeIdentifierForDropInSource() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtViewModel.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains("let preferredTypeIdentifier = preferredImageTypeIdentifier(for: imageProvider) ?? UTType.image.identifier"))
+        #expect(source.contains("type: UTType(preferredTypeIdentifier) ?? self.albumArtType(for: data)"))
+        #expect(source.contains("private func preferredImageTypeIdentifier(for provider: NSItemProvider) -> String?"))
+    }
+
+    @Test
+    func flacMetadataServiceNormalizesUnsupportedPicturesToPNGInSource() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("FlacMetadataService.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains("let normalizedPictures = try normalizePicturesForFlacWrite(pictures)"))
+        #expect(source.contains("private static func normalizePicturesForFlacWrite"))
+        #expect(source.contains("mimeType: \"image/png\""))
     }
 
     @Test
@@ -673,6 +725,8 @@ struct TrackStatusViewInspectorTests {
             onDropForSlot: { _, _ in false },
             onFileImportResult: { _ in },
             onFileExportResult: { _ in },
+            itemProvidersForSlot: { _ in [] },
+            onCopyPictureForSlot: { _ in },
             pictureCountForSlot: { _ in (pictureCount, pinCount) },
             infoOverlayStateForSlot: { _ in infoOverlayState },
             metadataForSlot: { _ in metadata },

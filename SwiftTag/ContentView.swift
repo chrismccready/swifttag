@@ -683,6 +683,12 @@ struct ContentView: View {
                 syncAlbumArtContext()
             },
             onFileExportResult: albumArtViewModel.handleAlbumArtFileExportResult(_:),
+            itemProvidersForSlot: { slot in
+                albumArtViewModel.currentPictureItemProviders(for: slot)
+            },
+            onCopyPictureForSlot: { slot in
+                albumArtViewModel.copyCurrentPictureToPasteboard(for: slot)
+            },
             pictureCountForSlot: { slot in
                 albumArtViewModel.uniquePictureCount(for: slot)
             },

@@ -1,5 +1,7 @@
 import Darwin
+import AppKit
 import Foundation
+import UniformTypeIdentifiers
 
 enum FlacMetadataServiceError: LocalizedError {
     case bridgeFailed(message: String)
@@ -134,7 +136,8 @@ enum FlacMetadataService {
         do {
             var usedTempRewrite = false
             try withWriteTagPairs(tags) { tagPairs in
-                try withWritePictures(pictures) { flacPictures in
+                let normalizedPictures = try normalizePicturesForFlacWrite(pictures)
+                try withWritePictures(normalizedPictures) { flacPictures in
                     var usedTempFile: UInt8 = 0
                     let status: Int32 = fileURL.path.withCString { filePath in
                         tempURL.path.withCString { tempFilePath in
@@ -169,6 +172,33 @@ enum FlacMetadataService {
         } catch {
             try? fileManager.removeItem(at: tempURL)
             throw error
+        }
+    }
+
+    private static func normalizePicturesForFlacWrite(
+        _ pictures: [FlacWritablePictureRecord]
+    ) throws -> [FlacWritablePictureRecord] {
+        try pictures.map { picture in
+            let type = UTType(mimeType: picture.mimeType) ?? UTType(filenameExtension: picture.mimeType)
+            if type?.conforms(to: .jpeg) == true || type?.conforms(to: .png) == true {
+                return picture
+            }
+
+            guard let image = NSImage(data: picture.data),
+                  let tiffData = image.tiffRepresentation,
+                  let bitmapRepresentation = NSBitmapImageRep(data: tiffData),
+                  let pngData = bitmapRepresentation.representation(using: .png, properties: [:]) else {
+                throw FlacMetadataServiceError.bridgeFailed(
+                    message: "Unsupported picture format could not be converted to PNG before FLAC write."
+                )
+            }
+
+            return FlacWritablePictureRecord(
+                type: picture.type,
+                mimeType: "image/png",
+                description: picture.description,
+                data: pngData
+            )
         }
     }
 

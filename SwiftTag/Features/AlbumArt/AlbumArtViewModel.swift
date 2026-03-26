@@ -1,6 +1,7 @@
 import AppKit
 import CryptoKit
 import ImageIO
+import Foundation
 import Observation
 import SwiftUI
 import UniformTypeIdentifiers
@@ -453,6 +454,33 @@ final class AlbumArtViewModel {
         isAlbumArtFileExporterPresented = true
     }
 
+    func currentPictureItemProviders(for slot: AlbumArtSlot) -> [NSItemProvider] {
+        guard let currentReference = currentReference(for: slot),
+              let poolItem = picturePool[currentReference.poolItemID] else {
+            return []
+        }
+
+        let contentType = utType(forMimeType: currentReference.mimeType)
+        let provider = NSItemProvider()
+        provider.registerDataRepresentation(forTypeIdentifier: contentType.identifier, visibility: .all) { completion in
+            completion(poolItem.data, nil)
+            return nil
+        }
+        return [provider]
+    }
+
+    func copyCurrentPictureToPasteboard(for slot: AlbumArtSlot) {
+        guard let currentReference = currentReference(for: slot),
+              let poolItem = picturePool[currentReference.poolItemID] else {
+            return
+        }
+
+        let contentType = utType(forMimeType: currentReference.mimeType)
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setData(poolItem.data, forType: NSPasteboard.PasteboardType(contentType.identifier))
+    }
+
     func handleAlbumArtFileExportResult(_ result: Result<URL, Error>) {
         albumArtExportDocument = nil
     }
@@ -464,7 +492,8 @@ final class AlbumArtViewModel {
         didUpdate: @escaping () -> Void = {}
     ) -> Bool {
         if let imageProvider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.image.identifier) }) {
-            imageProvider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+            let preferredTypeIdentifier = preferredImageTypeIdentifier(for: imageProvider) ?? UTType.image.identifier
+            imageProvider.loadDataRepresentation(forTypeIdentifier: preferredTypeIdentifier) { data, _ in
                 guard let data, let image = NSImage(data: data) else {
                     return
                 }
@@ -473,7 +502,7 @@ final class AlbumArtViewModel {
                     self.applyDroppedImage(
                         image: image,
                         data: data,
-                        type: self.albumArtType(for: data),
+                        type: UTType(preferredTypeIdentifier) ?? self.albumArtType(for: data),
                         for: albumArtSlot,
                         albumArtTypes: albumArtTypes
                     )
@@ -1255,6 +1284,15 @@ final class AlbumArtViewModel {
         }
 
         return .png
+    }
+
+    private func preferredImageTypeIdentifier(for provider: NSItemProvider) -> String? {
+        provider.registeredTypeIdentifiers.first { typeIdentifier in
+            guard let type = UTType(typeIdentifier) else {
+                return false
+            }
+            return type.conforms(to: .image)
+        }
     }
 
     nonisolated private static func droppedFileURL(from item: NSSecureCoding?) -> URL? {

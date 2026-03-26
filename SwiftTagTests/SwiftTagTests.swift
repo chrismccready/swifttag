@@ -2891,6 +2891,40 @@ struct SwiftTagTests {
     }
 
     @Test
+    func flacMetadataServiceConvertsNonJPEGPNGPictureToPNGBeforeWrite() throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "write-picture-tiff-convert.flac")
+        let image = NSImage(size: NSSize(width: 2, height: 2))
+        image.lockFocus()
+        NSColor.systemTeal.setFill()
+        NSBezierPath(rect: NSRect(x: 0, y: 0, width: 2, height: 2)).fill()
+        image.unlockFocus()
+
+        guard let tiffData = image.tiffRepresentation else {
+            Issue.record("Failed to create TIFF test data")
+            return
+        }
+
+        _ = try FlacMetadataService.writeMetadata(
+            pictures: [
+                FlacWritablePictureRecord(
+                    type: 3,
+                    mimeType: "image/tiff",
+                    description: "Cover (front)",
+                    data: tiffData
+                )
+            ],
+            to: fileURL,
+            writeTags: false,
+            writePictures: true
+        )
+
+        let rewrittenRecord = try FlacMetadataService.readTags(for: fileURL)
+        #expect(rewrittenRecord.pictures.count == 1)
+        #expect(rewrittenRecord.pictures.first?.mimeType == "image/png")
+        #expect(NSImage(data: try #require(rewrittenRecord.pictures.first?.data)) != nil)
+    }
+
+    @Test
     func flacMetadataServiceRejectsMultipleTypeOnePictures() throws {
         let fileURL = try Self.tempFixtureCopyURL(name: "write-type1-multiple.flac")
         let firstIcon = try Self.pngData(color: .black)
