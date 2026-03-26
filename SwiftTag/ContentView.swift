@@ -695,19 +695,6 @@ struct ContentView: View {
             hasCrossTypeDuplicateForSlot: { slot in
                 albumArtViewModel.hasCrossTypeDuplicate(for: slot)
             },
-            pinAlbumPictures: albumArtViewModel.isPinAlbumPicturesOn(),
-            isPinAlbumPicturesDisabled: albumArtViewModel.isPinAlbumPicturesDisabled() || isSaveOperationRunning,
-            onSetPinAlbumPictures: { isOn in
-                albumArtViewModel.setAlbumPicturesPinned(isOn, albumArtTypes: albumArtTypes)
-                syncTrackPictureRecordsFromAlbumArt()
-                syncAlbumArtContext()
-            },
-            trackPictureScope: albumArtViewModel.trackPictureScope,
-            onSetTrackPictureScope: { scope in
-                albumArtViewModel.setTrackPictureScope(scope, albumArtTypes: albumArtTypes)
-                syncTrackPictureRecordsFromAlbumArt()
-                syncAlbumArtContext()
-            },
             scopeLabelText: albumArtViewModel.scopeLabelText(),
             typePictureScopeForSlot: { slot in
                 albumArtViewModel.typePictureScope(for: slot)
@@ -726,10 +713,12 @@ struct ContentView: View {
                 syncAlbumArtContext()
             },
             isPinTrackPictureDisabled: { slot in
-                albumArtViewModel.isTrackPinForced(for: slot) ||
+                albumArtViewModel.isTrackPinControlDisabled(for: slot) ||
                     !albumArtViewModel.hasImage(for: slot) ||
-                    albumArtViewModel.hasLockedTrackInActiveSelection() ||
                     isSaveOperationRunning
+            },
+            isTypePictureScopeDisabled: { slot in
+                albumArtViewModel.isTypePictureScopeControlDisabled(for: slot) || isSaveOperationRunning
             },
             canNavigateForSlot: { slot in
                 albumArtViewModel.canNavigatePictures(for: slot)

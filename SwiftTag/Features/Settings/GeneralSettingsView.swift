@@ -43,6 +43,7 @@ struct GeneralSettingsView: View {
                 .padding(.top, 1)
             }
             .pickerStyle(.segmented)
+            .controlSize(.regular)
         }
         .formStyle(.grouped)
     }

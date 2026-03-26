@@ -26,17 +26,13 @@ struct AlbumArtSheetView: View {
     let infoOverlayMessagesForSlot: (AlbumArtSlot) -> [AlbumArtInfoOverlayMessage]
     let metadataTextForSlot: (AlbumArtSlot) -> String?
     let hasCrossTypeDuplicateForSlot: (AlbumArtSlot) -> Bool
-    let pinAlbumPictures: Bool
-    let isPinAlbumPicturesDisabled: Bool
-    let onSetPinAlbumPictures: (Bool) -> Void
-    let trackPictureScope: AlbumArtPictureScope
-    let onSetTrackPictureScope: (AlbumArtPictureScope) -> Void
     let scopeLabelText: String
     let typePictureScopeForSlot: (AlbumArtSlot) -> AlbumArtPictureScope
     let onSetTypePictureScope: (AlbumArtSlot, AlbumArtPictureScope) -> Void
     let isPinTrackPictureOn: (AlbumArtSlot) -> Bool
     let onSetPinTrackPicture: (AlbumArtSlot, Bool) -> Void
     let isPinTrackPictureDisabled: (AlbumArtSlot) -> Bool
+    let isTypePictureScopeDisabled: (AlbumArtSlot) -> Bool
     let canNavigateForSlot: (AlbumArtSlot) -> Bool
     let canGoToPreviousPictureForSlot: (AlbumArtSlot) -> Bool
     let canGoToNextPictureForSlot: (AlbumArtSlot) -> Bool
@@ -77,32 +73,6 @@ struct AlbumArtSheetView: View {
                 }
                 .navigationTitle("Album Art")
                 .toolbar {
-                    ToolbarItem(placement: .automatic) {
-                        Toggle(isOn: Binding(
-                            get: { pinAlbumPictures },
-                            set: { onSetPinAlbumPictures($0) }
-                        )) {
-                            Label("Pin Album Pictures", systemImage: "pin.fill")
-                        }
-                        .toggleStyle(.button)
-                        .labelStyle(.iconOnly)
-                        .disabled(isPinAlbumPicturesDisabled)
-                    }
-
-                    ToolbarItem(placement: .automatic) {
-                        Picker("", selection: Binding(
-                            get: { trackPictureScope },
-                            set: { onSetTrackPictureScope($0) }
-                        )) {
-                            ForEach(AlbumArtPictureScope.allCases) { scope in
-                                Image(systemName: scope.systemImage)
-                                    .tag(scope)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .accessibilityIdentifier("albumArt.sheet.trackPictureScopePicker")
-                    }
-
                     ToolbarItem(placement: .automatic) {
                         Text(scopeLabelText)
                             .font(.caption)
@@ -188,72 +158,97 @@ struct AlbumArtSheetView: View {
                     .navigationTitle(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art")
                     .toolbar {
                         ToolbarItemGroup(placement: .automatic) {
-                            Toggle(isOn: Binding(
-                                get: { isPinTrackPictureOn(albumArtSlot) },
-                                set: { onSetPinTrackPicture(albumArtSlot, $0) }
-                            )) {
-                                Label("Pin Track Pictures", systemImage: "pin.fill")
-                            }
-                            .toggleStyle(.button)
-                            .labelStyle(.iconOnly)
-                            .disabled(isPinTrackPictureDisabled(albumArtSlot))
-
-                            Picker("", selection: Binding(
-                                get: { typePictureScopeForSlot(albumArtSlot) },
-                                set: { onSetTypePictureScope(albumArtSlot, $0) }
-                            )) {
-                                ForEach(AlbumArtPictureScope.allCases) { scope in
-                                    Image(systemName: scope.systemImage)
-                                        .tag(scope)
+                                Toggle(isOn: Binding(
+                                    get: { isPinTrackPictureOn(albumArtSlot) },
+                                    set: { onSetPinTrackPicture(albumArtSlot, $0) }
+                                )) {
+                                    Label("Pin Track Pictures", systemImage: "pin.fill")
                                 }
+                                .toggleStyle(.button)
+                                .labelStyle(.iconOnly)
+                                .disabled(isPinTrackPictureDisabled(albumArtSlot))
+                                .frame(width: 60)
+                                
+                                Picker("", selection: Binding(
+                                    get: { typePictureScopeForSlot(albumArtSlot) },
+                                    set: { onSetTypePictureScope(albumArtSlot, $0) }
+                                )) {
+                                    ForEach(AlbumArtPictureScope.allCases) { scope in
+                                        Image(systemName: scope.systemImage)
+                                            .tag(scope)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .disabled(isTypePictureScopeDisabled(albumArtSlot))
+                                .accessibilityIdentifier("albumArt.sheet.typePictureScopePicker")
+                                       
+                            HStack(spacing: 0) {
+                                HStack(spacing: 0) {
+                                    //Divider()
+                                    Button("First Picture", systemImage: "backward.end.fill") {
+                                        onFirstPicture(albumArtSlot)
+                                    }
+                                    .labelStyle(.iconOnly)
+                                    .disabled(!canGoToPreviousPictureForSlot(albumArtSlot))
+                                    .frame(width: 36)
+                                    //Divider()
+                                    Button("Previous Picture", systemImage: "arrowtriangle.backward.fill") {
+                                        onPreviousPicture(albumArtSlot)
+                                    }
+                                    .labelStyle(.iconOnly)
+                                    .disabled(!canGoToPreviousPictureForSlot(albumArtSlot))
+                                    .frame(width: 36)
+                                    //Divider()
+                                    Button("Next Picture", systemImage: "arrowtriangle.forward.fill") {
+                                        onNextPicture(albumArtSlot)
+                                    }
+                                    .labelStyle(.iconOnly)
+                                    .disabled(!canGoToNextPictureForSlot(albumArtSlot))
+                                    .frame(width: 36)
+                                    //Divider()
+                                    Button("Last Picture", systemImage: "forward.end.fill") {
+                                        onLastPicture(albumArtSlot)
+                                    }
+                                    .labelStyle(.iconOnly)
+                                    .disabled(!canGoToNextPictureForSlot(albumArtSlot))
+                                    .frame(width: 36)
+                                    //Divider()
+                                }
+                                .buttonStyle(.glass)
+                                .padding(2)
+//                                .background(
+//                                    RoundedRectangle(cornerRadius: 12)
+//                                        .fill(.regularMaterial)
+//                                )
+                                
                             }
-                            .pickerStyle(.segmented)
-                            .accessibilityIdentifier("albumArt.sheet.typePictureScopePicker")
-
-                            Text(scopeLabelText)
-                                .font(.caption)
-
-                            Button("First Picture", systemImage: "backward.end.fill") {
-                                onFirstPicture(albumArtSlot)
+                            .frame(width: 240)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(.primary, lineWidth: 1)
+                                    .opacity(0.08)
+                            )
+                                                        
+                            ControlGroup {
+                                Button("Import Picture", systemImage: "plus") { // plus.app.fill
+                                    onOpenPicker(albumArtSlot)
+                                }
+                                .labelStyle(.iconOnly)
+                                .disabled(!isEditingEnabled || isSaveOperationRunning)
+                                .controlSize(.small)
+                                
+                                Button("Remove Picture", systemImage: "minus") { // minus, xmark.app
+                                    onRemovePicture(albumArtSlot)
+                                }
+                                .labelStyle(.iconOnly)
+                                .disabled(!hasImageForSlot(albumArtSlot))
+                                
+                                Button("Export Picture", systemImage: "arrow.down") { // arrow.down.app
+                                    onPrepareExport(albumArtSlot)
+                                }
+                                .labelStyle(.iconOnly)
+                                .disabled(!hasImageForSlot(albumArtSlot))
                             }
-                            .labelStyle(.iconOnly)
-                            .disabled(!canGoToPreviousPictureForSlot(albumArtSlot))
-
-                            Button("Previous Picture", systemImage: "arrowtriangle.backward.fill") {
-                                onPreviousPicture(albumArtSlot)
-                            }
-                            .labelStyle(.iconOnly)
-                            .disabled(!canGoToPreviousPictureForSlot(albumArtSlot))
-
-                            Button("Next Picture", systemImage: "arrowtriangle.forward.fill") {
-                                onNextPicture(albumArtSlot)
-                            }
-                            .labelStyle(.iconOnly)
-                            .disabled(!canGoToNextPictureForSlot(albumArtSlot))
-
-                            Button("Last Picture", systemImage: "forward.end.fill") {
-                                onLastPicture(albumArtSlot)
-                            }
-                            .labelStyle(.iconOnly)
-                            .disabled(!canGoToNextPictureForSlot(albumArtSlot))
-
-                            Button("Import Picture", systemImage: "plus") {
-                                onOpenPicker(albumArtSlot)
-                            }
-                            .labelStyle(.iconOnly)
-                            .disabled(!isEditingEnabled || isSaveOperationRunning)
-
-                            Button("Remove Picture", systemImage: "minus") {
-                                onRemovePicture(albumArtSlot)
-                            }
-                            .labelStyle(.iconOnly)
-                            .disabled(!hasImageForSlot(albumArtSlot) || isPinTrackPictureDisabled(albumArtSlot))
-
-                            Button("Export Picture", systemImage: "arrow.down") {
-                                onPrepareExport(albumArtSlot)
-                            }
-                            .labelStyle(.iconOnly)
-                            .disabled(!hasImageForSlot(albumArtSlot))
                         }
                     }
                 }

@@ -401,16 +401,14 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
-    func albumArtSheetViewExposesScopePickersWithConfiguredScopes() throws {
+    func albumArtSheetViewExposesTypeScopePickerWithoutTrackScopePicker() throws {
         let sut = makeAlbumArtSheetView(
             isSaveOperationRunning: false,
             saveStatusPresentation: nil,
-            trackPictureScope: .selectedTrackPictures,
             typePictureScope: .selectedTrackPictures
         )
 
         let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
-        #expect(actualView.trackPictureScope == .selectedTrackPictures)
         #expect(actualView.typePictureScopeForSlot(.frontCover) == .selectedTrackPictures)
 
         let sourceURL = URL(fileURLWithPath: #filePath)
@@ -421,8 +419,9 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("AlbumArt")
             .appendingPathComponent("AlbumArtSheetView.swift")
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
-        #expect(source.contains("albumArt.sheet.trackPictureScopePicker"))
         #expect(source.contains("albumArt.sheet.typePictureScopePicker"))
+        #expect(!source.contains("albumArt.sheet.trackPictureScopePicker"))
+        #expect(!source.contains("Pin Album Pictures"))
     }
 
     @Test
@@ -462,6 +461,21 @@ struct TrackStatusViewInspectorTests {
         let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
         #expect(actualView.canGoToPreviousPictureForSlot(.frontCover))
         #expect(actualView.canGoToNextPictureForSlot(.frontCover))
+    }
+
+    @Test
+    func albumArtViewModelSourceIncludesFrontCoverAddAction() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtViewModel.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains("case .add"))
+        #expect(source.contains("alert.addButton(withTitle: \"Add\")"))
     }
 
     @Test
@@ -606,8 +620,8 @@ struct TrackStatusViewInspectorTests {
         pinCount: Int = 0,
         infoOverlayMessages: [AlbumArtInfoOverlayMessage] = [],
         metadataText: String? = nil,
-        trackPictureScope: AlbumArtPictureScope = .allTrackPictures,
         typePictureScope: AlbumArtPictureScope = .allTrackPictures,
+        isTypePictureScopeDisabled: Bool = false,
         canGoToPreviousPicture: Bool = false,
         canGoToNextPicture: Bool = false
     ) -> AlbumArtSheetView {
@@ -641,17 +655,13 @@ struct TrackStatusViewInspectorTests {
             infoOverlayMessagesForSlot: { _ in infoOverlayMessages },
             metadataTextForSlot: { _ in metadataText },
             hasCrossTypeDuplicateForSlot: { _ in false },
-            pinAlbumPictures: false,
-            isPinAlbumPicturesDisabled: false,
-            onSetPinAlbumPictures: { _ in },
-            trackPictureScope: trackPictureScope,
-            onSetTrackPictureScope: { _ in },
             scopeLabelText: "All Tracks",
             typePictureScopeForSlot: { _ in typePictureScope },
             onSetTypePictureScope: { _, _ in },
             isPinTrackPictureOn: { _ in false },
             onSetPinTrackPicture: { _, _ in },
             isPinTrackPictureDisabled: { _ in false },
+            isTypePictureScopeDisabled: { _ in isTypePictureScopeDisabled },
             canNavigateForSlot: { _ in false },
             canGoToPreviousPictureForSlot: { _ in canGoToPreviousPicture },
             canGoToNextPictureForSlot: { _ in canGoToNextPicture },

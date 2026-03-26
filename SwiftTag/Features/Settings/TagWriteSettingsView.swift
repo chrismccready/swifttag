@@ -106,51 +106,83 @@ struct TagWriteSettingsView: View {
 
     var body: some View {
         Form {
-            Toggle("Zero pad Track Number/Total", isOn: $zeroPadTrackNumber)
-                .accessibilityIdentifier("settings.tags.zeroPadTrackNumber")
-                .accessibilityValue(zeroPadTrackNumber ? "On" : "Off")
+            GroupBox("Value preferences") {
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle("Zero pad Track Number/Total", isOn: $zeroPadTrackNumber)
+                        .accessibilityIdentifier("settings.tags.zeroPadTrackNumber")
+                        .accessibilityValue(zeroPadTrackNumber ? "On" : "Off")
+                    
+                    Toggle("Zero pad Disc Number/Total", isOn: $zeroPadDiscNumber)
+                        .accessibilityIdentifier("settings.tags.zeroPadDiscNumber")
+                        .accessibilityValue(zeroPadDiscNumber ? "On" : "Off")
+                }
+                .padding(EdgeInsets(top: 4, leading: 5, bottom: 4, trailing: 4))
+            }
+            .controlSize(.mini)
             
-            Toggle("Zero pad Disc Number/Total", isOn: $zeroPadDiscNumber)
-                .accessibilityIdentifier("settings.tags.zeroPadDiscNumber")
-                .accessibilityValue(zeroPadDiscNumber ? "On" : "Off")
-
-            Toggle("Auto update Track Total", isOn: $autoUpdateTrackTotal)
-                .accessibilityIdentifier("settings.tags.autoUpdateTrackTotal")
-                .accessibilityValue(autoUpdateTrackTotal ? "On" : "Off")
-
-            Toggle("Update Track Total on Locked Tracks", isOn: $updateTrackTotalOnLockedTracks)
-                .accessibilityIdentifier("settings.tags.updateTrackTotalOnLockedTracks")
-                .accessibilityValue(updateTrackTotalOnLockedTracks ? "On" : "Off")
-
-            LabeledContent("Write Track Total key") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Toggle("TOTALTRACKS", isOn: writeTotalTracksKey)
-                        .accessibilityIdentifier("settings.tags.trackCountKey.totalTracks")
-                    Toggle("TRACKTOTAL", isOn: writeTrackTotalKey)
-                        .accessibilityIdentifier("settings.tags.trackCountKey.trackTotal")
+            Section {
+                GroupBox("Key preferences") {
+                    LabeledContent("Write Track Total key") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Toggle("TOTALTRACKS", isOn: writeTotalTracksKey)
+                                .accessibilityIdentifier("settings.tags.trackCountKey.totalTracks")
+                            Toggle("TRACKTOTAL", isOn: writeTrackTotalKey)
+                                .accessibilityIdentifier("settings.tags.trackCountKey.trackTotal")
+                        }
+                        .toggleStyle(.switch)
+                        .padding(4)
+                    }
+                    .padding(.top, 2)
+                    .padding(.leading, 4)
+                    .accessibilityIdentifier("settings.tags.trackCountKeyStrategy")
+                    
+                    LabeledContent("Write Disc Total key") {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Toggle("TOTALDISCS", isOn: writeTotalDiscsKey)
+                                .accessibilityIdentifier("settings.tags.discCountKey.totalDiscs")
+                            Toggle("DISCTOTAL", isOn: writeDiscTotalKey)
+                                .accessibilityIdentifier("settings.tags.discCountKey.discTotal")
+                        }
+                        .toggleStyle(.switch)
+                        .padding(.trailing, 12)
+                    }
+                    .padding(.leading, 4)
+                    .accessibilityIdentifier("settings.tags.discCountKeyStrategy")
                 }
-                .toggleStyle(.switch)
+                .controlSize(.mini)
             }
-            .accessibilityIdentifier("settings.tags.trackCountKeyStrategy")
-
-            LabeledContent("Write Disc Total key") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Toggle("TOTALDISCS", isOn: writeTotalDiscsKey)
-                        .accessibilityIdentifier("settings.tags.discCountKey.totalDiscs")
-                    Toggle("DISCTOTAL", isOn: writeDiscTotalKey)
-                        .accessibilityIdentifier("settings.tags.discCountKey.discTotal")
+            
+            Section {
+                GroupBox("Track Total Management") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Toggle("Auto update Track Total", isOn: $autoUpdateTrackTotal)
+                            .accessibilityIdentifier("settings.tags.autoUpdateTrackTotal")
+                            .accessibilityValue(autoUpdateTrackTotal ? "On" : "Off")
+                        
+                        Toggle("Update Track Total on Locked Tracks", isOn: $updateTrackTotalOnLockedTracks)
+                            .accessibilityIdentifier("settings.tags.updateTrackTotalOnLockedTracks")
+                            .accessibilityValue(updateTrackTotalOnLockedTracks ? "On" : "Off")
+                    }
+                    .padding(EdgeInsets(top: 4, leading: 5, bottom: 4, trailing: 4))
                 }
-                .toggleStyle(.switch)
+                .controlSize(.mini)
             }
-            .accessibilityIdentifier("settings.tags.discCountKeyStrategy")
 
-            Toggle("Save Front Cover to all Tracks", isOn: $saveFrontCoverToAllTracks)
-                .accessibilityIdentifier("settings.tags.saveFrontCoverToAllTracks")
-                .accessibilityValue(saveFrontCoverToAllTracks ? "On" : "Off")
-
-            Toggle("Save all Pictures to all Tracks", isOn: $saveAllPicturesToAllTracks)
-                .accessibilityIdentifier("settings.tags.saveAllPicturesToAllTracks")
-                .accessibilityValue(saveAllPicturesToAllTracks ? "On" : "Off")
+            Section {
+                GroupBox("Picture Management") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Toggle("Save Front Cover to all Tracks", isOn: $saveFrontCoverToAllTracks)
+                            .accessibilityIdentifier("settings.tags.saveFrontCoverToAllTracks")
+                            .accessibilityValue(saveFrontCoverToAllTracks ? "On" : "Off")
+                        
+                        Toggle("Save all Pictures to all Tracks", isOn: $saveAllPicturesToAllTracks)
+                            .accessibilityIdentifier("settings.tags.saveAllPicturesToAllTracks")
+                            .accessibilityValue(saveAllPicturesToAllTracks ? "On" : "Off")
+                    }
+                    .padding(EdgeInsets(top: 4, leading: 5, bottom: 4, trailing: 4))
+                }
+                .controlSize(.mini)
+            }
         }
         .formStyle(.grouped)
     }

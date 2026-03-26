@@ -51,6 +51,7 @@ final class AlbumArtViewModel {
     private enum FrontCoverDropAction {
         case cancel
         case replace
+        case add
     }
 
     #if DEBUG
@@ -77,19 +78,22 @@ final class AlbumArtViewModel {
     var isTrackLockedByID: [UUID: Bool] = [:]
     var currentReferenceIndexBySlot: [AlbumArtSlot: Int] = [:]
     var infoOverlayStateBySlot: [AlbumArtSlot: AlbumArtInfoOverlayState] = [:]
-    var pinAlbumPictures: Bool = false
-    var trackPictureScope: AlbumArtPictureScope = .selectedTrackPictures
     var typePictureScopeBySlot: [AlbumArtSlot: AlbumArtPictureScope] = [:]
 
     private var saveFrontCoverToAllTracks: Bool = SaveSettingsDefaults.saveFrontCoverToAllTracks
     private var saveAllPicturesToAllTracks: Bool = SaveSettingsDefaults.saveAllPicturesToAllTracks
+    private var configuredSlots: [AlbumArtSlot] = []
+    private var hasConfiguredPinSettings: Bool = false
 
     func configurePinSettings(saveFrontCoverToAllTracks: Bool, saveAllPicturesToAllTracks: Bool) {
+        hasConfiguredPinSettings = true
         self.saveFrontCoverToAllTracks = saveFrontCoverToAllTracks
         self.saveAllPicturesToAllTracks = saveAllPicturesToAllTracks
+        applyActivePinSettings()
     }
 
     func configureTrackContext(trackItems: [Track], selectedTrackIDs: Set<UUID>, albumArtTypes: [AlbumArtType]) {
+        configuredSlots = albumArtTypes.map(\.slot)
         self.allTrackIDs = trackItems.map(\.id)
         self.selectedTrackIDs = selectedTrackIDs
         self.isTrackLockedByID = Dictionary(uniqueKeysWithValues: trackItems.map { ($0.id, $0.isLocked) })
@@ -99,6 +103,13 @@ final class AlbumArtViewModel {
             .filter { allTrackIDs.contains($0.key) }
 
         mergePoolAndReferences(from: trackItems, albumArtTypes: albumArtTypes)
+        for slot in configuredSlots where typePictureScopeBySlot[slot] == nil {
+            typePictureScopeBySlot[slot] = .selectedTrackPictures
+        }
+        typePictureScopeBySlot = typePictureScopeBySlot.filter { configuredSlots.contains($0.key) }
+        if hasConfiguredPinSettings {
+            applyActivePinSettings()
+        }
         syncLegacySlotImages(albumArtTypes: albumArtTypes)
     }
 
@@ -118,12 +129,12 @@ final class AlbumArtViewModel {
         typePictureScopeBySlot[slot] ?? .selectedTrackPictures
     }
 
-    func setTrackPictureScope(_ scope: AlbumArtPictureScope, albumArtTypes: [AlbumArtType]) {
-        trackPictureScope = scope
-        syncLegacySlotImages(albumArtTypes: albumArtTypes)
-    }
-
     func setTypePictureScope(_ scope: AlbumArtPictureScope, for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) {
+        guard !isTypePictureScopeControlDisabled(for: slot) else {
+            syncLegacySlotImages(albumArtTypes: albumArtTypes)
+            return
+        }
+
         typePictureScopeBySlot[slot] = scope
         syncLegacySlotImages(albumArtTypes: albumArtTypes)
     }
@@ -142,18 +153,10 @@ final class AlbumArtViewModel {
         syncLegacySlotImages(albumArtTypes: albumArtTypes)
     }
 
-    func isPinAlbumPicturesOn() -> Bool {
-        saveAllPicturesToAllTracks || pinAlbumPictures
-    }
-
-    func isPinAlbumPicturesDisabled() -> Bool {
-        saveAllPicturesToAllTracks || hasLockedTrackInScope(trackPictureScope)
-    }
-
     func uniquePictureCount(for albumArtSlot: AlbumArtSlot) -> (count: Int, pinCount: Int) {
         var uniquePoolIDs: Set<UUID> = []
         var pinCount = 0
-        for trackID in visibleTrackIDs(for: trackPictureScope) {
+        for trackID in visibleTrackIDs(for: typePictureScope(for: albumArtSlot)) {
             for reference in trackReferencesByTrackID[trackID, default: []] where reference.slot == albumArtSlot {
                 uniquePoolIDs.insert(reference.poolItemID)
                 if isReferencePinned(reference, for: trackID) {
@@ -232,25 +235,14 @@ final class AlbumArtViewModel {
 
     func scopeLabelText() -> String {
         if selectedTrackIDs.isEmpty || selectedTrackIDs.count == allTrackIDs.count {
-            return "All Tracks"
+            return "All Tracks (\(allTrackIDs.count))"
         }
         return "Selected Tracks (\(selectedTrackIDs.count))"
-    }
-
-    func hasLockedTrackInActiveSelection() -> Bool {
-        if selectedTrackIDs.isEmpty || selectedTrackIDs.count == allTrackIDs.count {
-            return allTrackIDs.contains { isTrackLockedByID[$0] == true }
-        }
-        return selectedTrackIDs.contains { isTrackLockedByID[$0] == true }
     }
 
     func isCurrentPicturePinned(for slot: AlbumArtSlot) -> Bool {
         guard let currentReference = currentReference(for: slot) else {
             return false
-        }
-
-        if let forcedState = forcedTrackPinState(for: slot, reference: currentReference) {
-            return forcedState
         }
 
         let targetTrackIDs = manualTrackPinTargetTrackIDs(for: slot)
@@ -272,7 +264,7 @@ final class AlbumArtViewModel {
             return
         }
 
-        guard !isTrackPinForced(for: slot) else {
+        guard !isTrackPinControlDisabled(for: slot) else {
             syncLegacySlotImages(albumArtTypes: albumArtTypes)
             return
         }
@@ -299,16 +291,6 @@ final class AlbumArtViewModel {
             trackReferencesByTrackID[trackID] = refs
         }
 
-        syncLegacySlotImages(albumArtTypes: albumArtTypes)
-    }
-
-    func setAlbumPicturesPinned(_ isPinned: Bool, albumArtTypes: [AlbumArtType]) {
-        guard !saveAllPicturesToAllTracks else {
-            syncLegacySlotImages(albumArtTypes: albumArtTypes)
-            return
-        }
-
-        pinAlbumPictures = isPinned
         syncLegacySlotImages(albumArtTypes: albumArtTypes)
     }
 
@@ -580,7 +562,7 @@ final class AlbumArtViewModel {
         var nonFrontCoverRecords: [FlacWritablePictureRecord] = []
         var frontCoverRecords: [FlacWritablePictureRecord] = []
         for slot in albumArtTypes.map(\.slot) {
-            for reference in effectivePinnedReferences(for: trackID, slot: slot) {
+            for reference in pinnedReferences(for: trackID, slot: slot) {
                 guard let poolItem = picturePool[reference.poolItemID],
                       let flacType = albumArtTypes.first(where: { $0.slot == reference.slot })?.flacPictureType else {
                     continue
@@ -802,6 +784,8 @@ final class AlbumArtViewModel {
         #if DEBUG
         if let debugFrontCoverDropAction {
             switch debugFrontCoverDropAction {
+            case "add":
+                return .add
             case "replace":
                 return .replace
             default:
@@ -816,10 +800,13 @@ final class AlbumArtViewModel {
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Cancel")
         alert.addButton(withTitle: "Replace Existing")
+        alert.addButton(withTitle: "Add")
 
         switch alert.runModal() {
         case .alertSecondButtonReturn:
             return .replace
+        case .alertThirdButtonReturn:
+            return .add
         default:
             return .cancel
         }
@@ -848,6 +835,19 @@ final class AlbumArtViewModel {
                         description: "Cover (front)"
                     ),
                     at: min(replacementIndex, refs.endIndex)
+                )
+            case .add:
+                guard !refs.contains(where: { $0.slot == .frontCover && $0.poolItemID == poolID }) else {
+                    trackReferencesByTrackID[trackID] = refs
+                    continue
+                }
+                refs.append(
+                    AlbumArtTrackReference(
+                        poolItemID: poolID,
+                        slot: .frontCover,
+                        mimeType: mimeType,
+                        description: "Cover (front)"
+                    )
                 )
             }
             trackReferencesByTrackID[trackID] = refs
@@ -1057,22 +1057,8 @@ final class AlbumArtViewModel {
         visibleTrackIDs(for: scope).filter { isTrackLockedByID[$0] != true }
     }
 
-    private func hasLockedTrackInScope(_ scope: AlbumArtPictureScope) -> Bool {
-        visibleTrackIDs(for: scope).contains { isTrackLockedByID[$0] == true }
-    }
-
     private func manualTrackPinTargetTrackIDs(for slot: AlbumArtSlot) -> [UUID] {
-        if slot == .frontCover, saveFrontCoverToAllTracks {
-            return editableTrackIDs(for: .allTrackPictures)
-        }
-        if saveAllPicturesToAllTracks {
-            return editableTrackIDs(for: .allTrackPictures)
-        }
-        return editableTrackIDs(for: typePictureScope(for: slot))
-    }
-
-    private func albumPinTargetTrackIDs() -> [UUID] {
-        editableTrackIDs(for: trackPictureScope)
+        editableTrackIDs(for: slotEffectiveScope(for: slot))
     }
 
     private func removalTargetTrackIDs() -> [UUID] {
@@ -1082,75 +1068,73 @@ final class AlbumArtViewModel {
         return editableTrackIDs(for: .selectedTrackPictures)
     }
 
-    func isTrackPinForced(for slot: AlbumArtSlot) -> Bool {
-        if saveAllPicturesToAllTracks {
-            return true
-        }
-        if slot == .frontCover, saveFrontCoverToAllTracks {
-            return true
-        }
-        return pinAlbumPictures
+    func isTrackPinControlDisabled(for slot: AlbumArtSlot) -> Bool {
+        slotUsesForcedAllTracks(slot)
     }
 
-    private func forcedTrackPinState(for slot: AlbumArtSlot, reference: AlbumArtTrackReference) -> Bool? {
-        if saveAllPicturesToAllTracks {
-            return hasAnyPicture(for: slot)
-        }
-        if slot == .frontCover, saveFrontCoverToAllTracks {
-            return hasAnyPicture(for: .frontCover)
-        }
-        if pinAlbumPictures {
-            return true
-        }
-        return nil
+    func isTypePictureScopeControlDisabled(for slot: AlbumArtSlot) -> Bool {
+        slotUsesForcedAllTracks(slot)
     }
 
-    private func hasAnyPicture(for slot: AlbumArtSlot) -> Bool {
-        !allReferences(for: slot).isEmpty
-    }
-
-    private func effectivePinnedReferences(for trackID: UUID, slot: AlbumArtSlot) -> [AlbumArtTrackReference] {
-        let refs = trackReferencesByTrackID[trackID, default: []].filter {
+    private func pinnedReferences(for trackID: UUID, slot: AlbumArtSlot) -> [AlbumArtTrackReference] {
+        trackReferencesByTrackID[trackID, default: []].filter {
             $0.slot == slot && isReferencePinned($0, for: trackID)
         }
-
-        guard isTrackLockedByID[trackID] != true else {
-            return refs
-        }
-
-        if saveAllPicturesToAllTracks {
-            return mergeUniqueReferences(
-                refs,
-                with: uniquePresentationReferences(from: allReferences(for: slot))
-            )
-        }
-
-        if slot == .frontCover, saveFrontCoverToAllTracks {
-            return mergeUniqueReferences(
-                refs,
-                with: uniquePresentationReferences(from: allReferences(for: .frontCover))
-            )
-        }
-
-        guard pinAlbumPictures, albumPinTargetTrackIDs().contains(trackID) else {
-            return refs
-        }
-
-        return mergeUniqueReferences(
-            refs,
-            with: uniquePresentationReferences(from: references(for: slot, trackIDs: visibleTrackIDs(for: trackPictureScope)))
-        )
     }
 
-    private func mergeUniqueReferences(
-        _ lhs: [AlbumArtTrackReference],
-        with rhs: [AlbumArtTrackReference]
-    ) -> [AlbumArtTrackReference] {
-        var merged = lhs
-        for reference in rhs where !merged.contains(where: { referencesMatch($0, reference) }) {
-            merged.append(reference)
+    private func slotEffectiveScope(for slot: AlbumArtSlot) -> AlbumArtPictureScope {
+        slotUsesForcedAllTracks(slot) ? .allTrackPictures : typePictureScope(for: slot)
+    }
+
+    private func slotUsesForcedAllTracks(_ slot: AlbumArtSlot) -> Bool {
+        guard hasConfiguredPinSettings else {
+            return false
         }
-        return merged
+        if slot == .frontCover, saveFrontCoverToAllTracks {
+            return true
+        }
+        return saveAllPicturesToAllTracks
+    }
+
+    private func applyActivePinSettings() {
+        guard !configuredSlots.isEmpty else {
+            return
+        }
+
+        let unlockedTrackIDs = allTrackIDs.filter { isTrackLockedByID[$0] != true }
+        guard !unlockedTrackIDs.isEmpty else {
+            return
+        }
+
+        for slot in configuredSlots where slotUsesForcedAllTracks(slot) {
+            typePictureScopeBySlot[slot] = .allTrackPictures
+            let sourceReferences = uniquePresentationReferences(
+                from: references(for: slot, trackIDs: unlockedTrackIDs)
+            )
+            guard !sourceReferences.isEmpty else {
+                continue
+            }
+
+            for trackID in unlockedTrackIDs {
+                var refs = trackReferencesByTrackID[trackID, default: []]
+                for sourceReference in sourceReferences {
+                    if let existingIndex = refs.firstIndex(where: { referencesMatch($0, sourceReference) }) {
+                        setReferencePinned(refs[existingIndex], for: trackID, isPinned: true)
+                        continue
+                    }
+
+                    let copiedReference = AlbumArtTrackReference(
+                        poolItemID: sourceReference.poolItemID,
+                        slot: sourceReference.slot,
+                        mimeType: sourceReference.mimeType,
+                        description: sourceReference.description
+                    )
+                    refs.append(copiedReference)
+                    setReferencePinned(copiedReference, for: trackID, isPinned: true)
+                }
+                trackReferencesByTrackID[trackID] = refs
+            }
+        }
     }
 
     private func garbageCollectPool() {

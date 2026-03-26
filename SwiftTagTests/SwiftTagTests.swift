@@ -156,7 +156,7 @@ struct SwiftTagTests {
         #expect(SaveSettingsDefaults.discCountKeyStrategy == .totalDiscs)
         #expect(!SaveSettingsDefaults.autoUpdateTrackTotal)
         #expect(!SaveSettingsDefaults.updateTrackTotalOnLockedTracks)
-        #expect(SaveSettingsDefaults.saveFrontCoverToAllTracks)
+        #expect(!SaveSettingsDefaults.saveFrontCoverToAllTracks)
         #expect(!SaveSettingsDefaults.saveAllPicturesToAllTracks)
     }
 
@@ -526,6 +526,104 @@ struct SwiftTagTests {
 
         #expect(viewModel.trackReferencesByTrackID[lockedTrack.id, default: []].isEmpty)
         #expect(!viewModel.trackReferencesByTrackID[unlockedTrack.id, default: []].isEmpty)
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelSaveAllPicturesForcesAllUnlockedTracksAndScope() throws {
+        let frontData = try Self.pngData(color: .cyan)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let sourceTrack = Track(
+            tags: [TagKey.title: "Source"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: frontData)
+            ]
+        )
+        let targetTrack = Track(tags: [TagKey.title: "Target"], flacPictureRecords: [])
+        let lockedTrack = Track(tags: [TagKey.title: "Locked"], flacPictureRecords: [], isLocked: true)
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(
+            trackItems: [sourceTrack, targetTrack, lockedTrack],
+            selectedTrackIDs: [targetTrack.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: true)
+
+        #expect(viewModel.typePictureScope(for: .frontCover) == .allTrackPictures)
+        #expect(viewModel.isTrackPinControlDisabled(for: .frontCover))
+        #expect(viewModel.flacPictures(for: sourceTrack.id, albumArtTypes: albumArtTypes).count == 1)
+        #expect(viewModel.flacPictures(for: targetTrack.id, albumArtTypes: albumArtTypes).count == 1)
+        #expect(viewModel.flacPictures(for: lockedTrack.id, albumArtTypes: albumArtTypes).isEmpty)
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelSaveAllPicturesOffRestoresSelectedScopeAndPreservesUnlockedPins() throws {
+        let frontData = try Self.pngData(color: .magenta)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let sourceTrack = Track(
+            tags: [TagKey.title: "Source"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: frontData)
+            ]
+        )
+        let targetTrack = Track(tags: [TagKey.title: "Target"], flacPictureRecords: [])
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(
+            trackItems: [sourceTrack, targetTrack],
+            selectedTrackIDs: [targetTrack.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: true)
+        #expect(viewModel.flacPictures(for: targetTrack.id, albumArtTypes: albumArtTypes).count == 1)
+
+        viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: false)
+
+        #expect(viewModel.typePictureScope(for: .frontCover) == .allTrackPictures)
+        #expect(!viewModel.isTrackPinControlDisabled(for: .frontCover))
+        #expect(viewModel.flacPictures(for: targetTrack.id, albumArtTypes: albumArtTypes).count == 1)
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelFrontCoverSettingForcesOnlyFrontCoverSlot() throws {
+        let frontData = try Self.pngData(color: .red)
+        let backData = try Self.pngData(color: .blue)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let sourceTrack = Track(
+            tags: [TagKey.title: "Source"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front", data: frontData),
+                FlacWritablePictureRecord(type: 4, mimeType: "image/png", description: "Back", data: backData)
+            ]
+        )
+        let targetTrack = Track(tags: [TagKey.title: "Target"], flacPictureRecords: [])
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(
+            trackItems: [sourceTrack, targetTrack],
+            selectedTrackIDs: [targetTrack.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        viewModel.configurePinSettings(saveFrontCoverToAllTracks: true, saveAllPicturesToAllTracks: false)
+
+        #expect(viewModel.typePictureScope(for: .frontCover) == .allTrackPictures)
+        #expect(viewModel.typePictureScope(for: .backCover) == .selectedTrackPictures)
+        #expect(viewModel.isTrackPinControlDisabled(for: .frontCover))
+        #expect(!viewModel.isTrackPinControlDisabled(for: .backCover))
+        #expect(viewModel.flacPictures(for: targetTrack.id, albumArtTypes: albumArtTypes).map(\.type) == [3])
     }
 
     @Test
@@ -1004,7 +1102,7 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
-    func albumArtViewModelTrackPictureScopeChangesTypeCount() throws {
+    func albumArtViewModelTypePictureScopeChangesTypeCount() throws {
         let firstData = try Self.pngData(color: .red)
         let secondData = try Self.pngData(color: .blue)
         let albumArtTypes: [AlbumArtType] = [
@@ -1030,11 +1128,11 @@ struct SwiftTagTests {
             albumArtTypes: albumArtTypes
         )
 
-        #expect(viewModel.uniquePictureCount(for: .frontCover).count == 2)
-
-        viewModel.setTrackPictureScope(.selectedTrackPictures, albumArtTypes: albumArtTypes)
-
         #expect(viewModel.uniquePictureCount(for: .frontCover).count == 1)
+
+        viewModel.setTypePictureScope(.allTrackPictures, for: .frontCover, albumArtTypes: albumArtTypes)
+
+        #expect(viewModel.uniquePictureCount(for: .frontCover).count == 2)
     }
 
     @Test
@@ -1069,6 +1167,44 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func albumArtViewModelFrontCoverAddAppendsInsteadOfReplacing() async throws {
+        let firstFront = try Self.pngData(color: .orange)
+        let secondFront = try Self.pngData(color: .green)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "First Front", data: firstFront)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+        #if DEBUG
+        viewModel.debugFrontCoverDropAction = "add"
+        #endif
+
+        let addedURL = try Self.tempPNGFileURL(name: "album-art-front-cover-add", color: .green)
+        guard let provider = NSItemProvider(contentsOf: addedURL) else {
+            Issue.record("Failed to create item provider for front-cover add test")
+            return
+        }
+
+        #expect(viewModel.handleAlbumArtDrop([provider], for: .frontCover, albumArtTypes: albumArtTypes))
+        let didSelectAddedPicture = await Self.waitUntil {
+            viewModel.albumArtImages[.frontCover]?.data == secondFront
+        }
+
+        #expect(didSelectAddedPicture)
+        #expect(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).map(\.description) == ["First Front", "Cover (front)"])
+        let metadata = viewModel.currentPictureMetadataText(for: .frontCover, albumArtTypes: albumArtTypes) ?? ""
+        #expect(metadata.contains("2 of 2"))
+    }
+
+    @Test
+    @MainActor
     func albumArtViewModelForcedSaveAllPicturesRestoresStoredPinStateWhenDisabled() throws {
         let frontData = try Self.pngData(color: .brown)
         let albumArtTypes: [AlbumArtType] = [
@@ -1091,7 +1227,9 @@ struct SwiftTagTests {
         #expect(viewModel.isCurrentPicturePinned(for: .frontCover))
 
         viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: false)
-        #expect(!viewModel.isCurrentPicturePinned(for: .frontCover))
+        #expect(viewModel.isCurrentPicturePinned(for: .frontCover))
+        #expect(viewModel.typePictureScope(for: .frontCover) == .allTrackPictures)
+        #expect(!viewModel.isTrackPinControlDisabled(for: .frontCover))
     }
 
     @Test
