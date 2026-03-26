@@ -109,11 +109,13 @@ enum FeedbackSettingsKey {
     static let trackToFileDiffColor = "settings.feedback.trackToFileDiffColor"
     static let externallyModifiedDiffColor = "settings.feedback.externallyModifiedDiffColor"
     static let trackDiscTotalMismatchColor = "settings.feedback.trackDiscTotalMismatchColor"
+    static let pictureStatusOverlayColor = "settings.feedback.pictureStatusOverlayColor"
     static let formatOnTrackToFileDiff = "settings.diffTools.formatOnTrackToFileDiff"
     static let formatOnTrackToTrackDiff = "settings.diffTools.formatOnTrackToTrackDiff"
     static let formatOnExternallyModifiedDiff = "settings.diffTools.formatOnExternallyModifiedDiff"
     static let formatOnTrackTotalMismatch = "settings.diffTools.formatOnTrackTotalMismatch"
     static let formatOnDiscTotalMismatch = "settings.diffTools.formatOnDiscTotalMismatch"
+    static let formatOnDuplicatePicture = "settings.diffTools.formatOnDuplicatePicture"
 }
 
 enum FeedbackSettingsDefaults {
@@ -123,11 +125,13 @@ enum FeedbackSettingsDefaults {
     static let trackToFileDiffColor = AppColorStorage.archive(Color.primary, fallback: .labelColor)
     static let externallyModifiedDiffColor = AppColorStorage.archive(Color.red, fallback: .systemRed)
     static let trackDiscTotalMismatchColor = AppColorStorage.archive(Color.red, fallback: .systemRed)
+    static let pictureStatusOverlayColor = AppColorStorage.archive(Color.orange, fallback: .systemOrange)
     static let formatOnTrackToFileDiff = true
     static let formatOnTrackToTrackDiff = true
     static let formatOnExternallyModifiedDiff = true
     static let formatOnTrackTotalMismatch = true
     static let formatOnDiscTotalMismatch = true
+    static let formatOnDuplicatePicture = true
 }
 
 enum AppColorStorage {

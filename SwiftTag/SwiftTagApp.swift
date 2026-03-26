@@ -204,7 +204,7 @@ struct SwiftTagApp: App {
 
         UtilityWindow("Diff Tools", id: AppSceneID.diffTools) {
             DiffToolsView()
-                .frame(width: 322, height: 170)
+                .frame(width: 278, height: 170)
                 .preferredColorScheme(preferredScheme)
         }
         .keyboardShortcut("d", modifiers: [.command])

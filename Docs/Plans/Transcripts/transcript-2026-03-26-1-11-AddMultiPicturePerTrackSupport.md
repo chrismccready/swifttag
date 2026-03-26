@@ -259,4 +259,36 @@ Validation passed: 5 targeted tests passed and the project build succeeded.
 
 [ 2026-03-26T17:50:47Z (2m 8s since Assistant start) ]
 
+## User 2026-03-26T19:38:40Z (1h 50m 1s since previous Assistant start) 
+
+- Add to FeedbackSettingsView after settings.feedback.trackDiscTotalMismatchColor a ColorPicker labeled “Picture Status Overlay Color” that has @AppStorage backing and defaults to orange.
+- Add to DiffToolsView after diffTools.formatOnDiscTotalMismatch a DiffToolsToggleRow titled “Format on Duplicate Picture” default to On.
+- Update AlbumArtSheetView to use of trackDiscTotalMismatchColorRawValue with “Picture Status Overlay Color”.
+- Add to AlbumArtSheetView the ability to show/hide duplicate overlay based on “Format on Duplicate Picture” setting.
+Ask questions for clarification if needed.
+
+## Assistant 2026-03-26T19:38:40Z (0s since User start)
+
+I’m wiring the new feedback color and duplicate-overlay toggle through settings, then I’ll update the album art sheet to read those values and verify the affected views/tests.
+
+I’ve got the setting surfaces. Next I’m patching the shared keys/defaults, both settings views, and the album art sheet so duplicate overlays can be colorized separately and disabled via the new diff-tools toggle, then I’ll update the existing settings/view inspector tests that assert row counts and source strings.
+
+I’m treating the new toggle as overlay-specific, not as a global duplicate-formatting kill switch. That means the slot row can still reflect duplicates, while the image overlay will hide only duplicate messages when Format on ​Duplicate ​Picture is off. If you wanted the list-row formatting disabled too, say so and I’ll extend it.
+
+I’ve patched the app-side settings and sheet logic. I’m updating tests now for the new keys, defaults, extra diff-tools row, and the sheet’s filtered overlay source assertions, then I’ll run diagnostics/build.
+
+The file-level diagnostics are clean. I’m running the narrow settings and album-art inspector tests now, then a project build to confirm the new keys and view changes integrate cleanly.
+
+Everything is validated. I’m collecting a short diff summary and the UTC timestamp for the closeout.
+
+I added the new settings and wired them into album art overlay behavior.
+
+FeedbackSettings.swift now defines picture​Status​Overlay​Color with an orange default and format​On​Duplicate​Picture with a default of true. FeedbackSettingsView.swift now shows a Color​Picker labeled Picture ​Status ​Overlay ​Color after the existing track/disc mismatch color. DiffToolsView.swift now adds Format on ​Duplicate ​Picture after Format on ​Disc ​Total ​Mismatch.
+
+In AlbumArtSheetView.swift, the duplicate-status styling now uses the new picture overlay color, and duplicate messages in the picture overlay are filtered by the new diff-tools setting. If Format on ​Duplicate ​Picture is off, duplicate overlay messages are suppressed while non-duplicate messages like out-of-scope warnings still display.
+
+I updated the affected tests in TrackStatusViewInspectorTests.swift and SwiftTagTests.swift. Validation passed: the targeted tests passed and the full project build succeeded.
+
+[ 2026-03-26T19:41:00Z (2m 20s since Assistant start) ]
+
 End of Transcription.

@@ -42,8 +42,11 @@ struct AlbumArtSheetView: View {
     let onLastPicture: (AlbumArtSlot) -> Void
     let onRemovePicture: (AlbumArtSlot) -> Void
 
-    @AppStorage(FeedbackSettingsKey.trackDiscTotalMismatchColor)
-    private var trackDiscTotalMismatchColorRawValue: String = FeedbackSettingsDefaults.trackDiscTotalMismatchColor
+    @AppStorage(FeedbackSettingsKey.pictureStatusOverlayColor)
+    private var pictureStatusOverlayColorRawValue: String = FeedbackSettingsDefaults.pictureStatusOverlayColor
+
+    @AppStorage(FeedbackSettingsKey.formatOnDuplicatePicture)
+    private var formatOnDuplicatePicture: Bool = FeedbackSettingsDefaults.formatOnDuplicatePicture
 
     private func albumArtType(for slot: AlbumArtSlot) -> AlbumArtType? {
         albumArtTypes.first { $0.slot == slot }
@@ -63,6 +66,21 @@ struct AlbumArtSheetView: View {
             """
     }
 
+    private func filteredInfoOverlayMessages(from state: AlbumArtInfoOverlayState?) -> [AlbumArtInfoOverlayMessage] {
+        guard let state else {
+            return []
+        }
+
+        return state.messages.filter { message in
+            switch message.messageType {
+            case .hasDuplicateInOtherSlot:
+                return formatOnDuplicatePicture
+            case .hasOutOfScopeReference:
+                return true
+            }
+        }
+    }
+
     var body: some View {
         ZStack {
             NavigationStack(path: $navigationPath) {
@@ -70,7 +88,7 @@ struct AlbumArtSheetView: View {
                     ForEach(albumArtTypes) { albumArtType in
                         let countSummary = pictureCountForSlot(albumArtType.slot)
                         let hasCrossTypeDuplicate = hasCrossTypeDuplicateForSlot(albumArtType.slot)
-                        let hasCrossTypeDuplicateColor = AppColorStorage.color(from: trackDiscTotalMismatchColorRawValue, fallback: .systemRed)
+                        let hasCrossTypeDuplicateColor = AppColorStorage.color(from: pictureStatusOverlayColorRawValue, fallback: .systemOrange)
                         NavigationLink(value: albumArtType.slot) {
                             HStack(spacing: 0) {
                                 Text("\(albumArtType.navigationLinkName)")
@@ -138,19 +156,20 @@ struct AlbumArtSheetView: View {
                             .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
 
                             let infoOverlayState = infoOverlayStateForSlot(albumArtSlot)
+                            let overlayMessages = filteredInfoOverlayMessages(from: infoOverlayState)
                             let shouldShowInfoOverlay = metadataForSlot(albumArtSlot)?.poolItemID == infoOverlayState?.poolItemID
-                            if let infoOverlayState, shouldShowInfoOverlay {
+                            if shouldShowInfoOverlay, !overlayMessages.isEmpty {
                                 Rectangle()
                                     .fill(
                                         AppColorStorage.color(
-                                            from: trackDiscTotalMismatchColorRawValue,
-                                            fallback: .systemRed
+                                            from: pictureStatusOverlayColorRawValue,
+                                            fallback: .systemOrange
                                         )
                                         .opacity(0.25)
                                     )
                                     .overlay(alignment: .bottomLeading) {
                                         VStack(alignment: .leading, spacing: 4) {
-                                            ForEach(Array(infoOverlayState.messages.enumerated()), id: \.offset) { _, overlayMessage in
+                                            ForEach(Array(overlayMessages.enumerated()), id: \.offset) { _, overlayMessage in
                                                 Text(overlayMessage.message)
                                                     .font(.caption)
                                                     .foregroundStyle(.primary)

@@ -413,8 +413,9 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("AlbumArtSheetView.swift")
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
         #expect(source.contains("let infoOverlayState = infoOverlayStateForSlot(albumArtSlot)"))
+        #expect(source.contains("let overlayMessages = filteredInfoOverlayMessages(from: infoOverlayState)"))
         #expect(source.contains("let shouldShowInfoOverlay = metadataForSlot(albumArtSlot)?.poolItemID == infoOverlayState?.poolItemID"))
-        #expect(source.contains("ForEach(Array(infoOverlayState.messages.enumerated()), id: \\.offset)"))
+        #expect(source.contains("ForEach(Array(overlayMessages.enumerated()), id: \\.offset)"))
         #expect(source.contains("if let metadata = metadataForSlot(albumArtSlot)"))
     }
 
@@ -540,7 +541,7 @@ struct TrackStatusViewInspectorTests {
         let sut = DiffToolsView()
 
         let rows = try sut.inspect().findAll(DiffToolsToggleRow.self)
-        #expect(rows.count == 5)
+        #expect(rows.count == 6)
 
         let actualRows = try rows.map { try $0.actualView() }
         #expect(actualRows[0].title == "Format on Track to File Diff")
@@ -553,6 +554,8 @@ struct TrackStatusViewInspectorTests {
         #expect(actualRows[3].accessibilityID == "diffTools.formatOnTrackTotalMismatch")
         #expect(actualRows[4].title == "Format on Disc Total Mismatch")
         #expect(actualRows[4].accessibilityID == "diffTools.formatOnDiscTotalMismatch")
+        #expect(actualRows[5].title == "Format on Duplicate Picture")
+        #expect(actualRows[5].accessibilityID == "diffTools.formatOnDuplicatePicture")
     }
 
     @Test
@@ -574,6 +577,7 @@ struct TrackStatusViewInspectorTests {
         #expect(source.contains("settings.feedback.trackToFileDiffColor"))
         #expect(source.contains("settings.feedback.externallyModifiedDiffColor"))
         #expect(source.contains("settings.feedback.trackDiscTotalMismatchColor"))
+        #expect(source.contains("settings.feedback.pictureStatusOverlayColor"))
 
         let _ = try sut.inspect().find(ViewType.Form.self)
     }

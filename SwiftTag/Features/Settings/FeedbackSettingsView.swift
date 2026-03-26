@@ -20,6 +20,9 @@ struct FeedbackSettingsView: View {
     @AppStorage(FeedbackSettingsKey.trackDiscTotalMismatchColor)
     private var trackDiscTotalMismatchColorRawValue: String = FeedbackSettingsDefaults.trackDiscTotalMismatchColor
 
+    @AppStorage(FeedbackSettingsKey.pictureStatusOverlayColor)
+    private var pictureStatusOverlayColorRawValue: String = FeedbackSettingsDefaults.pictureStatusOverlayColor
+
     private var saveNotificationMode: Binding<SaveNotificationMode> {
         Binding(
             get: { SaveNotificationMode(rawValue: saveNotificationModeRawValue) ?? FeedbackSettingsDefaults.saveNotificationMode },
@@ -48,6 +51,10 @@ struct FeedbackSettingsView: View {
 
     private var trackDiscTotalMismatchColor: Binding<Color> {
         AppColorStorage.binding(rawValue: $trackDiscTotalMismatchColorRawValue, fallback: .systemRed)
+    }
+
+    private var pictureStatusOverlayColor: Binding<Color> {
+        AppColorStorage.binding(rawValue: $pictureStatusOverlayColorRawValue, fallback: .systemOrange)
     }
 
     var body: some View {
@@ -94,6 +101,9 @@ struct FeedbackSettingsView: View {
                     
                     ColorPicker("Track/Disc Total Mismatch Color", selection: trackDiscTotalMismatchColor)
                         .accessibilityIdentifier("settings.feedback.trackDiscTotalMismatchColor")
+
+                    ColorPicker("Picture Status Overlay Color", selection: pictureStatusOverlayColor)
+                        .accessibilityIdentifier("settings.feedback.pictureStatusOverlayColor")
                 }
                 .controlSize(.small)
             }

@@ -7,6 +7,9 @@ struct DiffToolsView: View {
     @AppStorage(FeedbackSettingsKey.formatOnDiscTotalMismatch)
     private var formatOnDiscTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnDiscTotalMismatch
 
+    @AppStorage(FeedbackSettingsKey.formatOnDuplicatePicture)
+    private var formatOnDuplicatePicture: Bool = FeedbackSettingsDefaults.formatOnDuplicatePicture
+
     @AppStorage(FeedbackSettingsKey.formatOnTrackToFileDiff)
     private var formatOnTrackToFileDiff: Bool = FeedbackSettingsDefaults.formatOnTrackToFileDiff
 
@@ -43,9 +46,15 @@ struct DiffToolsView: View {
                 isOn: $formatOnDiscTotalMismatch,
                 accessibilityID: "diffTools.formatOnDiscTotalMismatch"
             )
+            DiffToolsToggleRow(
+                title: "Format on Duplicate Picture",
+                isOn: $formatOnDuplicatePicture,
+                accessibilityID: "diffTools.formatOnDuplicatePicture"
+            )
         }
+        .controlSize(.small)
         .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.vertical, 12)
         Spacer()
     }
 }

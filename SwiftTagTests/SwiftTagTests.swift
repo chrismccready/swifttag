@@ -271,7 +271,9 @@ struct SwiftTagTests {
         #expect(FeedbackSettingsDefaults.formatOnExternallyModifiedDiff)
         #expect(FeedbackSettingsDefaults.formatOnTrackTotalMismatch)
         #expect(FeedbackSettingsDefaults.formatOnDiscTotalMismatch)
+        #expect(FeedbackSettingsDefaults.formatOnDuplicatePicture)
         #expect(!FeedbackSettingsDefaults.trackDiscTotalMismatchColor.isEmpty)
+        #expect(!FeedbackSettingsDefaults.pictureStatusOverlayColor.isEmpty)
     }
 
     @Test
