@@ -24,7 +24,7 @@ struct AlbumArtSheetView: View {
     let onFileExportResult: (Result<URL, Error>) -> Void
     let pictureCountForSlot: (AlbumArtSlot) -> (count: Int, pinCount: Int)
     let infoOverlayMessagesForSlot: (AlbumArtSlot) -> [AlbumArtInfoOverlayMessage]
-    let metadataTextForSlot: (AlbumArtSlot) -> String?
+    let metadataForSlot: (AlbumArtSlot) -> AlbumArtPictureMetadata?
     let hasCrossTypeDuplicateForSlot: (AlbumArtSlot) -> Bool
     let scopeLabelText: String
     let typePictureScopeForSlot: (AlbumArtSlot) -> AlbumArtPictureScope
@@ -49,25 +49,48 @@ struct AlbumArtSheetView: View {
         albumArtTypes.first { $0.slot == slot }
     }
 
+    private func metadataText(for metadata: AlbumArtPictureMetadata) -> String {
+        let descriptionText = metadata.description.isEmpty ? "None" : metadata.description
+        let mimeTypeText = metadata.mimeType.isEmpty ? "unknown" : metadata.mimeType
+        let byteCountText = ByteCountFormatter.string(
+            fromByteCount: Int64(metadata.byteCount),
+            countStyle: .file
+        )
+        
+        return """
+            \(descriptionText) \(metadata.poolItemIDShort) \(metadata.inSlotReferenceCount) \(metadata.outOfSlotReferenceCount) \
+            \(metadata.pinCount) · \(mimeTypeText) · \(byteCountText) · \(metadata.currentIndex) of \(metadata.totalCount)"
+            """
+    }
+
     var body: some View {
         ZStack {
             NavigationStack(path: $navigationPath) {
                 List {
                     ForEach(albumArtTypes) { albumArtType in
                         let countSummary = pictureCountForSlot(albumArtType.slot)
+                        let hasCrossTypeDuplicate = hasCrossTypeDuplicateForSlot(albumArtType.slot)
+                        let hasCrossTypeDuplicateColor = AppColorStorage.color(from: trackDiscTotalMismatchColorRawValue, fallback: .systemRed)
                         NavigationLink(value: albumArtType.slot) {
-                            Text("\(albumArtType.navigationLinkName) • \(countSummary.count) • \(countSummary.pinCount)")
-                                .italic(hasCrossTypeDuplicateForSlot(albumArtType.slot))
-                                .foregroundStyle(
-                                    hasCrossTypeDuplicateForSlot(albumArtType.slot)
-                                    ? AnyShapeStyle(
-                                        AppColorStorage.color(
-                                            from: trackDiscTotalMismatchColorRawValue,
-                                            fallback: .systemRed
-                                        )
+                            HStack(spacing: 0) {
+                                Text("\(albumArtType.navigationLinkName)")
+                                    .italic(hasCrossTypeDuplicate)
+                                    .foregroundStyle(
+                                        hasCrossTypeDuplicate
+                                        ? AnyShapeStyle(hasCrossTypeDuplicateColor)
+                                        : AnyShapeStyle(.primary)
                                     )
-                                    : AnyShapeStyle(.primary)
-                                )
+                                Spacer()
+                                Text("\(countSummary.count) : \(countSummary.pinCount)")
+                                    .font(.caption)
+                                    .italic(hasCrossTypeDuplicate)
+                                    .foregroundStyle(
+                                        hasCrossTypeDuplicate
+                                        ? AnyShapeStyle(hasCrossTypeDuplicateColor)
+                                        : AnyShapeStyle(.secondary)
+                                    )
+                                    .frame(width: 40, alignment: .trailing)
+                            }
                         }
                     }
                 }
@@ -141,12 +164,22 @@ struct AlbumArtSheetView: View {
                             }
                         }
 
-                        if let metadataText = metadataTextForSlot(albumArtSlot) {
-                            Text(metadataText)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.top, 8)
+                        if let metadata = metadataForSlot(albumArtSlot) {
+                            HStack(spacing: 0) {
+                                Text("""
+                                     \(metadata.descriptionText()) \(metadata.poolItemIDShort) \(metadata.inSlotReferenceCount) \
+                                     \(metadata.outOfSlotReferenceCount) \(metadata.pinCount) · \(metadata.mimeTypeText()) · \(metadata.byteCountText())
+                                     """)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text("\(metadata.currentIndex) of \(metadata.totalCount)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 40, alignment: .trailing)
+                            }
+                            .padding(.top, 8)
+                            .padding(.horizontal, 4)
                         }
 
                         Text(isSaveOperationRunning ? "disabled" : "enabled")
@@ -268,7 +301,7 @@ struct AlbumArtSheetView: View {
                     .accessibilityIdentifier("albumArt.sheet.saveStatusVisible")
             }
         }
-        .frame(width: 524, height: 572)
+        .frame(width: 524, height: 582, alignment: .top)
         .accessibilityIdentifier("albumArt.sheet")
         .accessibilityLabel(isSaveOperationRunning ? "imageWellDisabled" : "imageWellEnabled")
         .accessibilityValue(isSaveOperationRunning ? "imageWellDisabled" : "imageWellEnabled")

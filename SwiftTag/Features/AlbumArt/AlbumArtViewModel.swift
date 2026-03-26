@@ -45,6 +45,33 @@ struct AlbumArtInfoOverlayState: Equatable {
     let messages: [AlbumArtInfoOverlayMessage]
 }
 
+struct AlbumArtPictureMetadata: Equatable {
+    let description: String
+    let poolItemIDShort: String
+    let inSlotReferenceCount: Int
+    let outOfSlotReferenceCount: Int
+    let pinCount: Int
+    let mimeType: String
+    let byteCount: Int
+    let currentIndex: Int
+    let totalCount: Int
+    
+    func descriptionText() -> String {
+        return self.description.isEmpty ? "None" : self.description
+    }
+    
+    func mimeTypeText() -> String {
+        return self.mimeType.isEmpty ? "NA" : self.mimeType
+    }
+    
+    func byteCountText() -> String {
+        return ByteCountFormatter.string(
+            fromByteCount: Int64(self.byteCount),
+            countStyle: .file
+        )
+    }
+}
+
 @MainActor
 @Observable
 final class AlbumArtViewModel {
@@ -200,12 +227,12 @@ final class AlbumArtViewModel {
         return twinNames.sorted()
     }
 
-    func currentPictureMetadataText(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> String? {
+    func currentPictureMetadata(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> AlbumArtPictureMetadata? {
         guard let reference = currentReference(for: slot),
               let poolItem = picturePool[reference.poolItemID] else {
             return nil
         }
-        
+
         var refCount = (inSlot: 0, outSlot: 0, pinCount: 0)
         for trackID in allTrackIDs {
             let refs = trackReferencesByTrackID[trackID, default: []]
@@ -223,10 +250,18 @@ final class AlbumArtViewModel {
         let presentedRefs = presentedReferences(for: slot)
         let typeImageCount = presentedRefs.count
         let currentIndex = min(currentReferenceIndexBySlot[slot, default: 0], max(typeImageCount - 1, 0)) + 1
-        let descriptionText = reference.description.isEmpty ? "None" : reference.description
-        let mimeText = reference.mimeType.isEmpty ? "unknown" : reference.mimeType
-        let byteCount = ByteCountFormatter.string(fromByteCount: Int64(poolItem.data.count), countStyle: .file)
-        return "\(descriptionText) \(reference.poolItemIDShort()) \(refCount.inSlot) \(refCount.outSlot) \(refCount.pinCount) · \(mimeText) · \(byteCount) · \(currentIndex) of \(typeImageCount)"
+
+        return AlbumArtPictureMetadata(
+            description: reference.description,
+            poolItemIDShort: reference.poolItemIDShort(),
+            inSlotReferenceCount: refCount.inSlot,
+            outOfSlotReferenceCount: refCount.outSlot,
+            pinCount: refCount.pinCount,
+            mimeType: reference.mimeType,
+            byteCount: poolItem.data.count,
+            currentIndex: currentIndex,
+            totalCount: typeImageCount
+        )
     }
 
     func infoOverlayMessages(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> [AlbumArtInfoOverlayMessage] {

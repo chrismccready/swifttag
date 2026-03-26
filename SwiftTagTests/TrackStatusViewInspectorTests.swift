@@ -365,7 +365,9 @@ struct TrackStatusViewInspectorTests {
             pinCount: 2
         )
 
-        let _ = try sut.inspect().find(text: "Front Cover • 3 • 2")
+        let inspection = try sut.inspect()
+        let _ = try inspection.find(text: "Front Cover")
+        let _ = try inspection.find(text: "3 : 2")
     }
 
     @Test
@@ -379,13 +381,24 @@ struct TrackStatusViewInspectorTests {
                     message: "Removed from selected tracks. Re-pin to add it back."
                 )
             ],
-            metadataText: "In file: Mixed 1 of 3"
+            metadata: AlbumArtPictureMetadata(
+                description: "Front Cover",
+                poolItemIDShort: "ABC123",
+                inSlotReferenceCount: 2,
+                outOfSlotReferenceCount: 1,
+                pinCount: 1,
+                mimeType: "image/png",
+                byteCount: 1_024,
+                currentIndex: 1,
+                totalCount: 3
+            )
         )
 
         let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
         #expect(actualView.infoOverlayMessagesForSlot(.frontCover).count == 1)
         #expect(actualView.infoOverlayMessagesForSlot(.frontCover).first?.message == "Removed from selected tracks. Re-pin to add it back.")
-        #expect(actualView.metadataTextForSlot(.frontCover) == "In file: Mixed 1 of 3")
+        #expect(actualView.metadataForSlot(.frontCover)?.currentIndex == 1)
+        #expect(actualView.metadataForSlot(.frontCover)?.totalCount == 3)
 
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -397,7 +410,7 @@ struct TrackStatusViewInspectorTests {
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
         #expect(source.contains("let infoOverlayMessages = infoOverlayMessagesForSlot(albumArtSlot)"))
         #expect(source.contains("ForEach(Array(infoOverlayMessages.enumerated()), id: \\.offset)"))
-        #expect(source.contains("if let metadataText = metadataTextForSlot(albumArtSlot)"))
+        #expect(source.contains("if let metadata = metadataForSlot(albumArtSlot)"))
     }
 
     @Test
@@ -619,7 +632,7 @@ struct TrackStatusViewInspectorTests {
         pictureCount: Int = 1,
         pinCount: Int = 0,
         infoOverlayMessages: [AlbumArtInfoOverlayMessage] = [],
-        metadataText: String? = nil,
+        metadata: AlbumArtPictureMetadata? = nil,
         typePictureScope: AlbumArtPictureScope = .allTrackPictures,
         isTypePictureScopeDisabled: Bool = false,
         canGoToPreviousPicture: Bool = false,
@@ -653,7 +666,7 @@ struct TrackStatusViewInspectorTests {
             onFileExportResult: { _ in },
             pictureCountForSlot: { _ in (pictureCount, pinCount) },
             infoOverlayMessagesForSlot: { _ in infoOverlayMessages },
-            metadataTextForSlot: { _ in metadataText },
+            metadataForSlot: { _ in metadata },
             hasCrossTypeDuplicateForSlot: { _ in false },
             scopeLabelText: "All Tracks",
             typePictureScopeForSlot: { _ in typePictureScope },

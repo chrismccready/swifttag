@@ -689,8 +689,8 @@ struct ContentView: View {
             infoOverlayMessagesForSlot: { slot in
                 albumArtViewModel.infoOverlayMessages(for: slot, albumArtTypes: albumArtTypes)
             },
-            metadataTextForSlot: { slot in
-                albumArtViewModel.currentPictureMetadataText(for: slot, albumArtTypes: albumArtTypes)
+            metadataForSlot: { slot in
+                albumArtViewModel.currentPictureMetadata(for: slot, albumArtTypes: albumArtTypes)
             },
             hasCrossTypeDuplicateForSlot: { slot in
                 albumArtViewModel.hasCrossTypeDuplicate(for: slot)

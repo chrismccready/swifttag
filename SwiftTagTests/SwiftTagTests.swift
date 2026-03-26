@@ -785,9 +785,14 @@ struct SwiftTagTests {
         )
         viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: false)
 
+        #expect(viewModel.uniquePictureCount(for: .frontCover).count == 0)
+        #expect(!viewModel.hasImage(for: .frontCover))
+        #expect(!viewModel.isCurrentPicturePinned(for: .frontCover))
+
+        viewModel.setTypePictureScope(.allTrackPictures, for: .frontCover, albumArtTypes: albumArtTypes)
+
         #expect(viewModel.uniquePictureCount(for: .frontCover).count == 1)
         #expect(viewModel.hasImage(for: .frontCover))
-        #expect(!viewModel.isCurrentPicturePinned(for: .frontCover))
 
         viewModel.setCurrentPicturePinned(true, for: .frontCover, albumArtTypes: albumArtTypes)
 
@@ -928,9 +933,14 @@ struct SwiftTagTests {
         )
 
         #expect(!viewModel.canNavigatePictures(for: .frontCover))
-        let metadata = viewModel.currentPictureMetadataText(for: .frontCover, albumArtTypes: albumArtTypes) ?? ""
-        #expect(metadata.contains("In file: Yes"))
-        #expect(metadata.contains("1 of 1"))
+        let metadata = try #require(
+            viewModel.currentPictureMetadata(for: .frontCover, albumArtTypes: albumArtTypes)
+        )
+        #expect(metadata.inSlotReferenceCount == 2)
+        #expect(metadata.outOfSlotReferenceCount == 0)
+        #expect(metadata.pinCount == 2)
+        #expect(metadata.currentIndex == 1)
+        #expect(metadata.totalCount == 1)
     }
 
     @Test
@@ -991,8 +1001,11 @@ struct SwiftTagTests {
         }
 
         #expect(didSelectAddedPicture)
-        let metadata = viewModel.currentPictureMetadataText(for: .backCover, albumArtTypes: albumArtTypes) ?? ""
-        #expect(metadata.contains("2 of 2"))
+        let metadata = try #require(
+            viewModel.currentPictureMetadata(for: .backCover, albumArtTypes: albumArtTypes)
+        )
+        #expect(metadata.currentIndex == 2)
+        #expect(metadata.totalCount == 2)
     }
 
     @Test
@@ -1031,8 +1044,11 @@ struct SwiftTagTests {
         }
 
         #expect(didSelectMatchingPicture)
-        let metadata = viewModel.currentPictureMetadataText(for: .backCover, albumArtTypes: albumArtTypes) ?? ""
-        #expect(metadata.contains("1 of 2") || metadata.contains("2 of 2"))
+        let metadata = try #require(
+            viewModel.currentPictureMetadata(for: .backCover, albumArtTypes: albumArtTypes)
+        )
+        #expect(metadata.totalCount == 2)
+        #expect((1...2).contains(metadata.currentIndex))
     }
 
     @Test
@@ -1069,8 +1085,11 @@ struct SwiftTagTests {
         #expect(didSelectExistingPicture)
         #expect(viewModel.trackReferencesByTrackID[track.id, default: []].count == initialTrackReferenceCount)
         #expect(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).count == initialWritableCount)
-        let metadata = viewModel.currentPictureMetadataText(for: .backCover, albumArtTypes: albumArtTypes) ?? ""
-        #expect(metadata.contains("1 of 1"))
+        let metadata = try #require(
+            viewModel.currentPictureMetadata(for: .backCover, albumArtTypes: albumArtTypes)
+        )
+        #expect(metadata.currentIndex == 1)
+        #expect(metadata.totalCount == 1)
     }
 
     @Test
@@ -1199,8 +1218,11 @@ struct SwiftTagTests {
 
         #expect(didSelectAddedPicture)
         #expect(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).map(\.description) == ["First Front", "Cover (front)"])
-        let metadata = viewModel.currentPictureMetadataText(for: .frontCover, albumArtTypes: albumArtTypes) ?? ""
-        #expect(metadata.contains("2 of 2"))
+        let metadata = try #require(
+            viewModel.currentPictureMetadata(for: .frontCover, albumArtTypes: albumArtTypes)
+        )
+        #expect(metadata.currentIndex == 2)
+        #expect(metadata.totalCount == 2)
     }
 
     @Test
@@ -1261,15 +1283,23 @@ struct SwiftTagTests {
             albumArtTypes: albumArtTypes
         )
 
-        let metadata = viewModel.currentPictureMetadataText(for: .frontCover, albumArtTypes: albumArtTypes) ?? ""
-        #expect(metadata.contains("In file: Yes"))
-        #expect(metadata.contains("1 of 2"))
+        let metadata = try #require(
+            viewModel.currentPictureMetadata(for: .frontCover, albumArtTypes: albumArtTypes)
+        )
+        #expect(metadata.inSlotReferenceCount == 2)
+        #expect(metadata.outOfSlotReferenceCount == 0)
+        #expect(metadata.currentIndex == 1)
+        #expect(metadata.totalCount == 2)
 
         viewModel.goToNextPicture(for: .frontCover, albumArtTypes: albumArtTypes)
 
-        let secondMetadata = viewModel.currentPictureMetadataText(for: .frontCover, albumArtTypes: albumArtTypes) ?? ""
-        #expect(secondMetadata.contains("In file: Mixed"))
-        #expect(secondMetadata.contains("2 of 2"))
+        let secondMetadata = try #require(
+            viewModel.currentPictureMetadata(for: .frontCover, albumArtTypes: albumArtTypes)
+        )
+        #expect(secondMetadata.inSlotReferenceCount == 1)
+        #expect(secondMetadata.outOfSlotReferenceCount == 0)
+        #expect(secondMetadata.currentIndex == 2)
+        #expect(secondMetadata.totalCount == 2)
     }
 
     @Test
