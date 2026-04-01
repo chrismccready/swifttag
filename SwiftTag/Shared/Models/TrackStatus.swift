@@ -4,15 +4,18 @@ struct TrackFileSnapshot: Equatable {
     var tags: [String: String]
     var picturesByType: [Int: Data]
     var pictureRecords: [FlacWritablePictureRecord]
+    var fingerprint: String?
 
     init(
         tags: [String: String],
         picturesByType: [Int: Data],
-        pictureRecords: [FlacWritablePictureRecord] = []
+        pictureRecords: [FlacWritablePictureRecord] = [],
+        fingerprint: String? = nil
     ) {
         self.tags = tags
         self.picturesByType = picturesByType
         self.pictureRecords = pictureRecords
+        self.fingerprint = fingerprint
     }
 }
 

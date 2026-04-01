@@ -5,6 +5,7 @@ struct TagEditorTrackFileView: View {
     let trackItems: [Track]
     let statusRefreshID: String
     var selection: Binding<Set<UUID>>
+    var showsFingerprintColumn: Binding<Bool>
     let titleBindingForTrack: (UUID) -> Binding<String>?
     let statusPresentationForTrack: (UUID) -> TrackStatusPresentation?
     let isTrackLocked: (UUID) -> Bool
@@ -50,6 +51,10 @@ struct TagEditorTrackFileView: View {
             let rhsFilename = $1.tags[TagKey.filename] ?? ""
             return lhsFilename.localizedStandardCompare(rhsFilename) == .orderedAscending
         }
+    }
+
+    private var fingerprintColumnMenuTitle: String {
+        showsFingerprintColumn.wrappedValue ? "Hide Fingerprint Column" : "Show Fingerprint Column"
     }
 
     var body: some View {
@@ -99,6 +104,14 @@ struct TagEditorTrackFileView: View {
                     .strikethrough(hasDeletedFile(track.id), color: .red)
             }
             .width(min: 52)
+
+            if showsFingerprintColumn.wrappedValue {
+                TableColumn("Fingerprint (ffp)") { track in
+                    Text(track.fingerprintDisplayValue)
+                        .foregroundStyle(.primary)
+                }
+                .width(min: 90)
+            }
         }
         .id(statusRefreshID)
         .frame(minHeight: 64, idealHeight: .infinity)
@@ -138,6 +151,12 @@ struct TagEditorTrackFileView: View {
                 onRemoveSelectedTracks()
             }
             .disabled(!canRemoveSelectedTracks)
+
+            Divider()
+
+            Button(fingerprintColumnMenuTitle) {
+                showsFingerprintColumn.wrappedValue.toggle()
+            }
         }
         .onDrop(of: [.fileURL], isTargeted: nil, perform: onDropFlacFiles)
     }

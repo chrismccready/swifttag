@@ -17,6 +17,7 @@ enum FlacMetadataServiceError: LocalizedError {
 struct FlacMetadataRecord {
     let tags: [String: String]
     let pictures: [FlacPictureRecord]
+    let fingerprint: String?
 }
 
 struct FlacPictureRecord {
@@ -38,6 +39,7 @@ enum FlacMetadataService {
     static func readTags(for fileURL: URL) throws -> FlacMetadataRecord {
         var result = FlacTagResult(pairs: nil, count: 0)
         var pictureResult = FlacPictureResult(pictures: nil, count: 0)
+        var fingerprintPointer: UnsafeMutablePointer<CChar>? = nil
         var errorMessage: UnsafeMutablePointer<CChar>? = nil
 
         let status: Int32 = fileURL.path.withCString { filePath in
@@ -47,6 +49,9 @@ enum FlacMetadataService {
         defer {
             flac_free_tag_result(&result)
             flac_free_picture_result(&pictureResult)
+            if let fingerprintPointer {
+                flac_free_c_string(fingerprintPointer)
+            }
             if let errorMessage {
                 flac_free_c_string(errorMessage)
             }
@@ -63,6 +68,15 @@ enum FlacMetadataService {
 
         guard pictureStatus == 0 else {
             let message = errorMessage.map { String(cString: $0) } ?? "Unknown FLAC picture bridge error."
+            throw FlacMetadataServiceError.bridgeFailed(message: message)
+        }
+
+        let fingerprintStatus: Int32 = fileURL.path.withCString { filePath in
+            flac_read_fingerprint(filePath, &fingerprintPointer, &errorMessage)
+        }
+
+        guard fingerprintStatus == 0 else {
+            let message = errorMessage.map { String(cString: $0) } ?? "Unknown FLAC fingerprint bridge error."
             throw FlacMetadataServiceError.bridgeFailed(message: message)
         }
 
@@ -105,7 +119,11 @@ enum FlacMetadataService {
             }
         }
 
-        return FlacMetadataRecord(tags: tags, pictures: pictures)
+        let fingerprint = fingerprintPointer
+            .map { String(cString: $0).trimmingCharacters(in: .whitespacesAndNewlines) }
+            .flatMap { $0.isEmpty ? nil : $0 }
+
+        return FlacMetadataRecord(tags: tags, pictures: pictures, fingerprint: fingerprint)
     }
 
     @discardableResult

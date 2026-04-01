@@ -12,6 +12,7 @@ struct Track: Identifiable {
     var securityScopedBookmarkData: Data?
     var latestFileSnapshot: TrackFileSnapshot?
     var externalDifferences: TrackExternalDifferences?
+    var fingerprint: String?
     var isLocked: Bool
 
     var isImportedFlacTrack: Bool {
@@ -61,6 +62,10 @@ struct Track: Identifiable {
         }
     }
 
+    var fingerprintDisplayValue: String {
+        return fingerprint ?? "NA"
+    }
+
     init(
         id: UUID = UUID(),
         album: String? = nil,
@@ -73,6 +78,7 @@ struct Track: Identifiable {
         securityScopedBookmarkData: Data? = nil,
         latestFileSnapshot: TrackFileSnapshot? = nil,
         externalDifferences: TrackExternalDifferences? = nil,
+        fingerprint: String? = nil,
         isLocked: Bool = false
     ) {
         self.id = id
@@ -97,6 +103,7 @@ struct Track: Identifiable {
         self.securityScopedBookmarkData = securityScopedBookmarkData
         self.latestFileSnapshot = latestFileSnapshot
         self.externalDifferences = externalDifferences
+        self.fingerprint = Track.normalizedOptionalValue(fingerprint)
         self.isLocked = isLocked
     }
 
@@ -107,5 +114,14 @@ struct Track: Identifiable {
     private static func normalizedNumericValue(_ value: String) -> String {
         let trimmedValue = normalizedSharedValue(value)
         return Int(trimmedValue).map(String.init) ?? trimmedValue
+    }
+
+    private static func normalizedOptionalValue(_ value: String?) -> String? {
+        guard let value else {
+            return nil
+        }
+
+        let trimmedValue = normalizedSharedValue(value)
+        return trimmedValue.isEmpty ? nil : trimmedValue
     }
 }

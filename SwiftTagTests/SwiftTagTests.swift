@@ -22,6 +22,8 @@ struct SwiftTagTests {
             .appendingPathComponent("test-with_padding.flac")
     }
 
+    private static let fixtureFingerprint = "ad98344c162662ceeb88f25aa552af60"
+
     private static func pngData(color: NSColor) throws -> Data {
         let imageSize = NSSize(width: 2, height: 2)
         let image = NSImage(size: imageSize)
@@ -266,6 +268,7 @@ struct SwiftTagTests {
     func feedbackSettingsDefaultsMatchPlan() {
         #expect(FeedbackSettingsDefaults.saveNotificationMode == .whenNotFrontmost)
         #expect(FeedbackSettingsDefaults.themePreference == .system)
+        #expect(FeedbackSettingsDefaults.showTrackFingerprintColumn)
         #expect(FeedbackSettingsDefaults.formatOnTrackToFileDiff)
         #expect(FeedbackSettingsDefaults.formatOnTrackToTrackDiff)
         #expect(FeedbackSettingsDefaults.formatOnExternallyModifiedDiff)
@@ -417,6 +420,7 @@ struct SwiftTagTests {
         #expect(record.tags["COMPOSER"] == "Test Composer")
         #expect(record.tags["DESCRIPTION"] == "Test Description")
         #expect(record.tags["ENCODED_BY"] == "Test Encoded_By")
+        #expect(record.fingerprint == Self.fixtureFingerprint)
         #expect(record.pictures.count >= 0)
     }
 
@@ -428,6 +432,80 @@ struct SwiftTagTests {
         let record = try FlacMetadataService.readTags(for: fileURL)
         #expect(record.tags["ALBUM"] == "Test Album")
         #expect(record.tags["ALBUMARTIST"] == "Test AlbumArtist")
+        #expect(record.fingerprint == Self.fixtureFingerprint)
+    }
+
+    @Test
+    func flacMetadataServiceSurfacesBridgeFailureForMissingFile() {
+        let missingURL = URL(fileURLWithPath: "/tmp/\(UUID().uuidString)-missing.flac")
+
+        do {
+            _ = try FlacMetadataService.readTags(for: missingURL)
+            Issue.record("Expected missing file read to fail.")
+        } catch let error as FlacMetadataServiceError {
+            switch error {
+            case let .bridgeFailed(message):
+                #expect(!message.isEmpty)
+                #expect(message.contains("FLAC__metadata_get_tags failed for file."))
+            }
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
+        }
+    }
+
+    @Test
+    @MainActor
+    func importFlacFilesPropagatesFixtureFingerprintToTrackAndSnapshot() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "fingerprint-import.flac")
+        let viewModel = TagEditorViewModel()
+
+        try await viewModel.importFlacFiles([fileURL])
+
+        let importedTrack = try #require(viewModel.trackItems.first)
+        #expect(importedTrack.fingerprint == Self.fixtureFingerprint)
+        #expect(importedTrack.latestFileSnapshot?.fingerprint == Self.fixtureFingerprint)
+    }
+
+    @Test
+    @MainActor
+    func reloadTracksWithDifferencesRestoresTrackFingerprintFromFile() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "fingerprint-reload.flac")
+        let viewModel = TagEditorViewModel()
+
+        try await viewModel.importFlacFiles([fileURL])
+        let trackID = try #require(viewModel.trackItems.first?.id)
+
+        viewModel.trackItems[0].tags[TagKey.title] = "Changed Title"
+        viewModel.trackItems[0].fingerprint = "stale"
+
+        try viewModel.reloadTracksWithDifferences(
+            in: [trackID],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(viewModel.trackItems[0].fingerprint == Self.fixtureFingerprint)
+        #expect(viewModel.trackItems[0].latestFileSnapshot?.fingerprint == Self.fixtureFingerprint)
+    }
+
+    @Test
+    @MainActor
+    func refreshTrackFileStateReplacesStaleFingerprintFromCurrentFile() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "fingerprint-refresh.flac")
+        let viewModel = TagEditorViewModel()
+
+        try await viewModel.importFlacFiles([fileURL])
+        let trackID = try #require(viewModel.trackItems.first?.id)
+
+        viewModel.trackItems[0].fingerprint = "stale"
+
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(viewModel.trackItems[0].fingerprint == Self.fixtureFingerprint)
     }
 
     @Test

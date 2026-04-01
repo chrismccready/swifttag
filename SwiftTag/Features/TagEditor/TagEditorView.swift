@@ -22,6 +22,7 @@ struct TagEditorView: View {
     let trackItems: [Track]
     let trackStatusRefreshID: String
     var selectedTrackIDsBinding: Binding<Set<UUID>>
+    var showsFingerprintColumnBinding: Binding<Bool>
     let titleBindingForTrack: (UUID) -> Binding<String>?
     let statusPresentationForTrack: (UUID) -> TrackStatusPresentation?
     let isTrackLocked: (UUID) -> Bool
@@ -134,6 +135,7 @@ struct TagEditorView: View {
                 trackItems: trackItems,
                 statusRefreshID: trackStatusRefreshID,
                 selection: selectedTrackIDsBinding,
+                showsFingerprintColumn: showsFingerprintColumnBinding,
                 titleBindingForTrack: titleBindingForTrack,
                 statusPresentationForTrack: statusPresentationForTrack,
                 isTrackLocked: isTrackLocked,

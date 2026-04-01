@@ -106,6 +106,28 @@ static int append_picture(FlacPictureResult *result, const FLAC__StreamMetadata_
     return 0;
 }
 
+static int copy_streaminfo_md5_hex(const FLAC__byte md5sum[16], char **out_fingerprint) {
+    static const char hex_digits[] = "0123456789abcdef";
+
+    if (md5sum == NULL || out_fingerprint == NULL) {
+        return -1;
+    }
+
+    char *fingerprint = (char *)malloc(33);
+    if (fingerprint == NULL) {
+        return -1;
+    }
+
+    for (size_t index = 0; index < 16; index++) {
+        unsigned char byte = md5sum[index];
+        fingerprint[index * 2] = hex_digits[byte >> 4];
+        fingerprint[index * 2 + 1] = hex_digits[byte & 0x0F];
+    }
+    fingerprint[32] = '\0';
+    *out_fingerprint = fingerprint;
+    return 0;
+}
+
 static void set_chain_error(char **error_message, FLAC__Metadata_Chain *chain, const char *fallback_message) {
     if (chain != NULL) {
         FLAC__Metadata_ChainStatus status = FLAC__metadata_chain_status(chain);
@@ -510,6 +532,35 @@ int flac_read_pictures(const char *file_path, FlacPictureResult *out_result, cha
 
     FLAC__metadata_iterator_delete(iterator);
     FLAC__metadata_chain_delete(chain);
+    return 0;
+}
+
+int flac_read_fingerprint(const char *file_path, char **out_fingerprint, char **error_message) {
+    if (out_fingerprint == NULL || file_path == NULL) {
+        set_error(error_message, "Invalid arguments for flac_read_fingerprint.");
+        return -1;
+    }
+
+    *out_fingerprint = NULL;
+
+    FLAC__StreamMetadata streaminfo;
+    memset(&streaminfo, 0, sizeof(streaminfo));
+
+    if (!FLAC__metadata_get_streaminfo(file_path, &streaminfo)) {
+        set_error(error_message, "FLAC__metadata_get_streaminfo failed for file.");
+        return -1;
+    }
+
+    if (streaminfo.type != FLAC__METADATA_TYPE_STREAMINFO) {
+        set_error(error_message, "FLAC stream info metadata block was unavailable.");
+        return -1;
+    }
+
+    if (copy_streaminfo_md5_hex(streaminfo.data.stream_info.md5sum, out_fingerprint) != 0) {
+        set_error(error_message, "Out of memory while collecting FLAC fingerprint.");
+        return -1;
+    }
+
     return 0;
 }
 

@@ -50,6 +50,7 @@ typedef struct {
 // On error, if error_message is non-NULL, caller must call flac_free_c_string.
 int flac_read_tags(const char *file_path, FlacTagResult *out_result, char **error_message);
 int flac_read_pictures(const char *file_path, FlacPictureResult *out_result, char **error_message);
+int flac_read_fingerprint(const char *file_path, char **out_fingerprint, char **error_message);
 int flac_write_metadata(
     const char *file_path,
     const char *temp_file_path,

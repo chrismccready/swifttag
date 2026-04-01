@@ -760,8 +760,10 @@ final class TagEditorViewModel {
                     latestFileSnapshot: makeFileSnapshot(
                         tags: tags,
                         picturesByType: trackPicturesByType,
-                        pictureRecords: trackPictureRecords
+                        pictureRecords: trackPictureRecords,
+                        fingerprint: metadata.fingerprint
                     ),
+                    fingerprint: metadata.fingerprint,
                     isLocked: locked
                 )
             )
@@ -1053,7 +1055,8 @@ final class TagEditorViewModel {
             trackItems[index].latestFileSnapshot = TrackFileSnapshot(
                 tags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
                 picturesByType: writablePicturesByType(from: picturesForTrack),
-                pictureRecords: canonicalPictureRecords(picturesForTrack)
+                pictureRecords: canonicalPictureRecords(picturesForTrack),
+                fingerprint: trackItems[index].fingerprint
             )
             trackItems[index].externalDifferences = nil
         }
@@ -1149,6 +1152,7 @@ final class TagEditorViewModel {
                 updatedTrackItems[index].flacPicturesByType = picturesByType
                 updatedTrackItems[index].sourceFileURL = fileURL
                 updatedTrackItems[index].securityScopedBookmarkData = refreshedBookmarkData
+                updatedTrackItems[index].fingerprint = metadata.fingerprint
                 updatedTrackItems[index].latestFileSnapshot = TrackFileSnapshot(
                     tags: FlacWriteMapper.makeTags(
                         for: updatedTrackItems[index],
@@ -1156,7 +1160,8 @@ final class TagEditorViewModel {
                         options: tagWriteOptions
                     ),
                     picturesByType: writablePicturesByType(from: pictureRecords),
-                    pictureRecords: canonicalPictureRecords(pictureRecords)
+                    pictureRecords: canonicalPictureRecords(pictureRecords),
+                    fingerprint: metadata.fingerprint
                 )
                 updatedTrackItems[index].externalDifferences = nil
                 didUpdateTrackItems = true
@@ -1215,12 +1220,14 @@ final class TagEditorViewModel {
         tagWriteOptions: TagWriteOptions,
         albumArtPictures: [FlacWritablePictureRecord]
     ) throws {
-        _ = try FlacMetadataService.readTags(for: fileURL)
+        let metadata = try FlacMetadataService.readTags(for: fileURL)
         let picturesByType = writablePicturesByType(from: albumArtPictures)
+        trackItems[index].fingerprint = metadata.fingerprint
         trackItems[index].latestFileSnapshot = TrackFileSnapshot(
             tags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
             picturesByType: picturesByType,
-            pictureRecords: canonicalPictureRecords(albumArtPictures)
+            pictureRecords: canonicalPictureRecords(albumArtPictures),
+            fingerprint: metadata.fingerprint
         )
         trackItems[index].flacPictureRecords = albumArtPictures
         trackItems[index].flacPicturesByType = picturesByType
@@ -1300,9 +1307,11 @@ final class TagEditorViewModel {
             let fileSnapshot = makeFileSnapshot(
                 tags: metadata.tags,
                 picturesByType: FlacImportMapper.mapPicturesByType(metadata.pictures),
-                pictureRecords: pictureRecords
+                pictureRecords: pictureRecords,
+                fingerprint: metadata.fingerprint
             )
             trackItems[index].flacPictureRecords = pictureRecords
+            trackItems[index].fingerprint = metadata.fingerprint
             trackItems[index].externalDifferences = externalDifferences(
                 for: index,
                 fileSnapshot: fileSnapshot,
@@ -1384,12 +1393,14 @@ final class TagEditorViewModel {
     private func makeFileSnapshot(
         tags: [String: String],
         picturesByType: [Int: Data],
-        pictureRecords: [FlacWritablePictureRecord] = []
+        pictureRecords: [FlacWritablePictureRecord] = [],
+        fingerprint: String? = nil
     ) -> TrackFileSnapshot {
         TrackFileSnapshot(
             tags: normalizeFileTags(tags),
             picturesByType: picturesByType,
-            pictureRecords: pictureRecords
+            pictureRecords: pictureRecords,
+            fingerprint: fingerprint
         )
     }
 
