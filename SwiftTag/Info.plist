@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+			<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>SwiftTagFLACDoc</string>
+			<key>CFBundleTypeIconSystemGenerated</key>
+			<false/>
+			<key>CFBundleTypeName</key>
+			<string>FLAC Audio</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.xiph.flac</string>
+			</array>
+		</dict>
+	</array>
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.audio</string>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>FLAC Audio</string>
+			<key>UTTypeIconFile</key>
+			<string>SwiftTagFLACDoc</string>
+			<key>UTTypeIcons</key>
+			<dict>
+				<key>UTTypeIconBadgeName</key>
+				<string>SwiftTagFLACDoc</string>
+			</dict>
+			<key>UTTypeIdentifier</key>
+			<string>org.xiph.flac</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>flac</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>audio/flac</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

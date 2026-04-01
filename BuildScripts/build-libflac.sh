@@ -37,6 +37,15 @@ INSTALL_ROOT="${BUILD_ROOT}/install"
 
 mkdir -p "${BUILD_ROOT}" "${INSTALL_ROOT}"
 
+filter_ranlib_warnings() {
+  while IFS= read -r line; do
+    if [[ "${line}" == *"libFLAC.a("* && "${line}" == *"has no symbols"* ]]; then
+      continue
+    fi
+    printf '%s\n' "${line}" >&2
+  done
+}
+
 # Resolve primary arch for single-config local builds.
 PRIMARY_ARCH="${CURRENT_ARCH:-arm64}"
 if [[ -z "${PRIMARY_ARCH}" || "${PRIMARY_ARCH}" == "undefined_arch" ]]; then
@@ -64,8 +73,10 @@ CMAKE_OSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-13.0}"
   -DINSTALL_PKGCONFIG_MODULE=OFF \
   -DCMAKE_INSTALL_PREFIX="${INSTALL_ROOT}"
 
-"${CMAKE_BIN}" --build "${BUILD_ROOT}" --config "${CMAKE_CONFIG}" --target FLAC
-"${CMAKE_BIN}" --install "${BUILD_ROOT}" --config "${CMAKE_CONFIG}"
+"${CMAKE_BIN}" --build "${BUILD_ROOT}" --config "${CMAKE_CONFIG}" --target FLAC \
+  2> >(filter_ranlib_warnings)
+"${CMAKE_BIN}" --install "${BUILD_ROOT}" --config "${CMAKE_CONFIG}" \
+  2> >(filter_ranlib_warnings)
 
 if [[ ! -f "${INSTALL_ROOT}/lib/libFLAC.a" ]]; then
   echo "error: expected static library at ${INSTALL_ROOT}/lib/libFLAC.a"

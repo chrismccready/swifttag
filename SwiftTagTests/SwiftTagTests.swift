@@ -3629,4 +3629,173 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
 
         XCTAssertEqual(reportedError, "The save notification did not contain valid reopening data.")
     }
+
+    @MainActor
+    func testFinderOpenRoutesToFocusedSessionWhenAppIsActive() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let sessionValue = EditorSessionValue(sessionID: UUID())
+        coordinator.register(sessionValue: sessionValue, trackReferences: [])
+        coordinator.markSessionFocused(sessionValue.sessionID)
+
+        var deliveredURLs: [URL] = []
+        coordinator.registerExternalOpenHandler(sessionID: sessionValue.sessionID) { urls in
+            deliveredURLs = urls
+        }
+
+        let didRouteFiles = coordinator.routeFinderOpenedFiles(
+            [
+                URL(fileURLWithPath: "/tmp/Focused.flac"),
+                URL(fileURLWithPath: "/tmp/ignored.txt")
+            ],
+            appIsActive: true
+        )
+
+        XCTAssertTrue(didRouteFiles)
+        XCTAssertEqual(deliveredURLs.map(\.path), ["/tmp/Focused.flac"])
+    }
+
+    @MainActor
+    func testFinderOpenCreatesNewWindowWhenAppIsInactive() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let existingSession = EditorSessionValue(sessionID: UUID())
+        coordinator.register(sessionValue: existingSession, trackReferences: [])
+        coordinator.markSessionFocused(existingSession.sessionID)
+
+        var openedSession: EditorSessionValue?
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSession = sessionValue
+        }
+
+        let didRouteFiles = coordinator.routeFinderOpenedFiles(
+            [URL(fileURLWithPath: "/tmp/inactive.flac")],
+            appIsActive: false
+        )
+
+        XCTAssertTrue(didRouteFiles)
+        XCTAssertNotNil(openedSession)
+        XCTAssertNotEqual(openedSession?.sessionID, existingSession.sessionID)
+    }
+
+    @MainActor
+    func testFinderOpenCreatesNewEditorWindowWhenAppIsActiveWithoutEditorSession() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        var openedSession: EditorSessionValue?
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSession = sessionValue
+        }
+
+        let didRouteFiles = coordinator.routeFinderOpenedFiles(
+            [URL(fileURLWithPath: "/tmp/settings-only.flac")],
+            appIsActive: true
+        )
+
+        XCTAssertTrue(didRouteFiles)
+        XCTAssertNotNil(openedSession)
+    }
+
+    @MainActor
+    func testFinderOpenBringsExistingEditorWindowForwardWhenAppIsActive() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let sessionValue = EditorSessionValue(sessionID: UUID())
+        coordinator.register(sessionValue: sessionValue, trackReferences: [])
+        coordinator.markSessionFocused(sessionValue.sessionID)
+
+        var openedSessions: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSessions.append(sessionValue)
+        }
+
+        var deliveredURLs: [URL] = []
+        coordinator.registerExternalOpenHandler(sessionID: sessionValue.sessionID) { urls in
+            deliveredURLs = urls
+        }
+
+        let didRouteFiles = coordinator.routeFinderOpenedFiles(
+            [URL(fileURLWithPath: "/tmp/bring-forward.flac")],
+            appIsActive: true
+        )
+
+        XCTAssertTrue(didRouteFiles)
+        XCTAssertEqual(openedSessions, [sessionValue])
+        XCTAssertEqual(deliveredURLs.map(\.path), ["/tmp/bring-forward.flac"])
+    }
+
+    @MainActor
+    func testFinderOpenQueuesFilesUntilNewSessionRegistersHandler() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        var openedSession: EditorSessionValue?
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSession = sessionValue
+        }
+
+        let didRouteFiles = coordinator.routeFinderOpenedFiles(
+            [
+                URL(fileURLWithPath: "/tmp/b.flac"),
+                URL(fileURLWithPath: "/tmp/a.flac"),
+                URL(fileURLWithPath: "/tmp/a.flac")
+            ],
+            appIsActive: false
+        )
+
+        XCTAssertTrue(didRouteFiles)
+        guard let openedSession else {
+            XCTFail("Expected a new session to open.")
+            return
+        }
+
+        coordinator.register(sessionValue: openedSession, trackReferences: [])
+
+        var deliveredURLs: [URL] = []
+        coordinator.registerExternalOpenHandler(sessionID: openedSession.sessionID) { urls in
+            deliveredURLs = urls
+        }
+
+        XCTAssertEqual(deliveredURLs.map(\.path), ["/tmp/a.flac", "/tmp/b.flac"])
+    }
+
+    @MainActor
+    func testFinderOpenBeforeAnySessionBootstrapsFirstRegisteredHandler() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let didRouteFiles = coordinator.routeFinderOpenedFiles(
+            [URL(fileURLWithPath: "/tmp/bootstrap.flac")],
+            appIsActive: false
+        )
+
+        XCTAssertTrue(didRouteFiles)
+
+        let firstSession = EditorSessionValue(sessionID: UUID())
+        coordinator.register(sessionValue: firstSession, trackReferences: [])
+
+        var deliveredURLs: [URL] = []
+        coordinator.registerExternalOpenHandler(sessionID: firstSession.sessionID) { urls in
+            deliveredURLs = urls
+        }
+
+        XCTAssertEqual(deliveredURLs.map(\.path), ["/tmp/bootstrap.flac"])
+    }
+
+    @MainActor
+    func testFinderOpenRejectsUnsupportedBatches() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let didRouteFiles = coordinator.routeFinderOpenedFiles(
+            [URL(fileURLWithPath: "/tmp/ignored.txt")],
+            appIsActive: true
+        )
+
+        XCTAssertFalse(didRouteFiles)
+    }
 }

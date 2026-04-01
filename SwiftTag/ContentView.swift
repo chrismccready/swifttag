@@ -866,12 +866,7 @@ struct ContentView: View {
             .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
             .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
             .onDisappear {
-                EditorWindowCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
-                UnsavedChangesCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
-                trackFileMonitor.stopAll()
-                saveStatusState = nil
-                isSaveStatusVisible = false
-                isSaveOperationRunning = false
+                teardownEditorSession()
             }
     }
 
@@ -881,6 +876,10 @@ struct ContentView: View {
             .background(
                 WindowCloseGuardRepresentable(sessionID: sessionValue.sessionID) {
                     UnsavedChangesCoordinator.shared.confirmCloseWindowIfNeeded(for: sessionValue.sessionID)
+                } onWindowDidBecomeKey: {
+                    EditorWindowCoordinator.shared.markSessionFocused(sessionValue.sessionID)
+                } onWindowWillClose: {
+                    teardownEditorSession()
                 }
             )
             .fileImporter(
@@ -974,25 +973,12 @@ struct ContentView: View {
         pendingImporterAddsFiles = false
 
         Task {
-            let scopedURLs = selectedURLs.filter { $0.startAccessingSecurityScopedResource() }
-            defer {
-                for scopedURL in scopedURLs {
-                    scopedURL.stopAccessingSecurityScopedResource()
-                }
-            }
-
-            let flacFiles = collectFlacFiles(from: scopedURLs)
-            do {
-                if shouldAddImportedTracks {
-                    let filteredFiles = viewModel.removeDuplicateImportURLsByBookmarkIdentity(flacFiles)
-                    try await importFlacFiles(filteredFiles, locked: shouldLockImportedTracks, append: true)
-                } else {
-                    try await importFlacFiles(flacFiles, locked: shouldLockImportedTracks, append: false)
-                }
-            } catch {
-                importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                isImportErrorPresented = true
-            }
+            await importSelectedURLs(
+                selectedURLs,
+                locked: shouldLockImportedTracks,
+                append: shouldAddImportedTracks,
+                allowsDirectoryRecursion: true
+            )
         }
     }
 
@@ -1026,6 +1012,21 @@ struct ContentView: View {
         }
     }
 
+    private func collectDirectFlacFiles(from selectedURLs: [URL]) -> [URL] {
+        let uniqueFiles = Set(
+            selectedURLs
+                .filter { $0.isFileURL }
+                .filter { $0.pathExtension.localizedCaseInsensitiveCompare("flac") == .orderedSame }
+                .map { $0.standardizedFileURL.path }
+        )
+
+        return uniqueFiles
+            .map(URL.init(fileURLWithPath:))
+            .sorted {
+                $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending
+            }
+    }
+
     private func importFlacFiles(_ flacFiles: [URL], locked: Bool = false, append: Bool = false) async throws {
         try await viewModel.importFlacFiles(flacFiles, locked: locked, append: append)
         syncAlbumArtContext()
@@ -1036,6 +1037,36 @@ struct ContentView: View {
         )
         applyAutoTrackTotalIfNeeded()
         refreshTrackMonitoring()
+    }
+
+    private func importSelectedURLs(
+        _ selectedURLs: [URL],
+        locked: Bool,
+        append: Bool,
+        allowsDirectoryRecursion: Bool
+    ) async {
+        let startedScopedURLs = selectedURLs.filter { $0.startAccessingSecurityScopedResource() }
+        defer {
+            for scopedURL in startedScopedURLs {
+                scopedURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let flacFiles = allowsDirectoryRecursion
+            ? collectFlacFiles(from: selectedURLs)
+            : collectDirectFlacFiles(from: selectedURLs)
+
+        do {
+            if append {
+                let filteredFiles = viewModel.removeDuplicateImportURLsByBookmarkIdentity(flacFiles)
+                try await importFlacFiles(filteredFiles, locked: locked, append: true)
+            } else {
+                try await importFlacFiles(flacFiles, locked: locked, append: false)
+            }
+        } catch {
+            importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            isImportErrorPresented = true
+        }
     }
 
     private var saveSettingsSnapshot: SaveSettingsSnapshot {
@@ -1176,10 +1207,24 @@ struct ContentView: View {
         EditorWindowCoordinator.shared.setOpenEditorWindowAction { sessionValue in
             openWindow(id: AppSceneID.editor, value: sessionValue)
         }
+        EditorWindowCoordinator.shared.registerExternalOpenHandler(sessionID: sessionValue.sessionID) { urls in
+            handleExternallyOpenedFlacFiles(urls)
+        }
         EditorWindowCoordinator.shared.register(
             sessionValue: sessionValue,
             trackReferences: viewModel.importedTrackReferences
         )
+    }
+
+    private func handleExternallyOpenedFlacFiles(_ urls: [URL]) {
+        Task {
+            await importSelectedURLs(
+                urls,
+                locked: false,
+                append: true,
+                allowsDirectoryRecursion: false
+            )
+        }
     }
 
     private func loadReopenRecordIfNeeded() {
@@ -1207,6 +1252,32 @@ struct ContentView: View {
                 isImportErrorPresented = true
             }
         }
+    }
+
+    private func teardownEditorSession() {
+        EditorWindowCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
+        UnsavedChangesCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
+        trackFileMonitor.stopAll()
+        trackFileMonitor = .init()
+        viewModel = .init()
+        albumArtViewModel = .init()
+        saveStatusState = nil
+        isSaveStatusVisible = false
+        isSaveOperationRunning = false
+        isTomlSheetPresented = false
+        isFlacImporterPresented = false
+        pendingImporterLockedState = false
+        pendingImporterAddsFiles = false
+        isImportErrorPresented = false
+        isSaveErrorPresented = false
+        isDestructiveAlertPresented = false
+        isAlbumArtSheetPresented = false
+        importErrorMessage = ""
+        saveErrorMessage = ""
+        destructiveAlertContext = nil
+        pendingDestructiveAction = nil
+        loadedReopenRecordID = nil
+        focusedMiscTagKeyRowID = nil
     }
 
     private func importSavedTracks(from references: [ImportedTrackReference]) async throws {
@@ -1712,9 +1783,28 @@ extension FocusedValues {
 private struct WindowCloseGuardRepresentable: NSViewRepresentable {
     let sessionID: UUID
     let shouldAllowClose: () -> Bool
+    let onWindowDidBecomeKey: () -> Void
+    let onWindowWillClose: () -> Void
+
+    init(
+        sessionID: UUID,
+        shouldAllowClose: @escaping () -> Bool,
+        onWindowDidBecomeKey: @escaping () -> Void = {},
+        onWindowWillClose: @escaping () -> Void = {}
+    ) {
+        self.sessionID = sessionID
+        self.shouldAllowClose = shouldAllowClose
+        self.onWindowDidBecomeKey = onWindowDidBecomeKey
+        self.onWindowWillClose = onWindowWillClose
+    }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(sessionID: sessionID, shouldAllowClose: shouldAllowClose)
+        Coordinator(
+            sessionID: sessionID,
+            shouldAllowClose: shouldAllowClose,
+            onWindowDidBecomeKey: onWindowDidBecomeKey,
+            onWindowWillClose: onWindowWillClose
+        )
     }
 
     func makeNSView(context: Context) -> WindowCloseGuardHostView {
@@ -1726,6 +1816,8 @@ private struct WindowCloseGuardRepresentable: NSViewRepresentable {
     func updateNSView(_ nsView: WindowCloseGuardHostView, context: Context) {
         context.coordinator.sessionID = sessionID
         context.coordinator.shouldAllowClose = shouldAllowClose
+        context.coordinator.onWindowDidBecomeKey = onWindowDidBecomeKey
+        context.coordinator.onWindowWillClose = onWindowWillClose
         nsView.delegateCoordinator = context.coordinator
         nsView.attachDelegateIfNeeded()
     }
@@ -1733,14 +1825,31 @@ private struct WindowCloseGuardRepresentable: NSViewRepresentable {
     final class Coordinator: NSObject, NSWindowDelegate {
         var sessionID: UUID
         var shouldAllowClose: () -> Bool
+        var onWindowDidBecomeKey: () -> Void
+        var onWindowWillClose: () -> Void
 
-        init(sessionID: UUID, shouldAllowClose: @escaping () -> Bool) {
+        init(
+            sessionID: UUID,
+            shouldAllowClose: @escaping () -> Bool,
+            onWindowDidBecomeKey: @escaping () -> Void,
+            onWindowWillClose: @escaping () -> Void
+        ) {
             self.sessionID = sessionID
             self.shouldAllowClose = shouldAllowClose
+            self.onWindowDidBecomeKey = onWindowDidBecomeKey
+            self.onWindowWillClose = onWindowWillClose
         }
 
         func windowShouldClose(_ sender: NSWindow) -> Bool {
             shouldAllowClose()
+        }
+
+        func windowDidBecomeKey(_ notification: Notification) {
+            onWindowDidBecomeKey()
+        }
+
+        func windowWillClose(_ notification: Notification) {
+            onWindowWillClose()
         }
     }
 }

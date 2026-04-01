@@ -69,6 +69,24 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testLaunchDocumentOpenImportsFlacFixture() throws {
+        let app = try launchApp(
+            openDocumentFixture: true,
+            waitForEditorUI: false
+        )
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 10.0)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: app,
+                identifier: UIID.albumTextField,
+                expectedValue: "Test Album",
+                timeout: 5.0
+            )
+        )
+    }
+
+    @MainActor
     func testSimulatedSaveReEnablesEditorAfterCompletion() throws {
         let app = try launchApp(
             importFixture: true,
@@ -184,6 +202,8 @@ final class SwiftTagUITests: XCTestCase {
         importFixture: Bool = false,
         importFixtureReadOnly: Bool = false,
         fixtureFileName: String = "test.flac",
+        openDocumentFixture: Bool = false,
+        openDocumentWhileActive: Bool = false,
         persistentFixtureName: String? = nil,
         reuseImportedFixture: Bool = false,
         openAlbumArtSheet: Bool = false,
@@ -218,6 +238,20 @@ final class SwiftTagUITests: XCTestCase {
             }
             if reuseImportedFixture {
                 app.launchEnvironment["UITEST_REUSE_IMPORTED_FLAC"] = "1"
+            }
+        }
+        if openDocumentFixture {
+            let fixturePath = fixtureFlacPath(fileName: fixtureFileName)
+            XCTAssertTrue(
+                FileManager.default.fileExists(atPath: fixturePath),
+                "UI test fixture was not found at \(fixturePath)"
+            )
+            let fixtureDataBase64 = try Data(contentsOf: URL(fileURLWithPath: fixturePath)).base64EncodedString()
+            app.launchEnvironment["UITEST_OPEN_DOCUMENT_FLAC_PATH"] = fixturePath
+            app.launchEnvironment["UITEST_OPEN_DOCUMENT_FLAC_DATA_BASE64"] = fixtureDataBase64
+            if openDocumentWhileActive {
+                app.launchEnvironment["UITEST_OPEN_DOCUMENT_WHILE_ACTIVE"] = "1"
+                app.launchArguments.append("-UITEST_OPEN_DOCUMENT_WHILE_ACTIVE")
             }
         }
         if openAlbumArtSheet {

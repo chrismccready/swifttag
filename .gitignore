@@ -23,3 +23,7 @@ build/
 
 ## vi/vim
 *.swp
+
+## Codex
+# Ignore Codex generated files
+.codex/

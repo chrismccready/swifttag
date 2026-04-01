@@ -14,9 +14,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         true
     }
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        handlePendingUITestDocumentOpenIfNeeded()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
         SaveNotificationCoordinator.shared.handlePendingUITestRouteIfNeeded()
+    }
+
+    func application(_ sender: NSApplication, openFile filename: String) -> Bool {
+        routeFinderOpenedFiles(
+            [URL(fileURLWithPath: filename)],
+            appIsActive: sender.isActive
+        )
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        _ = routeFinderOpenedFiles(urls, appIsActive: application.isActive)
+    }
+
+    func application(_ sender: NSApplication, openFiles filenames: [String]) {
+        let didRouteFiles = routeFinderOpenedFiles(
+            filenames.map(URL.init(fileURLWithPath:)),
+            appIsActive: sender.isActive
+        )
+        sender.reply(toOpenOrPrint: didRouteFiles ? .success : .failure)
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -45,6 +68,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             )
             completionHandler()
         }
+    }
+
+    private func handlePendingUITestDocumentOpenIfNeeded() {
+        guard let documentURL = uiTestDocumentOpenURLIfPresent() else {
+            return
+        }
+
+        let environment = ProcessInfo.processInfo.environment
+        let arguments = ProcessInfo.processInfo.arguments
+        let shouldTreatAppAsActive = environment["UITEST_OPEN_DOCUMENT_WHILE_ACTIVE"] == "1"
+            || arguments.contains("-UITEST_OPEN_DOCUMENT_WHILE_ACTIVE")
+
+        _ = routeFinderOpenedFiles(
+            [documentURL],
+            appIsActive: shouldTreatAppAsActive
+        )
+    }
+
+    @discardableResult
+    private func routeFinderOpenedFiles(_ urls: [URL], appIsActive: Bool) -> Bool {
+        EditorWindowCoordinator.shared.routeFinderOpenedFiles(urls, appIsActive: appIsActive)
+    }
+
+    private func uiTestDocumentOpenURLIfPresent() -> URL? {
+        let environment = ProcessInfo.processInfo.environment
+        guard let rawDocumentPath = environment["UITEST_OPEN_DOCUMENT_FLAC_PATH"],
+              !rawDocumentPath.isEmpty else {
+            return nil
+        }
+
+        guard let base64Value = environment["UITEST_OPEN_DOCUMENT_FLAC_DATA_BASE64"],
+              let fileData = Data(base64Encoded: base64Value) else {
+            return URL(fileURLWithPath: rawDocumentPath)
+        }
+
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftTagUITestOpenedDocument")
+            .appendingPathExtension("flac")
+        try? fileData.write(to: fileURL, options: .atomic)
+        return fileURL
     }
 }
 

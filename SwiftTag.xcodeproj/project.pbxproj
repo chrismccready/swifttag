@@ -46,6 +46,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		726EAA9F2F7C9B3C00060834 /* Exceptions for "SwiftTag" folder in "SwiftTag" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 720E0C932F4E5E98000DD6E1 /* SwiftTag */;
+		};
 		72D2D7DF2F69068000A22F6F /* Exceptions for "Plans" folder in "SwiftTag" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -58,6 +65,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		720E0C962F4E5E98000DD6E1 /* SwiftTag */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				726EAA9F2F7C9B3C00060834 /* Exceptions for "SwiftTag" folder in "SwiftTag" target */,
+			);
 			path = SwiftTag;
 			sourceTree = "<group>";
 		};
@@ -525,6 +535,7 @@
 					"$(inherited)",
 					"$(DERIVED_FILE_DIR)/flac-include",
 				);
+				INFOPLIST_FILE = SwiftTag/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -579,6 +590,7 @@
 					"$(inherited)",
 					"$(DERIVED_FILE_DIR)/flac-include",
 				);
+				INFOPLIST_FILE = SwiftTag/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
