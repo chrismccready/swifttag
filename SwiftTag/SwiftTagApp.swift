@@ -141,31 +141,29 @@ private struct AppCommands: Commands {
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
-            Button("Load FLAC files...") {
-                showFlacImporter?()
-            }
-            .keyboardShortcut("l")
-            .disabled(showFlacImporter == nil)
-
-            Button("Load FLAC files (read-only)...") {
-                showReadOnlyFlacImporter?()
-            }
-            .keyboardShortcut("l", modifiers: [.command, .option])
-            .disabled(showReadOnlyFlacImporter == nil)
-
-            Divider()
-
             Button("Add FLAC files...") {
                 showAddFlacImporter?()
             }
-            .keyboardShortcut("l", modifiers: [.command, .shift])
+            .keyboardShortcut("o", modifiers: [.command])
             .disabled(showAddFlacImporter == nil)
+            .modifierKeyAlternate(.shift) {
+                Button("Add FLAC files (replace existing)...") {
+                    showFlacImporter?()
+                }
+                .disabled(showFlacImporter == nil)
+            }
 
             Button("Add FLAC files (read-only)...") {
                 showAddReadOnlyFlacImporter?()
             }
-            .keyboardShortcut("l", modifiers: [.command, .shift, .option])
+            .keyboardShortcut("o", modifiers: [.command, .option])
             .disabled(showAddReadOnlyFlacImporter == nil)
+            .modifierKeyAlternate(.shift) {
+                Button("Add FLAC files (read-only)(replace existing)...") {
+                    showReadOnlyFlacImporter?()
+                }
+                .disabled(showReadOnlyFlacImporter == nil)
+            }
 
             Divider()
 
@@ -218,18 +216,18 @@ private struct AppCommands: Commands {
             }
             .keyboardShortcut("s")
             .disabled(!(canPerformDefaultSave ?? false))
-
-            Divider()
-
-            Button("Save Tags...") {
-                performSaveTagsOnly?()
+            .modifierKeyAlternate(.shift) {
+                Button("Save Tags") {
+                    performSaveTagsOnly?()
+                }
+                .disabled(!(canPerformSaveTagsOnly ?? false))
             }
-            .disabled(!(canPerformSaveTagsOnly ?? false))
-
-            Button("Save Pictures...") {
-                performSavePicturesOnly?()
+            .modifierKeyAlternate(.option) {
+                Button("Save Pictures") {
+                    performSavePicturesOnly?()
+                }
+                .disabled(!(canPerformSavePicturesOnly ?? false))
             }
-            .disabled(!(canPerformSavePicturesOnly ?? false))
         }
     }
 }

@@ -2,10 +2,12 @@
 
 ## Overview
 
-- This is a macOS Swift/SwiftUI project.
+- This is a macOS Swift/SwiftUI project compiled for macOS 26.2 or later.
 - The root working directory is where this file, `AGENTS.md`, and this project's Xocde project file, `SwiftTag.xcodeproj`, reside. Relative paths given later in this document are from here.
 - Use Swift and SwiftUI and follow best practices accordingly.
 - Prefer Xcode MCP tools for project inspection, diagnostics, builds, previews, and targeted test runs when available.
+- When searching for information outside of Xcode MCP tools, prioritize the [SwiftUI documentation](https://developer.apple.com/documentation/swiftui).
+- Before concluding that SwiftUI cannot implement a macOS behavior, check current Apple SwiftUI documentation and Xcode documentation search for the targeted macOS version first.
 - Unless otherwise instructed, if asked to create a plan/guide/information file and a name for the file is not given, then create an appropriate name prepended with an underscore and save to Docs folder.
 
 ## Guides
