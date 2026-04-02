@@ -260,6 +260,37 @@ final class TagEditorViewModel {
         )
     }
 
+    func compilationToggleState(applyToAllTracks: Bool) -> CompilationToggleState? {
+        let trackIndices = compilationTrackIndices(applyToAllTracks: applyToAllTracks)
+        guard !trackIndices.isEmpty else {
+            return nil
+        }
+
+        let compilationValues = trackIndices.map { CompilationTag.isEnabled(trackItems[$0].tags[TagKey.compilation]) }
+        guard let firstValue = compilationValues.first else {
+            return nil
+        }
+
+        return compilationValues.allSatisfy { $0 == firstValue }
+            ? (firstValue ? .on : .off)
+            : .mixed
+    }
+
+    func compilationTrackIDs(applyToAllTracks: Bool) -> Set<UUID> {
+        Set(compilationTrackIndices(applyToAllTracks: applyToAllTracks).map { trackItems[$0].id })
+    }
+
+    func canEditCompilation(applyToAllTracks: Bool) -> Bool {
+        !compilationTrackIndices(applyToAllTracks: applyToAllTracks).isEmpty
+    }
+
+    func setCompilationEnabled(_ isEnabled: Bool, applyToAllTracks: Bool) {
+        for index in compilationTrackIndices(applyToAllTracks: applyToAllTracks) {
+            CompilationTag.setEnabled(isEnabled, in: &trackItems[index].tags)
+            clearExternallyModifiedDifference(forTrackAt: index, keys: [TagKey.compilation])
+        }
+    }
+
     func tagBinding(for trackID: UUID, tagName: String) -> Binding<String>? {
         guard trackItems.contains(where: { $0.id == trackID }) else {
             return nil
@@ -780,13 +811,13 @@ final class TagEditorViewModel {
         reloadMiscTagRowsFromSelection()
     }
 
-    func setTrackTotal(_ total: Int, includeLockedTracks: Bool) {
+    func setTrackTotal(_ total: Int) {
         let normalizedTotal = String(max(0, total))
         for index in trackItems.indices {
             guard !trackItems[index].isDeletedInTable else {
                 continue
             }
-            if trackItems[index].isLocked && !includeLockedTracks {
+            if trackItems[index].isLocked {
                 continue
             }
             trackItems[index].totalTracks = normalizedTotal
@@ -794,8 +825,8 @@ final class TagEditorViewModel {
         }
     }
 
-    func setTrackTotalToCurrentCount(includeLockedTracks: Bool) {
-        setTrackTotal(nonDeletedTrackCount, includeLockedTracks: includeLockedTracks)
+    func setTrackTotalToCurrentCount() {
+        setTrackTotal(nonDeletedTrackCount)
     }
 
     func removeTracks(withIDs trackIDs: Set<UUID>) {
@@ -1411,6 +1442,14 @@ final class TagEditorViewModel {
                 guard !normalizedKey.isEmpty else {
                     return nil
                 }
+
+                if normalizedKey == TagKey.compilation {
+                    guard let normalizedValue = CompilationTag.normalizedValue(value) else {
+                        return nil
+                    }
+                    return (normalizedKey, normalizedValue)
+                }
+
                 return (normalizedKey, value.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         )
@@ -1769,6 +1808,8 @@ final class TagEditorViewModel {
             return track.album
         case TagKey.albumArtist:
             return track.albumArtist
+        case TagKey.compilation:
+            return CompilationTag.normalizedValue(track.tags[TagKey.compilation]) ?? ""
         case "TOTALTRACKS", "TRACKTOTAL":
             return track.totalTracks
         case "TOTALDISCS", "DISCTOTAL":
@@ -1801,6 +1842,20 @@ final class TagEditorViewModel {
         }
 
         return normalizedTagValue(totalDiscs)
+    }
+
+    private func compilationTrackIndices(applyToAllTracks: Bool) -> [Int] {
+        trackItems.indices.filter { index in
+            guard !trackItems[index].isLocked else {
+                return false
+            }
+
+            if applyToAllTracks {
+                return true
+            }
+
+            return selectedTrackIDs.contains(trackItems[index].id)
+        }
     }
 
     private func setCurrentTotalDiscsValue(_ value: String, forTrackAt index: Int) {

@@ -78,7 +78,7 @@ struct ContentView: View {
     @AppStorage(SaveSettingsKey.zeroPadDiscNumber) private var zeroPadDiscNumber: Bool = SaveSettingsDefaults.zeroPadDiscNumber
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.autoUpdateTrackTotal) private var autoUpdateTrackTotal: Bool = SaveSettingsDefaults.autoUpdateTrackTotal
-    @AppStorage(SaveSettingsKey.updateTrackTotalOnLockedTracks) private var updateTrackTotalOnLockedTracks: Bool = SaveSettingsDefaults.updateTrackTotalOnLockedTracks
+    @AppStorage(SaveSettingsKey.applyCompilationToAllTracks) private var applyCompilationToAllTracks: Bool = SaveSettingsDefaults.applyCompilationToAllTracks
     @AppStorage(SaveSettingsKey.saveFrontCoverToAllTracks) private var saveFrontCoverToAllTracks: Bool = SaveSettingsDefaults.saveFrontCoverToAllTracks
     @AppStorage(SaveSettingsKey.saveAllPicturesToAllTracks) private var saveAllPicturesToAllTracks: Bool = SaveSettingsDefaults.saveAllPicturesToAllTracks
     @AppStorage(FeedbackSettingsKey.themePreference) private var themePreferenceRawValue: String = FeedbackSettingsDefaults.themePreference.rawValue
@@ -199,6 +199,18 @@ struct ContentView: View {
 
     private var selectedDiscBinding: Binding<String>? {
         selectedTagBinding(tagName: TagKey.discNumber)
+    }
+
+    private var compilationTrackIDs: Set<UUID> {
+        viewModel.compilationTrackIDs(applyToAllTracks: applyCompilationToAllTracks)
+    }
+
+    private var compilationState: CompilationToggleState {
+        viewModel.compilationToggleState(applyToAllTracks: applyCompilationToAllTracks) ?? .off
+    }
+
+    private var isCompilationEditable: Bool {
+        !isSaveOperationRunning && viewModel.canEditCompilation(applyToAllTracks: applyCompilationToAllTracks)
     }
 
     private var selectedGenreBinding: Binding<String>? {
@@ -368,6 +380,18 @@ struct ContentView: View {
 
     private var hasDiscNumberInternalDifference: Bool {
         viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.discNumber])
+    }
+
+    private var hasCompilationExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.compilation], in: compilationTrackIDs)
+    }
+
+    private var hasCompilationExternallyModifiedDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.compilation], in: compilationTrackIDs)
+    }
+
+    private var hasCompilationInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.compilation], in: compilationTrackIDs)
     }
 
     private var hasGenreExternalDifference: Bool {
@@ -576,6 +600,9 @@ struct ContentView: View {
             hasTotalDiscsInternalDifference: hasTotalDiscsInternalDifference,
             selectedNumberBinding: selectedNumberBinding,
             selectedDiscBinding: selectedDiscBinding,
+            compilationState: compilationState,
+            isCompilationEditable: isCompilationEditable,
+            onSetCompilationEnabled: setCompilationEnabled(_:),
             selectedGenreBinding: selectedGenreBinding,
             selectedArtistBinding: selectedArtistBinding,
             selectedComposerBinding: selectedComposerBinding,
@@ -588,6 +615,9 @@ struct ContentView: View {
             hasDiscNumberInternalDifference: hasDiscNumberInternalDifference,
             hasDiscNumberExternalDifference: hasDiscNumberExternalDifference,
             hasDiscNumberExternallyModifiedDifference: hasDiscNumberExternallyModifiedDifference,
+            hasCompilationInternalDifference: hasCompilationInternalDifference,
+            hasCompilationExternalDifference: hasCompilationExternalDifference,
+            hasCompilationExternallyModifiedDifference: hasCompilationExternallyModifiedDifference,
             hasGenreInternalDifference: hasGenreInternalDifference,
             hasGenreExternalDifference: hasGenreExternalDifference,
             hasGenreExternallyModifiedDifference: hasGenreExternallyModifiedDifference,
@@ -626,7 +656,7 @@ struct ContentView: View {
     private var presentedEditorView: some View {
         editorView
             .padding()
-            .frame(minWidth: 520, minHeight: 530, idealHeight: 640, alignment: .topLeading)
+            .frame(minWidth: 680, minHeight: 578, idealHeight: 640, alignment: .topLeading)
     }
 
     private var contentStack: some View {
@@ -794,9 +824,6 @@ struct ContentView: View {
                 refreshTrackMonitoring()
             }
             .onChange(of: autoUpdateTrackTotal) { _, _ in
-                applyAutoTrackTotalIfNeeded()
-            }
-            .onChange(of: updateTrackTotalOnLockedTracks) { _, _ in
                 applyAutoTrackTotalIfNeeded()
             }
             .onChange(of: viewModel.nonDeletedTrackCount) { _, _ in
@@ -1321,7 +1348,15 @@ struct ContentView: View {
         guard canSetTrackTotal else {
             return
         }
-        viewModel.setTrackTotalToCurrentCount(includeLockedTracks: updateTrackTotalOnLockedTracks)
+        viewModel.setTrackTotalToCurrentCount()
+    }
+
+    private func setCompilationEnabled(_ isEnabled: Bool) {
+        guard isCompilationEditable else {
+            return
+        }
+
+        viewModel.setCompilationEnabled(isEnabled, applyToAllTracks: applyCompilationToAllTracks)
     }
 
     private func reloadSelectedTracks() {
@@ -1363,7 +1398,7 @@ struct ContentView: View {
         guard autoUpdateTrackTotal else {
             return
         }
-        viewModel.setTrackTotalToCurrentCount(includeLockedTracks: updateTrackTotalOnLockedTracks)
+        viewModel.setTrackTotalToCurrentCount()
     }
 
     private func handleDroppedFlacFileProviders(_ providers: [NSItemProvider]) -> Bool {

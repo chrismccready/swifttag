@@ -2,6 +2,7 @@ import Foundation
 
 enum TagNormalization {
     static let explicitTagKeys: Set<String> = [
+        TagKey.compilation,
         TagKey.trackNumber,
         TagKey.discNumber,
         TagKey.genre,

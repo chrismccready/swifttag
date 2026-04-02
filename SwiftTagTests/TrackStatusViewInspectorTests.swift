@@ -650,6 +650,42 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func tagEditorCoreTagsViewSourcePlacesCompilationBetweenTotalDiscsAndGenre() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("TagEditor")
+            .appendingPathComponent("TagEditorCoreTagsView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        let totalDiscsRange = try #require(source.range(of: ".help(totalDiscsHoverMessage)"))
+        let compilationRange = try #require(source.range(of: "Text(\"Compilation\")"))
+        let genreRange = try #require(source.range(of: "Text(\"Genre\")"))
+
+        #expect(totalDiscsRange.upperBound < compilationRange.lowerBound)
+        #expect(compilationRange.upperBound < genreRange.lowerBound)
+    }
+
+    @Test
+    func tagWriteSettingsViewSourceReplacesLockedTrackTotalToggleWithCompilationScopeToggle() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("Settings")
+            .appendingPathComponent("TagWriteSettingsView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains("Apply Compilation to all Tracks"))
+        #expect(source.contains("settings.tags.applyCompilationToAllTracks"))
+        #expect(!source.contains("Update Track Total on Locked Tracks"))
+        #expect(!source.contains("settings.tags.updateTrackTotalOnLockedTracks"))
+    }
+
+    @Test
     func diffToolsViewRendersExpectedToggleRows() throws {
         let sut = DiffToolsView()
 
@@ -829,6 +865,9 @@ struct TrackStatusViewInspectorTests {
             hasTotalDiscsInternalDifference: false,
             selectedNumberBinding: .constant("1"),
             selectedDiscBinding: .constant("1"),
+            compilationState: .off,
+            isCompilationEditable: true,
+            onSetCompilationEnabled: { _ in },
             selectedGenreBinding: .constant("Genre"),
             selectedArtistBinding: .constant("Artist"),
             selectedComposerBinding: .constant("Composer"),
@@ -841,6 +880,9 @@ struct TrackStatusViewInspectorTests {
             hasDiscNumberInternalDifference: false,
             hasDiscNumberExternalDifference: false,
             hasDiscNumberExternallyModifiedDifference: false,
+            hasCompilationInternalDifference: false,
+            hasCompilationExternalDifference: false,
+            hasCompilationExternallyModifiedDifference: false,
             hasGenreInternalDifference: false,
             hasGenreExternalDifference: false,
             hasGenreExternallyModifiedDifference: false,

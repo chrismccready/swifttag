@@ -145,6 +145,7 @@ struct SwiftTagTests {
         #expect(TagNormalization.normalizeTagKey("  encoded_by  ") == "ENCODED_BY")
         #expect(TagNormalization.isExplicitTagKey("title"))
         #expect(TagNormalization.isExplicitTagKey("ALBUMARTIST"))
+        #expect(TagNormalization.isExplicitTagKey("compilation"))
         #expect(!TagNormalization.isExplicitTagKey("ENCODED_BY"))
     }
 
@@ -157,14 +158,14 @@ struct SwiftTagTests {
         #expect(SaveSettingsDefaults.zeroPadDiscNumber)
         #expect(SaveSettingsDefaults.discCountKeyStrategy == .totalDiscs)
         #expect(!SaveSettingsDefaults.autoUpdateTrackTotal)
-        #expect(!SaveSettingsDefaults.updateTrackTotalOnLockedTracks)
+        #expect(!SaveSettingsDefaults.applyCompilationToAllTracks)
         #expect(!SaveSettingsDefaults.saveFrontCoverToAllTracks)
         #expect(!SaveSettingsDefaults.saveAllPicturesToAllTracks)
     }
 
     @Test
     @MainActor
-    func tagEditorViewModelSetTrackTotalToCurrentCountExcludesDeletedAndRespectsLockedSetting() {
+    func tagEditorViewModelSetTrackTotalToCurrentCountExcludesDeletedAndLockedTracks() {
         let editableTrack = Track(
             totalTracks: "1",
             tags: [
@@ -198,7 +199,7 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.trackItems = [editableTrack, lockedTrack, deletedTrack]
 
-        viewModel.setTrackTotalToCurrentCount(includeLockedTracks: false)
+        viewModel.setTrackTotalToCurrentCount()
 
         #expect(viewModel.nonDeletedTrackCount == 2)
         let firstPassEditable = viewModel.trackItems.first(where: { $0.id == editableTrack.id })
@@ -207,13 +208,20 @@ struct SwiftTagTests {
         #expect(firstPassEditable?.totalTracks == "2")
         #expect(firstPassLocked?.totalTracks == "1")
         #expect(firstPassDeleted?.totalTracks == "1")
+    }
 
-        viewModel.setTrackTotalToCurrentCount(includeLockedTracks: true)
-
-        let secondPassLocked = viewModel.trackItems.first(where: { $0.id == lockedTrack.id })
-        let secondPassDeleted = viewModel.trackItems.first(where: { $0.id == deletedTrack.id })
-        #expect(secondPassLocked?.totalTracks == "2")
-        #expect(secondPassDeleted?.totalTracks == "1")
+    @Test
+    func compilationTagNormalizesPresenceToCanonicalValue() {
+        #expect(CompilationTag.normalizedValue(nil) == nil)
+        #expect(CompilationTag.normalizedValue("") == nil)
+        #expect(CompilationTag.normalizedValue("   ") == nil)
+        #expect(CompilationTag.normalizedValue("0") == nil)
+        #expect(CompilationTag.normalizedValue("false") == nil)
+        #expect(CompilationTag.normalizedValue("1") == CompilationTag.storedValue)
+        #expect(CompilationTag.normalizedValue("T") == CompilationTag.storedValue)
+        #expect(CompilationTag.normalizedValue("true") == CompilationTag.storedValue)
+        #expect(CompilationTag.normalizedValue("On") == CompilationTag.storedValue)
+        #expect(CompilationTag.normalizedValue("YES") == CompilationTag.storedValue)
     }
 
     @Test
@@ -2778,6 +2786,39 @@ struct SwiftTagTests {
     }
 
     @Test
+    func flacWriteMapperWritesCompilationAsOneWhenEnabledAndOmitsItWhenDisabled() {
+        let enabledTrack = Track(tags: [
+            TagKey.title: "Mapped Title",
+            TagKey.compilation: "yes"
+        ])
+        let enabledTags = FlacWriteMapper.makeTags(
+            for: enabledTrack,
+            album: "Album",
+            albumArtist: "Album Artist",
+            totalTracks: 3,
+            totalDiscs: "1",
+            options: Self.defaultTagWriteOptions
+        )
+        #expect(enabledTags[TagKey.compilation] == "1")
+
+        var disabledSourceTags = [
+            TagKey.title: "Mapped Title",
+            TagKey.compilation: "1"
+        ]
+        CompilationTag.setEnabled(false, in: &disabledSourceTags)
+        let disabledTrack = Track(tags: disabledSourceTags)
+        let disabledTags = FlacWriteMapper.makeTags(
+            for: disabledTrack,
+            album: "Album",
+            albumArtist: "Album Artist",
+            totalTracks: 3,
+            totalDiscs: "1",
+            options: Self.defaultTagWriteOptions
+        )
+        #expect(disabledTags[TagKey.compilation] == nil)
+    }
+
+    @Test
     func flacMetadataServiceWritesTagsToFixtureCopy() throws {
         let fileURL = try Self.tempFixtureCopyURL(name: "write-tags-test.flac")
 
@@ -2799,6 +2840,120 @@ struct SwiftTagTests {
         #expect(record.tags["TRACKTOTAL"] == "09")
         #expect(record.tags["CUSTOM"] == "Value")
         #expect(record.tags["ARTIST"] == nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelCompilationToggleTreatsTruthyValuesAsOnForDifferences() {
+        let track = Self.trackWithSnapshot(
+            tags: [
+                TagKey.title: "Title",
+                TagKey.compilation: "TrUe"
+            ],
+            fileTags: [
+                TagKey.title: "Title",
+                TagKey.compilation: "1"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+
+        #expect(!viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.compilation]))
+        #expect(viewModel.compilationToggleState(applyToAllTracks: false) == .on)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelCompilationToggleTreatsNonTruthyValuesAsOff() {
+        let track = Self.trackWithSnapshot(
+            tags: [
+                TagKey.title: "Title",
+                TagKey.compilation: "0"
+            ],
+            fileTags: [
+                TagKey.title: "Title",
+                TagKey.compilation: "1"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+
+        #expect(viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.compilation]))
+        #expect(viewModel.compilationToggleState(applyToAllTracks: false) == .off)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelCompilationToggleUpdatesOnlySelectedUnlockedTracks() {
+        let selectedUnlocked = Track(
+            tags: [
+                TagKey.title: "Unlocked",
+                TagKey.filename: "unlocked.flac"
+            ]
+        )
+        let selectedLocked = Track(
+            tags: [
+                TagKey.title: "Locked",
+                TagKey.filename: "locked.flac"
+            ],
+            isLocked: true
+        )
+        let unselectedUnlocked = Track(
+            tags: [
+                TagKey.title: "Unselected",
+                TagKey.filename: "unselected.flac"
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [selectedUnlocked, selectedLocked, unselectedUnlocked]
+        viewModel.selectedTrackIDs = [selectedUnlocked.id, selectedLocked.id]
+
+        viewModel.setCompilationEnabled(true, applyToAllTracks: false)
+
+        #expect(viewModel.trackItems[0].tags[TagKey.compilation] == "1")
+        #expect(viewModel.trackItems[1].tags[TagKey.compilation] == nil)
+        #expect(viewModel.trackItems[2].tags[TagKey.compilation] == nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelCompilationToggleAppliesToAllUnlockedTracksWithoutSelection() {
+        let unlockedOff = Track(
+            tags: [
+                TagKey.title: "Unlocked Off",
+                TagKey.filename: "unlocked-off.flac"
+            ]
+        )
+        let unlockedOn = Track(
+            tags: [
+                TagKey.title: "Unlocked On",
+                TagKey.filename: "unlocked-on.flac",
+                TagKey.compilation: "YES"
+            ]
+        )
+        let lockedOff = Track(
+            tags: [
+                TagKey.title: "Locked Off",
+                TagKey.filename: "locked-off.flac"
+            ],
+            isLocked: true
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [unlockedOff, unlockedOn, lockedOff]
+
+        #expect(viewModel.canEditCompilation(applyToAllTracks: true))
+        #expect(viewModel.compilationToggleState(applyToAllTracks: true) == .mixed)
+
+        viewModel.setCompilationEnabled(true, applyToAllTracks: true)
+
+        #expect(viewModel.trackItems[0].tags[TagKey.compilation] == "1")
+        #expect(viewModel.trackItems[1].tags[TagKey.compilation] == "1")
+        #expect(viewModel.trackItems[2].tags[TagKey.compilation] == nil)
+        #expect(viewModel.compilationToggleState(applyToAllTracks: true) == .on)
     }
 
     @Test

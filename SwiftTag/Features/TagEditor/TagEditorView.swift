@@ -63,6 +63,9 @@ struct TagEditorView: View {
     let hasTotalDiscsInternalDifference: Bool
     let selectedNumberBinding: Binding<String>?
     let selectedDiscBinding: Binding<String>?
+    let compilationState: CompilationToggleState
+    let isCompilationEditable: Bool
+    let onSetCompilationEnabled: (Bool) -> Void
     let selectedGenreBinding: Binding<String>?
     let selectedArtistBinding: Binding<String>?
     let selectedComposerBinding: Binding<String>?
@@ -75,6 +78,9 @@ struct TagEditorView: View {
     let hasDiscNumberInternalDifference: Bool
     let hasDiscNumberExternalDifference: Bool
     let hasDiscNumberExternallyModifiedDifference: Bool
+    let hasCompilationInternalDifference: Bool
+    let hasCompilationExternalDifference: Bool
+    let hasCompilationExternallyModifiedDifference: Bool
     let hasGenreInternalDifference: Bool
     let hasGenreExternalDifference: Bool
     let hasGenreExternallyModifiedDifference: Bool
@@ -179,6 +185,9 @@ struct TagEditorView: View {
                 hasTotalDiscsInternalDifference: hasTotalDiscsInternalDifference,
                 selectedNumberBinding: selectedNumberBinding,
                 selectedDiscBinding: selectedDiscBinding,
+                compilationState: compilationState,
+                isCompilationEditable: isCompilationEditable,
+                onSetCompilationEnabled: onSetCompilationEnabled,
                 selectedGenreBinding: selectedGenreBinding,
                 selectedArtistBinding: selectedArtistBinding,
                 selectedComposerBinding: selectedComposerBinding,
@@ -191,6 +200,9 @@ struct TagEditorView: View {
                 hasDiscNumberInternalDifference: hasDiscNumberInternalDifference,
                 hasDiscNumberExternalDifference: hasDiscNumberExternalDifference,
                 hasDiscNumberExternallyModifiedDifference: hasDiscNumberExternallyModifiedDifference,
+                hasCompilationInternalDifference: hasCompilationInternalDifference,
+                hasCompilationExternalDifference: hasCompilationExternalDifference,
+                hasCompilationExternallyModifiedDifference: hasCompilationExternallyModifiedDifference,
                 hasGenreInternalDifference: hasGenreInternalDifference,
                 hasGenreExternalDifference: hasGenreExternalDifference,
                 hasGenreExternallyModifiedDifference: hasGenreExternallyModifiedDifference,

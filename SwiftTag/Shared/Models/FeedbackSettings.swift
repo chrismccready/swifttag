@@ -54,6 +54,7 @@ enum DiffTagIdentifier: String, CaseIterable, Identifiable, Codable {
     case title
     case album
     case albumArtist
+    case compilation
     case totalTracks
     case totalDiscs
     case trackNumber
@@ -76,6 +77,8 @@ enum DiffTagIdentifier: String, CaseIterable, Identifiable, Codable {
             return "Album"
         case .albumArtist:
             return "Album Artist"
+        case .compilation:
+            return "Compilation"
         case .totalTracks:
             return "Total Tracks"
         case .totalDiscs:

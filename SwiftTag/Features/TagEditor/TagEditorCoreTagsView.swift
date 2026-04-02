@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct TagEditorCoreTagsView: View {
@@ -19,6 +20,9 @@ struct TagEditorCoreTagsView: View {
 
     let selectedNumberBinding: Binding<String>?
     let selectedDiscBinding: Binding<String>?
+    let compilationState: CompilationToggleState
+    let isCompilationEditable: Bool
+    let onSetCompilationEnabled: (Bool) -> Void
     let selectedGenreBinding: Binding<String>?
     let selectedArtistBinding: Binding<String>?
     let selectedComposerBinding: Binding<String>?
@@ -31,6 +35,9 @@ struct TagEditorCoreTagsView: View {
     let hasDiscNumberInternalDifference: Bool
     let hasDiscNumberExternalDifference: Bool
     let hasDiscNumberExternallyModifiedDifference: Bool
+    let hasCompilationInternalDifference: Bool
+    let hasCompilationExternalDifference: Bool
+    let hasCompilationExternallyModifiedDifference: Bool
     let hasGenreInternalDifference: Bool
     let hasGenreExternalDifference: Bool
     let hasGenreExternallyModifiedDifference: Bool
@@ -147,16 +154,24 @@ struct TagEditorCoreTagsView: View {
                         .multilineTextAlignment(.center)
                         .frame(width: 30)
                         .help(totalDiscsHoverMessage)
-                        .padding(.trailing, 40)
                         .disabled(!isAlbumMetadataEditable)
                 } else {
                     TextField("#", text: .constant(""))
                         .multilineTextAlignment(.center)
                         .frame(width: 30)
                         .help(totalDiscsHoverMessage)
-                        .padding(.trailing, 40)
                         .disabled(true)
                 }
+
+                HStack(spacing: 6) {
+                    Text("Compilation")
+                    MixedStateCheckbox(
+                        state: compilationState,
+                        isEnabled: isCompilationEditable,
+                        onChange: onSetCompilationEnabled
+                    )
+                }
+                .padding(.horizontal, 18)
 
                 Text("Genre")
                 if let selectedGenreBinding {
@@ -262,6 +277,72 @@ struct TagEditorCoreTagsView: View {
             }
             .padding(.top, 22)
             .frame(height: 60)
+        }
+    }
+}
+
+private struct MixedStateCheckbox: NSViewRepresentable {
+    let state: CompilationToggleState
+    let isEnabled: Bool
+    let onChange: (Bool) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onChange: onChange)
+    }
+
+    func makeNSView(context: Context) -> NSButton {
+        let button = NSButton(checkboxWithTitle: "", target: context.coordinator, action: #selector(Coordinator.didToggle(_:)))
+        button.allowsMixedState = true
+        button.setButtonType(.switch)
+        button.imagePosition = .imageOnly
+        button.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 18),
+            button.heightAnchor.constraint(equalToConstant: 18)
+        ])
+        return button
+    }
+
+    func updateNSView(_ nsView: NSButton, context: Context) {
+        context.coordinator.onChange = onChange
+        context.coordinator.state = state
+        nsView.state = switch state {
+        case .off:
+            .off
+        case .on:
+            .on
+        case .mixed:
+            .mixed
+        }
+        nsView.isEnabled = isEnabled
+    }
+
+    final class Coordinator: NSObject {
+        var onChange: (Bool) -> Void
+        var state: CompilationToggleState = .off
+
+        init(onChange: @escaping (Bool) -> Void) {
+            self.onChange = onChange
+        }
+
+        @objc func didToggle(_ sender: NSButton) {
+            let nextState: CompilationToggleState = switch state {
+            case .off, .mixed:
+                .on
+            case .on:
+                .off
+            }
+
+            state = nextState
+            sender.state = switch nextState {
+            case .off:
+                .off
+            case .on:
+                .on
+            case .mixed:
+                .mixed
+            }
+            onChange(nextState == .on)
         }
     }
 }

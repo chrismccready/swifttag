@@ -6,7 +6,7 @@ struct TagWriteSettingsView: View {
     @AppStorage(SaveSettingsKey.zeroPadDiscNumber) private var zeroPadDiscNumber: Bool = SaveSettingsDefaults.zeroPadDiscNumber
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.autoUpdateTrackTotal) private var autoUpdateTrackTotal: Bool = SaveSettingsDefaults.autoUpdateTrackTotal
-    @AppStorage(SaveSettingsKey.updateTrackTotalOnLockedTracks) private var updateTrackTotalOnLockedTracks: Bool = SaveSettingsDefaults.updateTrackTotalOnLockedTracks
+    @AppStorage(SaveSettingsKey.applyCompilationToAllTracks) private var applyCompilationToAllTracks: Bool = SaveSettingsDefaults.applyCompilationToAllTracks
     @AppStorage(SaveSettingsKey.saveFrontCoverToAllTracks) private var saveFrontCoverToAllTracks: Bool = SaveSettingsDefaults.saveFrontCoverToAllTracks
     @AppStorage(SaveSettingsKey.saveAllPicturesToAllTracks) private var saveAllPicturesToAllTracks: Bool = SaveSettingsDefaults.saveAllPicturesToAllTracks
 
@@ -153,15 +153,15 @@ struct TagWriteSettingsView: View {
             }
             
             Section {
-                GroupBox("Track Total Management") {
+                GroupBox("Track Total/Compilation Management") {
                     VStack(alignment: .leading, spacing: 6) {
                         Toggle("Auto update Track Total", isOn: $autoUpdateTrackTotal)
                             .accessibilityIdentifier("settings.tags.autoUpdateTrackTotal")
                             .accessibilityValue(autoUpdateTrackTotal ? "On" : "Off")
-                        
-                        Toggle("Update Track Total on Locked Tracks", isOn: $updateTrackTotalOnLockedTracks)
-                            .accessibilityIdentifier("settings.tags.updateTrackTotalOnLockedTracks")
-                            .accessibilityValue(updateTrackTotalOnLockedTracks ? "On" : "Off")
+
+                        Toggle("Apply Compilation to all Tracks", isOn: $applyCompilationToAllTracks)
+                            .accessibilityIdentifier("settings.tags.applyCompilationToAllTracks")
+                            .accessibilityValue(applyCompilationToAllTracks ? "On" : "Off")
                     }
                     .padding(EdgeInsets(top: 4, leading: 5, bottom: 4, trailing: 4))
                 }

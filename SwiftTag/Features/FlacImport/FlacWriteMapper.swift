@@ -35,6 +35,7 @@ enum FlacWriteMapper {
         tags.removeValue(forKey: "TOTALTRACKS")
         tags.removeValue(forKey: "DISCTOTAL")
         tags.removeValue(forKey: "TOTALDISCS")
+        tags.removeValue(forKey: TagKey.compilation)
 
         tags[TagKey.trackNumber] = paddedNumberString(
             track.tags[TagKey.trackNumber],
@@ -62,6 +63,7 @@ enum FlacWriteMapper {
             zeroPad: options.zeroPadDiscNumber,
             into: &tags
         )
+        writeCompilationTag(track.tags[TagKey.compilation], into: &tags)
 
         return tags
             .mapValues { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -138,6 +140,15 @@ enum FlacWriteMapper {
         case .none:
             break
         }
+    }
+
+    private static func writeCompilationTag(_ rawValue: String?, into tags: inout [String: String]) {
+        guard let normalizedValue = CompilationTag.normalizedValue(rawValue) else {
+            tags.removeValue(forKey: TagKey.compilation)
+            return
+        }
+
+        tags[TagKey.compilation] = normalizedValue
     }
 
     private static func paddedNumberString(_ value: String?, totalCountString: String, zeroPad: Bool) -> String? {
