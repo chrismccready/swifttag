@@ -69,6 +69,32 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testFileMenuContainsSwiftTagDocumentCommandAndStartsDisabled() throws {
+        let app = try launchApp()
+        let fileMenu = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
+        fileMenu.click()
+
+        let swiftTagMenuItem = app.menuItems["Save SwiftTag Document..."].firstMatch
+        XCTAssertTrue(swiftTagMenuItem.waitForExistence(timeout: 2.0))
+        XCTAssertFalse(swiftTagMenuItem.isEnabled)
+    }
+
+    @MainActor
+    func testFileMenuEnablesSwiftTagDocumentCommandWhenTracksAreLoaded() throws {
+        let app = try launchApp(importFixture: true)
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
+
+        let fileMenu = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
+        fileMenu.click()
+
+        let swiftTagMenuItem = app.menuItems["Save SwiftTag Document..."].firstMatch
+        XCTAssertTrue(swiftTagMenuItem.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(swiftTagMenuItem.isEnabled)
+    }
+
+    @MainActor
     func testLaunchDocumentOpenImportsFlacFixture() throws {
         let app = try launchApp(
             openDocumentFixture: true,

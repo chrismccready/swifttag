@@ -621,7 +621,7 @@ final class AlbumArtViewModel {
                         mimeType: reference.mimeType,
                         description: reference.description,
                         data: poolItem.data
-                    )
+                    ).withComputedPictureMetadata()
                 )
             }
         }
@@ -644,7 +644,7 @@ final class AlbumArtViewModel {
                     mimeType: reference.mimeType,
                     description: reference.description,
                     data: poolItem.data
-                )
+                ).withComputedPictureMetadata()
 
                 if reference.slot == .frontCover {
                     frontCoverRecords.append(record)

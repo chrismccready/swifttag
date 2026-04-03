@@ -24,7 +24,31 @@ struct FlacPictureRecord {
     let type: Int
     let mimeType: String
     let description: String
+    let width: Int
+    let height: Int
+    let depth: Int
+    let colors: Int
     let data: Data
+
+    init(
+        type: Int,
+        mimeType: String,
+        description: String,
+        width: Int = 0,
+        height: Int = 0,
+        depth: Int = 0,
+        colors: Int = 0,
+        data: Data
+    ) {
+        self.type = type
+        self.mimeType = mimeType
+        self.description = description
+        self.width = width
+        self.height = height
+        self.depth = depth
+        self.colors = colors
+        self.data = data
+    }
 }
 
 struct FlacWritablePictureRecord: Equatable {
@@ -32,6 +56,46 @@ struct FlacWritablePictureRecord: Equatable {
     let mimeType: String
     let description: String
     let data: Data
+    let width: Int
+    let height: Int
+    let depth: Int
+    let colors: Int
+
+    init(
+        type: Int,
+        mimeType: String,
+        description: String,
+        data: Data,
+        width: Int = 0,
+        height: Int = 0,
+        depth: Int = 0,
+        colors: Int = 0
+    ) {
+        self.type = type
+        self.mimeType = mimeType
+        self.description = description
+        self.data = data
+        self.width = width
+        self.height = height
+        self.depth = depth
+        self.colors = colors
+    }
+}
+
+extension FlacWritablePictureRecord {
+    func withComputedPictureMetadata() -> FlacWritablePictureRecord {
+        let specifications = PictureDataUtilities.computedSpecifications(from: data)
+        return FlacWritablePictureRecord(
+            type: type,
+            mimeType: PictureDataUtilities.normalizedMimeType(mimeType: mimeType, data: data),
+            description: description,
+            data: data,
+            width: specifications.width,
+            height: specifications.height,
+            depth: specifications.depth,
+            colors: specifications.colors
+        )
+    }
 }
 
 enum FlacMetadataService {
@@ -113,6 +177,10 @@ enum FlacMetadataService {
                         type: Int(picture.type),
                         mimeType: mimeType,
                         description: description,
+                        width: Int(picture.width),
+                        height: Int(picture.height),
+                        depth: Int(picture.depth),
+                        colors: Int(picture.colors),
                         data: data
                     )
                 )
@@ -215,7 +283,11 @@ enum FlacMetadataService {
                 type: picture.type,
                 mimeType: "image/png",
                 description: picture.description,
-                data: pngData
+                data: pngData,
+                width: picture.width,
+                height: picture.height,
+                depth: picture.depth,
+                colors: picture.colors
             )
         }
     }
@@ -269,6 +341,10 @@ enum FlacMetadataService {
                 type: UInt32(picture.type),
                 mime_type: UnsafePointer(mimeTypePointer),
                 description: UnsafePointer(descriptionPointer),
+                width: UInt32(picture.width),
+                height: UInt32(picture.height),
+                depth: UInt32(picture.depth),
+                colors: UInt32(picture.colors),
                 data: UnsafePointer(dataPointer),
                 data_length: picture.data.count
             )

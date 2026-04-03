@@ -22,6 +22,10 @@ typedef struct {
     uint32_t type;
     const char *mime_type;
     const char *description;
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+    uint32_t colors;
     unsigned char *data;
     size_t data_length;
 } FlacPicture;
@@ -40,6 +44,10 @@ typedef struct {
     uint32_t type;
     const char *mime_type;
     const char *description;
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+    uint32_t colors;
     const unsigned char *data;
     size_t data_length;
 } FlacWritePicture;

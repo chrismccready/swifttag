@@ -335,6 +335,10 @@ struct ContentView: View {
         true
     }
 
+    private var canSaveSwiftTagDocument: Bool {
+        !isSaveOperationRunning && viewModel.canSaveSwiftTagDocument()
+    }
+
     private var reloadSelectedTracksTitle: String {
         selectedTrackIDs.count == 1 ? "Reload Selected Track" : "Reload Selected Tracks"
     }
@@ -871,6 +875,9 @@ struct ContentView: View {
             .focusedSceneValue(\.performSavePicturesOnly) {
                 save(using: .writePictures)
             }
+            .focusedSceneValue(\.performSaveSwiftTagDocument) {
+                saveSwiftTagDocument()
+            }
             .focusedSceneValue(\.toggleSelectedTrackLocksTitle, lockMenuTitle)
             .focusedSceneValue(\.performToggleSelectedTrackLocks) {
                 toggleSelectedTrackLocks()
@@ -894,6 +901,7 @@ struct ContentView: View {
             .focusedSceneValue(\.canPerformDefaultSave, canSave(payload: saveSettingsSnapshot.payload))
             .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
             .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
+            .focusedSceneValue(\.canPerformSaveSwiftTagDocument, canSaveSwiftTagDocument)
             .onDisappear {
                 teardownEditorSession()
             }
@@ -1177,6 +1185,60 @@ struct ContentView: View {
 
             isSaveOperationRunning = false
         }
+    }
+
+    private func saveSwiftTagDocument() {
+        guard !isSaveOperationRunning, canSaveSwiftTagDocument else {
+            return
+        }
+        syncTrackPictureRecordsFromAlbumArt()
+
+        let currentState = viewModel.swiftTagDocumentSaveState()
+        let destinationURL: URL
+        if let rememberedURL = currentState.destinationURL {
+            destinationURL = rememberedURL
+        } else {
+            guard let selectedURL = promptForSwiftTagDocumentDestination() else {
+                return
+            }
+            destinationURL = selectedURL
+        }
+
+        isSaveOperationRunning = true
+        Task { @MainActor in
+            do {
+                let result = try SwiftTagDocumentPackageWriter.save(
+                    tracks: viewModel.swiftTagDocumentExportTracks(),
+                    state: currentState,
+                    to: destinationURL
+                )
+                viewModel.rememberSwiftTagDocumentSave(result)
+            } catch {
+                saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                isSaveErrorPresented = true
+            }
+
+            isSaveOperationRunning = false
+        }
+    }
+
+    private func promptForSwiftTagDocumentDestination() -> URL? {
+        let savePanel = NSSavePanel()
+        savePanel.allowedContentTypes = [.swiftTagDocument]
+        savePanel.canCreateDirectories = true
+        savePanel.isExtensionHidden = false
+        savePanel.nameFieldStringValue = defaultSwiftTagDocumentFileName()
+
+        return savePanel.runModal() == .OK ? savePanel.url : nil
+    }
+
+    private func defaultSwiftTagDocumentFileName() -> String {
+        let albumName = viewModel.sharedAlbumDisplayText(in: .allTracks)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let baseName = albumName.isEmpty || albumName == viewModel.mixedSelectionMarker
+            ? "SwiftTag Document"
+            : albumName
+        return baseName
     }
 
     private func beginSaveStatus(totalTrackCount: Int, scope: SaveScopeOption) {
@@ -1800,6 +1862,7 @@ extension FocusedValues {
     @Entry var performDefaultSave: (() -> Void)?
     @Entry var performSaveTagsOnly: (() -> Void)?
     @Entry var performSavePicturesOnly: (() -> Void)?
+    @Entry var performSaveSwiftTagDocument: (() -> Void)?
     @Entry var performToggleSelectedTrackLocks: (() -> Void)?
     @Entry var toggleSelectedTrackLocksTitle: String?
     @Entry var performSetTrackTotal: (() -> Void)?
@@ -1814,6 +1877,7 @@ extension FocusedValues {
     @Entry var canPerformDefaultSave: Bool?
     @Entry var canPerformSaveTagsOnly: Bool?
     @Entry var canPerformSavePicturesOnly: Bool?
+    @Entry var canPerformSaveSwiftTagDocument: Bool?
     @Entry var canPerformToggleSelectedTrackLocks: Bool?
 }
 

@@ -43,6 +43,7 @@ final class TagEditorViewModel {
     private var pendingMissingRefreshTasks: [UUID: Task<Void, Never>] = [:]
     private var pendingAlbumValue: String = ""
     private var pendingAlbumArtistValue: String = ""
+    private var rememberedSwiftTagDocumentSaveState: SwiftTagDocumentSaveState = .init()
 
     init() {
         trackItems = []
@@ -166,6 +167,40 @@ final class TagEditorViewModel {
 
     func saveTrackCount(for scope: SaveScopeOption) -> Int {
         saveTrackIndices(for: scope).count
+    }
+
+    func canSaveSwiftTagDocument() -> Bool {
+        !trackItems.isEmpty
+    }
+
+    func swiftTagDocumentExportTracks() -> [SwiftTagDocumentExportTrack] {
+        trackItems.enumerated().map { index, track in
+            let normalizedPath = track.sourceFileURL?.standardizedFileURL.path ?? ""
+            let title = track.tags[TagKey.title]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let sortKey = [
+                normalizedPath,
+                title,
+                String(format: "%08d", index)
+            ].joined(separator: "|")
+
+            return SwiftTagDocumentExportTrack(
+                sortKey: sortKey,
+                tags: swiftTagDocumentTags(forTrackAt: index),
+                pictures: canonicalPictureRecords(picturesForTrack(at: index, fallback: [])),
+                sourceFileURL: track.sourceFileURL,
+                securityScopedBookmarkData: track.securityScopedBookmarkData,
+                flacFingerprint: track.fingerprint
+            )
+        }
+    }
+
+    func swiftTagDocumentSaveState() -> SwiftTagDocumentSaveState {
+        rememberedSwiftTagDocumentSaveState
+    }
+
+    func rememberSwiftTagDocumentSave(_ result: SwiftTagDocumentSaveResult) {
+        rememberedSwiftTagDocumentSaveState.destinationURL = result.destinationURL
+        rememberedSwiftTagDocumentSaveState.documentID = result.documentID
     }
 
     func isTrackLocked(_ trackID: UUID) -> Bool {
@@ -765,7 +800,11 @@ final class TagEditorViewModel {
             let metadata = try FlacMetadataService.readTags(for: fileURL)
             let tags = metadata.tags
             let trackPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
-            let trackPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
+            let trackPictureRecords = FlacImportMapper.mapWritablePictureRecords(
+                metadata.pictures,
+                normalizeImageMetadata: true
+            )
+            let importedPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
             let bookmarkData = try fileURL.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
             let initialValues = FlacImportMapper.initialValues(from: tags)
 
@@ -791,7 +830,7 @@ final class TagEditorViewModel {
                     latestFileSnapshot: makeFileSnapshot(
                         tags: tags,
                         picturesByType: trackPicturesByType,
-                        pictureRecords: trackPictureRecords,
+                        pictureRecords: importedPictureRecords,
                         fingerprint: metadata.fingerprint
                     ),
                     fingerprint: metadata.fingerprint,
@@ -1168,7 +1207,11 @@ final class TagEditorViewModel {
                     defaultDate: .now
                 )
                 let picturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
-                let pictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
+                let pictureRecords = FlacImportMapper.mapWritablePictureRecords(
+                    metadata.pictures,
+                    normalizeImageMetadata: true
+                )
+                let importedPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
                 let refreshedBookmarkData = try fileURL.bookmarkData(
                     options: .withSecurityScope,
                     includingResourceValuesForKeys: nil,
@@ -1191,7 +1234,7 @@ final class TagEditorViewModel {
                         options: tagWriteOptions
                     ),
                     picturesByType: writablePicturesByType(from: pictureRecords),
-                    pictureRecords: canonicalPictureRecords(pictureRecords),
+                    pictureRecords: canonicalPictureRecords(importedPictureRecords),
                     fingerprint: metadata.fingerprint
                 )
                 updatedTrackItems[index].externalDifferences = nil
@@ -1334,11 +1377,15 @@ final class TagEditorViewModel {
 
         do {
             let metadata = try FlacMetadataService.readTags(for: fileURL)
-            let pictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
+            let pictureRecords = FlacImportMapper.mapWritablePictureRecords(
+                metadata.pictures,
+                normalizeImageMetadata: true
+            )
+            let importedPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
             let fileSnapshot = makeFileSnapshot(
                 tags: metadata.tags,
                 picturesByType: FlacImportMapper.mapPicturesByType(metadata.pictures),
-                pictureRecords: pictureRecords,
+                pictureRecords: importedPictureRecords,
                 fingerprint: metadata.fingerprint
             )
             trackItems[index].flacPictureRecords = pictureRecords
@@ -1453,6 +1500,56 @@ final class TagEditorViewModel {
                 return (normalizedKey, value.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         )
+    }
+
+    private func swiftTagDocumentTags(forTrackAt index: Int) -> [String: String] {
+        guard trackItems.indices.contains(index) else {
+            return [:]
+        }
+
+        var tags = normalizeFileTags(trackItems[index].tags)
+        tags.removeValue(forKey: TagKey.filename)
+        tags.removeValue(forKey: "TRACK")
+        tags.removeValue(forKey: "DISC")
+        tags.removeValue(forKey: "TRACKTOTAL")
+        tags.removeValue(forKey: "DISCTOTAL")
+
+        let trimmedAlbum = trackItems[index].album.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedAlbum.isEmpty {
+            tags.removeValue(forKey: TagKey.album)
+        } else {
+            tags[TagKey.album] = trackItems[index].album
+        }
+
+        let trimmedAlbumArtist = trackItems[index].albumArtist.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedAlbumArtist.isEmpty {
+            tags.removeValue(forKey: TagKey.albumArtist)
+            tags.removeValue(forKey: "ALBUM ARTIST")
+        } else {
+            tags[TagKey.albumArtist] = trackItems[index].albumArtist
+        }
+
+        let trimmedTotalTracks = trackItems[index].totalTracks.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedTotalTracks.isEmpty {
+            tags.removeValue(forKey: "TOTALTRACKS")
+        } else {
+            tags["TOTALTRACKS"] = trackItems[index].totalTracks
+        }
+
+        let totalDiscs = currentTotalDiscsValue(for: trackItems[index])
+        if totalDiscs.isEmpty {
+            tags.removeValue(forKey: "TOTALDISCS")
+        } else {
+            tags["TOTALDISCS"] = totalDiscs
+        }
+
+        if let normalizedCompilation = CompilationTag.normalizedValue(trackItems[index].tags[TagKey.compilation]) {
+            tags[TagKey.compilation] = normalizedCompilation
+        } else {
+            tags.removeValue(forKey: TagKey.compilation)
+        }
+
+        return tags
     }
 
     private func expectedFileTags(forTrackAt index: Int, tagWriteOptions: TagWriteOptions) -> [String: String] {

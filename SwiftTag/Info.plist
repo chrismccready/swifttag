@@ -4,7 +4,7 @@
 <dict>
 	<key>CFBundleDocumentTypes</key>
 	<array>
-			<dict>
+		<dict>
 			<key>CFBundleTypeIconFile</key>
 			<string>SwiftTagFLACDoc</string>
 			<key>CFBundleTypeIconSystemGenerated</key>
@@ -19,6 +19,51 @@
 			<array>
 				<string>org.xiph.flac</string>
 			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>SwiftTagNamedDoc</string>
+			<key>CFBundleTypeIconSystemGenerated</key>
+			<false/>
+			<key>CFBundleTypeName</key>
+			<string>SwiftTag Document</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>toowalks.swifttag-document</string>
+			</array>
+			<key>LSTypeIsPackage</key>
+			<true/>
+		</dict>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.package</string>
+				<string>public.content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>SwiftTag Document</string>
+			<key>UTTypeIconFile</key>
+			<string>SwiftTagNamedDoc</string>
+			<key>UTTypeIdentifier</key>
+			<string>toowalks.swifttag-document</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>swifttag</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>application/vnd.toowalks.swifttag</string>
+				</array>
+			</dict>
 		</dict>
 	</array>
 	<key>UTImportedTypeDeclarations</key>

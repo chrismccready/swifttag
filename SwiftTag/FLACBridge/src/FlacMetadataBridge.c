@@ -82,6 +82,10 @@ static int append_picture(FlacPictureResult *result, const FLAC__StreamMetadata_
     destination->type = (uint32_t)picture->type;
     destination->mime_type = NULL;
     destination->description = NULL;
+    destination->width = picture->width;
+    destination->height = picture->height;
+    destination->depth = picture->depth;
+    destination->colors = picture->colors;
     destination->data = NULL;
     destination->data_length = 0;
 
@@ -376,6 +380,10 @@ static int append_picture_block(
     }
 
     block->data.picture.type = (FLAC__StreamMetadata_Picture_Type)picture->type;
+    block->data.picture.width = picture->width;
+    block->data.picture.height = picture->height;
+    block->data.picture.depth = picture->depth;
+    block->data.picture.colors = picture->colors;
 
     if (!FLAC__metadata_object_picture_set_mime_type(block, (char *)picture->mime_type, /*copy=*/true)) {
         FLAC__metadata_object_delete(block);

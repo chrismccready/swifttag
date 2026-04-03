@@ -73,18 +73,27 @@ enum FlacImportMapper {
         return picturesByType
     }
 
-    static func mapWritablePictureRecords(_ pictures: [FlacPictureRecord]) -> [FlacWritablePictureRecord] {
+    static func mapWritablePictureRecords(
+        _ pictures: [FlacPictureRecord],
+        normalizeImageMetadata: Bool = false
+    ) -> [FlacWritablePictureRecord] {
         pictures.compactMap { picture in
             guard !picture.data.isEmpty else {
                 return nil
             }
 
-            return FlacWritablePictureRecord(
+            let record = FlacWritablePictureRecord(
                 type: picture.type,
                 mimeType: picture.mimeType,
                 description: picture.description,
-                data: picture.data
+                data: picture.data,
+                width: picture.width,
+                height: picture.height,
+                depth: picture.depth,
+                colors: picture.colors
             )
+
+            return normalizeImageMetadata ? record.withComputedPictureMetadata() : record
         }
     }
 }

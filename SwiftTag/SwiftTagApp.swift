@@ -123,6 +123,7 @@ private struct AppCommands: Commands {
     @FocusedValue(\.performDefaultSave) private var performDefaultSave
     @FocusedValue(\.performSaveTagsOnly) private var performSaveTagsOnly
     @FocusedValue(\.performSavePicturesOnly) private var performSavePicturesOnly
+    @FocusedValue(\.performSaveSwiftTagDocument) private var performSaveSwiftTagDocument
     @FocusedValue(\.performToggleSelectedTrackLocks) private var performToggleSelectedTrackLocks
     @FocusedValue(\.performSetTrackTotal) private var performSetTrackTotal
     @FocusedValue(\.performReloadSelectedTracks) private var performReloadSelectedTracks
@@ -134,6 +135,7 @@ private struct AppCommands: Commands {
     @FocusedValue(\.canPerformDefaultSave) private var canPerformDefaultSave
     @FocusedValue(\.canPerformSaveTagsOnly) private var canPerformSaveTagsOnly
     @FocusedValue(\.canPerformSavePicturesOnly) private var canPerformSavePicturesOnly
+    @FocusedValue(\.canPerformSaveSwiftTagDocument) private var canPerformSaveSwiftTagDocument
     @FocusedValue(\.canPerformToggleSelectedTrackLocks) private var canPerformToggleSelectedTrackLocks
     @FocusedValue(\.canPerformSetTrackTotal) private var canPerformSetTrackTotal
     @FocusedValue(\.canPerformReloadSelectedTracks) private var canPerformReloadSelectedTracks
@@ -228,6 +230,13 @@ private struct AppCommands: Commands {
                 }
                 .disabled(!(canPerformSavePicturesOnly ?? false))
             }
+        }
+
+        CommandGroup(after: .saveItem) {
+            Button("Save SwiftTag Document...") {
+                performSaveSwiftTagDocument?()
+            }
+            .disabled(!(canPerformSaveSwiftTagDocument ?? false))
         }
     }
 }
