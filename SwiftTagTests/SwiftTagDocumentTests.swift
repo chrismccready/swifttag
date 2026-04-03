@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import Testing
+import zlib
 @testable import SwiftTag
 
 struct SwiftTagDocumentTests {
@@ -45,6 +46,95 @@ struct SwiftTagDocumentTests {
         }
 
         return jpegData
+    }
+
+    private static func indexedPNGData(
+        palette: [(UInt8, UInt8, UInt8)],
+        pixelRows: [[UInt8]],
+        bitDepth: UInt8 = 8
+    ) throws -> Data {
+        guard let rowWidth = pixelRows.first?.count, !pixelRows.isEmpty else {
+            throw NSError(domain: "SwiftTagDocumentTests", code: 3)
+        }
+
+        guard pixelRows.allSatisfy({ $0.count == rowWidth }) else {
+            throw NSError(domain: "SwiftTagDocumentTests", code: 4)
+        }
+
+        var rawImageData = Data()
+        for row in pixelRows {
+            rawImageData.append(0) // No filter.
+            rawImageData.append(contentsOf: row)
+        }
+
+        let compressedImageData = try zlibCompressed(rawImageData)
+        var pngData = Data([137, 80, 78, 71, 13, 10, 26, 10])
+
+        var ihdrData = Data()
+        ihdrData.append(contentsOf: UInt32(rowWidth).bigEndianBytes)
+        ihdrData.append(contentsOf: UInt32(pixelRows.count).bigEndianBytes)
+        ihdrData.append(bitDepth)
+        ihdrData.append(3) // Indexed-color PNG.
+        ihdrData.append(0)
+        ihdrData.append(0)
+        ihdrData.append(0)
+
+        let paletteData = Data(
+            palette.flatMap { color in
+                [color.0, color.1, color.2]
+            }
+        )
+
+        pngData.append(pngChunk(type: "IHDR", data: ihdrData))
+        pngData.append(pngChunk(type: "PLTE", data: paletteData))
+        pngData.append(pngChunk(type: "IDAT", data: compressedImageData))
+        pngData.append(pngChunk(type: "IEND", data: Data()))
+        return pngData
+    }
+
+    private static func pngChunk(type: String, data: Data) -> Data {
+        let typeData = Data(type.utf8)
+        var chunk = Data()
+        chunk.append(contentsOf: UInt32(data.count).bigEndianBytes)
+        chunk.append(typeData)
+        chunk.append(data)
+
+        let checksum = typeData.withUnsafeBytes { typeBuffer in
+            data.withUnsafeBytes { dataBuffer in
+                let typePointer = typeBuffer.bindMemory(to: Bytef.self).baseAddress
+                let dataPointer = dataBuffer.bindMemory(to: Bytef.self).baseAddress
+                let typeChecksum = crc32(0, typePointer, uInt(typeData.count))
+                return crc32(typeChecksum, dataPointer, uInt(data.count))
+            }
+        }
+        chunk.append(contentsOf: UInt32(checksum).bigEndianBytes)
+        return chunk
+    }
+
+    private static func zlibCompressed(_ data: Data) throws -> Data {
+        let sourceData = data.isEmpty ? Data([0]) : data
+        let destinationCapacity = Int(compressBound(uLong(sourceData.count)))
+        var destination = Data(count: destinationCapacity)
+        var compressedLength = uLongf(destinationCapacity)
+
+        let status = destination.withUnsafeMutableBytes { destinationBuffer in
+            sourceData.withUnsafeBytes { sourceBuffer in
+                compress2(
+                    destinationBuffer.bindMemory(to: Bytef.self).baseAddress,
+                    &compressedLength,
+                    sourceBuffer.bindMemory(to: Bytef.self).baseAddress,
+                    uLong(sourceData.count),
+                    Z_BEST_COMPRESSION
+                )
+            }
+        }
+
+        guard status == Z_OK else {
+            throw NSError(domain: "SwiftTagDocumentTests", code: 5)
+        }
+
+        destination.removeSubrange(Int(compressedLength) ..< destination.count)
+        return destination
     }
 
     private static func tempPackageURL(name: String) throws -> URL {
@@ -121,6 +211,43 @@ struct SwiftTagDocumentTests {
         #expect(sharedFileName.hasSuffix(".png"))
         #expect(firstTrackPictures[0]["Width"] as? Int == sharedPicture.width)
         #expect(firstTrackPictures[0]["Height"] as? Int == sharedPicture.height)
+    }
+
+    @Test
+    func pictureDataUtilitiesComputesPaletteColorCountForIndexedPNG() throws {
+        let indexedPNG = try Self.indexedPNGData(
+            palette: [
+                (255, 0, 0),
+                (0, 255, 0),
+                (0, 0, 255)
+            ],
+            pixelRows: [[0, 1]]
+        )
+
+        let specifications = PictureDataUtilities.computedSpecifications(from: indexedPNG)
+
+        #expect(specifications.width == 2)
+        #expect(specifications.height == 1)
+        #expect(specifications.depth == 8)
+        #expect(specifications.colors == 3)
+    }
+
+    @Test
+    func pictureDataUtilitiesComputesBitsPerPixelDepthForJPEGAndRGBAPNG() throws {
+        let jpegSpecifications = PictureDataUtilities.computedSpecifications(
+            from: try Self.jpegData(color: .systemBlue)
+        )
+        let pngSpecifications = PictureDataUtilities.computedSpecifications(
+            from: try Self.pngData(color: .systemRed)
+        )
+
+        #expect(jpegSpecifications.width > 0)
+        #expect(jpegSpecifications.height > 0)
+        #expect(jpegSpecifications.depth == 24)
+
+        #expect(pngSpecifications.width > 0)
+        #expect(pngSpecifications.height > 0)
+        #expect(pngSpecifications.depth == 32)
     }
 
     @Test
@@ -268,5 +395,16 @@ struct SwiftTagDocumentTests {
                 albumArtPictures: []
             )
         )
+    }
+}
+
+private extension UInt32 {
+    var bigEndianBytes: [UInt8] {
+        [
+            UInt8((self >> 24) & 0xff),
+            UInt8((self >> 16) & 0xff),
+            UInt8((self >> 8) & 0xff),
+            UInt8(self & 0xff)
+        ]
     }
 }
