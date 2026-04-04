@@ -81,6 +81,17 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testFileMenuContainsOpenSwiftTagDocumentCommand() throws {
+        let app = try launchApp()
+        let fileMenu = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
+        fileMenu.click()
+
+        let openSwiftTagMenuItem = app.menuItems["Open SwiftTag Document..."].firstMatch
+        XCTAssertTrue(openSwiftTagMenuItem.waitForExistence(timeout: 2.0))
+    }
+
+    @MainActor
     func testFileMenuEnablesSwiftTagDocumentCommandWhenTracksAreLoaded() throws {
         let app = try launchApp(importFixture: true)
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")

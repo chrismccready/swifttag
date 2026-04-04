@@ -821,10 +821,10 @@ struct ContentView: View {
                 syncAlbumArtContext()
             }
             .onChange(of: TrackSetFingerprint.make(from: viewModel.importedTrackReferences)) { _, _ in
-                EditorWindowCoordinator.shared.register(
-                    sessionValue: sessionValue,
-                    trackReferences: viewModel.importedTrackReferences
-                )
+                registerEditorSession()
+            }
+            .onChange(of: viewModel.swiftTagDocumentSaveState()) { _, _ in
+                registerEditorSession()
                 refreshTrackMonitoring()
             }
             .onChange(of: autoUpdateTrackTotal) { _, _ in
@@ -1168,10 +1168,7 @@ struct ContentView: View {
                     progress: updateSaveStatus(currentTrackIndex:totalTrackCount:currentTrackName:)
                 )
                 refreshTrackMonitoring()
-                EditorWindowCoordinator.shared.register(
-                    sessionValue: sessionValue,
-                    trackReferences: viewModel.importedTrackReferences
-                )
+                registerEditorSession()
                 let notificationPayload = SaveNotificationCoordinator.shared.prepareSuccessNotification(for: saveResult)
                 Task {
                     await SaveNotificationCoordinator.shared.schedulePreparedSuccessNotification(notificationPayload)
@@ -1213,6 +1210,7 @@ struct ContentView: View {
                     to: destinationURL
                 )
                 viewModel.rememberSwiftTagDocumentSave(result)
+                registerEditorSession()
             } catch {
                 saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 isSaveErrorPresented = true
@@ -1301,10 +1299,10 @@ struct ContentView: View {
         EditorWindowCoordinator.shared.registerExternalOpenHandler(sessionID: sessionValue.sessionID) { urls in
             handleExternallyOpenedFlacFiles(urls)
         }
-        EditorWindowCoordinator.shared.register(
-            sessionValue: sessionValue,
-            trackReferences: viewModel.importedTrackReferences
-        )
+        EditorWindowCoordinator.shared.registerSwiftTagDocumentOpenHandler(sessionID: sessionValue.sessionID) { url in
+            handleOpenedSwiftTagDocument(url)
+        }
+        registerEditorSession()
     }
 
     private func handleExternallyOpenedFlacFiles(_ urls: [URL]) {
@@ -1315,6 +1313,21 @@ struct ContentView: View {
                 append: true,
                 allowsDirectoryRecursion: false
             )
+        }
+    }
+
+    private func handleOpenedSwiftTagDocument(_ url: URL) {
+        Task { @MainActor in
+            do {
+                let document = try SwiftTagDocumentPackageReader.read(from: url)
+                viewModel.loadSwiftTagDocument(document, tagWriteOptions: saveSettingsSnapshot.tagWriteOptions)
+                syncAlbumArtContext()
+                refreshTrackMonitoring()
+                registerEditorSession()
+            } catch {
+                importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                isImportErrorPresented = true
+            }
         }
     }
 
@@ -1369,6 +1382,16 @@ struct ContentView: View {
         pendingDestructiveAction = nil
         loadedReopenRecordID = nil
         focusedMiscTagKeyRowID = nil
+    }
+
+    private func registerEditorSession() {
+        let swiftTagDocumentState = viewModel.swiftTagDocumentSaveState()
+        EditorWindowCoordinator.shared.register(
+            sessionValue: sessionValue,
+            trackReferences: viewModel.importedTrackReferences,
+            swiftTagDocumentURL: swiftTagDocumentState.destinationURL,
+            swiftTagDocumentID: swiftTagDocumentState.documentID
+        )
     }
 
     private func importSavedTracks(from references: [ImportedTrackReference]) async throws {

@@ -167,6 +167,11 @@ private struct AppCommands: Commands {
                 .disabled(showReadOnlyFlacImporter == nil)
             }
 
+            Button("Open SwiftTag Document...") {
+                openSwiftTagDocument()
+            }
+            .keyboardShortcut("o", modifiers: [.control])
+
             Divider()
 
             Button(toggleSelectedTrackLocksTitle ?? "Toggle Selected Tracks Lock") {
@@ -236,8 +241,24 @@ private struct AppCommands: Commands {
             Button("Save SwiftTag Document...") {
                 performSaveSwiftTagDocument?()
             }
+            .keyboardShortcut("s", modifiers: [.control])
             .disabled(!(canPerformSaveSwiftTagDocument ?? false))
         }
+    }
+
+    private func openSwiftTagDocument() {
+        let openPanel = NSOpenPanel()
+        openPanel.allowedContentTypes = [.swiftTagDocument]
+        openPanel.allowsMultipleSelection = true
+        openPanel.canChooseDirectories = false
+        openPanel.canChooseFiles = true
+        openPanel.resolvesAliases = true
+
+        guard openPanel.runModal() == .OK else {
+            return
+        }
+
+        _ = EditorWindowCoordinator.shared.routeOpenedSwiftTagDocuments(openPanel.urls)
     }
 }
 

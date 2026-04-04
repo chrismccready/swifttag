@@ -14,6 +14,7 @@ struct Track: Identifiable {
     var externalDifferences: TrackExternalDifferences?
     var fingerprint: String?
     var isLocked: Bool
+    var preservesEditorStateDuringFileRefresh: Bool
 
     var isImportedFlacTrack: Bool {
         sourceFileURL?.pathExtension.lowercased() == "flac"
@@ -79,7 +80,8 @@ struct Track: Identifiable {
         latestFileSnapshot: TrackFileSnapshot? = nil,
         externalDifferences: TrackExternalDifferences? = nil,
         fingerprint: String? = nil,
-        isLocked: Bool = false
+        isLocked: Bool = false,
+        preservesEditorStateDuringFileRefresh: Bool = false
     ) {
         self.id = id
         self.album = Track.normalizedSharedValue(album ?? tags[TagKey.album] ?? "")
@@ -105,6 +107,7 @@ struct Track: Identifiable {
         self.externalDifferences = externalDifferences
         self.fingerprint = Track.normalizedOptionalValue(fingerprint)
         self.isLocked = isLocked
+        self.preservesEditorStateDuringFileRefresh = preservesEditorStateDuringFileRefresh
     }
 
     private static func normalizedSharedValue(_ value: String) -> String {

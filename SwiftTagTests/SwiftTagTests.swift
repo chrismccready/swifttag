@@ -4020,6 +4020,178 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
     }
 
     @MainActor
+    func testSwiftTagDocumentOpenFocusesExistingAssociatedSession() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let sessionValue = EditorSessionValue(sessionID: UUID())
+        let documentURL = URL(fileURLWithPath: "/tmp/existing-document.swifttag")
+        coordinator.register(
+            sessionValue: sessionValue,
+            trackReferences: [],
+            swiftTagDocumentURL: documentURL,
+            swiftTagDocumentID: UUID()
+        )
+
+        var openedSessions: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction { openedSession in
+            openedSessions.append(openedSession)
+        }
+
+        var deliveredDocumentURL: URL?
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: sessionValue.sessionID) { url in
+            deliveredDocumentURL = url
+        }
+
+        let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([documentURL])
+
+        XCTAssertTrue(didRouteDocuments)
+        XCTAssertEqual(openedSessions, [sessionValue])
+        XCTAssertNil(deliveredDocumentURL)
+    }
+
+    @MainActor
+    func testSwiftTagDocumentOpenReusesUnusedWindowBeforeOpeningNewOne() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let unusedSession = EditorSessionValue(
+            sessionID: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        )
+        coordinator.register(sessionValue: unusedSession, trackReferences: [])
+
+        var deliveredDocumentURL: URL?
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: unusedSession.sessionID) { url in
+            deliveredDocumentURL = url
+        }
+
+        var openedSessions: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSessions.append(sessionValue)
+        }
+
+        let documentURL = URL(fileURLWithPath: "/tmp/reused-window.swifttag")
+        let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([documentURL])
+
+        XCTAssertTrue(didRouteDocuments)
+        XCTAssertEqual(openedSessions, [unusedSession])
+        XCTAssertEqual(deliveredDocumentURL?.path, documentURL.path)
+    }
+
+    @MainActor
+    func testSwiftTagDocumentOpenReusesMultipleUnusedWindowsInOrderBeforeOpeningNewOnes() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let firstUnusedSession = EditorSessionValue(
+            sessionID: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        )
+        let secondUnusedSession = EditorSessionValue(
+            sessionID: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+        )
+        coordinator.register(sessionValue: secondUnusedSession, trackReferences: [])
+        coordinator.register(sessionValue: firstUnusedSession, trackReferences: [])
+
+        var deliveredDocumentPathsBySessionID: [UUID: String] = [:]
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: firstUnusedSession.sessionID) { url in
+            deliveredDocumentPathsBySessionID[firstUnusedSession.sessionID] = url.path
+        }
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: secondUnusedSession.sessionID) { url in
+            deliveredDocumentPathsBySessionID[secondUnusedSession.sessionID] = url.path
+        }
+
+        var openedSessions: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSessions.append(sessionValue)
+        }
+
+        let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([
+            URL(fileURLWithPath: "/tmp/b.swifttag"),
+            URL(fileURLWithPath: "/tmp/a.swifttag")
+        ])
+
+        XCTAssertTrue(didRouteDocuments)
+        XCTAssertEqual(openedSessions, [firstUnusedSession, secondUnusedSession])
+        XCTAssertEqual(
+            deliveredDocumentPathsBySessionID[firstUnusedSession.sessionID],
+            "/tmp/a.swifttag"
+        )
+        XCTAssertEqual(
+            deliveredDocumentPathsBySessionID[secondUnusedSession.sessionID],
+            "/tmp/b.swifttag"
+        )
+    }
+
+    @MainActor
+    func testSwiftTagDocumentOpenQueuesDocumentUntilHandlerRegisters() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        var openedSession: EditorSessionValue?
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSession = sessionValue
+        }
+
+        let documentURL = URL(fileURLWithPath: "/tmp/queued-document.swifttag")
+        let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([documentURL])
+
+        XCTAssertTrue(didRouteDocuments)
+        guard let openedSession else {
+            XCTFail("Expected a new session to open.")
+            return
+        }
+
+        coordinator.register(
+            sessionValue: openedSession,
+            trackReferences: [],
+            swiftTagDocumentURL: documentURL,
+            swiftTagDocumentID: UUID()
+        )
+
+        var deliveredDocumentURL: URL?
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: openedSession.sessionID) { url in
+            deliveredDocumentURL = url
+        }
+
+        XCTAssertEqual(deliveredDocumentURL?.path, documentURL.path)
+    }
+
+    @MainActor
+    func testSwiftTagDocumentOpenRoutesMultipleSelectionsDeterministically() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        var openedSessions: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSessions.append(sessionValue)
+        }
+
+        let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([
+            URL(fileURLWithPath: "/tmp/b.swifttag"),
+            URL(fileURLWithPath: "/tmp/a.swifttag"),
+            URL(fileURLWithPath: "/tmp/a.swifttag")
+        ])
+
+        XCTAssertTrue(didRouteDocuments)
+        XCTAssertEqual(openedSessions.count, 2)
+
+        var deliveredDocumentPaths: [String] = []
+        for (index, sessionValue) in openedSessions.enumerated() {
+            coordinator.register(
+                sessionValue: sessionValue,
+                trackReferences: [],
+                swiftTagDocumentURL: URL(fileURLWithPath: index == 0 ? "/tmp/a.swifttag" : "/tmp/b.swifttag"),
+                swiftTagDocumentID: UUID()
+            )
+            coordinator.registerSwiftTagDocumentOpenHandler(sessionID: sessionValue.sessionID) { url in
+                deliveredDocumentPaths.append(url.path)
+            }
+        }
+
+        XCTAssertEqual(deliveredDocumentPaths, ["/tmp/a.swifttag", "/tmp/b.swifttag"])
+    }
+
+    @MainActor
     func testFinderOpenRejectsUnsupportedBatches() {
         let coordinator = EditorWindowCoordinator.shared
         coordinator.resetForTesting()
@@ -4030,5 +4202,17 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
         )
 
         XCTAssertFalse(didRouteFiles)
+    }
+
+    @MainActor
+    func testSwiftTagDocumentOpenRejectsUnsupportedBatches() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([
+            URL(fileURLWithPath: "/tmp/ignored.txt")
+        ])
+
+        XCTAssertFalse(didRouteDocuments)
     }
 }

@@ -22,6 +22,22 @@ struct SwiftTagDocumentSaveResult: Equatable {
     let fingerprint: String
 }
 
+struct SwiftTagDocumentImportTrack: Equatable {
+    let documentTrackFingerprint: String
+    let sourceFileURL: URL?
+    let securityScopedBookmarkData: Data?
+    let flacFingerprint: String?
+    let tags: [String: String]
+    let pictures: [FlacWritablePictureRecord]
+}
+
+struct SwiftTagDocumentImportResult: Equatable {
+    let documentURL: URL
+    let documentID: UUID
+    let fingerprint: String
+    let tracks: [SwiftTagDocumentImportTrack]
+}
+
 struct SwiftTagDocumentExportTrack: Equatable {
     let sortKey: String
     let tags: [String: String]
@@ -36,6 +52,10 @@ enum SwiftTagDocumentPackageError: LocalizedError {
     case unsupportedPictureFormat(mimeType: String)
     case invalidDestination
     case failedToWritePackage(message: String)
+    case unsupportedVersion(version: String)
+    case invalidDocumentID
+    case missingPictureAsset(fileName: String)
+    case failedToReadPackage(message: String)
 
     var errorDescription: String? {
         switch self {
@@ -50,6 +70,14 @@ enum SwiftTagDocumentPackageError: LocalizedError {
         case .invalidDestination:
             return "The selected SwiftTag document destination is invalid."
         case let .failedToWritePackage(message):
+            return message
+        case let .unsupportedVersion(version):
+            return "SwiftTag document version \(version) is not supported."
+        case .invalidDocumentID:
+            return "The SwiftTag document contains an invalid document identifier."
+        case let .missingPictureAsset(fileName):
+            return "The SwiftTag document is missing picture asset \(fileName)."
+        case let .failedToReadPackage(message):
             return message
         }
     }
@@ -124,10 +152,133 @@ private struct SwiftTagDocumentPackage {
     let documentID: UUID
 }
 
-enum SwiftTagDocumentPackageWriter {
-    private static let infoPlistFileName = "Info.plist"
-    private static let picturesDirectoryName = "Pictures"
+private enum SwiftTagDocumentPackageConstants {
+    static let infoPlistFileName = "Info.plist"
+    static let picturesDirectoryName = "Pictures"
+}
 
+enum SwiftTagDocumentPackageReader {
+    static func read(
+        from documentURL: URL,
+        fileManager: FileManager = .default
+    ) throws -> SwiftTagDocumentImportResult {
+        let normalizedDocumentURL = documentURL.standardizedFileURL
+
+        do {
+            let package = try loadPackage(at: normalizedDocumentURL, fileManager: fileManager)
+            let tracks = try package.manifest.tracks.map { manifestTrack in
+                SwiftTagDocumentImportTrack(
+                    documentTrackFingerprint: manifestTrack.fingerprint,
+                    sourceFileURL: normalizedFileURL(from: manifestTrack.flacFileURL),
+                    securityScopedBookmarkData: manifestTrack.flacFileBookmark,
+                    flacFingerprint: normalizedOptionalString(manifestTrack.flacFingerprint),
+                    tags: manifestTrack.tags,
+                    pictures: try manifestTrack.pictures.map { manifestPicture in
+                        FlacWritablePictureRecord(
+                            type: manifestPicture.flacType,
+                            mimeType: manifestPicture.mimeType,
+                            description: manifestPicture.description,
+                            data: try assetData(
+                                named: manifestPicture.file,
+                                from: package.assetsByFileName
+                            ),
+                            width: manifestPicture.width,
+                            height: manifestPicture.height,
+                            depth: manifestPicture.depth,
+                            colors: manifestPicture.colors
+                        )
+                    }
+                )
+            }
+
+            return SwiftTagDocumentImportResult(
+                documentURL: normalizedDocumentURL,
+                documentID: package.documentID,
+                fingerprint: package.manifest.fingerprint,
+                tracks: tracks
+            )
+        } catch let error as SwiftTagDocumentPackageError {
+            throw error
+        } catch {
+            throw SwiftTagDocumentPackageError.failedToReadPackage(
+                message: (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            )
+        }
+    }
+
+    private static func loadPackage(
+        at documentURL: URL,
+        fileManager: FileManager
+    ) throws -> SwiftTagDocumentPackage {
+        let infoPlistURL = documentURL
+            .appendingPathComponent(SwiftTagDocumentPackageConstants.infoPlistFileName)
+        let picturesDirectoryURL = documentURL
+            .appendingPathComponent(SwiftTagDocumentPackageConstants.picturesDirectoryName, isDirectory: true)
+
+        let manifestData = try Data(contentsOf: infoPlistURL)
+        let manifest = try PropertyListDecoder.swiftTagDocumentDecoder.decode(
+            SwiftTagDocumentManifest.self,
+            from: manifestData
+        )
+
+        guard manifest.version == SwiftTagDocumentType.version else {
+            throw SwiftTagDocumentPackageError.unsupportedVersion(version: manifest.version)
+        }
+
+        guard let documentID = UUID(uuidString: manifest.id) else {
+            throw SwiftTagDocumentPackageError.invalidDocumentID
+        }
+
+        let pictureFileNames = Set(manifest.tracks.flatMap(\.pictures).map(\.file))
+        var assetsByFileName: [String: Data] = [:]
+
+        for fileName in pictureFileNames {
+            let assetURL = picturesDirectoryURL.appendingPathComponent(fileName)
+            guard assetURL.lastPathComponent == fileName,
+                  fileManager.fileExists(atPath: assetURL.path) else {
+                throw SwiftTagDocumentPackageError.missingPictureAsset(fileName: fileName)
+            }
+            assetsByFileName[fileName] = try Data(contentsOf: assetURL)
+        }
+
+        return SwiftTagDocumentPackage(
+            manifest: manifest,
+            assetsByFileName: assetsByFileName,
+            documentID: documentID
+        )
+    }
+
+    private static func assetData(
+        named fileName: String,
+        from assetsByFileName: [String: Data]
+    ) throws -> Data {
+        guard let assetData = assetsByFileName[fileName] else {
+            throw SwiftTagDocumentPackageError.missingPictureAsset(fileName: fileName)
+        }
+
+        return assetData
+    }
+
+    private static func normalizedFileURL(from rawPath: String) -> URL? {
+        let trimmedPath = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedPath.isEmpty else {
+            return nil
+        }
+
+        return URL(fileURLWithPath: trimmedPath).standardizedFileURL
+    }
+
+    private static func normalizedOptionalString(_ value: String?) -> String? {
+        guard let value else {
+            return nil
+        }
+
+        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedValue.isEmpty ? nil : value
+    }
+}
+
+enum SwiftTagDocumentPackageWriter {
     static func save(
         tracks: [SwiftTagDocumentExportTrack],
         state: SwiftTagDocumentSaveState,
@@ -290,7 +441,10 @@ enum SwiftTagDocumentPackageWriter {
         let tempContainerURL = fileManager.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let tempPackageURL = tempContainerURL.appendingPathComponent(destinationURL.lastPathComponent, isDirectory: true)
-        let tempPicturesDirectoryURL = tempPackageURL.appendingPathComponent(picturesDirectoryName, isDirectory: true)
+        let tempPicturesDirectoryURL = tempPackageURL.appendingPathComponent(
+            SwiftTagDocumentPackageConstants.picturesDirectoryName,
+            isDirectory: true
+        )
         defer {
             try? fileManager.removeItem(at: tempContainerURL)
         }
@@ -299,7 +453,10 @@ enum SwiftTagDocumentPackageWriter {
             try fileManager.createDirectory(at: tempPicturesDirectoryURL, withIntermediateDirectories: true)
 
             let plistData = try PropertyListEncoder.swiftTagDocumentEncoder.encode(package.manifest)
-            try plistData.write(to: tempPackageURL.appendingPathComponent(infoPlistFileName), options: .atomic)
+            try plistData.write(
+                to: tempPackageURL.appendingPathComponent(SwiftTagDocumentPackageConstants.infoPlistFileName),
+                options: .atomic
+            )
 
             for assetFileName in package.assetsByFileName.keys.sorted() {
                 guard let assetData = package.assetsByFileName[assetFileName] else {
@@ -437,7 +594,8 @@ enum SwiftTagDocumentPackageWriter {
             return nil
         }
 
-        let infoPlistURL = destinationURL.appendingPathComponent(infoPlistFileName)
+        let infoPlistURL = destinationURL
+            .appendingPathComponent(SwiftTagDocumentPackageConstants.infoPlistFileName)
         guard let plistData = try? Data(contentsOf: infoPlistURL),
               let plist = try? PropertyListSerialization.propertyList(from: plistData, options: [], format: nil),
               let dictionary = plist as? [String: Any],
@@ -480,5 +638,11 @@ private extension PropertyListEncoder {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .xml
         return encoder
+    }
+}
+
+private extension PropertyListDecoder {
+    static var swiftTagDocumentDecoder: PropertyListDecoder {
+        PropertyListDecoder()
     }
 }

@@ -214,6 +214,44 @@ struct SwiftTagDocumentTests {
     }
 
     @Test
+    func swiftTagDocumentReaderLoadsWrittenPackage() throws {
+        let sharedPNG = try Self.pngData(color: .systemOrange)
+        let sharedPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Cover (front)",
+            data: sharedPNG
+        ).withComputedPictureMetadata()
+        let destinationURL = try Self.tempPackageURL(name: "reader-roundtrip")
+        let saveResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/reader.flac",
+                    tags: [TagKey.title: "Reader Track"],
+                    pictures: [sharedPicture],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/reader.flac"),
+                    securityScopedBookmarkData: Data([0x0A, 0x0B]),
+                    flacFingerprint: "reader-fingerprint"
+                )
+            ],
+            state: .init(),
+            to: destinationURL
+        )
+
+        let loadedDocument = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+
+        #expect(loadedDocument.documentURL == destinationURL.standardizedFileURL)
+        #expect(loadedDocument.documentID == saveResult.documentID)
+        #expect(loadedDocument.fingerprint == saveResult.fingerprint)
+        let loadedTrack = try #require(loadedDocument.tracks.first)
+        #expect(loadedTrack.sourceFileURL?.path == "/tmp/reader.flac")
+        #expect(loadedTrack.securityScopedBookmarkData == Data([0x0A, 0x0B]))
+        #expect(loadedTrack.flacFingerprint == "reader-fingerprint")
+        #expect(loadedTrack.tags[TagKey.title] == "Reader Track")
+        #expect(loadedTrack.pictures == [sharedPicture])
+    }
+
+    @Test
     func pictureDataUtilitiesComputesPaletteColorCountForIndexedPNG() throws {
         let indexedPNG = try Self.indexedPNGData(
             palette: [
@@ -350,6 +388,55 @@ struct SwiftTagDocumentTests {
         #expect(exportTrack.tags["TOTALDISCS"] == "3")
         #expect(exportTrack.tags["TRACKTOTAL"] == nil)
         #expect(exportTrack.tags[TagKey.filename] == nil)
+    }
+
+    @MainActor
+    @Test
+    func tagEditorViewModelLoadsSwiftTagDocumentAsCleanEditableSession() throws {
+        let frontCover = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Cover (front)",
+            data: try Self.pngData(color: .systemPink)
+        ).withComputedPictureMetadata()
+        let destinationURL = try Self.tempPackageURL(name: "view-model-load")
+        let saveResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/view-model-load.flac",
+                    tags: [
+                        TagKey.title: "Loaded Track",
+                        TagKey.album: "Loaded Album",
+                        TagKey.trackNumber: "01",
+                        "TOTALTRACKS": "01"
+                    ],
+                    pictures: [frontCover],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/view-model-load.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: "loaded-fingerprint"
+                )
+            ],
+            state: .init(),
+            to: destinationURL
+        )
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+
+        let loadedTrack = try #require(viewModel.trackItems.first)
+        #expect(viewModel.swiftTagDocumentSaveState().destinationURL == destinationURL.standardizedFileURL)
+        #expect(viewModel.swiftTagDocumentSaveState().documentID == saveResult.documentID)
+        #expect(loadedTrack.tags[TagKey.title] == "Loaded Track")
+        #expect(loadedTrack.album == "Loaded Album")
+        #expect(loadedTrack.latestFileSnapshot != nil)
+        #expect(loadedTrack.preservesEditorStateDuringFileRefresh)
+        #expect(!viewModel.canSave(
+            payload: .writeTagsAndPictures,
+            scope: .allTracks,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        ))
     }
 
     @MainActor
