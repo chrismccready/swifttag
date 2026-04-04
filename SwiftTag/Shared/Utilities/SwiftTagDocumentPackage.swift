@@ -2,7 +2,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 enum SwiftTagDocumentType {
-    static let identifier = "toowalks.swifttag-document"
+    static let identifier = "com.toowalks.swifttag-document"
     static let fileExtension = "swifttag"
     static let version = "1.0.0"
 }
