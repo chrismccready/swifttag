@@ -259,13 +259,17 @@ enum SwiftTagDocumentPackageReader {
         return assetData
     }
 
-    private static func normalizedFileURL(from rawPath: String) -> URL? {
-        let trimmedPath = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedPath.isEmpty else {
+    private static func normalizedFileURL(from rawValue: String) -> URL? {
+        let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty else {
             return nil
         }
 
-        return URL(fileURLWithPath: trimmedPath).standardizedFileURL
+        if let fileURL = URL(string: trimmedValue), fileURL.isFileURL {
+            return fileURL.standardizedFileURL
+        }
+
+        return URL(fileURLWithPath: trimmedValue).standardizedFileURL
     }
 
     private static func normalizedOptionalString(_ value: String?) -> String? {
@@ -392,7 +396,7 @@ enum SwiftTagDocumentPackageWriter {
             manifestTracks.append(
                 SwiftTagDocumentManifestTrack(
                     fingerprint: trackFingerprint,
-                    flacFileURL: normalizedFilePath(track.sourceFileURL),
+                    flacFileURL: normalizedFileURLString(track.sourceFileURL),
                     flacFileBookmark: track.securityScopedBookmarkData,
                     flacFingerprint: normalizedOptionalString(track.flacFingerprint),
                     tags: normalizedTags,
@@ -606,12 +610,12 @@ enum SwiftTagDocumentPackageWriter {
         return UUID(uuidString: rawID)
     }
 
-    private static func normalizedFilePath(_ url: URL?) -> String {
+    private static func normalizedFileURLString(_ url: URL?) -> String {
         guard let url else {
             return ""
         }
 
-        return url.standardizedFileURL.path
+        return url.standardizedFileURL.absoluteString
     }
 
     private static func normalizedOptionalString(_ value: String?) -> String? {
