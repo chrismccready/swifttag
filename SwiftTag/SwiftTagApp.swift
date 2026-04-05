@@ -88,7 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     @discardableResult
     private func routeFinderOpenedFiles(_ urls: [URL], appIsActive: Bool) -> Bool {
-        EditorWindowCoordinator.shared.routeFinderOpenedFiles(urls, appIsActive: appIsActive)
+        EditorWindowCoordinator.shared.routeOpenedDocuments(urls, appIsActive: appIsActive)
     }
 
     private func uiTestDocumentOpenURLIfPresent() -> URL? {
@@ -144,10 +144,17 @@ private struct AppCommands: Commands {
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Button("Add FLAC files...") {
-                showAddFlacImporter?()
+                if let uiTestFLACURL = uiTestMenuFlacURLIfPresent() {
+                    _ = EditorWindowCoordinator.shared.routeOpenedDocuments(
+                        [uiTestFLACURL],
+                        appIsActive: NSApp.isActive
+                    )
+                } else {
+                    showAddFlacImporter?()
+                }
             }
             .keyboardShortcut("o", modifiers: [.command])
-            .disabled(showAddFlacImporter == nil)
+            .disabled(showAddFlacImporter == nil && uiTestMenuFlacURLIfPresent() == nil)
             .modifierKeyAlternate(.shift) {
                 Button("Add FLAC files (replace existing)...") {
                     showFlacImporter?()
@@ -156,10 +163,17 @@ private struct AppCommands: Commands {
             }
 
             Button("Add FLAC files (read-only)...") {
-                showAddReadOnlyFlacImporter?()
+                if let uiTestFLACURL = uiTestMenuFlacURLIfPresent() {
+                    _ = EditorWindowCoordinator.shared.routeOpenedDocuments(
+                        [uiTestFLACURL],
+                        appIsActive: NSApp.isActive
+                    )
+                } else {
+                    showAddReadOnlyFlacImporter?()
+                }
             }
             .keyboardShortcut("o", modifiers: [.command, .option])
-            .disabled(showAddReadOnlyFlacImporter == nil)
+            .disabled(showAddReadOnlyFlacImporter == nil && uiTestMenuFlacURLIfPresent() == nil)
             .modifierKeyAlternate(.shift) {
                 Button("Add FLAC files (read-only)(replace existing)...") {
                     showReadOnlyFlacImporter?()
@@ -171,6 +185,13 @@ private struct AppCommands: Commands {
                 openSwiftTagDocument()
             }
             .keyboardShortcut("o", modifiers: [.control])
+            
+            Divider()
+
+            Button("Close Window") {
+                closeKeyWindow()
+            }
+            .keyboardShortcut("w")
 
             Divider()
 
@@ -247,6 +268,14 @@ private struct AppCommands: Commands {
     }
 
     private func openSwiftTagDocument() {
+        if let uiTestDocumentURL = uiTestOpenSwiftTagDocumentURLIfPresent() {
+            _ = EditorWindowCoordinator.shared.routeOpenedDocuments(
+                [uiTestDocumentURL],
+                appIsActive: NSApp.isActive
+            )
+            return
+        }
+
         let openPanel = NSOpenPanel()
         openPanel.allowedContentTypes = [.swiftTagDocument]
         openPanel.allowsMultipleSelection = true
@@ -259,6 +288,72 @@ private struct AppCommands: Commands {
         }
 
         _ = EditorWindowCoordinator.shared.routeOpenedSwiftTagDocuments(openPanel.urls)
+    }
+
+    private func closeKeyWindow() {
+        if let sessionDelegate = NSApp.keyWindow?.delegate as? EditorWindowSessionIdentifying {
+            EditorWindowCoordinator.shared.markSessionClosing(sessionDelegate.editorSessionID)
+        }
+
+        if NSApp.sendAction(#selector(NSWindow.performClose(_:)), to: nil, from: nil) {
+            return
+        }
+
+        if let keyWindow = NSApp.keyWindow {
+            keyWindow.performClose(nil)
+            return
+        }
+
+        NSApp.mainWindow?.performClose(nil)
+    }
+
+    private func uiTestOpenSwiftTagDocumentURLIfPresent() -> URL? {
+        let environment = ProcessInfo.processInfo.environment
+        if let rawPath = environment["UITEST_OPEN_SWIFTTAG_PATH"],
+           !rawPath.isEmpty {
+            return URL(fileURLWithPath: rawPath)
+        }
+
+        guard let rawPath = uiTestControlValueIfPresent(fileName: "open-swifttag-path.txt") else {
+            return nil
+        }
+
+        return URL(fileURLWithPath: rawPath)
+    }
+
+    private func uiTestMenuFlacURLIfPresent() -> URL? {
+        let environment = ProcessInfo.processInfo.environment
+        if let rawPath = environment["UITEST_MENU_FLAC_PATH"], !rawPath.isEmpty {
+            return URL(fileURLWithPath: rawPath)
+        }
+
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let keyIndex = arguments.firstIndex(of: "-UITEST_MENU_FLAC_PATH") else {
+            return nil
+        }
+
+        let valueIndex = arguments.index(after: keyIndex)
+        guard valueIndex < arguments.endIndex else {
+            return nil
+        }
+
+        let rawPath = arguments[valueIndex]
+        return rawPath.isEmpty ? nil : URL(fileURLWithPath: rawPath)
+    }
+
+    private func uiTestControlValueIfPresent(fileName: String) -> String? {
+        let controlURL = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Caches", isDirectory: true)
+            .appendingPathComponent("SwiftTagUITestControls", isDirectory: true)
+            .appendingPathComponent(fileName)
+
+        guard let rawValue = try? String(contentsOf: controlURL, encoding: .utf8) else {
+            return nil
+        }
+
+        let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedValue.isEmpty ? nil : trimmedValue
     }
 }
 
@@ -349,4 +444,5 @@ struct SwiftTagApp: App {
         let value = arguments[valueIndex]
         return value.isEmpty ? nil : value
     }
+
 }

@@ -1,11 +1,16 @@
 import AppKit
 import Foundation
 
+protocol EditorWindowSessionIdentifying: AnyObject {
+    var editorSessionID: UUID { get }
+}
+
 @MainActor
 final class EditorWindowCoordinator {
     static let shared = EditorWindowCoordinator()
 
-    private var openEditorWindowAction: ((EditorSessionValue) -> Void)?
+    private var fallbackOpenEditorWindowAction: ((EditorSessionValue) -> Void)?
+    private var openEditorWindowActionBySessionID: [UUID: (EditorSessionValue) -> Void] = [:]
     private var sessionByFingerprint: [String: EditorSessionValue] = [:]
     private var sessionBySwiftTagDocumentPath: [String: EditorSessionValue] = [:]
     private var sessionBySwiftTagDocumentID: [UUID: EditorSessionValue] = [:]
@@ -17,6 +22,7 @@ final class EditorWindowCoordinator {
     private var pendingBootstrapFiles: [URL] = []
     private var pendingSessionsToOpen: [EditorSessionValue] = []
     private var activeSessionID: UUID?
+    private var closingSessionIDs: Set<UUID> = []
 
     private init() {}
 
@@ -29,7 +35,15 @@ final class EditorWindowCoordinator {
     }
 
     func setOpenEditorWindowAction(_ action: @escaping (EditorSessionValue) -> Void) {
-        openEditorWindowAction = action
+        fallbackOpenEditorWindowAction = action
+        flushPendingSessionsToOpenIfNeeded()
+    }
+
+    func setOpenEditorWindowAction(
+        for sessionID: UUID,
+        action: @escaping (EditorSessionValue) -> Void
+    ) {
+        openEditorWindowActionBySessionID[sessionID] = action
         flushPendingSessionsToOpenIfNeeded()
     }
 
@@ -39,6 +53,7 @@ final class EditorWindowCoordinator {
         swiftTagDocumentURL: URL? = nil,
         swiftTagDocumentID: UUID? = nil
     ) {
+        closingSessionIDs.remove(sessionValue.sessionID)
         let normalizedPaths = TrackSetFingerprint.normalizedPaths(from: trackReferences)
         let newFingerprint = TrackSetFingerprint.make(fromNormalizedPaths: normalizedPaths)
         let normalizedSwiftTagDocumentPath = swiftTagDocumentURL?.standardizedFileURL.path
@@ -102,10 +117,18 @@ final class EditorWindowCoordinator {
     }
 
     func markSessionFocused(_ sessionID: UUID) {
-        guard registrationBySessionID[sessionID] != nil else {
+        guard registrationBySessionID[sessionID] != nil,
+              !closingSessionIDs.contains(sessionID) else {
             return
         }
         activeSessionID = sessionID
+    }
+
+    func markSessionClosing(_ sessionID: UUID) {
+        closingSessionIDs.insert(sessionID)
+        if activeSessionID == sessionID {
+            activeSessionID = nil
+        }
     }
 
     func unregister(sessionID: UUID) {
@@ -118,10 +141,12 @@ final class EditorWindowCoordinator {
                 sessionBySwiftTagDocumentID.removeValue(forKey: swiftTagDocumentID)
             }
         }
+        openEditorWindowActionBySessionID.removeValue(forKey: sessionID)
         externalOpenHandlerBySessionID.removeValue(forKey: sessionID)
         swiftTagDocumentOpenHandlerBySessionID.removeValue(forKey: sessionID)
         pendingFilesBySessionID.removeValue(forKey: sessionID)
         pendingSwiftTagDocumentsBySessionID.removeValue(forKey: sessionID)
+        closingSessionIDs.remove(sessionID)
         if activeSessionID == sessionID {
             activeSessionID = nil
         }
@@ -158,7 +183,7 @@ final class EditorWindowCoordinator {
     func openEditorWindow(for sessionValue: EditorSessionValue) {
         NSApp.activate(ignoringOtherApps: true)
 
-        guard let openEditorWindowAction else {
+        guard let openEditorWindowAction = currentOpenEditorWindowAction() else {
             pendingSessionsToOpen.append(sessionValue)
             return
         }
@@ -223,8 +248,14 @@ final class EditorWindowCoordinator {
         return true
     }
 
+    func routeOpenedDocuments(_ urls: [URL], appIsActive: Bool) -> Bool {
+        let didRouteSwiftTagDocuments = routeOpenedSwiftTagDocuments(urls)
+        let didRouteFlacFiles = routeFinderOpenedFiles(urls, appIsActive: appIsActive)
+        return didRouteSwiftTagDocuments || didRouteFlacFiles
+    }
+
     private func flushPendingSessionsToOpenIfNeeded() {
-        guard let openEditorWindowAction else {
+        guard let openEditorWindowAction = currentOpenEditorWindowAction() else {
             return
         }
 
@@ -233,6 +264,24 @@ final class EditorWindowCoordinator {
         for sessionValue in sessionsToOpen {
             openEditorWindowAction(sessionValue)
         }
+    }
+
+    private func currentOpenEditorWindowAction() -> ((EditorSessionValue) -> Void)? {
+        if let activeSessionID,
+           !closingSessionIDs.contains(activeSessionID),
+           let activeAction = openEditorWindowActionBySessionID[activeSessionID] {
+            return activeAction
+        }
+
+        if let firstAvailableSessionID = openEditorWindowActionBySessionID.keys
+            .filter({ !closingSessionIDs.contains($0) })
+            .sorted(by: { $0.uuidString < $1.uuidString })
+            .first,
+           let firstAvailableAction = openEditorWindowActionBySessionID[firstAvailableSessionID] {
+            return firstAvailableAction
+        }
+
+        return fallbackOpenEditorWindowAction
     }
 
     private func enqueuePendingFiles(_ urls: [URL], for sessionID: UUID) {
@@ -311,11 +360,49 @@ final class EditorWindowCoordinator {
     }
 
     private func existingSession(forSwiftTagDocumentURL documentURL: URL) -> EditorSessionValue? {
-        sessionBySwiftTagDocumentPath[documentURL.standardizedFileURL.path]
+        guard let sessionValue = sessionBySwiftTagDocumentPath[documentURL.standardizedFileURL.path] else {
+            return nil
+        }
+
+        return liveSessionValue(
+            for: sessionValue,
+            requiresExternalOpenHandler: false,
+            requiresSwiftTagDocumentOpenHandler: true
+        )
+    }
+
+    private func liveSessionValue(
+        for sessionValue: EditorSessionValue,
+        requiresExternalOpenHandler: Bool,
+        requiresSwiftTagDocumentOpenHandler: Bool
+    ) -> EditorSessionValue? {
+        let sessionID = sessionValue.sessionID
+        guard registrationBySessionID[sessionID] != nil else {
+            return nil
+        }
+
+        if closingSessionIDs.contains(sessionID) {
+            unregister(sessionID: sessionID)
+            return nil
+        }
+
+        if requiresExternalOpenHandler,
+           externalOpenHandlerBySessionID[sessionID] == nil {
+            unregister(sessionID: sessionID)
+            return nil
+        }
+
+        if requiresSwiftTagDocumentOpenHandler,
+           swiftTagDocumentOpenHandlerBySessionID[sessionID] == nil {
+            unregister(sessionID: sessionID)
+            return nil
+        }
+
+        return sessionValue
     }
 
     private func unusedSessionIDsInRoutingOrder() -> [UUID] {
-        registrationBySessionID.values
+        let candidateSessionIDs = registrationBySessionID.values
             .filter { registration in
                 registration.fingerprint.isEmpty
                     && registration.normalizedPaths.isEmpty
@@ -324,10 +411,23 @@ final class EditorWindowCoordinator {
             }
             .map(\.sessionValue.sessionID)
             .sorted { $0.uuidString < $1.uuidString }
+
+        return candidateSessionIDs.compactMap { sessionID in
+            guard let sessionValue = registrationBySessionID[sessionID]?.sessionValue else {
+                return nil
+            }
+
+            return liveSessionValue(
+                for: sessionValue,
+                requiresExternalOpenHandler: true,
+                requiresSwiftTagDocumentOpenHandler: true
+            )?.sessionID
+        }
     }
 
     func resetForTesting() {
-        openEditorWindowAction = nil
+        fallbackOpenEditorWindowAction = nil
+        openEditorWindowActionBySessionID.removeAll()
         sessionByFingerprint.removeAll()
         sessionBySwiftTagDocumentPath.removeAll()
         sessionBySwiftTagDocumentID.removeAll()
@@ -339,5 +439,6 @@ final class EditorWindowCoordinator {
         pendingBootstrapFiles.removeAll()
         pendingSessionsToOpen.removeAll()
         activeSessionID = nil
+        closingSessionIDs.removeAll()
     }
 }

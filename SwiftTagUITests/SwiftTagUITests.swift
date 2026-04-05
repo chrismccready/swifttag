@@ -6,8 +6,10 @@
 //
 
 import XCTest
+import AppKit
 
 final class SwiftTagUITests: XCTestCase {
+    private static let appBundleIdentifier = "com.toowalks.swifttag"
     private static let fixtureDirectoryName = "SwiftTagTestFiles"
     private static let fixtureFileName = "test.flac"
 
@@ -25,6 +27,10 @@ final class SwiftTagUITests: XCTestCase {
         static let trackCountKeyStrategy = "settings.tags.trackCountKeyStrategy"
         static let zeroPadDiscNumber = "settings.tags.zeroPadDiscNumber"
         static let discCountKeyStrategy = "settings.tags.discCountKeyStrategy"
+    }
+
+    private enum PlaceholderText {
+        static let noSelection = "Select track(s) to..."
     }
 
     override func setUpWithError() throws {
@@ -121,6 +127,42 @@ final class SwiftTagUITests: XCTestCase {
                 timeout: 5.0
             )
         )
+    }
+
+    @MainActor
+    func testReopeningClosedSwiftTagDocumentReloadsDocumentContents() throws {
+        let savedAlbum = "Saved UI Album \(UUID().uuidString)"
+        let savedTitle = "Saved Document Title \(UUID().uuidString)"
+        let flacURL = try prepareReadableFlacFixture(fileName: Self.fixtureFileName)
+        let swiftTagDocumentURL = try prepareSwiftTagDocumentFixture(
+            sourceFlacURL: flacURL,
+            savedAlbum: savedAlbum,
+            savedTitle: savedTitle
+        )
+
+        let app = try launchApp()
+
+        XCTAssertTrue(waitForWindowCount(in: app, minimumCount: 1, timeout: 5.0))
+        let initialWindowCount = currentWindowCount(in: app)
+        XCTAssertGreaterThanOrEqual(initialWindowCount, 1)
+
+        app.typeKey("n", modifierFlags: .command)
+        XCTAssertTrue(waitForWindowCount(in: app, minimumCount: initialWindowCount + 1, timeout: 5.0))
+
+        app.activate()
+        XCTAssertTrue(openFileWithSwiftTag(url: flacURL))
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
+
+        app.activate()
+        XCTAssertTrue(openFileWithSwiftTag(url: swiftTagDocumentURL))
+        XCTAssertTrue(waitForTextFieldValueAnywhere(in: app, expectedValue: savedTitle, timeout: 10.0))
+
+        app.typeKey("w", modifierFlags: .command)
+        XCTAssertTrue(waitForTextFieldValueAnywhere(in: app, expectedValue: savedTitle, timeout: 2.0) == false)
+
+        app.activate()
+        XCTAssertTrue(openFileWithSwiftTag(url: swiftTagDocumentURL))
+        XCTAssertTrue(waitForTextFieldValueAnywhere(in: app, expectedValue: savedTitle, timeout: 10.0))
     }
 
     @MainActor
@@ -241,6 +283,7 @@ final class SwiftTagUITests: XCTestCase {
         fixtureFileName: String = "test.flac",
         openDocumentFixture: Bool = false,
         openDocumentWhileActive: Bool = false,
+        menuImportFixturePath: String? = nil,
         persistentFixtureName: String? = nil,
         reuseImportedFixture: Bool = false,
         openAlbumArtSheet: Bool = false,
@@ -248,11 +291,15 @@ final class SwiftTagUITests: XCTestCase {
         simulatedSaveScope: String = "allTracks",
         simulatedSaveDelay: TimeInterval = 0,
         simulatedSaveDuration: TimeInterval = 0,
+        saveSwiftTagDocumentPath: String? = nil,
+        openSwiftTagDocumentPath: String? = nil,
         resetSaveSettings: Bool = true,
         openSaveNotificationRecordID: String? = nil,
         waitForEditorUI: Bool = true
     ) throws -> XCUIApplication {
         let app = XCUIApplication()
+        app.launchEnvironment["ApplePersistenceIgnoreState"] = "YES"
+        app.launchArguments.append(contentsOf: ["-ApplePersistenceIgnoreState", "YES"])
         if resetSaveSettings {
             app.launchEnvironment["UITEST_RESET_SAVE_SETTINGS"] = "1"
             app.launchArguments.append("-UITEST_RESET_SAVE_SETTINGS")
@@ -291,9 +338,24 @@ final class SwiftTagUITests: XCTestCase {
                 app.launchArguments.append("-UITEST_OPEN_DOCUMENT_WHILE_ACTIVE")
             }
         }
+        if let menuImportFixturePath {
+            app.launchEnvironment["UITEST_MENU_FLAC_PATH"] = menuImportFixturePath
+            app.launchArguments.append("-UITEST_MENU_FLAC_PATH")
+            app.launchArguments.append(menuImportFixturePath)
+        }
         if openAlbumArtSheet {
             app.launchEnvironment["UITEST_OPEN_ALBUM_ART_SHEET"] = "1"
             app.launchArguments.append("-UITEST_OPEN_ALBUM_ART_SHEET")
+        }
+        if let saveSwiftTagDocumentPath {
+            app.launchEnvironment["UITEST_SAVE_SWIFTTAG_PATH"] = saveSwiftTagDocumentPath
+            app.launchArguments.append("-UITEST_SAVE_SWIFTTAG_PATH")
+            app.launchArguments.append(saveSwiftTagDocumentPath)
+        }
+        if let openSwiftTagDocumentPath {
+            app.launchEnvironment["UITEST_OPEN_SWIFTTAG_PATH"] = openSwiftTagDocumentPath
+            app.launchArguments.append("-UITEST_OPEN_SWIFTTAG_PATH")
+            app.launchArguments.append(openSwiftTagDocumentPath)
         }
         if simulateSaveStatus {
             app.launchEnvironment["UITEST_SIMULATE_SAVE_STATUS"] = "1"
@@ -312,9 +374,71 @@ final class SwiftTagUITests: XCTestCase {
         }
         app.launch()
         if waitForEditorUI {
-            XCTAssertTrue(app.textFields[UIID.albumTextField].waitForExistence(timeout: 10.0))
+            XCTAssertTrue(
+                waitForWindowCount(in: app, minimumCount: 1, timeout: 10.0)
+                    || app.textFields[UIID.albumTextField].waitForExistence(timeout: 2.0)
+            )
         }
         return app
+    }
+
+    private func prepareSwiftTagDocumentFixture(
+        sourceFlacURL: URL,
+        savedAlbum: String,
+        savedTitle: String
+    ) throws -> URL {
+        let destinationURL = appContainerCachesDirectoryURL()
+            .appendingPathComponent("SwiftTagUITest-\(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+
+        try? FileManager.default.removeItem(at: destinationURL)
+        try FileManager.default.createDirectory(at: destinationURL, withIntermediateDirectories: true)
+
+        let infoPlistURL = destinationURL.appendingPathComponent("Info.plist")
+        let trackFingerprint = sourceFlacURL.path
+        let manifest: [String: Any] = [
+            "Id": UUID().uuidString,
+            "Version": "1.0.0",
+            "Fingerprint": trackFingerprint,
+            "Tracks": [
+                [
+                    "Fingerprint": trackFingerprint,
+                    "FLAC File URL": sourceFlacURL.absoluteString,
+                    "FLAC Fingerprint": trackFingerprint,
+                    "Tags": [
+                        "TITLE": savedTitle,
+                        "ALBUM": savedAlbum,
+                        "TRACKNUMBER": "01",
+                        "TOTALTRACKS": "01"
+                    ],
+                    "Pictures": []
+                ]
+            ]
+        ]
+        let plistData = try PropertyListSerialization.data(
+            fromPropertyList: manifest,
+            format: .xml,
+            options: 0
+        )
+        try plistData.write(to: infoPlistURL, options: .atomic)
+
+        return destinationURL
+    }
+
+    private func prepareReadableFlacFixture(fileName: String) throws -> URL {
+        let sourceURL = URL(fileURLWithPath: fixtureFlacPath(fileName: fileName))
+        let destinationDirectoryURL = appContainerCachesDirectoryURL()
+            .appendingPathComponent("UITestReadableFixtures", isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: destinationDirectoryURL,
+            withIntermediateDirectories: true
+        )
+
+        let destinationURL = destinationDirectoryURL
+            .appendingPathComponent("\(UUID().uuidString)-\(fileName)")
+        try? FileManager.default.removeItem(at: destinationURL)
+        try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+        return destinationURL
     }
 
     private func fixtureFlacPath(fileName: String) -> String {
@@ -496,8 +620,15 @@ final class SwiftTagUITests: XCTestCase {
         let titleField = app.textFields.matching(NSPredicate(format: "value == %@", expectedTitle)).firstMatch
         XCTAssertTrue(titleField.waitForExistence(timeout: timeout), "Expected imported track title field '\(expectedTitle)' to exist.")
         titleField.click()
+        let editableAlbumField = app.textFields.matching(
+            NSPredicate(
+                format: "identifier == %@ AND value != %@",
+                UIID.albumTextField,
+                PlaceholderText.noSelection
+            )
+        ).firstMatch
         XCTAssertTrue(
-            waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: true, timeout: timeout),
+            waitForEnabledState(of: editableAlbumField, expectedValue: true, timeout: timeout),
             "Album field did not become editable after selecting imported track '\(expectedTitle)'."
         )
     }
@@ -516,6 +647,192 @@ final class SwiftTagUITests: XCTestCase {
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
             if let value = textField.value as? String, value == expectedValue {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForTextFieldValueAnywhere(
+        in app: XCUIApplication,
+        expectedValue: String,
+        timeout: TimeInterval = 10.0
+    ) -> Bool {
+        let predicate = NSPredicate(format: "value == %@", expectedValue)
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            if app.textFields.matching(predicate).count > 0 {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForWindowCount(
+        in app: XCUIApplication,
+        expectedCount: Int,
+        timeout: TimeInterval = 5.0
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            if app.windows.allElementsBoundByIndex.count == expectedCount {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func currentWindowCount(in app: XCUIApplication) -> Int {
+        app.windows.allElementsBoundByIndex.count
+    }
+
+    private func currentWindowIdentifiers(in app: XCUIApplication) -> [String] {
+        app.windows.allElementsBoundByIndex.map(windowIdentifier)
+    }
+
+    private func waitForNewWindow(
+        in app: XCUIApplication,
+        excluding existingIdentifiers: Set<String>,
+        timeout: TimeInterval
+    ) -> XCUIElement {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            for window in app.windows.allElementsBoundByIndex {
+                if !existingIdentifiers.contains(windowIdentifier(window)) {
+                    return window
+                }
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return app.windows.firstMatch
+    }
+
+    private func windowIdentifier(_ window: XCUIElement) -> String {
+        let identifier = window.identifier.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !identifier.isEmpty {
+            return identifier
+        }
+
+        return window.debugDescription
+    }
+
+    private func openFileWithSwiftTag(url: URL, timeout: TimeInterval = 10.0) -> Bool {
+        guard let applicationURL = NSRunningApplication
+            .runningApplications(withBundleIdentifier: Self.appBundleIdentifier)
+            .first?
+            .bundleURL else {
+            XCTFail("SwiftTag app is not running.")
+            return false
+        }
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+
+        let completionExpectation = XCTestExpectation(description: "open \(url.lastPathComponent) in SwiftTag")
+        var didOpen = false
+
+        NSWorkspace.shared.open(
+            [url],
+            withApplicationAt: applicationURL,
+            configuration: configuration
+        ) { _, error in
+            didOpen = (error == nil)
+            completionExpectation.fulfill()
+        }
+
+        let waitResult = XCTWaiter.wait(for: [completionExpectation], timeout: timeout)
+        if waitResult != .completed {
+            XCTFail("Timed out opening \(url.lastPathComponent) in SwiftTag.")
+            return false
+        }
+
+        if let frontmostApp = NSRunningApplication.runningApplications(withBundleIdentifier: Self.appBundleIdentifier).first {
+            frontmostApp.activate()
+        }
+
+        return didOpen
+    }
+
+    private func waitForWindowCount(
+        in app: XCUIApplication,
+        minimumCount: Int,
+        timeout: TimeInterval = 5.0
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            if app.windows.allElementsBoundByIndex.count >= minimumCount {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForFileExistence(at url: URL, timeout: TimeInterval = 5.0) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            if FileManager.default.fileExists(atPath: url.path) {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func appContainerCachesDirectoryURL() -> URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Containers", isDirectory: true)
+            .appendingPathComponent("com.toowalks.swifttag", isDirectory: true)
+            .appendingPathComponent("Data", isDirectory: true)
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Caches", isDirectory: true)
+    }
+
+    private func chooseFileInOpenPanel(in app: XCUIApplication, path: String) {
+        XCTAssertTrue(waitForOpenPanel(in: app, timeout: 5.0))
+
+        app.typeKey("g", modifierFlags: [.command, .shift])
+
+        let goToFolderSheet = app.sheets.firstMatch
+        XCTAssertTrue(goToFolderSheet.waitForExistence(timeout: 5.0))
+
+        let pathField = goToFolderSheet.textFields.firstMatch
+        XCTAssertTrue(pathField.waitForExistence(timeout: 5.0))
+        pathField.click()
+        pathField.typeText(path)
+        app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+
+        let openButton = app.buttons["Open"].firstMatch
+        XCTAssertTrue(openButton.waitForExistence(timeout: 5.0))
+        openButton.click()
+    }
+
+    private func waitForOpenPanel(in app: XCUIApplication, timeout: TimeInterval = 5.0) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            if app.dialogs.firstMatch.exists || app.sheets.firstMatch.exists || app.buttons["Open"].firstMatch.exists {
                 return true
             }
 

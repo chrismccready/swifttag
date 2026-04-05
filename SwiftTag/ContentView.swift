@@ -916,6 +916,7 @@ struct ContentView: View {
                 } onWindowDidBecomeKey: {
                     EditorWindowCoordinator.shared.markSessionFocused(sessionValue.sessionID)
                 } onWindowWillClose: {
+                    EditorWindowCoordinator.shared.markSessionClosing(sessionValue.sessionID)
                     teardownEditorSession()
                 }
             )
@@ -1222,6 +1223,10 @@ struct ContentView: View {
     }
 
     private func promptForSwiftTagDocumentDestination() -> URL? {
+        if let uiTestSaveURL = uiTestSwiftTagDocumentSaveURLIfPresent() {
+            return uiTestSaveURL
+        }
+
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.swiftTagDocument]
         savePanel.canCreateDirectories = true
@@ -1294,7 +1299,7 @@ struct ContentView: View {
     }
 
     private func configureWindowRouting() {
-        EditorWindowCoordinator.shared.setOpenEditorWindowAction { sessionValue in
+        EditorWindowCoordinator.shared.setOpenEditorWindowAction(for: sessionValue.sessionID) { sessionValue in
             openWindow(id: AppSceneID.editor, value: sessionValue)
         }
         EditorWindowCoordinator.shared.registerExternalOpenHandler(sessionID: sessionValue.sessionID) { urls in
@@ -1304,6 +1309,7 @@ struct ContentView: View {
             handleOpenedSwiftTagDocument(url)
         }
         registerEditorSession()
+        EditorWindowCoordinator.shared.markSessionFocused(sessionValue.sessionID)
     }
 
     private func handleExternallyOpenedFlacFiles(_ urls: [URL]) {
@@ -1607,6 +1613,9 @@ struct ContentView: View {
     }
 
     private func showWritableImporter() {
+        if importUITestMenuFlacIfNeeded(locked: false, append: false) {
+            return
+        }
         confirmBeforeDestructiveAction(.loadFiles) {
             pendingImporterLockedState = false
             pendingImporterAddsFiles = false
@@ -1615,6 +1624,9 @@ struct ContentView: View {
     }
 
     private func showReadOnlyImporter() {
+        if importUITestMenuFlacIfNeeded(locked: true, append: false) {
+            return
+        }
         confirmBeforeDestructiveAction(.loadFiles) {
             pendingImporterLockedState = true
             pendingImporterAddsFiles = false
@@ -1623,15 +1635,37 @@ struct ContentView: View {
     }
 
     private func showAddWritableImporter() {
+        if importUITestMenuFlacIfNeeded(locked: false, append: true) {
+            return
+        }
         pendingImporterLockedState = false
         pendingImporterAddsFiles = true
         isFlacImporterPresented = true
     }
 
     private func showAddReadOnlyImporter() {
+        if importUITestMenuFlacIfNeeded(locked: true, append: true) {
+            return
+        }
         pendingImporterLockedState = true
         pendingImporterAddsFiles = true
         isFlacImporterPresented = true
+    }
+
+    private func importUITestMenuFlacIfNeeded(locked: Bool, append: Bool) -> Bool {
+        guard let uiTestURL = uiTestMenuFlacURLIfPresent() else {
+            return false
+        }
+
+        Task {
+            await importSelectedURLs(
+                [uiTestURL],
+                locked: locked,
+                append: append,
+                allowsDirectoryRecursion: true
+            )
+        }
+        return true
     }
 
     private func syncAlbumArtContext() {
@@ -1825,6 +1859,22 @@ struct ContentView: View {
         return value.isEmpty ? nil : value
     }
 
+    private func uiTestSwiftTagDocumentSaveURLIfPresent() -> URL? {
+        guard let rawPath = uiTestLaunchValue(for: "UITEST_SAVE_SWIFTTAG_PATH") else {
+            return nil
+        }
+
+        return URL(fileURLWithPath: rawPath)
+    }
+
+    private func uiTestMenuFlacURLIfPresent() -> URL? {
+        guard let rawPath = uiTestLaunchValue(for: "UITEST_MENU_FLAC_PATH") else {
+            return nil
+        }
+
+        return URL(fileURLWithPath: rawPath)
+    }
+
     private func uiTestImportFileURL(for fallbackPath: String) throws -> URL {
         guard let dataValue = uiTestLaunchValue(for: "UITEST_FLAC_DATA_BASE64"),
               let fileData = Data(base64Encoded: dataValue) else {
@@ -1951,11 +2001,13 @@ private struct WindowCloseGuardRepresentable: NSViewRepresentable {
         nsView.attachDelegateIfNeeded()
     }
 
-    final class Coordinator: NSObject, NSWindowDelegate {
+    final class Coordinator: NSObject, NSWindowDelegate, EditorWindowSessionIdentifying {
         var sessionID: UUID
         var shouldAllowClose: () -> Bool
         var onWindowDidBecomeKey: () -> Void
         var onWindowWillClose: () -> Void
+
+        var editorSessionID: UUID { sessionID }
 
         init(
             sessionID: UUID,

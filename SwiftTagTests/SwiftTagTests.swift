@@ -4157,6 +4157,40 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
     }
 
     @MainActor
+    func testSwiftTagDocumentOpenIgnoresUnusedSessionWithoutHandlers() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let staleUnusedSession = EditorSessionValue(
+            sessionID: UUID(uuidString: "00000000-0000-0000-0000-0000000000C1")!
+        )
+        coordinator.register(sessionValue: staleUnusedSession, trackReferences: [])
+
+        let liveSession = EditorSessionValue(
+            sessionID: UUID(uuidString: "00000000-0000-0000-0000-0000000000C2")!
+        )
+        coordinator.register(sessionValue: liveSession, trackReferences: [])
+
+        var openedSessions: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction(for: liveSession.sessionID) { sessionValue in
+            openedSessions.append(sessionValue)
+        }
+        coordinator.registerExternalOpenHandler(sessionID: liveSession.sessionID) { _ in }
+        var deliveredDocumentURL: URL?
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: liveSession.sessionID) { url in
+            deliveredDocumentURL = url
+        }
+
+        let documentURL = URL(fileURLWithPath: "/tmp/stale-unused-window.swifttag")
+        let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([documentURL])
+
+        XCTAssertTrue(didRouteDocuments)
+        XCTAssertEqual(openedSessions.count, 1)
+        XCTAssertEqual(openedSessions.first?.sessionID, liveSession.sessionID)
+        XCTAssertEqual(deliveredDocumentURL?.path, documentURL.path)
+    }
+
+    @MainActor
     func testSwiftTagDocumentOpenRoutesMultipleSelectionsDeterministically() {
         let coordinator = EditorWindowCoordinator.shared
         coordinator.resetForTesting()
@@ -4189,6 +4223,228 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
         }
 
         XCTAssertEqual(deliveredDocumentPaths, ["/tmp/a.swifttag", "/tmp/b.swifttag"])
+    }
+
+    @MainActor
+    func testUnifiedOpenRoutingHandlesSwiftTagDocuments() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        var openedSessions: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction { sessionValue in
+            openedSessions.append(sessionValue)
+        }
+
+        let documentURL = URL(fileURLWithPath: "/tmp/routed-document.swifttag")
+        let didRouteDocuments = coordinator.routeOpenedDocuments([documentURL], appIsActive: true)
+
+        XCTAssertTrue(didRouteDocuments)
+        XCTAssertEqual(openedSessions.count, 1)
+
+        guard let openedSession = openedSessions.first else {
+            XCTFail("Expected a new session to open.")
+            return
+        }
+
+        coordinator.register(sessionValue: openedSession, trackReferences: [])
+
+        var deliveredDocumentURL: URL?
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: openedSession.sessionID) { url in
+            deliveredDocumentURL = url
+        }
+
+        XCTAssertEqual(deliveredDocumentURL?.path, documentURL.path)
+    }
+
+    @MainActor
+    func testReopeningClosedSwiftTagDocumentUsesRemainingWindowRoutingAction() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let loadedSession = EditorSessionValue(
+            sessionID: UUID(uuidString: "00000000-0000-0000-0000-0000000000A1")!
+        )
+        coordinator.register(
+            sessionValue: loadedSession,
+            trackReferences: [
+                ImportedTrackReference(filePath: "/tmp/loaded.flac", securityScopedBookmarkData: nil)
+            ]
+        )
+        coordinator.markSessionFocused(loadedSession.sessionID)
+
+        var openedSessionsFromLoadedWindow: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction(for: loadedSession.sessionID) { sessionValue in
+            openedSessionsFromLoadedWindow.append(sessionValue)
+        }
+
+        let documentURL = URL(fileURLWithPath: "/tmp/reopen-sequence.swifttag")
+        let firstOpenDidRoute = coordinator.routeOpenedDocuments([documentURL], appIsActive: true)
+
+        XCTAssertTrue(firstOpenDidRoute)
+        XCTAssertEqual(openedSessionsFromLoadedWindow.count, 1)
+
+        guard let firstDocumentSession = openedSessionsFromLoadedWindow.first else {
+            XCTFail("Expected the first document window to open.")
+            return
+        }
+
+        coordinator.register(
+            sessionValue: firstDocumentSession,
+            trackReferences: [],
+            swiftTagDocumentURL: documentURL,
+            swiftTagDocumentID: UUID()
+        )
+
+        var firstDeliveredDocumentURL: URL?
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: firstDocumentSession.sessionID) { url in
+            firstDeliveredDocumentURL = url
+        }
+
+        XCTAssertEqual(firstDeliveredDocumentURL?.path, documentURL.path)
+
+        var openedSessionsFromClosedDocumentWindow: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction(for: firstDocumentSession.sessionID) { sessionValue in
+            openedSessionsFromClosedDocumentWindow.append(sessionValue)
+        }
+
+        coordinator.unregister(sessionID: firstDocumentSession.sessionID)
+
+        let reopenedDidRoute = coordinator.routeOpenedDocuments([documentURL], appIsActive: true)
+
+        XCTAssertTrue(reopenedDidRoute)
+        XCTAssertEqual(openedSessionsFromClosedDocumentWindow.count, 0)
+        XCTAssertEqual(openedSessionsFromLoadedWindow.count, 2)
+
+        guard let reopenedSession = openedSessionsFromLoadedWindow.last else {
+            XCTFail("Expected the reopened document window to open.")
+            return
+        }
+
+        var reopenedDeliveredDocumentURL: URL?
+        coordinator.register(sessionValue: reopenedSession, trackReferences: [])
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: reopenedSession.sessionID) { url in
+            reopenedDeliveredDocumentURL = url
+        }
+
+        XCTAssertEqual(reopenedDeliveredDocumentURL?.path, documentURL.path)
+    }
+
+    @MainActor
+    func testReopeningSwiftTagDocumentIgnoresStaleRegisteredSessionWithoutHandler() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let loadedSession = EditorSessionValue(
+            sessionID: UUID(uuidString: "00000000-0000-0000-0000-0000000000B1")!
+        )
+        coordinator.register(
+            sessionValue: loadedSession,
+            trackReferences: [
+                ImportedTrackReference(filePath: "/tmp/loaded.flac", securityScopedBookmarkData: nil)
+            ]
+        )
+        coordinator.markSessionFocused(loadedSession.sessionID)
+
+        var openedSessionsFromLoadedWindow: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction(for: loadedSession.sessionID) { sessionValue in
+            openedSessionsFromLoadedWindow.append(sessionValue)
+        }
+
+        let documentURL = URL(fileURLWithPath: "/tmp/stale-reopen-sequence.swifttag")
+        let firstOpenDidRoute = coordinator.routeOpenedDocuments([documentURL], appIsActive: true)
+
+        XCTAssertTrue(firstOpenDidRoute)
+        guard let staleDocumentSession = openedSessionsFromLoadedWindow.first else {
+            XCTFail("Expected the first document window to open.")
+            return
+        }
+
+        coordinator.register(
+            sessionValue: staleDocumentSession,
+            trackReferences: [],
+            swiftTagDocumentURL: documentURL,
+            swiftTagDocumentID: UUID()
+        )
+
+        let reopenedDidRoute = coordinator.routeOpenedDocuments([documentURL], appIsActive: true)
+
+        XCTAssertTrue(reopenedDidRoute)
+        XCTAssertEqual(openedSessionsFromLoadedWindow.count, 2)
+
+        guard let reopenedSession = openedSessionsFromLoadedWindow.last else {
+            XCTFail("Expected the reopened document window to open.")
+            return
+        }
+
+        XCTAssertNotEqual(reopenedSession.sessionID, staleDocumentSession.sessionID)
+
+        var reopenedDeliveredDocumentURL: URL?
+        coordinator.register(sessionValue: reopenedSession, trackReferences: [])
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: reopenedSession.sessionID) { url in
+            reopenedDeliveredDocumentURL = url
+        }
+
+        XCTAssertEqual(reopenedDeliveredDocumentURL?.path, documentURL.path)
+    }
+
+    @MainActor
+    func testReopeningSwiftTagDocumentIgnoresSessionMarkedClosing() {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let loadedSession = EditorSessionValue(
+            sessionID: UUID(uuidString: "00000000-0000-0000-0000-0000000000B2")!
+        )
+        coordinator.register(
+            sessionValue: loadedSession,
+            trackReferences: [
+                ImportedTrackReference(filePath: "/tmp/loaded.flac", securityScopedBookmarkData: nil)
+            ]
+        )
+        coordinator.markSessionFocused(loadedSession.sessionID)
+
+        var openedSessionsFromLoadedWindow: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction(for: loadedSession.sessionID) { sessionValue in
+            openedSessionsFromLoadedWindow.append(sessionValue)
+        }
+
+        let documentURL = URL(fileURLWithPath: "/tmp/closing-reopen-sequence.swifttag")
+        let firstOpenDidRoute = coordinator.routeOpenedDocuments([documentURL], appIsActive: true)
+
+        XCTAssertTrue(firstOpenDidRoute)
+        guard let closingDocumentSession = openedSessionsFromLoadedWindow.first else {
+            XCTFail("Expected the first document window to open.")
+            return
+        }
+
+        coordinator.register(
+            sessionValue: closingDocumentSession,
+            trackReferences: [],
+            swiftTagDocumentURL: documentURL,
+            swiftTagDocumentID: UUID()
+        )
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: closingDocumentSession.sessionID) { _ in }
+        coordinator.markSessionClosing(closingDocumentSession.sessionID)
+
+        let reopenedDidRoute = coordinator.routeOpenedDocuments([documentURL], appIsActive: true)
+
+        XCTAssertTrue(reopenedDidRoute)
+        XCTAssertEqual(openedSessionsFromLoadedWindow.count, 2)
+
+        guard let reopenedSession = openedSessionsFromLoadedWindow.last else {
+            XCTFail("Expected the reopened document window to open.")
+            return
+        }
+
+        XCTAssertNotEqual(reopenedSession.sessionID, closingDocumentSession.sessionID)
+
+        var reopenedDeliveredDocumentURL: URL?
+        coordinator.register(sessionValue: reopenedSession, trackReferences: [])
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: reopenedSession.sessionID) { url in
+            reopenedDeliveredDocumentURL = url
+        }
+
+        XCTAssertEqual(reopenedDeliveredDocumentURL?.path, documentURL.path)
     }
 
     @MainActor
