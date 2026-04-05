@@ -1204,8 +1204,9 @@ struct ContentView: View {
         isSaveOperationRunning = true
         Task { @MainActor in
             do {
+                let exportTracks = try viewModel.validatedSwiftTagDocumentExportTracks()
                 let result = try SwiftTagDocumentPackageWriter.save(
-                    tracks: viewModel.swiftTagDocumentExportTracks(),
+                    tracks: exportTracks,
                     state: currentState,
                     to: destinationURL
                 )
@@ -1322,6 +1323,10 @@ struct ContentView: View {
                 let document = try SwiftTagDocumentPackageReader.read(from: url)
                 viewModel.loadSwiftTagDocument(document, tagWriteOptions: saveSettingsSnapshot.tagWriteOptions)
                 syncAlbumArtContext()
+                viewModel.refreshLoadedTrackFileStates(
+                    tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+                    albumArtPictures: currentAlbumArtPictures
+                )
                 refreshTrackMonitoring()
                 registerEditorSession()
             } catch {

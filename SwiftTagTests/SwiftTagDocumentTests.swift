@@ -5,12 +5,60 @@ import zlib
 @testable import SwiftTag
 
 struct SwiftTagDocumentTests {
+    private static var fixtureURL: URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTagTestFiles")
+            .appendingPathComponent("test.flac")
+    }
+
     private static var defaultTagWriteOptions: TagWriteOptions {
         TagWriteOptions(
             zeroPadTrackNumber: SaveSettingsDefaults.zeroPadTrackNumber,
             trackCountKeyStrategy: SaveSettingsDefaults.trackCountKeyStrategy,
             zeroPadDiscNumber: SaveSettingsDefaults.zeroPadDiscNumber,
             discCountKeyStrategy: SaveSettingsDefaults.discCountKeyStrategy
+        )
+    }
+
+    private static func tempFixtureCopyURL(name: String) throws -> URL {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+
+        let fileURL = directoryURL.appendingPathComponent(name)
+        try FileManager.default.copyItem(at: fixtureURL, to: fileURL)
+        return fileURL
+    }
+
+    @MainActor
+    private static func waitUntil(
+        timeoutNanoseconds: UInt64 = 2_000_000_000,
+        pollIntervalNanoseconds: UInt64 = 25_000_000,
+        condition: @escaping @MainActor () -> Bool
+    ) async -> Bool {
+        let deadline = DispatchTime.now().uptimeNanoseconds + timeoutNanoseconds
+        while DispatchTime.now().uptimeNanoseconds < deadline {
+            if condition() {
+                return true
+            }
+            try? await Task.sleep(nanoseconds: pollIntervalNanoseconds)
+        }
+        return condition()
+    }
+
+    @MainActor
+    private static func writeLiveTitle(_ title: String, to fileURL: URL) async throws {
+        let metadata = try FlacMetadataService.readTags(for: fileURL)
+        var tags = metadata.tags
+        tags["TITLE"] = title
+
+        try FlacMetadataService.writeMetadata(
+            tags: tags,
+            to: fileURL,
+            writeTags: true,
+            writePictures: false
         )
     }
 
@@ -201,7 +249,10 @@ struct SwiftTagDocumentTests {
 
         let manifestTracks = try #require(manifest["Tracks"] as? [[String: Any]])
         #expect(manifestTracks.count == 2)
-        #expect(manifestTracks[0]["FLAC File URL"] as? String == "/tmp/a.flac")
+        #expect(
+            manifestTracks[0]["FLAC File URL"] as? String
+                == URL(fileURLWithPath: "/tmp/a.flac").standardizedFileURL.absoluteString
+        )
         #expect(manifestTracks[0]["FLAC Fingerprint"] as? String == " abc123 ")
 
         let firstTrackPictures = try #require(manifestTracks[0]["Pictures"] as? [[String: Any]])
@@ -482,6 +533,242 @@ struct SwiftTagDocumentTests {
                 albumArtPictures: []
             )
         )
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentLoadRefreshesLiveTagDifferencesImmediately() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-live-diff.flac")
+        let baselineViewModel = TagEditorViewModel()
+        try await baselineViewModel.importFlacFiles([fileURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-live-diff")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try baselineViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        try await Self.writeLiveTitle("Document Live Changed", to: fileURL)
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let loadedTrack = try #require(viewModel.trackItems.first)
+        #expect(loadedTrack.tags[TagKey.title] == "Test Title")
+        #expect(loadedTrack.latestFileSnapshot?.tags[TagKey.title] == "Test Title")
+        #expect(loadedTrack.externalDifferences?.fileValuesByTag[TagKey.title] == "Document Live Changed")
+        #expect(loadedTrack.externalDifferences?.isDeleted == false)
+
+        let presentation = viewModel.trackStatusPresentation(
+            for: loadedTrack.id,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(presentation?.systemImageName == "exclamationmark.triangle")
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentLoadRepairsRenamedTrackReferenceWithoutDeletedState() async throws {
+        let originalURL = try Self.tempFixtureCopyURL(name: "document-rename-source.flac")
+        let sourceViewModel = TagEditorViewModel()
+        try await sourceViewModel.importFlacFiles([originalURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-rename")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try sourceViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        let renamedURL = originalURL.deletingLastPathComponent().appendingPathComponent("document-rename-target.flac")
+        try FileManager.default.moveItem(at: originalURL, to: renamedURL)
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let loadedTrack = try #require(viewModel.trackItems.first)
+        #expect(loadedTrack.sourceFileURL?.path == renamedURL.path)
+        #expect(loadedTrack.tags[TagKey.filename] == renamedURL.lastPathComponent)
+        #expect(loadedTrack.externalDifferences == nil)
+        #expect(!viewModel.hasDeletedFile(for: loadedTrack.id))
+
+        let repairedBookmarkData = try #require(loadedTrack.securityScopedBookmarkData)
+        var isStale = false
+        let resolvedURL = try URL(
+            resolvingBookmarkData: repairedBookmarkData,
+            options: [.withSecurityScope, .withoutUI],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+        #expect(!isStale)
+        #expect(resolvedURL.path == renamedURL.path)
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentLoadFallsBackToSavedFileURLWhenBookmarkCannotResolve() throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-fallback.flac")
+        let metadata = try FlacMetadataService.readTags(for: fileURL)
+        let pictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
+
+        let document = SwiftTagDocumentImportResult(
+            documentURL: try Self.tempPackageURL(name: "document-fallback-manual"),
+            documentID: UUID(),
+            fingerprint: UUID().uuidString,
+            tracks: [
+                SwiftTagDocumentImportTrack(
+                    documentTrackFingerprint: UUID().uuidString,
+                    sourceFileURL: fileURL,
+                    securityScopedBookmarkData: Data([0x00, 0x01, 0x02]),
+                    flacFingerprint: metadata.fingerprint,
+                    tags: metadata.tags,
+                    pictures: pictureRecords
+                )
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let loadedTrack = try #require(viewModel.trackItems.first)
+        #expect(loadedTrack.sourceFileURL?.path == fileURL.path)
+        #expect(!viewModel.hasDeletedFile(for: loadedTrack.id))
+        #expect(loadedTrack.externalDifferences == nil)
+        #expect(loadedTrack.securityScopedBookmarkData != Data([0x00, 0x01, 0x02]))
+    }
+
+    @MainActor
+    @Test
+    func validatedSwiftTagDocumentExportTracksRepairsRenamedReferencesBeforeSave() throws {
+        let originalURL = try Self.tempFixtureCopyURL(name: "document-export-rename-source.flac")
+        let bookmarkData = try originalURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let metadata = try FlacMetadataService.readTags(for: originalURL)
+        let renamedURL = originalURL.deletingLastPathComponent().appendingPathComponent("document-export-rename-target.flac")
+        try FileManager.default.moveItem(at: originalURL, to: renamedURL)
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: FlacImportMapper.mapTrackTags(
+                    sourceTags: metadata.tags,
+                    fileURL: originalURL,
+                    defaultDate: .now
+                ),
+                sourceFileURL: originalURL,
+                securityScopedBookmarkData: bookmarkData,
+                fingerprint: metadata.fingerprint
+            )
+        ]
+
+        let exportTrack = try #require(viewModel.validatedSwiftTagDocumentExportTracks().first)
+        #expect(exportTrack.sourceFileURL?.path == renamedURL.path)
+        #expect(viewModel.trackItems.first?.sourceFileURL?.path == renamedURL.path)
+
+        let repairedBookmarkData = try #require(exportTrack.securityScopedBookmarkData)
+        var isStale = false
+        let resolvedURL = try URL(
+            resolvingBookmarkData: repairedBookmarkData,
+            options: [.withSecurityScope, .withoutUI],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+        #expect(!isStale)
+        #expect(resolvedURL.path == renamedURL.path)
+    }
+
+    @MainActor
+    @Test
+    func validatedSwiftTagDocumentExportTracksFailsWhenNoUsableReferenceCanBeProduced() throws {
+        let missingURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("flac")
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: [TagKey.title: "Missing Track", TagKey.filename: missingURL.lastPathComponent],
+                sourceFileURL: missingURL,
+                securityScopedBookmarkData: Data([0xFF])
+            )
+        ]
+
+        #expect(throws: TagEditorSaveError.self) {
+            _ = try viewModel.validatedSwiftTagDocumentExportTracks()
+        }
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentLoadedTrackMonitorReflectsExternalChangesAndRestoredRefreshClearsDifferences() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-monitor-source.flac")
+        let sourceViewModel = TagEditorViewModel()
+        try await sourceViewModel.importFlacFiles([fileURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-monitor")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try sourceViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        let monitor = TrackFileMonitor()
+        defer { monitor.stopAll() }
+
+        @MainActor
+        func onChange(_ event: TrackFileMonitorEvent) {
+            viewModel.refreshTrackFileState(
+                for: event.trackID,
+                currentPath: event.currentPath,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: []
+            )
+            monitor.replaceObservations(for: viewModel.trackItems, onChange: onChange)
+        }
+
+        monitor.replaceObservations(for: viewModel.trackItems, onChange: onChange)
+
+        try await Self.writeLiveTitle("Document Monitor Changed", to: fileURL)
+        let sawDifference = await Self.waitUntil {
+            viewModel.trackItems.first?.externalDifferences?.fileValuesByTag[TagKey.title] == "Document Monitor Changed"
+        }
+        #expect(sawDifference)
+
+        try await Self.writeLiveTitle("Test Title", to: fileURL)
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(viewModel.trackItems.first?.externalDifferences == nil)
+        #expect(!viewModel.hasDeletedFile(for: trackID))
     }
 }
 

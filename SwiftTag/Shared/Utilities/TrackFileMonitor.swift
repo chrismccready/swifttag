@@ -130,15 +130,19 @@ final class TrackFileMonitor {
                     bookmarkDataIsStale: &isStale
                 )
                 let didAccess = resolvedURL.startAccessingSecurityScopedResource()
+                if didAccess, FileManager.default.fileExists(atPath: resolvedURL.path) {
+                    return (resolvedURL.standardizedFileURL, true)
+                }
                 if didAccess {
-                    return (resolvedURL, true)
+                    resolvedURL.stopAccessingSecurityScopedResource()
                 }
             } catch {
-                return nil
+                // Fall back to the saved file URL when the bookmark can no longer resolve.
             }
         }
 
-        guard let sourceFileURL = track.sourceFileURL else {
+        guard let sourceFileURL = track.sourceFileURL?.standardizedFileURL,
+              FileManager.default.fileExists(atPath: sourceFileURL.path) else {
             return nil
         }
 

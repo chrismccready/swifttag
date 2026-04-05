@@ -25,6 +25,11 @@ enum TagEditorSaveError: LocalizedError {
 @MainActor
 @Observable
 final class TagEditorViewModel {
+    private struct ResolvedTrackFileReference {
+        let fileURL: URL
+        let refreshedBookmarkData: Data?
+    }
+
     let mixedSelectionMarker: String = "*"
     var totalDiscs: String = ""
     var selectedTrackIDs: Set<UUID> = []
@@ -194,6 +199,14 @@ final class TagEditorViewModel {
         }
     }
 
+    func validatedSwiftTagDocumentExportTracks() throws -> [SwiftTagDocumentExportTrack] {
+        for index in trackItems.indices {
+            try validateSwiftTagDocumentTrackReferenceForExport(at: index)
+        }
+
+        return swiftTagDocumentExportTracks()
+    }
+
     func swiftTagDocumentSaveState() -> SwiftTagDocumentSaveState {
         rememberedSwiftTagDocumentSaveState
     }
@@ -247,6 +260,20 @@ final class TagEditorViewModel {
         trackItems = loadedTracks
         syncCurrentStateAsSaved(tagWriteOptions: tagWriteOptions, albumArtPictures: [])
         reloadMiscTagRowsFromSelection()
+    }
+
+    func refreshLoadedTrackFileStates(
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) {
+        let loadedTrackIDs = trackItems.map(\.id)
+        for trackID in loadedTrackIDs {
+            refreshTrackFileState(
+                for: trackID,
+                tagWriteOptions: tagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+        }
     }
 
     func isTrackLocked(_ trackID: UUID) -> Bool {
@@ -1368,89 +1395,48 @@ final class TagEditorViewModel {
             return
         }
 
-        if let currentPath, !currentPath.isEmpty,
-           FileManager.default.fileExists(atPath: currentPath) {
-            refreshTrackFileState(
-                at: index,
-                fileURL: URL(fileURLWithPath: currentPath),
-                tagWriteOptions: tagWriteOptions,
-                albumArtPictures: albumArtPictures,
-                allowMissingRetry: allowMissingRetry
-            )
-            return
-        }
-
         do {
-            try withAccessingSecurityScopedTrackURL(for: index) { fileURL in
-                self.refreshTrackFileState(
-                    at: index,
-                    fileURL: fileURL,
+            try withResolvedTrackFileURL(for: index, currentPath: currentPath) { resolvedReference in
+                let metadata: FlacMetadataRecord
+                do {
+                    metadata = try FlacMetadataService.readTags(for: resolvedReference.fileURL)
+                } catch {
+                    if !FileManager.default.fileExists(atPath: resolvedReference.fileURL.path) {
+                        throw TagEditorSaveError.failedToResolveAccess(path: resolvedReference.fileURL.path)
+                    }
+
+                    throw error
+                }
+
+                let livePicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+                let pictureRecords = FlacImportMapper.mapWritablePictureRecords(
+                    metadata.pictures,
+                    normalizeImageMetadata: true
+                )
+                let importedPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
+                let fileSnapshot = self.makeFileSnapshot(
+                    tags: metadata.tags,
+                    picturesByType: livePicturesByType,
+                    pictureRecords: importedPictureRecords,
+                    fingerprint: metadata.fingerprint
+                )
+
+                self.applyResolvedTrackFileReference(resolvedReference, at: index)
+                if !self.trackItems[index].preservesEditorStateDuringFileRefresh {
+                    self.trackItems[index].flacPictureRecords = pictureRecords
+                    self.trackItems[index].flacPicturesByType = livePicturesByType
+                }
+                self.cancelPendingMissingRefresh(for: self.trackItems[index].id)
+                self.trackItems[index].fingerprint = metadata.fingerprint
+                self.trackItems[index].externalDifferences = self.externalDifferences(
+                    for: index,
+                    fileSnapshot: fileSnapshot,
                     tagWriteOptions: tagWriteOptions,
-                    albumArtPictures: albumArtPictures,
-                    allowMissingRetry: allowMissingRetry
+                    albumArtPictures: albumArtPictures
                 )
             }
         } catch {
-            handleMissingTrackFileState(
-                at: index,
-                tagWriteOptions: tagWriteOptions,
-                albumArtPictures: albumArtPictures,
-                allowMissingRetry: allowMissingRetry
-            )
-        }
-    }
-
-    private func refreshTrackFileState(
-        at index: Int,
-        fileURL: URL,
-        tagWriteOptions: TagWriteOptions,
-        albumArtPictures: [FlacWritablePictureRecord],
-        allowMissingRetry: Bool
-    ) {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            handleMissingTrackFileState(
-                at: index,
-                tagWriteOptions: tagWriteOptions,
-                albumArtPictures: albumArtPictures,
-                allowMissingRetry: allowMissingRetry
-            )
-            return
-        }
-
-        cancelPendingMissingRefresh(for: trackItems[index].id)
-
-        if fileURL.path != trackItems[index].sourceFileURL?.path {
-            updateTrackFileURL(fileURL, at: index)
-            trackItems[index].tags[TagKey.filename] = fileURL.lastPathComponent
-        }
-
-        do {
-            let metadata = try FlacMetadataService.readTags(for: fileURL)
-            let livePicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
-            let pictureRecords = FlacImportMapper.mapWritablePictureRecords(
-                metadata.pictures,
-                normalizeImageMetadata: true
-            )
-            let importedPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
-            let fileSnapshot = makeFileSnapshot(
-                tags: metadata.tags,
-                picturesByType: livePicturesByType,
-                pictureRecords: importedPictureRecords,
-                fingerprint: metadata.fingerprint
-            )
-            if !trackItems[index].preservesEditorStateDuringFileRefresh {
-                trackItems[index].flacPictureRecords = pictureRecords
-                trackItems[index].flacPicturesByType = livePicturesByType
-            }
-            trackItems[index].fingerprint = metadata.fingerprint
-            trackItems[index].externalDifferences = externalDifferences(
-                for: index,
-                fileSnapshot: fileSnapshot,
-                tagWriteOptions: tagWriteOptions,
-                albumArtPictures: albumArtPictures
-            )
-        } catch {
-            if !FileManager.default.fileExists(atPath: fileURL.path) {
+            if isTrackFileResolutionFailure(error) {
                 handleMissingTrackFileState(
                     at: index,
                     tagWriteOptions: tagWriteOptions,
@@ -2099,6 +2085,47 @@ final class TagEditorViewModel {
         )
     }
 
+    private func validateSwiftTagDocumentTrackReferenceForExport(at index: Int) throws {
+        guard trackItems.indices.contains(index) else {
+            return
+        }
+
+        guard trackItems[index].sourceFileURL != nil || trackItems[index].securityScopedBookmarkData != nil else {
+            return
+        }
+
+        var resolvedReference: ResolvedTrackFileReference?
+        try withResolvedTrackFileURL(for: index) { reference in
+            resolvedReference = reference
+        }
+
+        if let resolvedReference {
+            applyResolvedTrackFileReference(resolvedReference, at: index)
+        }
+    }
+
+    private func applyResolvedTrackFileReference(_ resolvedReference: ResolvedTrackFileReference, at index: Int) {
+        let normalizedURL = resolvedReference.fileURL.standardizedFileURL
+        trackItems[index].sourceFileURL = normalizedURL
+        trackItems[index].tags[TagKey.filename] = normalizedURL.lastPathComponent
+        if let refreshedBookmarkData = resolvedReference.refreshedBookmarkData {
+            trackItems[index].securityScopedBookmarkData = refreshedBookmarkData
+        }
+    }
+
+    private func isTrackFileResolutionFailure(_ error: Error) -> Bool {
+        guard let error = error as? TagEditorSaveError else {
+            return false
+        }
+
+        switch error {
+        case .failedToResolveAccess, .failedToAccessFile:
+            return true
+        case .noTracksToSave, .partialFailure:
+            return false
+        }
+    }
+
     private func bookmarkIdentity(for track: Track) -> String {
         if let bookmarkData = track.securityScopedBookmarkData,
            let resolvedPath = resolvedPathFromBookmarkData(bookmarkData) {
@@ -2167,46 +2194,89 @@ final class TagEditorViewModel {
         for index: Int,
         _ body: (URL) throws -> T
     ) throws -> T {
+        try withResolvedTrackFileURL(for: index) { resolvedReference in
+            try body(resolvedReference.fileURL)
+        }
+    }
+
+    private func withResolvedTrackFileURL<T>(
+        for index: Int,
+        currentPath: String? = nil,
+        _ body: (ResolvedTrackFileReference) throws -> T
+    ) throws -> T {
         guard trackItems.indices.contains(index) else {
             throw TagEditorSaveError.noTracksToSave
         }
 
-        let track = trackItems[index]
-        guard let bookmarkData = track.securityScopedBookmarkData else {
-            guard let sourceFileURL = track.sourceFileURL else {
-                throw TagEditorSaveError.failedToResolveAccess(path: track.tags[TagKey.filename] ?? "Unknown file")
+        if let currentPath {
+            let trimmedCurrentPath = currentPath.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedCurrentPath.isEmpty {
+                let currentFileURL = URL(fileURLWithPath: trimmedCurrentPath).standardizedFileURL
+                if FileManager.default.fileExists(atPath: currentFileURL.path) {
+                    return try body(
+                        ResolvedTrackFileReference(
+                            fileURL: currentFileURL,
+                            refreshedBookmarkData: try? currentFileURL.bookmarkData(
+                                options: .withSecurityScope,
+                                includingResourceValuesForKeys: nil,
+                                relativeTo: nil
+                            )
+                        )
+                    )
+                }
             }
-
-            return try body(sourceFileURL)
         }
 
-        var isStale = false
-        let resolvedURL = try URL(
-            resolvingBookmarkData: bookmarkData,
-            options: [.withSecurityScope, .withoutUI],
-            relativeTo: nil,
-            bookmarkDataIsStale: &isStale
-        )
+        let track = trackItems[index]
+        if let bookmarkData = track.securityScopedBookmarkData {
+            do {
+                var isStale = false
+                let resolvedURL = try URL(
+                    resolvingBookmarkData: bookmarkData,
+                    options: [.withSecurityScope, .withoutUI],
+                    relativeTo: nil,
+                    bookmarkDataIsStale: &isStale
+                ).standardizedFileURL
+                let didAccess = resolvedURL.startAccessingSecurityScopedResource()
+                defer {
+                    if didAccess {
+                        resolvedURL.stopAccessingSecurityScopedResource()
+                    }
+                }
 
-        if isStale {
-            trackItems[index].securityScopedBookmarkData = try resolvedURL.bookmarkData(
-                options: .withSecurityScope,
-                includingResourceValuesForKeys: nil,
-                relativeTo: nil
+                if didAccess, FileManager.default.fileExists(atPath: resolvedURL.path) {
+                    return try body(
+                        ResolvedTrackFileReference(
+                            fileURL: resolvedURL,
+                            refreshedBookmarkData: try? resolvedURL.bookmarkData(
+                                options: .withSecurityScope,
+                                includingResourceValuesForKeys: nil,
+                                relativeTo: nil
+                            )
+                        )
+                    )
+                }
+            } catch {
+                // Fall through to the saved file URL when the bookmark can no longer resolve.
+            }
+        }
+
+        if let sourceFileURL = track.sourceFileURL?.standardizedFileURL,
+           FileManager.default.fileExists(atPath: sourceFileURL.path) {
+            return try body(
+                ResolvedTrackFileReference(
+                    fileURL: sourceFileURL,
+                    refreshedBookmarkData: try? sourceFileURL.bookmarkData(
+                        options: .withSecurityScope,
+                        includingResourceValuesForKeys: nil,
+                        relativeTo: nil
+                    )
+                )
             )
         }
 
-        let didAccess = resolvedURL.startAccessingSecurityScopedResource()
-        defer {
-            if didAccess {
-                resolvedURL.stopAccessingSecurityScopedResource()
-            }
-        }
-
-        guard didAccess else {
-            throw TagEditorSaveError.failedToAccessFile(path: resolvedURL.path)
-        }
-
-        return try body(resolvedURL)
+        throw TagEditorSaveError.failedToResolveAccess(
+            path: track.sourceFileURL?.path ?? track.tags[TagKey.filename] ?? "Unknown file"
+        )
     }
 }
