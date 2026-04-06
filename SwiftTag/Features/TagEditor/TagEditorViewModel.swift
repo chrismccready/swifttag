@@ -1191,10 +1191,14 @@ final class TagEditorViewModel {
     }
 
     func syncCurrentStateAsSaved(
+        for trackIDs: Set<UUID>? = nil,
         tagWriteOptions: TagWriteOptions,
         albumArtPictures: [FlacWritablePictureRecord]
     ) {
         for index in trackItems.indices {
+            if let trackIDs, !trackIDs.contains(trackItems[index].id) {
+                continue
+            }
             let picturesForTrack = picturesForTrack(at: index, fallback: albumArtPictures)
             trackItems[index].latestFileSnapshot = TrackFileSnapshot(
                 tags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),

@@ -69,6 +69,46 @@ For `Table` / `TableColumn` specifically:
 - Keep fixtures deterministic; prefer in-memory setup unless integration with FLAC/filesystem behavior is the test target.
 - Prefer `@MainActor` for SwiftUI interaction tests.
 
+## FLAC Fixture Strategy
+
+- Treat `SwiftTagTestFiles` as the source-of-truth fixture store for checked-in FLAC samples.
+- For unit and service tests, copy fixture FLAC files into a temporary per-test directory before mutating them.
+- For XCUI tests, do not rely on the sandboxed app being able to read repo fixture paths or arbitrary host-side UUID files directly.
+- Prefer sending FLAC bytes to the app through launch environment values such as `UITEST_FLAC_DATA_BASE64`, `UITEST_MENU_FLAC_DATA_BASE64`, or `UITEST_OPEN_DOCUMENT_FLAC_DATA_BASE64`.
+- On the app side, materialize those bytes into the app container before import/open. The current preferred directory is the app-owned caches folder:
+  - `~/Library/Containers/com.toowalks.swifttag/Data/Library/Caches/SwiftTagUITestFixtures`
+- Use app-owned materialization for:
+  - launch-time load/import fixture flows
+  - menu-driven add/load flows
+  - document-open fixture flows that need a real `.flac` path
+- Prefer the caches-based materialized path over raw external file paths when the test:
+  - runs through menu commands
+  - spans relaunches
+  - depends on sandbox-safe file access
+- If a UI test must pre-create a file outside the app process, prefer the app container caches directory so both the UI test target and the app can resolve the same stable path.
+- Existing helper examples:
+  - `prepareReadableFlacFixture(fileName:)` in `SwiftTagUITests.swift` copies a repo fixture into the app container caches directory for test-managed paths.
+  - `uiTestImportFileURL(for:)` in `ContentView.swift` materializes launch-import bytes into the app-owned test-fixture directory.
+  - `uiTestMenuFlacURLIfPresent()` in `ContentView.swift` and `SwiftTagApp.swift` materializes menu-import bytes into the same app-owned directory.
+  - `uiTestDocumentOpenURLIfPresent()` in `SwiftTagApp.swift` materializes open-document bytes into the same app-owned directory.
+
+## Creating And Reading Test Files
+
+- Unit/service tests:
+  - Start from `SwiftTagTestFiles`.
+  - Copy into `FileManager.default.temporaryDirectory`.
+  - Mutate only the copied file.
+- XCUI tests that need the app to read a FLAC:
+  - Read the repo fixture on the test side.
+  - Base64-encode the bytes.
+  - Pass the bytes through launch environment.
+  - Let the app write the `.flac` into `SwiftTagUITestFixtures` inside its sandbox container.
+- XCUI tests that need a durable path across relaunches:
+  - Use the app container caches directory, not an arbitrary host temp path.
+- When debugging sandbox failures:
+  - first confirm the materialized file actually exists inside `~/Library/Containers/com.toowalks.swifttag/Data/Library/Caches/SwiftTagUITestFixtures`
+  - then confirm the app path being imported/opened points to that container-owned file rather than a repo or host-only path
+
 ## SwiftTag Patterns
 
 ### `TagEditorTrackFileView`

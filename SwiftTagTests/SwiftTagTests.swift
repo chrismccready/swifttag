@@ -2280,6 +2280,63 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func tagEditorViewModelAddImportKeepsExistingDirtyTrackStatusWhileCleaningNewTrack() async throws {
+        let firstURL = try Self.tempFixtureCopyURL(name: "append-dirty-existing.flac")
+        let secondURL = try Self.tempFixtureCopyURL(name: "append-clean-new.flac")
+
+        let viewModel = TagEditorViewModel()
+        try await viewModel.importFlacFiles([firstURL], locked: false)
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let originalTrackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.trackItems[0].tags[TagKey.title] = "Edited Existing Track"
+
+        let dirtyBeforeAdd = viewModel.trackStatusPresentation(
+            for: originalTrackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(dirtyBeforeAdd?.systemImageName == "fish")
+
+        let existingTrackIDs = Set(viewModel.trackItems.map(\.id))
+        try await viewModel.importFlacFiles([secondURL], locked: false, append: true)
+        let importedTrackIDs = Set(viewModel.trackItems.map(\.id)).subtracting(existingTrackIDs)
+        let addedTrackID = try #require(importedTrackIDs.first)
+
+        viewModel.syncCurrentStateAsSaved(
+            for: importedTrackIDs,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(
+            viewModel.hasDifferences(
+                in: [originalTrackID],
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: []
+            )
+        )
+
+        let dirtyAfterAdd = viewModel.trackStatusPresentation(
+            for: originalTrackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(dirtyAfterAdd?.systemImageName == "fish")
+
+        let addedTrackPresentation = viewModel.trackStatusPresentation(
+            for: addedTrackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(addedTrackPresentation?.systemImageName == "fish.fill")
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelRefreshMultipleRenamesKeepsUpdatingFilename() throws {
         let originalURL = try Self.tempFixtureCopyURL(name: "rename-twice-source.flac")
         let bookmarkData = try originalURL.bookmarkData(

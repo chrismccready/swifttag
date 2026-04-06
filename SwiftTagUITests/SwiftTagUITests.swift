@@ -20,6 +20,7 @@ final class SwiftTagUITests: XCTestCase {
         static let miscTagKeyFieldPrefix = "miscTags.keyField."
         static let albumTextField = "albumTextField"
         static let albumArtistTextField = "albumArtistTextField"
+        static let trackStatusIcon = "trackStatusIcon"
         static let settingsTabView = "settings.tabView"
         static let defaultSavePayload = "settings.general.defaultSavePayload"
         static let defaultSaveScope = "settings.general.defaultSaveScope"
@@ -177,6 +178,26 @@ final class SwiftTagUITests: XCTestCase {
 
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
         XCTAssertTrue(waitForEnabledState(of: app.textFields[UIID.albumTextField], expectedValue: true, timeout: 5.0))
+    }
+
+    @MainActor
+    func testAddFlacFilesPreservesDirtyTrackStatusIcon() throws {
+        let addFixturePath = fixtureFlacPath(fileName: Self.fixtureFileName)
+        let app = try launchApp(
+            importFixture: true,
+            menuImportFixturePath: addFixturePath
+        )
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
+        clearAndType(in: app, element: editableAlbumField(in: app), text: "Dirty UI Album \(UUID().uuidString)")
+
+        XCTAssertTrue(waitForEnabledState(of: editableAlbumField(in: app), expectedValue: true, timeout: 10.0))
+        XCTAssertTrue(waitForLabeledElement(in: app, identifier: UIID.trackStatusIcon, expectedLabel: "fish", timeout: 10.0))
+
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Add FLAC files...")
+
+        XCTAssertTrue(waitForEnabledState(of: editableAlbumField(in: app), expectedValue: true, timeout: 10.0))
+        XCTAssertTrue(waitForLabeledElement(in: app, identifier: UIID.trackStatusIcon, expectedLabel: "fish", timeout: 10.0))
     }
 
     @MainActor
@@ -339,9 +360,10 @@ final class SwiftTagUITests: XCTestCase {
             }
         }
         if let menuImportFixturePath {
-            app.launchEnvironment["UITEST_MENU_FLAC_PATH"] = menuImportFixturePath
-            app.launchArguments.append("-UITEST_MENU_FLAC_PATH")
-            app.launchArguments.append(menuImportFixturePath)
+            let menuImportFileName = URL(fileURLWithPath: menuImportFixturePath).lastPathComponent
+            app.launchEnvironment["UITEST_MENU_FLAC_PATH"] = menuImportFileName
+            let menuImportDataBase64 = try Data(contentsOf: URL(fileURLWithPath: menuImportFixturePath)).base64EncodedString()
+            app.launchEnvironment["UITEST_MENU_FLAC_DATA_BASE64"] = menuImportDataBase64
         }
         if openAlbumArtSheet {
             app.launchEnvironment["UITEST_OPEN_ALBUM_ART_SHEET"] = "1"
@@ -374,9 +396,11 @@ final class SwiftTagUITests: XCTestCase {
         }
         app.launch()
         if waitForEditorUI {
+            app.activate()
             XCTAssertTrue(
-                waitForWindowCount(in: app, minimumCount: 1, timeout: 10.0)
-                    || app.textFields[UIID.albumTextField].waitForExistence(timeout: 2.0)
+                app.windows.firstMatch.waitForExistence(timeout: 10.0)
+                    || waitForWindowCount(in: app, minimumCount: 1, timeout: 10.0)
+                    || app.textFields[UIID.albumTextField].waitForExistence(timeout: 5.0)
             )
         }
         return app
@@ -620,17 +644,20 @@ final class SwiftTagUITests: XCTestCase {
         let titleField = app.textFields.matching(NSPredicate(format: "value == %@", expectedTitle)).firstMatch
         XCTAssertTrue(titleField.waitForExistence(timeout: timeout), "Expected imported track title field '\(expectedTitle)' to exist.")
         titleField.click()
-        let editableAlbumField = app.textFields.matching(
+        XCTAssertTrue(
+            waitForEnabledState(of: editableAlbumField(in: app), expectedValue: true, timeout: timeout),
+            "Album field did not become editable after selecting imported track '\(expectedTitle)'."
+        )
+    }
+
+    private func editableAlbumField(in app: XCUIApplication) -> XCUIElement {
+        app.textFields.matching(
             NSPredicate(
                 format: "identifier == %@ AND value != %@",
                 UIID.albumTextField,
                 PlaceholderText.noSelection
             )
         ).firstMatch
-        XCTAssertTrue(
-            waitForEnabledState(of: editableAlbumField, expectedValue: true, timeout: timeout),
-            "Album field did not become editable after selecting imported track '\(expectedTitle)'."
-        )
     }
 
     private func waitForTextFieldValue(
@@ -848,17 +875,19 @@ final class SwiftTagUITests: XCTestCase {
         expectedLabel: String,
         timeout: TimeInterval = 2.0
     ) -> Bool {
-        let element = app.descendants(matching: .any)
-            .matching(identifier: identifier)
-            .firstMatch
-        guard element.waitForExistence(timeout: timeout) else {
-            return false
-        }
-
+        let query = app.descendants(matching: .any).matching(identifier: identifier)
+        let normalizedExpectedLabel = expectedLabel
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
-            if element.label.localizedCaseInsensitiveContains(expectedLabel) {
-                return true
+            for element in query.allElementsBoundByIndex where element.exists {
+                let normalizedLabel = element.label
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .lowercased()
+                if normalizedLabel == normalizedExpectedLabel {
+                    return true
+                }
             }
 
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))

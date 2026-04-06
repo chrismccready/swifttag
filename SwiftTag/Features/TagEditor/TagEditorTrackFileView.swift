@@ -62,6 +62,8 @@ struct TagEditorTrackFileView: View {
             TableColumn("") { track in
                 if let statusPresentation = statusPresentationForTrack(track.id) {
                     Image(systemName: statusPresentation.systemImageName)
+                        .accessibilityIdentifier("trackStatusIcon")
+                        .accessibilityLabel(Text(statusPresentation.systemImageName))
                         .help(statusPresentation.help ?? "")
                         .foregroundStyle(.primary)
                         .frame(minHeight: 20, alignment: .center)

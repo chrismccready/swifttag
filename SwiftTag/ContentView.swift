@@ -1066,10 +1066,13 @@ struct ContentView: View {
     }
 
     private func importFlacFiles(_ flacFiles: [URL], locked: Bool = false, append: Bool = false) async throws {
+        let existingTrackIDs = Set(viewModel.trackItems.map(\.id))
         try await viewModel.importFlacFiles(flacFiles, locked: locked, append: append)
+        let importedTrackIDs = Set(viewModel.trackItems.map(\.id)).subtracting(existingTrackIDs)
         syncAlbumArtContext()
         syncTrackPictureRecordsFromAlbumArt()
         viewModel.syncCurrentStateAsSaved(
+            for: append ? importedTrackIDs : nil,
             tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
             albumArtPictures: currentAlbumArtPictures
         )
@@ -1868,11 +1871,11 @@ struct ContentView: View {
     }
 
     private func uiTestMenuFlacURLIfPresent() -> URL? {
-        guard let rawPath = uiTestLaunchValue(for: "UITEST_MENU_FLAC_PATH") else {
-            return nil
-        }
-
-        return URL(fileURLWithPath: rawPath)
+        uiTestMaterializedFlacURL(
+            pathValue: uiTestLaunchValue(for: "UITEST_MENU_FLAC_PATH"),
+            dataValue: uiTestLaunchValue(for: "UITEST_MENU_FLAC_DATA_BASE64"),
+            fileStem: "SwiftTagUITestMenuFixture"
+        )
     }
 
     private func uiTestImportFileURL(for fallbackPath: String) throws -> URL {
@@ -1892,7 +1895,7 @@ struct ContentView: View {
             }
             tempURL = reuseURL
         } else {
-            tempURL = FileManager.default.temporaryDirectory
+            tempURL = uiTestMaterializedFlacDirectoryURL()
                 .appendingPathComponent("SwiftTagUITestFixture")
                 .appendingPathExtension("flac")
         }
@@ -1900,16 +1903,34 @@ struct ContentView: View {
         return tempURL
     }
 
+    private func uiTestMaterializedFlacURL(
+        pathValue: String?,
+        dataValue: String?,
+        fileStem: String
+    ) -> URL? {
+        let trimmedPath = pathValue?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pathExtension = URL(fileURLWithPath: trimmedPath ?? "").pathExtension
+        guard let dataValue,
+              let fileData = Data(base64Encoded: dataValue) else {
+            guard let trimmedPath, !trimmedPath.isEmpty else {
+                return nil
+            }
+            return URL(fileURLWithPath: trimmedPath)
+        }
+
+        let fileURL = uiTestMaterializedFlacDirectoryURL()
+            .appendingPathComponent(fileStem)
+            .appendingPathExtension(pathExtension.isEmpty ? "flac" : pathExtension)
+        try? fileData.write(to: fileURL, options: .atomic)
+        return fileURL
+    }
+
     private func uiTestReusableImportFileURLIfPresent() throws -> URL? {
         guard let destinationName = uiTestLaunchValue(for: "UITEST_FLAC_DESTINATION_NAME") else {
             return nil
         }
 
-        let directoryURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("SwiftTagUITestFixtures", isDirectory: true)
-        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-
-        let fileURL = directoryURL
+        let fileURL = uiTestMaterializedFlacDirectoryURL()
             .appendingPathComponent(destinationName)
             .appendingPathExtension("flac")
         if uiTestLaunchFlagEnabled("UITEST_REUSE_IMPORTED_FLAC"), FileManager.default.fileExists(atPath: fileURL.path) {
@@ -1917,6 +1938,14 @@ struct ContentView: View {
         }
 
         return fileURL
+    }
+
+    private func uiTestMaterializedFlacDirectoryURL() -> URL {
+        let directoryURL = (FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory)
+            .appendingPathComponent("SwiftTagUITestFixtures", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        return directoryURL
     }
 
     init(sessionValue: Binding<EditorSessionValue> = .constant(EditorSessionValue())) {
