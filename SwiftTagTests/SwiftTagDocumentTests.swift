@@ -62,6 +62,17 @@ struct SwiftTagDocumentTests {
         )
     }
 
+    @MainActor
+    private static func writeLivePictures(_ pictures: [FlacWritablePictureRecord], to fileURL: URL) throws {
+        _ = try FlacMetadataService.writeMetadata(
+            tags: [:],
+            pictures: pictures,
+            to: fileURL,
+            writeTags: false,
+            writePictures: true
+        )
+    }
+
     private static func pngData(color: NSColor) throws -> Data {
         let imageSize = NSSize(width: 2, height: 2)
         let image = NSImage(size: imageSize)
@@ -571,6 +582,77 @@ struct SwiftTagDocumentTests {
             albumArtPictures: []
         )
         #expect(presentation?.systemImageName == "exclamationmark.triangle")
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentLoadRefreshDoesNotFlagPictureDifferencesWhenLiveFileMatches() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-picture-match.flac")
+        let baselineViewModel = TagEditorViewModel()
+        try await baselineViewModel.importFlacFiles([fileURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-picture-match")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try baselineViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let loadedTrack = try #require(viewModel.trackItems.first)
+        #expect(loadedTrack.externalDifferences == nil)
+
+        let presentation = viewModel.trackStatusPresentation(
+            for: loadedTrack.id,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(presentation?.systemImageName == "fish.fill")
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentNavigationMetadataCountsExternalTagAndPictureDifferences() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-navigation-external-diffs.flac")
+        let baselineViewModel = TagEditorViewModel()
+        try await baselineViewModel.importFlacFiles([fileURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-navigation-external-diffs")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try baselineViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        let replacementPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Changed",
+            data: try Self.pngData(color: .systemBlue)
+        )
+        try await Self.writeLiveTitle("Externally Changed Title", to: fileURL)
+        try Self.writeLivePictures([replacementPicture], to: fileURL)
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(metadata.subtitle == "Tracks: 1 (0) • Tag Δ: 1 (0) • Picture Δ: 1 (0)")
     }
 
     @MainActor

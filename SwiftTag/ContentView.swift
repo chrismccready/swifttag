@@ -672,7 +672,29 @@ struct ContentView: View {
                     .transition(.opacity)
                     .zIndex(1)
             }
+
+            if uiTestLaunchFlagEnabled("UITEST_EXPOSE_NAVIGATION_METADATA") {
+                uiTestNavigationMetadataProbe
+                    .zIndex(2)
+            }
         }
+    }
+
+    private var uiTestNavigationMetadataProbe: some View {
+        let metadata = navigationMetadata
+        return VStack(alignment: .leading, spacing: 2) {
+            Text(metadata.title)
+                .accessibilityIdentifier("uiTest.navigation.title")
+            Text(metadata.subtitle)
+                .accessibilityIdentifier("uiTest.navigation.subtitle")
+            Text(metadata.documentURL?.path ?? "absent")
+                .accessibilityIdentifier("uiTest.navigation.documentURL")
+        }
+        .font(.caption2)
+        .padding(2)
+        .opacity(0.01)
+        .allowsHitTesting(false)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
     }
 
     private var albumArtSheetView: some View {
@@ -902,9 +924,6 @@ struct ContentView: View {
             .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
             .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
             .focusedSceneValue(\.canPerformSaveSwiftTagDocument, canSaveSwiftTagDocument)
-            .onDisappear {
-                teardownEditorSession()
-            }
     }
 
     private var presentedContent: some View {
@@ -1125,6 +1144,13 @@ struct ContentView: View {
 
     private var currentAlbumArtPictures: [FlacWritablePictureRecord] {
         albumArtViewModel.flacPictures(albumArtTypes: albumArtTypes)
+    }
+
+    var navigationMetadata: EditorNavigationMetadata {
+        viewModel.editorNavigationMetadata(
+            tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures
+        )
     }
 
     private func canSave(payload: SavePayloadOption) -> Bool {
@@ -1768,7 +1794,7 @@ struct ContentView: View {
         }
 
         let importsFixtureAsReadOnly = uiTestLaunchFlagEnabled("UITEST_FLAC_READ_ONLY")
-        Task {
+        Task { @MainActor in
             do {
                 let fileURL = try uiTestImportFileURL(for: fixturePath)
                 try await importFlacFiles([fileURL], locked: importsFixtureAsReadOnly)
@@ -1862,12 +1888,45 @@ struct ContentView: View {
         return value.isEmpty ? nil : value
     }
 
-    private func uiTestSwiftTagDocumentSaveURLIfPresent() -> URL? {
-        guard let rawPath = uiTestLaunchValue(for: "UITEST_SAVE_SWIFTTAG_PATH") else {
+    private func uiTestControlValueIfPresent(fileName: String) -> String? {
+        let controlDirectoryURL = (FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory)
+            .appendingPathComponent("SwiftTagUITestControls", isDirectory: true)
+        let controlURL = controlDirectoryURL.appendingPathComponent(fileName)
+
+        guard let rawValue = try? String(contentsOf: controlURL, encoding: .utf8) else {
             return nil
         }
 
-        return URL(fileURLWithPath: rawPath)
+        let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedValue.isEmpty ? nil : trimmedValue
+    }
+
+    private func uiTestSwiftTagDocumentSaveURLIfPresent() -> URL? {
+        let rawPath = uiTestLaunchValue(for: "UITEST_SAVE_SWIFTTAG_PATH")
+            ?? uiTestControlValueIfPresent(fileName: "save-swifttag-path.txt")
+        let url: URL
+        if let rawPath {
+            url = URL(fileURLWithPath: rawPath)
+        } else if uiTestLaunchFlagEnabled("UITEST_SAVE_SWIFTTAG_PATH") {
+            url = uiTestMaterializedFileDirectoryURL()
+                .appendingPathComponent("SwiftTagUITestSave")
+                .appendingPathExtension("swifttag")
+        } else {
+            return nil
+        }
+
+        let directoryURL = url.deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        return url
+    }
+
+    private func uiTestMaterializedFileDirectoryURL() -> URL {
+        let directoryURL = (FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory)
+            .appendingPathComponent("SwiftTagUITestFixtures", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        return directoryURL
     }
 
     private func uiTestMenuFlacURLIfPresent() -> URL? {
@@ -1900,6 +1959,11 @@ struct ContentView: View {
                 .appendingPathExtension("flac")
         }
         try fileData.write(to: tempURL, options: .atomic)
+        try applyUITestFlacOverridesIfNeeded(
+            to: tempURL,
+            albumModeKey: "UITEST_FLAC_ALBUM_MODE",
+            titleOverrideKey: "UITEST_FLAC_TITLE_OVERRIDE"
+        )
         return tempURL
     }
 
@@ -1922,7 +1986,54 @@ struct ContentView: View {
             .appendingPathComponent(fileStem)
             .appendingPathExtension(pathExtension.isEmpty ? "flac" : pathExtension)
         try? fileData.write(to: fileURL, options: .atomic)
+        try? applyUITestFlacOverridesIfNeeded(
+            to: fileURL,
+            albumModeKey: pathValue == uiTestLaunchValue(for: "UITEST_MENU_FLAC_PATH")
+                ? "UITEST_MENU_FLAC_ALBUM_MODE"
+                : "UITEST_OPEN_DOCUMENT_FLAC_ALBUM_MODE",
+            titleOverrideKey: pathValue == uiTestLaunchValue(for: "UITEST_MENU_FLAC_PATH")
+                ? "UITEST_MENU_FLAC_TITLE_OVERRIDE"
+                : "UITEST_OPEN_DOCUMENT_FLAC_TITLE_OVERRIDE"
+        )
         return fileURL
+    }
+
+    private func applyUITestFlacOverridesIfNeeded(
+        to fileURL: URL,
+        albumModeKey: String,
+        titleOverrideKey: String
+    ) throws {
+        let albumMode = uiTestLaunchValue(for: albumModeKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        let titleOverride = uiTestLaunchValue(for: titleOverrideKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let shouldEmptyAlbum = albumMode == "empty"
+        let shouldRemoveAlbum = albumMode == "remove"
+        let shouldOverrideTitle = !(titleOverride?.isEmpty ?? true)
+        guard shouldEmptyAlbum || shouldRemoveAlbum || shouldOverrideTitle else {
+            return
+        }
+
+        let metadata = try FlacMetadataService.readTags(for: fileURL)
+        var tags = metadata.tags
+        if shouldRemoveAlbum {
+            tags.removeValue(forKey: "ALBUM")
+        } else if shouldEmptyAlbum {
+            tags["ALBUM"] = ""
+        }
+        if let titleOverride, !titleOverride.isEmpty {
+            tags["TITLE"] = titleOverride
+        }
+
+        _ = try FlacMetadataService.writeMetadata(
+            tags: tags,
+            pictures: [],
+            to: fileURL,
+            writeTags: true,
+            writePictures: false
+        )
     }
 
     private func uiTestReusableImportFileURLIfPresent() throws -> URL? {
@@ -1952,8 +2063,30 @@ struct ContentView: View {
         _sessionValue = sessionValue
     }
 
+    @MainActor
+    init(
+        sessionValue: Binding<EditorSessionValue>,
+        viewModel: TagEditorViewModel,
+        albumArtViewModel: AlbumArtViewModel
+    ) {
+        _sessionValue = sessionValue
+        _viewModel = State(initialValue: viewModel)
+        _albumArtViewModel = State(initialValue: albumArtViewModel)
+    }
+
+    @ViewBuilder
     var body: some View {
-        presentedContent
+        let metadata = navigationMetadata
+        if let documentURL = metadata.documentURL {
+            presentedContent
+                .navigationTitle(metadata.title)
+                .navigationSubtitle(metadata.subtitle)
+                .navigationDocument(documentURL)
+        } else {
+            presentedContent
+                .navigationTitle(metadata.title)
+                .navigationSubtitle(metadata.subtitle)
+        }
     }
 }
 

@@ -1582,6 +1582,251 @@ struct SwiftTagTests {
     }
 
     @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataUsesSwiftTagWhenEditorIsEmpty() {
+        let viewModel = TagEditorViewModel()
+
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(metadata.title == "SwiftTag")
+        #expect(metadata.subtitle == "Tracks: 0 (0) • Tag Δ: 0 (0) • Picture Δ: 0 (0)")
+        #expect(metadata.documentURL == nil)
+        #expect(metadata.documentDisplayName == nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataUsesLoadedAlbumWhenNothingIsSelected() {
+        let track = Track(
+            album: "Loaded Album",
+            tags: [
+                TagKey.album: "Loaded Album",
+                TagKey.title: "Track",
+                TagKey.filename: "loaded.flac"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/loaded.flac")
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(metadata.title == "Loaded Album")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataUsesSharedSelectedAlbumWhenSelectionMatches() {
+        let firstTrack = Track(
+            album: "Shared Album",
+            tags: [
+                TagKey.album: "Shared Album",
+                TagKey.title: "Track 1",
+                TagKey.filename: "track-1.flac"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/track-1.flac")
+        )
+        let secondTrack = Track(
+            album: "Shared Album",
+            tags: [
+                TagKey.album: "Shared Album",
+                TagKey.title: "Track 2",
+                TagKey.filename: "track-2.flac"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/track-2.flac")
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack, secondTrack]
+        viewModel.selectedTrackIDs = [firstTrack.id, secondTrack.id]
+
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(metadata.title == "Shared Album")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataUsesMixedWhenSelectedAlbumsDiffer() {
+        let firstTrack = Track(
+            album: "Album A",
+            tags: [
+                TagKey.album: "Album A",
+                TagKey.title: "Track 1",
+                TagKey.filename: "track-1.flac"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/track-1.flac")
+        )
+        let secondTrack = Track(
+            album: "Album B",
+            tags: [
+                TagKey.album: "Album B",
+                TagKey.title: "Track 2",
+                TagKey.filename: "track-2.flac"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/track-2.flac")
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack, secondTrack]
+        viewModel.selectedTrackIDs = [firstTrack.id, secondTrack.id]
+
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(metadata.title == "Mixed")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataUsesUntitledWhenSelectedAlbumIsEmpty() {
+        let track = Track(
+            album: "",
+            tags: [
+                TagKey.album: "",
+                TagKey.title: "Track",
+                TagKey.filename: "untitled.flac"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/untitled.flac")
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(metadata.title == "Untitled")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataUsesDocumentNameAndStandardizedURLWhenPresent() {
+        let track = Track(
+            album: "Album",
+            tags: [
+                TagKey.album: "Album",
+                TagKey.title: "Track",
+                TagKey.filename: "track.flac"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/track.flac")
+        )
+        let documentURL = URL(fileURLWithPath: "/tmp/navigation-tests/../Session.swifttag")
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: documentURL,
+                documentID: UUID(),
+                fingerprint: "fingerprint"
+            )
+        )
+
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(metadata.title == "Session.swifttag")
+        #expect(metadata.documentDisplayName == "Session.swifttag")
+        #expect(metadata.documentURL == documentURL.standardizedFileURL)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataSubtitleReportsLoadedSelectedAndUnsavedCounts() {
+        let deletedTagTrack = Track(
+            tags: [
+                TagKey.album: "Album",
+                TagKey.title: "Original Title",
+                TagKey.filename: "changed.flac"
+            ],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Current", data: Data([0x01]))
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/changed.flac")
+        )
+        let pictureChangedTrack = Track(
+            tags: [
+                TagKey.album: "Album",
+                TagKey.title: "Picture Changed",
+                TagKey.filename: "picture.flac"
+            ],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Snapshot", data: Data([0x03]))
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/picture.flac")
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [deletedTagTrack, pictureChangedTrack]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        viewModel.trackItems[0].tags[TagKey.title] = "Changed Title"
+        viewModel.trackItems[0].externalDifferences = TrackExternalDifferences(
+            isDeleted: true,
+            fileValuesByTag: [:],
+            hasPictureDifference: false
+        )
+        viewModel.trackItems[1].flacPictureRecords = [
+            FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Current", data: Data([0x02]))
+        ]
+        viewModel.selectedTrackIDs = [deletedTagTrack.id]
+
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(metadata.subtitle == "Tracks: 2 (1) • Tag Δ: 1 (1) • Picture Δ: 1 (0)")
+    }
+
+    @Test
+    @MainActor
+    func contentViewNavigationMetadataUsesViewModelDerivationSeam() {
+        let track = Track(
+            album: "Content Album",
+            tags: [
+                TagKey.album: "Content Album",
+                TagKey.title: "Track",
+                TagKey.filename: "content.flac"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/content.flac")
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        let expected = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let sut = ContentView(
+            sessionValue: .constant(EditorSessionValue()),
+            viewModel: viewModel,
+            albumArtViewModel: AlbumArtViewModel()
+        )
+
+        #expect(sut.navigationMetadata.title == expected.title)
+        #expect(sut.navigationMetadata.subtitle == expected.subtitle)
+        #expect(sut.navigationMetadata.documentURL == expected.documentURL)
+    }
+
+    @Test
     func flacWriteMapperProducesCanonicalKeysOnly() {
         let track = Track(tags: [
             TagKey.trackNumber: "1",

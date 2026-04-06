@@ -2,6 +2,13 @@ import Foundation
 import Observation
 import SwiftUI
 
+struct EditorNavigationMetadata: Equatable {
+    let title: String
+    let subtitle: String
+    let documentURL: URL?
+    let documentDisplayName: String?
+}
+
 enum TagEditorSaveError: LocalizedError {
     case noTracksToSave
     case failedToResolveAccess(path: String)
@@ -465,6 +472,37 @@ final class TagEditorViewModel {
         return sharedDisplayValue(for: values)
     }
 
+    func editorNavigationMetadata(
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) -> EditorNavigationMetadata {
+        let documentURL = rememberedSwiftTagDocumentSaveState.destinationURL?.standardizedFileURL
+        let documentDisplayName = documentURL?.lastPathComponent
+        let allTrackIDs = Set(trackItems.map(\.id))
+        let selectedTrackCount = trackItems.count(where: { selectedTrackIDs.contains($0.id) })
+        let totalDifferenceCounts = differenceCounts(
+            for: allTrackIDs,
+            tagWriteOptions: tagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+        let selectedDifferenceCounts = differenceCounts(
+            for: selectedTrackIDs,
+            tagWriteOptions: tagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        return EditorNavigationMetadata(
+            title: editorNavigationTitle(documentDisplayName: documentDisplayName),
+            subtitle: [
+                "Tracks: \(trackItems.count) (\(selectedTrackCount))",
+                "Tag \u{0394}: \(totalDifferenceCounts.tagEdits) (\(selectedDifferenceCounts.tagEdits))",
+                "Picture \u{0394}: \(totalDifferenceCounts.pictureEdits) (\(selectedDifferenceCounts.pictureEdits))"
+            ].joined(separator: " • "),
+            documentURL: documentURL,
+            documentDisplayName: documentDisplayName
+        )
+    }
+
     func selectedDateBinding() -> Binding<Date>? {
         let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
         guard !selectedTracks.isEmpty else {
@@ -877,7 +915,6 @@ final class TagEditorViewModel {
                 metadata.pictures,
                 normalizeImageMetadata: true
             )
-            let importedPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
             let bookmarkData = try fileURL.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
             let initialValues = FlacImportMapper.initialValues(from: tags)
 
@@ -903,7 +940,7 @@ final class TagEditorViewModel {
                     latestFileSnapshot: makeFileSnapshot(
                         tags: tags,
                         picturesByType: trackPicturesByType,
-                        pictureRecords: importedPictureRecords,
+                        pictureRecords: trackPictureRecords,
                         fingerprint: metadata.fingerprint
                     ),
                     fingerprint: metadata.fingerprint,
@@ -1235,6 +1272,31 @@ final class TagEditorViewModel {
         return (tagEditCount, pictureEditCount)
     }
 
+    func differenceCounts(
+        for trackIDs: Set<UUID>,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) -> (tagEdits: Int, pictureEdits: Int) {
+        var tagEditCount = 0
+        var pictureEditCount = 0
+
+        for index in trackItems.indices where trackIDs.contains(trackItems[index].id) {
+            let differences = differencesForTrack(
+                at: index,
+                tagWriteOptions: tagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+            if differences.hasTagDifferences {
+                tagEditCount += 1
+            }
+            if differences.hasPictureDifferences {
+                pictureEditCount += 1
+            }
+        }
+
+        return (tagEditCount, pictureEditCount)
+    }
+
     func hasDifferences(
         in trackIDs: Set<UUID>,
         tagWriteOptions: TagWriteOptions,
@@ -1289,7 +1351,6 @@ final class TagEditorViewModel {
                     metadata.pictures,
                     normalizeImageMetadata: true
                 )
-                let importedPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
                 let refreshedBookmarkData = try fileURL.bookmarkData(
                     options: .withSecurityScope,
                     includingResourceValuesForKeys: nil,
@@ -1313,7 +1374,7 @@ final class TagEditorViewModel {
                         options: tagWriteOptions
                     ),
                     picturesByType: writablePicturesByType(from: pictureRecords),
-                    pictureRecords: canonicalPictureRecords(importedPictureRecords),
+                    pictureRecords: canonicalPictureRecords(pictureRecords),
                     fingerprint: metadata.fingerprint
                 )
                 updatedTrackItems[index].externalDifferences = nil
@@ -1417,11 +1478,10 @@ final class TagEditorViewModel {
                     metadata.pictures,
                     normalizeImageMetadata: true
                 )
-                let importedPictureRecords = FlacImportMapper.mapWritablePictureRecords(metadata.pictures)
                 let fileSnapshot = self.makeFileSnapshot(
                     tags: metadata.tags,
                     picturesByType: livePicturesByType,
-                    pictureRecords: importedPictureRecords,
+                    pictureRecords: pictureRecords,
                     fingerprint: metadata.fingerprint
                 )
 
@@ -1917,6 +1977,25 @@ final class TagEditorViewModel {
         }
 
         return "Unknown track"
+    }
+
+    private func editorNavigationTitle(documentDisplayName: String?) -> String {
+        if let documentDisplayName, !documentDisplayName.isEmpty {
+            return documentDisplayName
+        }
+
+        let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
+        let titleTracks = selectedTracks.isEmpty ? trackItems : selectedTracks
+        guard !titleTracks.isEmpty else {
+            return "SwiftTag"
+        }
+
+        let sharedAlbum = sharedDisplayValue(for: titleTracks.map(\.album))
+        if sharedAlbum == mixedSelectionMarker {
+            return "Mixed"
+        }
+
+        return sharedAlbum.isEmpty ? "Untitled" : sharedAlbum
     }
 
     private func selectedTrackValueBinding(
