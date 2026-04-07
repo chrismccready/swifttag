@@ -21,6 +21,7 @@ final class SwiftTagUITests: XCTestCase {
         static let albumTextField = "albumTextField"
         static let albumArtistTextField = "albumArtistTextField"
         static let trackStatusIcon = "trackStatusIcon"
+        static let trackFilenameText = "trackFilenameText"
         static let settingsTabView = "settings.tabView"
         static let defaultSavePayload = "settings.general.defaultSavePayload"
         static let defaultSaveScope = "settings.general.defaultSaveScope"
@@ -281,7 +282,6 @@ final class SwiftTagUITests: XCTestCase {
         )
     }
 
-    @MainActor
     func testReopeningSavedSwiftTagDocumentShowsZeroDifferenceSubtitleWhenLiveFileMatches() throws {
         let persistentFixtureName = "saved-document-match-\(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
@@ -303,9 +303,11 @@ final class SwiftTagUITests: XCTestCase {
         app.terminate()
 
         let reopenedApp = try launchApp(exposeNavigationMetadata: true)
-        let reopenedWindow = reopenedApp.windows.firstMatch
         reopenedApp.activate()
-        XCTAssertTrue(openFileWithSwiftTag(url: swiftTagDocumentURL))
+        let reopenedWindow = try openSavedSwiftTagDocumentWindow(
+            in: reopenedApp,
+            documentURL: swiftTagDocumentURL
+        )
 
         XCTAssertTrue(waitForTextFieldValueAnywhere(in: reopenedApp, expectedValue: "Test Title", timeout: 10.0))
         XCTAssertTrue(
@@ -316,6 +318,259 @@ final class SwiftTagUITests: XCTestCase {
             )
         )
         XCTAssertTrue(waitForLabeledElement(in: reopenedApp, identifier: UIID.trackStatusIcon, expectedLabel: "fish.fill", timeout: 10.0))
+    }
+
+    @MainActor
+    func testSavingSwiftTagDocumentUpdatesTrackFilenameAfterReferencedFlacRename() throws {
+        let persistentFixtureName = "saved-document-rename-open-\(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Saved Rename Open \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        let renamedBasename = "renamed-\(UUID().uuidString).flac"
+        let saveContext = try saveSwiftTagDocumentFromImportedFixture(
+            persistentFixtureName: persistentFixtureName,
+            swiftTagDocumentURL: swiftTagDocumentURL,
+            postSaveRenameBasename: renamedBasename
+        )
+
+        let renamedURL = saveContext.flacURL.deletingLastPathComponent()
+            .appendingPathComponent(renamedBasename)
+
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: saveContext.window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: renamedURL.lastPathComponent,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: saveContext.window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: "available",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: saveContext.app,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "fish.fill",
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
+    func testAddingExternalFlacFileUpdatesTrackFilenameAfterRename() throws {
+        let flacURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
+        let renamedURL = flacURL.deletingLastPathComponent()
+            .appendingPathComponent("renamed-\(UUID().uuidString).flac")
+        let app = try launchApp()
+        let window = app.windows.firstMatch
+
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Add FLAC files...")
+        chooseFileInOpenPanel(in: app, path: flacURL.path)
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: flacURL.lastPathComponent,
+                timeout: 10.0
+            )
+        )
+
+        try? FileManager.default.removeItem(at: renamedURL)
+        try FileManager.default.moveItem(at: flacURL, to: renamedURL)
+
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: renamedURL.lastPathComponent,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: "available",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: app,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "fish.fill",
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
+    func testAddingExternalFlacFileKeepsRenamedFilenameWhenDeleted() throws {
+        let flacURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
+        let renamedURL = flacURL.deletingLastPathComponent()
+            .appendingPathComponent("deleted-after-rename-\(UUID().uuidString).flac")
+        let app = try launchApp()
+        let window = app.windows.firstMatch
+
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Add FLAC files...")
+        chooseFileInOpenPanel(in: app, path: flacURL.path)
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        try? FileManager.default.removeItem(at: renamedURL)
+        try FileManager.default.moveItem(at: flacURL, to: renamedURL)
+
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: renamedURL.lastPathComponent,
+                timeout: 10.0
+            )
+        )
+
+        try FileManager.default.removeItem(at: renamedURL)
+
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: renamedURL.lastPathComponent,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: "deleted",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: app,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "exclamationmark.triangle",
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
+    func testSavingSwiftTagDocumentKeepsRenamedFilenameWhenReferencedFlacIsDeleted() throws {
+        let persistentFixtureName = "saved-document-delete-open-\(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Saved Delete Open \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        let renamedBasename = "renamed-before-delete-\(UUID().uuidString).flac"
+        let saveContext = try saveSwiftTagDocumentFromImportedFixture(
+            persistentFixtureName: persistentFixtureName,
+            swiftTagDocumentURL: swiftTagDocumentURL,
+            postSaveRenameBasename: renamedBasename,
+            postSaveDeleteAfterRename: true
+        )
+
+        let renamedURL = saveContext.flacURL.deletingLastPathComponent()
+            .appendingPathComponent(renamedBasename)
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: saveContext.window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: renamedURL.lastPathComponent,
+                timeout: 10.0
+            )
+        )
+
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: saveContext.window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: renamedURL.lastPathComponent,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: saveContext.window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: "deleted",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: saveContext.app,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "exclamationmark.triangle",
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
+    func testReopeningSavedSwiftTagDocumentShowsRenamedReferencedFilenameAndZeroDifferenceSubtitle() throws {
+        let persistentFixtureName = "saved-document-rename-reopen-\(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Saved Rename Reopen \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        let renamedBasename = "renamed-before-reopen-\(UUID().uuidString).flac"
+        let saveContext = try saveSwiftTagDocumentFromImportedFixture(
+            persistentFixtureName: persistentFixtureName,
+            swiftTagDocumentURL: swiftTagDocumentURL,
+            postSaveRenameBasename: renamedBasename
+        )
+
+        let renamedURL = saveContext.flacURL.deletingLastPathComponent()
+            .appendingPathComponent(renamedBasename)
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: saveContext.window,
+                identifier: UIID.trackFilenameText,
+                expectedValue: renamedURL.lastPathComponent,
+                timeout: 10.0
+            )
+        )
+        saveContext.app.terminate()
+
+        let reopenedApp = try launchApp(exposeNavigationMetadata: true)
+        reopenedApp.activate()
+        let reopenedWindow = try openSavedSwiftTagDocumentWindow(
+            in: reopenedApp,
+            documentURL: swiftTagDocumentURL
+        )
+
+        XCTAssertTrue(waitForTextFieldValueAnywhere(in: reopenedApp, expectedValue: "Test Title", timeout: 10.0))
+        XCTAssertTrue(
+            waitForStaticTextLabel(
+                in: reopenedWindow,
+                identifier: UIID.trackFilenameText,
+                expectedValue: renamedURL.lastPathComponent,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForNavigationSubtitle(
+                in: reopenedWindow,
+                expectedValue: "Tracks: 1 (0) • Tag Δ: 0 (0) • Picture Δ: 0 (0)",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: reopenedApp,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "fish.fill",
+                timeout: 10.0
+            )
+        )
     }
 
     @MainActor
@@ -347,9 +602,11 @@ final class SwiftTagUITests: XCTestCase {
         app.terminate()
 
         let reopenedApp = try launchApp(exposeNavigationMetadata: true)
-        let reopenedWindow = reopenedApp.windows.firstMatch
         reopenedApp.activate()
-        XCTAssertTrue(openFileWithSwiftTag(url: swiftTagDocumentURL))
+        let reopenedWindow = try openSavedSwiftTagDocumentWindow(
+            in: reopenedApp,
+            documentURL: swiftTagDocumentURL
+        )
 
         XCTAssertTrue(waitForTextFieldValueAnywhere(in: reopenedApp, expectedValue: "Test Title", timeout: 10.0))
         XCTAssertTrue(
@@ -557,6 +814,9 @@ final class SwiftTagUITests: XCTestCase {
         resetSaveSettings: Bool = true,
         openSaveNotificationRecordID: String? = nil,
         exposeNavigationMetadata: Bool = false,
+        enableFileActions: Bool = false,
+        postSaveRenameBasename: String? = nil,
+        postSaveDeleteAfterRename: Bool = false,
         waitForEditorUI: Bool = true
     ) throws -> XCUIApplication {
         let app = XCUIApplication()
@@ -649,6 +909,17 @@ final class SwiftTagUITests: XCTestCase {
             app.launchEnvironment["UITEST_EXPOSE_NAVIGATION_METADATA"] = "1"
             app.launchArguments.append("-UITEST_EXPOSE_NAVIGATION_METADATA")
         }
+        if enableFileActions {
+            app.launchEnvironment["UITEST_ENABLE_FILE_ACTIONS"] = "1"
+            app.launchArguments.append("-UITEST_ENABLE_FILE_ACTIONS")
+        }
+        if let postSaveRenameBasename {
+            app.launchEnvironment["UITEST_POST_SAVE_RENAME_BASENAME"] = postSaveRenameBasename
+        }
+        if postSaveDeleteAfterRename {
+            app.launchEnvironment["UITEST_POST_SAVE_DELETE_AFTER_RENAME"] = "1"
+            app.launchArguments.append("-UITEST_POST_SAVE_DELETE_AFTER_RENAME")
+        }
         try setUITestControlValue(saveSwiftTagDocumentPath, fileName: "save-swifttag-path.txt")
         try setUITestControlValue(openSwiftTagDocumentPath, fileName: "open-swifttag-path.txt")
         app.launch()
@@ -720,6 +991,136 @@ final class SwiftTagUITests: XCTestCase {
         try? FileManager.default.removeItem(at: destinationURL)
         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
         return destinationURL
+    }
+
+    private func prepareExternalOpenPanelFlacFixture(fileName: String) throws -> URL {
+        let sourceURL = URL(fileURLWithPath: fixtureFlacPath(fileName: fileName))
+        let destinationDirectoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftTagUITestExternal", isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: destinationDirectoryURL,
+            withIntermediateDirectories: true
+        )
+
+        let destinationURL = destinationDirectoryURL
+            .appendingPathComponent("\(UUID().uuidString)-\(fileName)")
+        try? FileManager.default.removeItem(at: destinationURL)
+        try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+        return destinationURL
+    }
+
+    @MainActor
+    private func saveSwiftTagDocumentFromImportedFixture(
+        persistentFixtureName: String,
+        swiftTagDocumentURL: URL,
+        postSaveRenameBasename: String? = nil,
+        postSaveDeleteAfterRename: Bool = false
+    ) throws -> (app: XCUIApplication, window: XCUIElement, flacURL: URL) {
+        try? FileManager.default.removeItem(at: swiftTagDocumentURL)
+
+        let app = try launchApp(
+            importFixture: true,
+            persistentFixtureName: persistentFixtureName,
+            exposeNavigationMetadata: true,
+            postSaveRenameBasename: postSaveRenameBasename,
+            postSaveDeleteAfterRename: postSaveDeleteAfterRename
+        )
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
+        saveFileInSavePanel(in: app, destinationURL: swiftTagDocumentURL)
+        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
+
+        let flacURL = try referencedFlacURL(in: swiftTagDocumentURL)
+        if postSaveRenameBasename == nil {
+            XCTAssertTrue(
+                waitForStaticTextLabel(
+                    in: window,
+                    identifier: UIID.trackFilenameText,
+                    expectedValue: flacURL.lastPathComponent,
+                    timeout: 10.0
+                )
+            )
+        }
+
+        return (app: app, window: window, flacURL: flacURL)
+    }
+
+    private func referencedFlacURL(in swiftTagDocumentURL: URL) throws -> URL {
+        let infoPlistURL = swiftTagDocumentURL.appendingPathComponent("Info.plist")
+        let plistData = try Data(contentsOf: infoPlistURL)
+        let plist = try XCTUnwrap(
+            PropertyListSerialization.propertyList(from: plistData, format: nil) as? [String: Any]
+        )
+        let tracks = try XCTUnwrap(plist["Tracks"] as? [[String: Any]])
+        let firstTrack = try XCTUnwrap(tracks.first)
+        let fileURLString = try XCTUnwrap(firstTrack["FLAC File URL"] as? String)
+        return URL(fileURLWithPath: URL(string: fileURLString)?.path ?? fileURLString)
+    }
+
+    private func performUITestFileAction(
+        operation: String,
+        sourceURL: URL,
+        destinationURL: URL? = nil,
+        timeout: TimeInterval = 10.0
+    ) throws {
+        var actionLines = [operation, sourceURL.path]
+        if let destinationURL {
+            actionLines.append(destinationURL.path)
+        }
+        let actionValue = actionLines.joined(separator: "\n")
+        let targetDirectoryURL = try XCTUnwrap(
+            uiTestControlDirectoryURLWithReadyMarker() ?? uiTestControlDirectoryURLs().first
+        )
+        let targetActionURL = targetDirectoryURL.appendingPathComponent("file-action.txt")
+        try actionValue.write(to: targetActionURL, atomically: true, encoding: .utf8)
+
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if !FileManager.default.fileExists(atPath: targetActionURL.path) {
+                return
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        XCTFail("Timed out waiting for UI test file action to be consumed.")
+    }
+
+    private func waitForUITestFileActionReady(timeout: TimeInterval = 10.0) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if uiTestControlValueIfPresent(fileName: "file-action-ready.txt") == "ready" {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func uiTestControlDirectoryURLWithReadyMarker() -> URL? {
+        uiTestControlDirectoryURLs().first { directoryURL in
+            let readyURL = directoryURL.appendingPathComponent("file-action-ready.txt")
+            let isReady = (try? String(contentsOf: readyURL, encoding: .utf8)
+                .trimmingCharacters(in: .whitespacesAndNewlines)) == "ready"
+            return isReady && isUITestControlDirectoryWritable(directoryURL)
+        }
+    }
+
+    private func isUITestControlDirectoryWritable(_ directoryURL: URL) -> Bool {
+        let probeURL = directoryURL.appendingPathComponent("write-probe-\(UUID().uuidString).txt")
+        do {
+            try "probe".write(to: probeURL, atomically: true, encoding: .utf8)
+            try? FileManager.default.removeItem(at: probeURL)
+            return true
+        } catch {
+            return false
+        }
     }
 
     private func fixtureFlacPath(fileName: String) -> String {
@@ -970,19 +1371,23 @@ final class SwiftTagUITests: XCTestCase {
         expectedValue: String,
         timeout: TimeInterval = 10.0
     ) -> Bool {
-        let staticText = scope.descendants(matching: .any)
+        let staticTexts = scope.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier == %@", identifier))
-            .firstMatch
-        guard staticText.waitForExistence(timeout: timeout) else {
-            return false
-        }
-
+        let normalizedExpectedValue = expectedValue
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
-            let label = staticText.label
-            let value = staticText.value as? String
-            if label == expectedValue || value == expectedValue {
-                return true
+            for staticText in staticTexts.allElementsBoundByIndex where staticText.exists {
+                let normalizedLabel = staticText.label
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .lowercased()
+                let normalizedValue = (staticText.value as? String)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .lowercased()
+                if normalizedLabel == normalizedExpectedValue || normalizedValue == normalizedExpectedValue {
+                    return true
+                }
             }
 
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
@@ -1122,6 +1527,29 @@ final class SwiftTagUITests: XCTestCase {
         return didOpen
     }
 
+    private func openSavedSwiftTagDocumentWindow(
+        in app: XCUIApplication,
+        documentURL: URL,
+        timeout: TimeInterval = 10.0
+    ) throws -> XCUIElement {
+        let existingIdentifiers = Set(currentWindowIdentifiers(in: app))
+        XCTAssertTrue(openFileWithSwiftTag(url: documentURL, timeout: timeout))
+
+        let openedWindow = waitForNewWindow(
+            in: app,
+            excluding: existingIdentifiers,
+            timeout: 2.0
+        )
+        XCTAssertTrue(
+            waitForNavigationDocumentURL(
+                in: openedWindow,
+                expectedValue: documentURL.standardizedFileURL.path,
+                timeout: timeout
+            )
+        )
+        return openedWindow
+    }
+
     private func waitForWindowCount(
         in app: XCUIApplication,
         minimumCount: Int,
@@ -1172,24 +1600,77 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     private func uiTestControlDirectoryURL() -> URL {
-        let directoryURL = appContainerCachesDirectoryURL()
+        uiTestControlDirectoryURLs().first ?? appContainerCachesDirectoryURL()
             .appendingPathComponent("SwiftTagUITestControls", isDirectory: true)
-        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        return directoryURL
+    }
+
+    private func uiTestControlDirectoryURLs() -> [URL] {
+        let runnerNestedDirectoryURL = appContainerCachesDirectoryURL()
+            .appendingPathComponent("SwiftTagUITestControls", isDirectory: true)
+        let appControlDirectoryURL = URL(fileURLWithPath: "/Users", isDirectory: true)
+            .appendingPathComponent(NSUserName(), isDirectory: true)
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Containers", isDirectory: true)
+            .appendingPathComponent("com.toowalks.swifttag", isDirectory: true)
+            .appendingPathComponent("Data", isDirectory: true)
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Caches", isDirectory: true)
+            .appendingPathComponent("SwiftTagUITestControls", isDirectory: true)
+
+        let directories = [runnerNestedDirectoryURL, appControlDirectoryURL]
+        for directoryURL in directories {
+            try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        }
+
+        return directories.enumerated().compactMap { index, directoryURL in
+            directories.firstIndex(of: directoryURL) == index ? directoryURL : nil
+        }
+    }
+
+    private func uiTestControlValueIfPresent(fileName: String) -> String? {
+        for directoryURL in uiTestControlDirectoryURLs() {
+            let controlURL = directoryURL.appendingPathComponent(fileName)
+            guard let rawValue = try? String(contentsOf: controlURL, encoding: .utf8) else {
+                continue
+            }
+
+            let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedValue.isEmpty {
+                return trimmedValue
+            }
+        }
+        return nil
     }
 
     private func setUITestControlValue(_ value: String?, fileName: String) throws {
-        let controlURL = uiTestControlDirectoryURL().appendingPathComponent(fileName)
-        if let value {
-            try value.write(to: controlURL, atomically: true, encoding: .utf8)
-        } else {
-            try? FileManager.default.removeItem(at: controlURL)
+        var didSucceed = false
+        var lastError: Error?
+
+        for directoryURL in uiTestControlDirectoryURLs() {
+            let controlURL = directoryURL.appendingPathComponent(fileName)
+            do {
+                if let value {
+                    try value.write(to: controlURL, atomically: true, encoding: .utf8)
+                } else {
+                    try? FileManager.default.removeItem(at: controlURL)
+                }
+                didSucceed = true
+            } catch {
+                lastError = error
+            }
+        }
+
+        if !didSucceed, let lastError {
+            throw lastError
         }
     }
 
     private func clearUITestControlFiles() throws {
         try setUITestControlValue(nil, fileName: "save-swifttag-path.txt")
         try setUITestControlValue(nil, fileName: "open-swifttag-path.txt")
+        try setUITestControlValue(nil, fileName: "file-action.txt")
+        try setUITestControlValue(nil, fileName: "file-action-result.txt")
+        try setUITestControlValue(nil, fileName: "file-action-ready.txt")
     }
 
     private func chooseFileInOpenPanel(in app: XCUIApplication, path: String) {
@@ -1203,12 +1684,19 @@ final class SwiftTagUITests: XCTestCase {
         let pathField = goToFolderSheet.textFields.firstMatch
         XCTAssertTrue(pathField.waitForExistence(timeout: 5.0))
         pathField.click()
-        pathField.typeText(path)
+        replaceText(in: app, element: pathField, text: path)
         app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
 
-        let openButton = app.buttons["Open"].firstMatch
+        let openPanel = currentOpenPanel(in: app)
+        XCTAssertTrue(openPanel.waitForExistence(timeout: 5.0))
+
+        let openButton = openPanel.buttons["Open"].firstMatch
         XCTAssertTrue(openButton.waitForExistence(timeout: 5.0))
-        openButton.click()
+        if openButton.isHittable {
+            openButton.click()
+        } else {
+            app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+        }
     }
 
     private func saveFileInSavePanel(in app: XCUIApplication, destinationURL: URL) {
@@ -1254,6 +1742,15 @@ final class SwiftTagUITests: XCTestCase {
         } while Date() < deadline
 
         return false
+    }
+
+    private func currentOpenPanel(in app: XCUIApplication) -> XCUIElement {
+        let dialogOpenButton = app.dialogs.buttons["Open"].firstMatch
+        if dialogOpenButton.exists {
+            return app.dialogs.firstMatch
+        }
+
+        return app.sheets.firstMatch
     }
 
     private func waitForSavePanel(in app: XCUIApplication, timeout: TimeInterval = 5.0) -> Bool {

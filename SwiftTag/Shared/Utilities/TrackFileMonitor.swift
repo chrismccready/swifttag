@@ -84,7 +84,9 @@ final class TrackFileMonitor {
 
         let monitoredURL = Self.monitoredURL(for: resolved.url)
         let fileDescriptor = open(monitoredURL.path, O_EVTONLY)
+        let openError = errno
         guard fileDescriptor >= 0 else {
+            Self.debugTrapOnPermissionDeniedOpen(for: monitoredURL, errnoCode: openError)
             if resolved.didAccessSecurityScope {
                 resolved.url.stopAccessingSecurityScopedResource()
             }
@@ -216,5 +218,18 @@ final class TrackFileMonitor {
 
         return descriptorStat.st_dev == pathStat.st_dev &&
             descriptorStat.st_ino == pathStat.st_ino
+    }
+
+    @inline(never)
+    private nonisolated static func debugTrapOnPermissionDeniedOpen(for fileURL: URL, errnoCode: Int32) {
+#if DEBUG
+        guard errnoCode == EPERM else {
+            return
+        }
+
+        let message = "Could not open() the item: [\(errnoCode): \(String(cString: strerror(errnoCode)))] \(fileURL.path)"
+        fputs("\(message)\n", stderr)
+        raise(SIGTRAP)
+#endif
     }
 }

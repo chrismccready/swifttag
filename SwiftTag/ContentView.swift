@@ -17,6 +17,12 @@ struct ContentView: View {
         case removeSelectedTracks
     }
 
+    private struct TrackMonitoringReferenceKey: Equatable {
+        let id: UUID
+        let sourceFilePath: String?
+        let securityScopedBookmarkData: Data?
+    }
+
     private struct DestructiveAlertContext {
         let title: String
         let message: String
@@ -67,7 +73,9 @@ struct ContentView: View {
     @State private var isSaveStatusVisible: Bool = false
     @State private var isSaveOperationRunning: Bool = false
     @State private var hasPerformedInitialUITestSetup: Bool = false
+    @State private var didPerformUITestPostSaveReferenceMutation: Bool = false
     @State private var loadedReopenRecordID: UUID?
+    @State private var uiTestFileActionTask: Task<Void, Never>?
     @State private var trackFileMonitor: TrackFileMonitor = .init()
     @FocusState private var focusedMiscTagKeyRowID: MiscTagRow.ID?
     @Environment(\.openWindow) private var openWindow
@@ -109,6 +117,16 @@ struct ContentView: View {
     private var trackItems: [Track] {
         get { viewModel.trackItems }
         set { viewModel.trackItems = newValue }
+    }
+
+    private var trackMonitoringReferenceKeys: [TrackMonitoringReferenceKey] {
+        viewModel.trackItems.map { track in
+            TrackMonitoringReferenceKey(
+                id: track.id,
+                sourceFilePath: track.sourceFileURL?.standardizedFileURL.path,
+                securityScopedBookmarkData: track.securityScopedBookmarkData
+            )
+        }
     }
 
     private var themePreference: AppThemePreference {
@@ -817,8 +835,9 @@ struct ContentView: View {
                 reloadMiscTagRowsFromSelection()
                 syncAlbumArtContext()
             }
-            .onChange(of: viewModel.trackItems.map(\.id)) { _, _ in
+            .onChange(of: trackMonitoringReferenceKeys) { _, _ in
                 syncAlbumArtContext()
+                refreshTrackMonitoring()
             }
             .onChange(of: saveFrontCoverToAllTracks) { _, _ in
                 syncAlbumArtContext()
@@ -1219,6 +1238,7 @@ struct ContentView: View {
         Task { @MainActor in
             do {
                 let exportTracks = try viewModel.validatedSwiftTagDocumentExportTracks()
+                let postSaveMutationSourceURL = exportTracks.first?.sourceFileURL
                 let result = try SwiftTagDocumentPackageWriter.save(
                     tracks: exportTracks,
                     state: currentState,
@@ -1226,6 +1246,7 @@ struct ContentView: View {
                 )
                 viewModel.rememberSwiftTagDocumentSave(result)
                 registerEditorSession()
+                performUITestPostSaveReferenceMutationIfNeeded(sourceURL: postSaveMutationSourceURL)
             } catch {
                 saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 isSaveErrorPresented = true
@@ -1247,6 +1268,36 @@ struct ContentView: View {
         savePanel.nameFieldStringValue = defaultSwiftTagDocumentFileName()
 
         return savePanel.runModal() == .OK ? savePanel.url : nil
+    }
+
+    private func performUITestPostSaveReferenceMutationIfNeeded(sourceURL: URL?) {
+        guard !didPerformUITestPostSaveReferenceMutation,
+              let renameBasename = uiTestLaunchValue(for: "UITEST_POST_SAVE_RENAME_BASENAME")?
+                .trimmingCharacters(in: .whitespacesAndNewlines),
+              !renameBasename.isEmpty,
+              let sourceURL else {
+            return
+        }
+
+        didPerformUITestPostSaveReferenceMutation = true
+        let renamedURL = sourceURL.deletingLastPathComponent().appendingPathComponent(renameBasename)
+        let shouldDeleteAfterRename = uiTestLaunchFlagEnabled("UITEST_POST_SAVE_DELETE_AFTER_RENAME")
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            do {
+                try FileManager.default.moveItem(at: sourceURL, to: renamedURL)
+            } catch {
+                return
+            }
+
+            guard shouldDeleteAfterRename else {
+                return
+            }
+
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            try? FileManager.default.removeItem(at: renamedURL)
+        }
     }
 
     private func defaultSwiftTagDocumentFileName() -> String {
@@ -1404,7 +1455,10 @@ struct ContentView: View {
         saveErrorMessage = ""
         destructiveAlertContext = nil
         pendingDestructiveAction = nil
+        didPerformUITestPostSaveReferenceMutation = false
         loadedReopenRecordID = nil
+        uiTestFileActionTask?.cancel()
+        uiTestFileActionTask = nil
         focusedMiscTagKeyRowID = nil
     }
 
@@ -1762,6 +1816,7 @@ struct ContentView: View {
 
         hasPerformedInitialUITestSetup = true
         activateUISimulatedSaveStatusIfNeeded()
+        beginUITestFileActionPollingIfNeeded()
 
         if uiTestLaunchFlagEnabled("UITEST_OPEN_ALBUM_ART_SHEET") {
             isAlbumArtSheetPresented = true
@@ -1873,17 +1928,118 @@ struct ContentView: View {
     }
 
     private func uiTestControlValueIfPresent(fileName: String) -> String? {
-        let controlDirectoryURL = (FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        for controlDirectoryURL in uiTestControlDirectoryURLs() {
+            let controlURL = controlDirectoryURL.appendingPathComponent(fileName)
+            guard let rawValue = try? String(contentsOf: controlURL, encoding: .utf8) else {
+                continue
+            }
+
+            let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedValue.isEmpty {
+                return trimmedValue
+            }
+        }
+        return nil
+    }
+
+    private func uiTestControlDirectoryURL() -> URL {
+        let directoryURL = (FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory)
             .appendingPathComponent("SwiftTagUITestControls", isDirectory: true)
-        let controlURL = controlDirectoryURL.appendingPathComponent(fileName)
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        return directoryURL
+    }
 
-        guard let rawValue = try? String(contentsOf: controlURL, encoding: .utf8) else {
-            return nil
+    private func uiTestExternalControlDirectoryURL() -> URL? {
+        let directoryURL = URL(fileURLWithPath: "/Users", isDirectory: true)
+            .appendingPathComponent(NSUserName(), isDirectory: true)
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Containers", isDirectory: true)
+            .appendingPathComponent("com.toowalks.swifttagUITests.xctrunner", isDirectory: true)
+            .appendingPathComponent("Data", isDirectory: true)
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Containers", isDirectory: true)
+            .appendingPathComponent("com.toowalks.swifttag", isDirectory: true)
+            .appendingPathComponent("Data", isDirectory: true)
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Caches", isDirectory: true)
+            .appendingPathComponent("SwiftTagUITestControls", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        return directoryURL
+    }
+
+    private func uiTestControlDirectoryURLs() -> [URL] {
+        var directories = [uiTestControlDirectoryURL()]
+        if let externalDirectoryURL = uiTestExternalControlDirectoryURL(),
+           !directories.contains(externalDirectoryURL) {
+            directories.append(externalDirectoryURL)
+        }
+        return directories
+    }
+
+    private func beginUITestFileActionPollingIfNeeded() {
+        guard uiTestLaunchFlagEnabled("UITEST_ENABLE_FILE_ACTIONS"),
+              uiTestFileActionTask == nil else {
+            return
         }
 
-        let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmedValue.isEmpty ? nil : trimmedValue
+        for controlDirectoryURL in uiTestControlDirectoryURLs() {
+            let readyURL = controlDirectoryURL.appendingPathComponent("file-action-ready.txt")
+            try? "ready".write(to: readyURL, atomically: true, encoding: .utf8)
+        }
+
+        uiTestFileActionTask = Task { @MainActor in
+            while !Task.isCancelled {
+                processPendingUITestFileActionIfNeeded()
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+        }
+    }
+
+    private func processPendingUITestFileActionIfNeeded() {
+        for controlDirectoryURL in uiTestControlDirectoryURLs() {
+            let actionURL = controlDirectoryURL.appendingPathComponent("file-action.txt")
+            let resultURL = controlDirectoryURL.appendingPathComponent("file-action-result.txt")
+            guard let rawAction = try? String(contentsOf: actionURL, encoding: .utf8) else {
+                continue
+            }
+
+            try? FileManager.default.removeItem(at: actionURL)
+
+            let lines = rawAction
+                .split(separator: "\n", omittingEmptySubsequences: false)
+                .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+            guard let operation = lines.first?.lowercased(), !operation.isEmpty else {
+                try? "error:missing-operation".write(to: resultURL, atomically: true, encoding: .utf8)
+                return
+            }
+
+            do {
+                switch operation {
+                case "rename":
+                    guard lines.count >= 3 else {
+                        throw NSError(domain: NSCocoaErrorDomain, code: NSFileReadCorruptFileError)
+                    }
+                    try FileManager.default.moveItem(
+                        at: URL(fileURLWithPath: lines[1]),
+                        to: URL(fileURLWithPath: lines[2])
+                    )
+                case "delete":
+                    guard lines.count >= 2 else {
+                        throw NSError(domain: NSCocoaErrorDomain, code: NSFileReadCorruptFileError)
+                    }
+                    try FileManager.default.removeItem(at: URL(fileURLWithPath: lines[1]))
+                default:
+                    throw NSError(domain: NSCocoaErrorDomain, code: NSFeatureUnsupportedError)
+                }
+
+                try? "success".write(to: resultURL, atomically: true, encoding: .utf8)
+            } catch {
+                let message = (error as NSError).localizedDescription
+                try? "error:\(message)".write(to: resultURL, atomically: true, encoding: .utf8)
+            }
+            return
+        }
     }
 
     private func uiTestSwiftTagDocumentSaveURLIfPresent() -> URL? {

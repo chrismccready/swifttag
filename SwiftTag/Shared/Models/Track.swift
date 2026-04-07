@@ -67,6 +67,14 @@ struct Track: Identifiable {
         return fingerprint ?? "NA"
     }
 
+    var displayFileName: String {
+        if let sourceFileURL {
+            return sourceFileURL.lastPathComponent
+        }
+
+        return tags[TagKey.filename]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
     init(
         id: UUID = UUID(),
         album: String? = nil,

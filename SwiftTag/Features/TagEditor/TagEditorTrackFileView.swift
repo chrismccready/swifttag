@@ -48,8 +48,8 @@ struct TagEditorTrackFileView: View {
                 break
             }
 
-            let lhsFilename = $0.tags[TagKey.filename] ?? ""
-            let rhsFilename = $1.tags[TagKey.filename] ?? ""
+            let lhsFilename = $0.displayFileName
+            let rhsFilename = $1.displayFileName
             return lhsFilename.localizedStandardCompare(rhsFilename) == .orderedAscending
         }
     }
@@ -103,7 +103,9 @@ struct TagEditorTrackFileView: View {
             .width(min: 140, max: 800)
 
             TableColumn("Filename") { track in
-                Text(track.tags[TagKey.filename] ?? "")
+                Text(track.displayFileName)
+                    .accessibilityIdentifier("trackFilenameText")
+                    .accessibilityValue(hasDeletedFile(track.id) ? "deleted" : "available")
                     .foregroundStyle(hasDeletedFile(track.id) ? .red : .primary)
                     .strikethrough(hasDeletedFile(track.id), color: .red)
             }

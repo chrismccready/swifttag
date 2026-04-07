@@ -1967,7 +1967,7 @@ final class TagEditorViewModel {
             return title
         }
 
-        let filename = track.tags[TagKey.filename]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let filename = track.displayFileName
         if !filename.isEmpty {
             return filename
         }
@@ -2291,26 +2291,25 @@ final class TagEditorViewModel {
             throw TagEditorSaveError.noTracksToSave
         }
 
-        if let currentPath {
-            let trimmedCurrentPath = currentPath.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmedCurrentPath.isEmpty {
-                let currentFileURL = URL(fileURLWithPath: trimmedCurrentPath).standardizedFileURL
-                if FileManager.default.fileExists(atPath: currentFileURL.path) {
-                    return try body(
-                        ResolvedTrackFileReference(
-                            fileURL: currentFileURL,
-                            refreshedBookmarkData: try? currentFileURL.bookmarkData(
-                                options: .withSecurityScope,
-                                includingResourceValuesForKeys: nil,
-                                relativeTo: nil
-                            )
-                        )
-                    )
-                }
-            }
-        }
-
         let track = trackItems[index]
+        let currentFileURL: URL? = {
+            guard let currentPath else {
+                return nil
+            }
+
+            let trimmedCurrentPath = currentPath.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedCurrentPath.isEmpty else {
+                return nil
+            }
+
+            let candidateURL = URL(fileURLWithPath: trimmedCurrentPath).standardizedFileURL
+            guard FileManager.default.fileExists(atPath: candidateURL.path) else {
+                return nil
+            }
+
+            return candidateURL
+        }()
+
         if let bookmarkData = track.securityScopedBookmarkData {
             do {
                 var isStale = false
@@ -2325,6 +2324,19 @@ final class TagEditorViewModel {
                     if didAccess {
                         resolvedURL.stopAccessingSecurityScopedResource()
                     }
+                }
+
+                if didAccess, let currentFileURL {
+                    return try body(
+                        ResolvedTrackFileReference(
+                            fileURL: currentFileURL,
+                            refreshedBookmarkData: try? currentFileURL.bookmarkData(
+                                options: .withSecurityScope,
+                                includingResourceValuesForKeys: nil,
+                                relativeTo: nil
+                            )
+                        )
+                    )
                 }
 
                 if didAccess, FileManager.default.fileExists(atPath: resolvedURL.path) {
@@ -2342,6 +2354,20 @@ final class TagEditorViewModel {
             } catch {
                 // Fall through to the saved file URL when the bookmark can no longer resolve.
             }
+        }
+
+        if let currentFileURL,
+           FileManager.default.isReadableFile(atPath: currentFileURL.path) {
+            return try body(
+                ResolvedTrackFileReference(
+                    fileURL: currentFileURL,
+                    refreshedBookmarkData: try? currentFileURL.bookmarkData(
+                        options: .withSecurityScope,
+                        includingResourceValuesForKeys: nil,
+                        relativeTo: nil
+                    )
+                )
+            )
         }
 
         if let sourceFileURL = track.sourceFileURL?.standardizedFileURL,
