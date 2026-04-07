@@ -518,25 +518,7 @@ enum SwiftTagDocumentPackageWriter {
     }
 
     private static func canonicalPictures(for pictures: [FlacWritablePictureRecord]) throws -> [FlacWritablePictureRecord] {
-        let normalizedPictures = pictures.map { $0.withComputedPictureMetadata() }
-
-        return normalizedPictures.sorted { lhs, rhs in
-            if lhs.type != rhs.type {
-                return lhs.type < rhs.type
-            }
-
-            let lhsHash = PictureDataUtilities.sha256Hex(of: lhs.data)
-            let rhsHash = PictureDataUtilities.sha256Hex(of: rhs.data)
-            if lhsHash != rhsHash {
-                return lhsHash < rhsHash
-            }
-
-            if lhs.mimeType != rhs.mimeType {
-                return lhs.mimeType < rhs.mimeType
-            }
-
-            return lhs.description < rhs.description
-        }
+        PictureRecordCanonicalizer.canonicalize(pictures)
     }
 
     private static func assetCandidate(for picture: FlacWritablePictureRecord) throws -> SwiftTagDocumentAssetCandidate {

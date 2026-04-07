@@ -73,6 +73,23 @@ struct SwiftTagDocumentTests {
         )
     }
 
+    private static func orderedFrontCoverPicturesForReopenRegression() throws -> [FlacWritablePictureRecord] {
+        let firstPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Regression Front Cover A",
+            data: try pngData(color: .systemPink)
+        )
+        let secondPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Regression Front Cover B",
+            data: try pngData(color: .systemGreen)
+        )
+
+        return Array(PictureRecordCanonicalizer.canonicalize([firstPicture, secondPicture]).reversed())
+    }
+
     private static func pngData(color: NSColor) throws -> Data {
         let imageSize = NSSize(width: 2, height: 2)
         let image = NSImage(size: imageSize)
@@ -601,6 +618,41 @@ struct SwiftTagDocumentTests {
         try await baselineViewModel.importFlacFiles([fileURL])
 
         let destinationURL = try Self.tempPackageURL(name: "document-picture-match")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try baselineViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let loadedTrack = try #require(viewModel.trackItems.first)
+        #expect(loadedTrack.externalDifferences == nil)
+
+        let presentation = viewModel.trackStatusPresentation(
+            for: loadedTrack.id,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(presentation?.systemImageName == "fish.fill")
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentLoadRefreshDoesNotFlagEquivalentMultiPictureOrderingAsPictureDifference() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-picture-order-match.flac")
+        try Self.writeLivePictures(Self.orderedFrontCoverPicturesForReopenRegression(), to: fileURL)
+
+        let baselineViewModel = TagEditorViewModel()
+        try await baselineViewModel.importFlacFiles([fileURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-picture-order-match")
         _ = try SwiftTagDocumentPackageWriter.save(
             tracks: try baselineViewModel.validatedSwiftTagDocumentExportTracks(),
             state: .init(),

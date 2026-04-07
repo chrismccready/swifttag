@@ -107,6 +107,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             .appendingPathComponent("SwiftTagUITestOpenedDocument")
             .appendingPathExtension("flac")
         try? fileData.write(to: fileURL, options: .atomic)
+        try? UITestFlacOverrideWriter.applyOverrides(
+            to: fileURL,
+            albumMode: environment["UITEST_OPEN_DOCUMENT_FLAC_ALBUM_MODE"],
+            titleOverride: environment["UITEST_OPEN_DOCUMENT_FLAC_TITLE_OVERRIDE"],
+            pictureProfile: environment["UITEST_OPEN_DOCUMENT_FLAC_PICTURE_PROFILE"]
+        )
         return fileURL
     }
 
@@ -334,7 +340,10 @@ private struct AppCommands: Commands {
         if let materializedURL = uiTestMaterializedFLACURL(
             pathValue: environment["UITEST_MENU_FLAC_PATH"],
             dataValue: environment["UITEST_MENU_FLAC_DATA_BASE64"],
-            fileStem: "SwiftTagUITestMenuFixture"
+            fileStem: "SwiftTagUITestMenuFixture",
+            albumMode: environment["UITEST_MENU_FLAC_ALBUM_MODE"],
+            titleOverride: environment["UITEST_MENU_FLAC_TITLE_OVERRIDE"],
+            pictureProfile: environment["UITEST_MENU_FLAC_PICTURE_PROFILE"]
         ) {
             return materializedURL
         }
@@ -356,7 +365,10 @@ private struct AppCommands: Commands {
     private func uiTestMaterializedFLACURL(
         pathValue: String?,
         dataValue: String?,
-        fileStem: String
+        fileStem: String,
+        albumMode: String?,
+        titleOverride: String?,
+        pictureProfile: String?
     ) -> URL? {
         let trimmedPath = pathValue?.trimmingCharacters(in: .whitespacesAndNewlines)
         let pathExtension = URL(fileURLWithPath: trimmedPath ?? "").pathExtension
@@ -372,6 +384,12 @@ private struct AppCommands: Commands {
             .appendingPathComponent(fileStem)
             .appendingPathExtension(pathExtension.isEmpty ? "flac" : pathExtension)
         try? fileData.write(to: fileURL, options: .atomic)
+        try? UITestFlacOverrideWriter.applyOverrides(
+            to: fileURL,
+            albumMode: albumMode,
+            titleOverride: titleOverride,
+            pictureProfile: pictureProfile
+        )
         return fileURL
     }
 

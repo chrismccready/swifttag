@@ -1787,17 +1787,7 @@ final class TagEditorViewModel {
     }
 
     private func canonicalPictureRecords(_ pictures: [FlacWritablePictureRecord]) -> [FlacWritablePictureRecord] {
-        pictures.enumerated()
-            .sorted { lhs, rhs in
-                let lhsType = lhs.element.type == 3 ? Int.max : lhs.element.type
-                let rhsType = rhs.element.type == 3 ? Int.max : rhs.element.type
-                if lhsType != rhsType {
-                    return lhsType < rhsType
-                }
-
-                return lhs.offset < rhs.offset
-            }
-            .map(\.element)
+        PictureRecordCanonicalizer.canonicalize(pictures)
     }
 
     private func differingFileValues(

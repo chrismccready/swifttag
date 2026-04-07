@@ -627,6 +627,100 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testReopeningSavedSwiftTagDocumentIgnoresEquivalentMultiPictureOrderingAfterExternalTagSave() throws {
+        let singlePictureTitle = "Single Picture Track \(UUID().uuidString)"
+        let multiPictureTitle = "Multi Picture Track \(UUID().uuidString)"
+        let changedAlbum = "Changed Album \(UUID().uuidString)"
+        let singlePictureFixtureName = "single-picture-\(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Picture Order Regression \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        try? FileManager.default.removeItem(at: swiftTagDocumentURL)
+
+        let saveApp = try launchApp(
+            importFixture: true,
+            importedTitleOverride: singlePictureTitle,
+            importedPictureProfile: "single-front-cover",
+            menuImportFixturePath: fixtureFlacPath(fileName: Self.fixtureFileName),
+            menuImportTitleOverride: multiPictureTitle,
+            menuImportPictureProfile: "double-front-cover-reversed",
+            persistentFixtureName: singlePictureFixtureName,
+            exposeNavigationMetadata: true
+        )
+        saveApp.activate()
+        selectImportedTrackForEditing(in: saveApp, expectedTitle: singlePictureTitle, timeout: 20.0)
+        clickMenuItem(in: saveApp, menuBarItem: "File", menuItem: "Add FLAC files...")
+        selectImportedTrackForEditing(in: saveApp, expectedTitle: multiPictureTitle, timeout: 20.0)
+        clickMenuItem(in: saveApp, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
+        saveFileInSavePanel(in: saveApp, destinationURL: swiftTagDocumentURL)
+        XCTAssertFalse(saveApp.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
+        saveApp.terminate()
+
+        let modifierApp = try launchApp(
+            importFixture: true,
+            importedTitleOverride: singlePictureTitle,
+            importedPictureProfile: "single-front-cover",
+            persistentFixtureName: singlePictureFixtureName,
+            reuseImportedFixture: true
+        )
+        modifierApp.activate()
+        selectImportedTrackForEditing(in: modifierApp, expectedTitle: singlePictureTitle, timeout: 20.0)
+
+        let liveAlbumField = editableAlbumField(in: modifierApp)
+        XCTAssertTrue(liveAlbumField.waitForExistence(timeout: 10.0))
+        clearAndType(in: modifierApp, element: liveAlbumField, text: changedAlbum)
+        clickMenuItem(in: modifierApp, menuBarItem: "File", menuItem: "Save")
+        XCTAssertFalse(modifierApp.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        modifierApp.terminate()
+
+        let reopenedApp = try launchApp(exposeNavigationMetadata: true)
+        reopenedApp.activate()
+        let reopenedWindow = try openSavedSwiftTagDocumentWindow(
+            in: reopenedApp,
+            documentURL: swiftTagDocumentURL
+        )
+
+        selectImportedTrackForEditing(in: reopenedApp, expectedTitle: singlePictureTitle, timeout: 20.0)
+        let singleSelectionExpectedSubtitle = "Tracks: 2 (1) • Tag Δ: 1 (1) • Picture Δ: 0 (0)"
+        XCTAssertTrue(
+            waitForNavigationSubtitle(
+                in: reopenedWindow,
+                expectedValue: singleSelectionExpectedSubtitle,
+                timeout: 10.0
+            ),
+            "Observed subtitles after selecting single-picture track: \(navigationSubtitleProbeValues(in: reopenedWindow))"
+        )
+
+        selectImportedTrackForEditing(in: reopenedApp, expectedTitle: multiPictureTitle, timeout: 20.0)
+        let multiSelectionExpectedSubtitle = "Tracks: 2 (1) • Tag Δ: 1 (0) • Picture Δ: 0 (0)"
+        XCTAssertTrue(
+            waitForNavigationSubtitle(
+                in: reopenedWindow,
+                expectedValue: multiSelectionExpectedSubtitle,
+                timeout: 10.0
+            ),
+            "Observed subtitles after selecting multi-picture track: \(navigationSubtitleProbeValues(in: reopenedWindow))"
+        )
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: reopenedApp,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "exclamationmark.triangle",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: reopenedApp,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "fish.fill",
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
     func testSavingSwiftTagDocumentKeepsTracksLoadedAndShowsDocumentTitleAndURL() throws {
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
             .appendingPathComponent("Test Album")
@@ -797,11 +891,13 @@ final class SwiftTagUITests: XCTestCase {
         fixtureFileName: String = "test.flac",
         importedAlbumMode: String? = nil,
         importedTitleOverride: String? = nil,
+        importedPictureProfile: String? = nil,
         openDocumentFixture: Bool = false,
         openDocumentWhileActive: Bool = false,
         menuImportFixturePath: String? = nil,
         menuImportAlbumMode: String? = nil,
         menuImportTitleOverride: String? = nil,
+        menuImportPictureProfile: String? = nil,
         persistentFixtureName: String? = nil,
         reuseImportedFixture: Bool = false,
         openAlbumArtSheet: Bool = false,
@@ -841,6 +937,9 @@ final class SwiftTagUITests: XCTestCase {
             if let importedTitleOverride {
                 app.launchEnvironment["UITEST_FLAC_TITLE_OVERRIDE"] = importedTitleOverride
             }
+            if let importedPictureProfile {
+                app.launchEnvironment["UITEST_FLAC_PICTURE_PROFILE"] = importedPictureProfile
+            }
             if importFixtureReadOnly {
                 app.launchEnvironment["UITEST_FLAC_READ_ONLY"] = "1"
                 app.launchArguments.append("-UITEST_FLAC_READ_ONLY")
@@ -876,6 +975,9 @@ final class SwiftTagUITests: XCTestCase {
             }
             if let menuImportTitleOverride {
                 app.launchEnvironment["UITEST_MENU_FLAC_TITLE_OVERRIDE"] = menuImportTitleOverride
+            }
+            if let menuImportPictureProfile {
+                app.launchEnvironment["UITEST_MENU_FLAC_PICTURE_PROFILE"] = menuImportPictureProfile
             }
         }
         if openAlbumArtSheet {
@@ -1420,6 +1522,19 @@ final class SwiftTagUITests: XCTestCase {
             expectedValue: expectedValue,
             timeout: timeout
         )
+    }
+
+    private func navigationSubtitleProbeValues(in window: XCUIElement) -> [String] {
+        let staticTexts = window.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == %@", UIID.navigationSubtitleProbe))
+
+        return staticTexts.allElementsBoundByIndex
+            .filter(\.exists)
+            .flatMap { element in
+                [element.label, element.value as? String]
+                    .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+            }
     }
 
     private func waitForNavigationDocumentURL(

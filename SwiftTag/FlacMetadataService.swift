@@ -98,6 +98,161 @@ extension FlacWritablePictureRecord {
     }
 }
 
+enum PictureRecordCanonicalizer {
+    static func canonicalize(
+        _ pictures: [FlacWritablePictureRecord],
+        normalizeImageMetadata: Bool = true
+    ) -> [FlacWritablePictureRecord] {
+        let normalizedPictures = normalizeImageMetadata
+            ? pictures.map { $0.withComputedPictureMetadata() }
+            : pictures
+
+        return normalizedPictures.sorted { lhs, rhs in
+            if lhs.type != rhs.type {
+                return lhs.type < rhs.type
+            }
+
+            let lhsHash = PictureDataUtilities.sha256Hex(of: lhs.data)
+            let rhsHash = PictureDataUtilities.sha256Hex(of: rhs.data)
+            if lhsHash != rhsHash {
+                return lhsHash < rhsHash
+            }
+
+            if lhs.mimeType != rhs.mimeType {
+                return lhs.mimeType < rhs.mimeType
+            }
+
+            if lhs.description != rhs.description {
+                return lhs.description < rhs.description
+            }
+
+            if lhs.width != rhs.width {
+                return lhs.width < rhs.width
+            }
+
+            if lhs.height != rhs.height {
+                return lhs.height < rhs.height
+            }
+
+            if lhs.depth != rhs.depth {
+                return lhs.depth < rhs.depth
+            }
+
+            return lhs.colors < rhs.colors
+        }
+    }
+}
+
+enum UITestFlacOverrideWriter {
+    static func applyOverrides(
+        to fileURL: URL,
+        albumMode: String?,
+        titleOverride: String?,
+        pictureProfile: String?
+    ) throws {
+        let normalizedAlbumMode = albumMode?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        let normalizedTitleOverride = titleOverride?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedPictureProfile = pictureProfile?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        let shouldEmptyAlbum = normalizedAlbumMode == "empty"
+        let shouldRemoveAlbum = normalizedAlbumMode == "remove"
+        let shouldOverrideTitle = !(normalizedTitleOverride?.isEmpty ?? true)
+        let shouldOverridePictures = !(normalizedPictureProfile?.isEmpty ?? true)
+        guard shouldEmptyAlbum || shouldRemoveAlbum || shouldOverrideTitle || shouldOverridePictures else {
+            return
+        }
+
+        let metadata = try FlacMetadataService.readTags(for: fileURL)
+        var tags = metadata.tags
+        if shouldRemoveAlbum {
+            tags.removeValue(forKey: "ALBUM")
+        } else if shouldEmptyAlbum {
+            tags["ALBUM"] = ""
+        }
+        if let normalizedTitleOverride, !normalizedTitleOverride.isEmpty {
+            tags["TITLE"] = normalizedTitleOverride
+        }
+
+        let pictures = shouldOverridePictures
+            ? try pictureRecords(for: normalizedPictureProfile ?? "")
+            : []
+
+        _ = try FlacMetadataService.writeMetadata(
+            tags: tags,
+            pictures: pictures,
+            to: fileURL,
+            writeTags: shouldEmptyAlbum || shouldRemoveAlbum || shouldOverrideTitle,
+            writePictures: shouldOverridePictures
+        )
+    }
+
+    private static func pictureRecords(for profile: String) throws -> [FlacWritablePictureRecord] {
+        switch profile {
+        case "single-front-cover":
+            return [
+                try makeFrontCoverPicture(
+                    color: .systemRed,
+                    description: "UI Test Single Front Cover"
+                )
+            ]
+        case "double-front-cover-reversed":
+            let firstPicture = try makeFrontCoverPicture(
+                color: .systemBlue,
+                description: "UI Test Regression Front Cover A"
+            )
+            let secondPicture = try makeFrontCoverPicture(
+                color: .systemGreen,
+                description: "UI Test Regression Front Cover B"
+            )
+            return Array(PictureRecordCanonicalizer.canonicalize([firstPicture, secondPicture]).reversed())
+        default:
+            throw NSError(
+                domain: "SwiftTagUITestOverrides",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Unsupported UI test picture profile '\(profile)'."]
+            )
+        }
+    }
+
+    private static func makeFrontCoverPicture(
+        color: NSColor,
+        description: String
+    ) throws -> FlacWritablePictureRecord {
+        FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: description,
+            data: try pngData(color: color)
+        )
+    }
+
+    private static func pngData(color: NSColor) throws -> Data {
+        let imageSize = NSSize(width: 2, height: 2)
+        let image = NSImage(size: imageSize)
+        image.lockFocus()
+        color.setFill()
+        NSBezierPath(rect: NSRect(origin: .zero, size: imageSize)).fill()
+        image.unlockFocus()
+
+        guard let tiffData = image.tiffRepresentation,
+              let bitmapRepresentation = NSBitmapImageRep(data: tiffData),
+              let pngData = bitmapRepresentation.representation(using: .png, properties: [:]) else {
+            throw NSError(
+                domain: "SwiftTagUITestOverrides",
+                code: 2,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to generate PNG data for UI test picture overrides."]
+            )
+        }
+
+        return pngData
+    }
+}
+
 enum FlacMetadataService {
     @discardableResult
     static func readTags(for fileURL: URL) throws -> FlacMetadataRecord {

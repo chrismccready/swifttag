@@ -2102,7 +2102,8 @@ struct ContentView: View {
         try applyUITestFlacOverridesIfNeeded(
             to: tempURL,
             albumModeKey: "UITEST_FLAC_ALBUM_MODE",
-            titleOverrideKey: "UITEST_FLAC_TITLE_OVERRIDE"
+            titleOverrideKey: "UITEST_FLAC_TITLE_OVERRIDE",
+            pictureProfileKey: "UITEST_FLAC_PICTURE_PROFILE"
         )
         return tempURL
     }
@@ -2133,7 +2134,10 @@ struct ContentView: View {
                 : "UITEST_OPEN_DOCUMENT_FLAC_ALBUM_MODE",
             titleOverrideKey: pathValue == uiTestLaunchValue(for: "UITEST_MENU_FLAC_PATH")
                 ? "UITEST_MENU_FLAC_TITLE_OVERRIDE"
-                : "UITEST_OPEN_DOCUMENT_FLAC_TITLE_OVERRIDE"
+                : "UITEST_OPEN_DOCUMENT_FLAC_TITLE_OVERRIDE",
+            pictureProfileKey: pathValue == uiTestLaunchValue(for: "UITEST_MENU_FLAC_PATH")
+                ? "UITEST_MENU_FLAC_PICTURE_PROFILE"
+                : "UITEST_OPEN_DOCUMENT_FLAC_PICTURE_PROFILE"
         )
         return fileURL
     }
@@ -2141,38 +2145,16 @@ struct ContentView: View {
     private func applyUITestFlacOverridesIfNeeded(
         to fileURL: URL,
         albumModeKey: String,
-        titleOverrideKey: String
+        titleOverrideKey: String,
+        pictureProfileKey: String
     ) throws {
-        let albumMode = uiTestLaunchValue(for: albumModeKey)?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
         let titleOverride = uiTestLaunchValue(for: titleOverrideKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        let shouldEmptyAlbum = albumMode == "empty"
-        let shouldRemoveAlbum = albumMode == "remove"
-        let shouldOverrideTitle = !(titleOverride?.isEmpty ?? true)
-        guard shouldEmptyAlbum || shouldRemoveAlbum || shouldOverrideTitle else {
-            return
-        }
-
-        let metadata = try FlacMetadataService.readTags(for: fileURL)
-        var tags = metadata.tags
-        if shouldRemoveAlbum {
-            tags.removeValue(forKey: "ALBUM")
-        } else if shouldEmptyAlbum {
-            tags["ALBUM"] = ""
-        }
-        if let titleOverride, !titleOverride.isEmpty {
-            tags["TITLE"] = titleOverride
-        }
-
-        _ = try FlacMetadataService.writeMetadata(
-            tags: tags,
-            pictures: [],
+        try UITestFlacOverrideWriter.applyOverrides(
             to: fileURL,
-            writeTags: true,
-            writePictures: false
+            albumMode: uiTestLaunchValue(for: albumModeKey),
+            titleOverride: titleOverride,
+            pictureProfile: uiTestLaunchValue(for: pictureProfileKey)
         )
     }
 
