@@ -76,7 +76,7 @@ final class SwiftTagUITests: XCTestCase {
         XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
         fileMenu.click()
 
-        let readOnlyMenuItem = app.menuItems["Load FLAC files (read-only)..."].firstMatch
+        let readOnlyMenuItem = app.menuItems["Add FLAC files (read-only)..."].firstMatch
         XCTAssertTrue(readOnlyMenuItem.waitForExistence(timeout: 2.0))
     }
 
@@ -465,7 +465,7 @@ final class SwiftTagUITests: XCTestCase {
 
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
         clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Should Not Persist")
-        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save Pictures...")
+        performSavePictures(in: app)
         XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
 
         app.terminate()
@@ -868,6 +868,11 @@ final class SwiftTagUITests: XCTestCase {
         let item = app.menuItems[menuItem].firstMatch
         XCTAssertTrue(item.waitForExistence(timeout: 2.0))
         item.click()
+    }
+
+    private func performSavePictures(in app: XCUIApplication) {
+        app.activate()
+        app.typeKey("s", modifierFlags: [.command, .option])
     }
 
     private func typeEscape(in app: XCUIApplication) {

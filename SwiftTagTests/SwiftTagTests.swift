@@ -4353,7 +4353,7 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
     }
 
     @MainActor
-    func testSwiftTagDocumentOpenReusesUnusedWindowBeforeOpeningNewOne() {
+    func testSwiftTagDocumentOpenOpensNewWindowInsteadOfReusingUnusedWindow() {
         let coordinator = EditorWindowCoordinator.shared
         coordinator.resetForTesting()
 
@@ -4376,12 +4376,30 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
         let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([documentURL])
 
         XCTAssertTrue(didRouteDocuments)
-        XCTAssertEqual(openedSessions, [unusedSession])
+        XCTAssertEqual(openedSessions.count, 1)
+        XCTAssertNotEqual(openedSessions.first?.sessionID, unusedSession.sessionID)
+        XCTAssertNil(deliveredDocumentURL)
+
+        guard let openedSession = openedSessions.first else {
+            XCTFail("Expected a new session to open.")
+            return
+        }
+
+        coordinator.register(
+            sessionValue: openedSession,
+            trackReferences: [],
+            swiftTagDocumentURL: documentURL,
+            swiftTagDocumentID: UUID()
+        )
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: openedSession.sessionID) { url in
+            deliveredDocumentURL = url
+        }
+
         XCTAssertEqual(deliveredDocumentURL?.path, documentURL.path)
     }
 
     @MainActor
-    func testSwiftTagDocumentOpenReusesMultipleUnusedWindowsInOrderBeforeOpeningNewOnes() {
+    func testSwiftTagDocumentOpenOpensNewWindowsWhenUnusedWindowsAlreadyExist() {
         let coordinator = EditorWindowCoordinator.shared
         coordinator.resetForTesting()
 
@@ -4413,13 +4431,31 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
         ])
 
         XCTAssertTrue(didRouteDocuments)
-        XCTAssertEqual(openedSessions, [firstUnusedSession, secondUnusedSession])
+        XCTAssertEqual(openedSessions.count, 2)
+        XCTAssertFalse(openedSessions.contains(firstUnusedSession))
+        XCTAssertFalse(openedSessions.contains(secondUnusedSession))
+        XCTAssertTrue(deliveredDocumentPathsBySessionID.isEmpty)
+
+        for (index, sessionValue) in openedSessions.enumerated() {
+            let expectedURL = URL(fileURLWithPath: index == 0 ? "/tmp/a.swifttag" : "/tmp/b.swifttag")
+            coordinator.register(
+                sessionValue: sessionValue,
+                trackReferences: [],
+                swiftTagDocumentURL: expectedURL,
+                swiftTagDocumentID: UUID()
+            )
+            coordinator.registerSwiftTagDocumentOpenHandler(sessionID: sessionValue.sessionID) { url in
+                deliveredDocumentPathsBySessionID[sessionValue.sessionID] = url.path
+            }
+        }
+
+        XCTAssertEqual(deliveredDocumentPathsBySessionID.count, 2)
         XCTAssertEqual(
-            deliveredDocumentPathsBySessionID[firstUnusedSession.sessionID],
+            deliveredDocumentPathsBySessionID[openedSessions[0].sessionID],
             "/tmp/a.swifttag"
         )
         XCTAssertEqual(
-            deliveredDocumentPathsBySessionID[secondUnusedSession.sessionID],
+            deliveredDocumentPathsBySessionID[openedSessions[1].sessionID],
             "/tmp/b.swifttag"
         )
     }
@@ -4459,7 +4495,7 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
     }
 
     @MainActor
-    func testSwiftTagDocumentOpenIgnoresUnusedSessionWithoutHandlers() {
+    func testSwiftTagDocumentOpenDoesNotDeliverToUnassociatedLiveSession() {
         let coordinator = EditorWindowCoordinator.shared
         coordinator.resetForTesting()
 
@@ -4483,12 +4519,29 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
             deliveredDocumentURL = url
         }
 
-        let documentURL = URL(fileURLWithPath: "/tmp/stale-unused-window.swifttag")
+        let documentURL = URL(fileURLWithPath: "/tmp/new-window.swifttag")
         let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([documentURL])
 
         XCTAssertTrue(didRouteDocuments)
         XCTAssertEqual(openedSessions.count, 1)
-        XCTAssertEqual(openedSessions.first?.sessionID, liveSession.sessionID)
+        XCTAssertNotEqual(openedSessions.first?.sessionID, liveSession.sessionID)
+        XCTAssertNil(deliveredDocumentURL)
+
+        guard let openedSession = openedSessions.first else {
+            XCTFail("Expected a new session to open.")
+            return
+        }
+
+        coordinator.register(
+            sessionValue: openedSession,
+            trackReferences: [],
+            swiftTagDocumentURL: documentURL,
+            swiftTagDocumentID: UUID()
+        )
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: openedSession.sessionID) { url in
+            deliveredDocumentURL = url
+        }
+
         XCTAssertEqual(deliveredDocumentURL?.path, documentURL.path)
     }
 

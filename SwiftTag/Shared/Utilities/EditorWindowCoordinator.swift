@@ -197,20 +197,9 @@ final class EditorWindowCoordinator {
             return false
         }
 
-        var availableUnusedSessionIDs = unusedSessionIDsInRoutingOrder()
-
         for documentURL in documentURLs {
             if let existingSession = existingSession(forSwiftTagDocumentURL: documentURL) {
                 openEditorWindow(for: existingSession)
-                continue
-            }
-
-            if let unusedSessionID = availableUnusedSessionIDs.first,
-               let unusedSession = registrationBySessionID[unusedSessionID]?.sessionValue {
-                availableUnusedSessionIDs.removeFirst()
-                enqueuePendingSwiftTagDocument(documentURL, for: unusedSessionID)
-                openEditorWindow(for: unusedSession)
-                flushPendingSwiftTagDocumentIfNeeded(for: unusedSessionID)
                 continue
             }
 
@@ -399,30 +388,6 @@ final class EditorWindowCoordinator {
         }
 
         return sessionValue
-    }
-
-    private func unusedSessionIDsInRoutingOrder() -> [UUID] {
-        let candidateSessionIDs = registrationBySessionID.values
-            .filter { registration in
-                registration.fingerprint.isEmpty
-                    && registration.normalizedPaths.isEmpty
-                    && registration.swiftTagDocumentPath == nil
-                    && registration.swiftTagDocumentID == nil
-            }
-            .map(\.sessionValue.sessionID)
-            .sorted { $0.uuidString < $1.uuidString }
-
-        return candidateSessionIDs.compactMap { sessionID in
-            guard let sessionValue = registrationBySessionID[sessionID]?.sessionValue else {
-                return nil
-            }
-
-            return liveSessionValue(
-                for: sessionValue,
-                requiresExternalOpenHandler: true,
-                requiresSwiftTagDocumentOpenHandler: true
-            )?.sessionID
-        }
     }
 
     func resetForTesting() {
