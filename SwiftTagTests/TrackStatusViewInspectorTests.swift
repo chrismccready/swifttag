@@ -30,7 +30,6 @@ struct TrackStatusViewInspectorTests {
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
-            statusRefreshID: "status-refresh",
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(true),
             titleBindingForTrack: { _ in .constant("Track A") },
@@ -61,7 +60,6 @@ struct TrackStatusViewInspectorTests {
         )
 
         let inspectedView = try sut.inspect().find(TagEditorTrackFileView.self).actualView()
-        #expect(inspectedView.statusRefreshID == "status-refresh")
         #expect(inspectedView.statusPresentationForTrack(track.id)?.systemImageName == "fish.fill")
     }
 
@@ -71,7 +69,6 @@ struct TrackStatusViewInspectorTests {
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
-            statusRefreshID: "status-refresh",
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(true),
             titleBindingForTrack: { _ in .constant("Track A") },
@@ -198,7 +195,6 @@ struct TrackStatusViewInspectorTests {
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
-            statusRefreshID: "status-refresh",
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(true),
             titleBindingForTrack: { _ in .constant("Locked Track") },
@@ -236,7 +232,6 @@ struct TrackStatusViewInspectorTests {
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
-            statusRefreshID: "status-refresh",
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(true),
             titleBindingForTrack: { _ in .constant("Unlocked Track") },
@@ -582,7 +577,6 @@ struct TrackStatusViewInspectorTests {
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
-            statusRefreshID: "status-refresh",
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(false),
             titleBindingForTrack: { _ in .constant("Track A") },

@@ -2,8 +2,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct TagEditorTrackFileView: View {
+    @FocusState private var focusedTitleTrackID: UUID?
+
     let trackItems: [Track]
-    let statusRefreshID: String
     var selection: Binding<Set<UUID>>
     var showsFingerprintColumn: Binding<Bool>
     let titleBindingForTrack: (UUID) -> Binding<String>?
@@ -81,6 +82,7 @@ struct TagEditorTrackFileView: View {
             TableColumn("Title") { track in
                 if let title = titleBindingForTrack(track.id) {
                     TextField("Title", text: title)
+                        .focused($focusedTitleTrackID, equals: track.id)
                         .tagDiffStyle(
                             tag: .title,
                             hasTrackToTrackDifference: hasTrackToTrackTitleDifference(track.id),
@@ -115,7 +117,6 @@ struct TagEditorTrackFileView: View {
                 .width(min: 90)
             }
         }
-        .id(statusRefreshID)
         .frame(minHeight: 64, idealHeight: .infinity)
         .contextMenu {
             Button("Add FLAC files...") {

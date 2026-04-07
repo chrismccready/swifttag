@@ -149,6 +149,18 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testTrackTitleEditingKeepsFocusAfterFirstTextChange() throws {
+        let app = try launchApp(importFixture: true)
+
+        let originalTitleField = app.textFields.matching(NSPredicate(format: "value == %@", "Test Title")).firstMatch
+        XCTAssertTrue(originalTitleField.waitForExistence(timeout: 10.0))
+
+        clearAndType(in: app, element: originalTitleField, text: "Renamed Track")
+
+        XCTAssertTrue(waitForTextFieldValueAnywhere(in: app, expectedValue: "Renamed Track", timeout: 5.0))
+    }
+
+    @MainActor
     func testMixedAlbumSelectionUpdatesWindowTitleBetweenAlbumAndUntitled() throws {
         let addFixturePath = fixtureFlacPath(fileName: Self.fixtureFileName)
         let app = try launchApp(

@@ -226,7 +226,9 @@ final class EditorWindowCoordinator {
             return true
         }
 
-        if !appIsActive, registrationBySessionID.isEmpty {
+        if !appIsActive,
+           registrationBySessionID.isEmpty,
+           currentOpenEditorWindowAction() == nil {
             pendingBootstrapFiles = normalizedFlacFiles(from: pendingBootstrapFiles + flacFiles)
             return true
         }

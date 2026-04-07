@@ -310,7 +310,16 @@ struct SwiftTagDocumentTests {
         #expect(loadedTrack.securityScopedBookmarkData == Data([0x0A, 0x0B]))
         #expect(loadedTrack.flacFingerprint == "reader-fingerprint")
         #expect(loadedTrack.tags[TagKey.title] == "Reader Track")
-        #expect(loadedTrack.pictures == [sharedPicture])
+        #expect(loadedTrack.pictures.count == 1)
+        let loadedPicture = try #require(loadedTrack.pictures.first)
+        #expect(loadedPicture.type == sharedPicture.type)
+        #expect(loadedPicture.mimeType == sharedPicture.mimeType)
+        #expect(loadedPicture.description == sharedPicture.description)
+        #expect(loadedPicture.data == sharedPicture.data)
+        #expect(loadedPicture.width == sharedPicture.width)
+        #expect(loadedPicture.height == sharedPicture.height)
+        #expect(loadedPicture.depth == sharedPicture.depth)
+        #expect(loadedPicture.colors == sharedPicture.colors)
     }
 
     @Test
