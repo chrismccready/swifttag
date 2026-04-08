@@ -109,14 +109,16 @@ struct TagWriteSettingsView: View {
             GroupBox("Value preferences") {
                 VStack(alignment: .leading, spacing: 6) {
                     Toggle("Zero pad Track Number/Total", isOn: $zeroPadTrackNumber)
+                        .padding(.horizontal, 2)
                         .accessibilityIdentifier("settings.tags.zeroPadTrackNumber")
                         .accessibilityValue(zeroPadTrackNumber ? "On" : "Off")
                     
                     Toggle("Zero pad Disc Number/Total", isOn: $zeroPadDiscNumber)
+                        .padding(.horizontal, 2)
                         .accessibilityIdentifier("settings.tags.zeroPadDiscNumber")
                         .accessibilityValue(zeroPadDiscNumber ? "On" : "Off")
                 }
-                .padding(EdgeInsets(top: 4, leading: 5, bottom: 4, trailing: 4))
+                .padding(.vertical, 4)
             }
             .controlSize(.mini)
             
@@ -124,29 +126,31 @@ struct TagWriteSettingsView: View {
                 GroupBox("Key preferences") {
                     LabeledContent("Write Track Total key") {
                         VStack(alignment: .leading, spacing: 8) {
-                            Toggle("TOTALTRACKS", isOn: writeTotalTracksKey)
+                            Toggle("  TOTALTRACKS", isOn: writeTotalTracksKey)
                                 .accessibilityIdentifier("settings.tags.trackCountKey.totalTracks")
-                            Toggle("TRACKTOTAL", isOn: writeTrackTotalKey)
+                            Toggle("  TRACKTOTAL", isOn: writeTrackTotalKey)
                                 .accessibilityIdentifier("settings.tags.trackCountKey.trackTotal")
                         }
                         .toggleStyle(.switch)
-                        .padding(4)
+                        .padding(.trailing, 8)
                     }
-                    .padding(.top, 2)
-                    .padding(.leading, 4)
+                    .padding(.top, 4)
+                    .padding(.leading, 2)
                     .accessibilityIdentifier("settings.tags.trackCountKeyStrategy")
                     
                     LabeledContent("Write Disc Total key") {
                         VStack(alignment: .leading, spacing: 8) {
-                            Toggle("TOTALDISCS", isOn: writeTotalDiscsKey)
+                            Toggle("  TOTALDISCS", isOn: writeTotalDiscsKey)
                                 .accessibilityIdentifier("settings.tags.discCountKey.totalDiscs")
-                            Toggle("DISCTOTAL", isOn: writeDiscTotalKey)
+                            Toggle("  DISCTOTAL", isOn: writeDiscTotalKey)
                                 .accessibilityIdentifier("settings.tags.discCountKey.discTotal")
                         }
                         .toggleStyle(.switch)
-                        .padding(.trailing, 12)
+                        .padding(.trailing, 16)
                     }
-                    .padding(.leading, 4)
+                    .padding(.bottom, 4)
+                    .padding(.leading, 2)
+                    
                     .accessibilityIdentifier("settings.tags.discCountKeyStrategy")
                 }
                 .controlSize(.mini)
@@ -156,14 +160,16 @@ struct TagWriteSettingsView: View {
                 GroupBox("Track Total/Compilation Management") {
                     VStack(alignment: .leading, spacing: 6) {
                         Toggle("Auto update Track Total", isOn: $autoUpdateTrackTotal)
+                            .padding(.horizontal, 2)
                             .accessibilityIdentifier("settings.tags.autoUpdateTrackTotal")
                             .accessibilityValue(autoUpdateTrackTotal ? "On" : "Off")
 
                         Toggle("Apply Compilation to all Tracks", isOn: $applyCompilationToAllTracks)
+                            .padding(.horizontal, 2)
                             .accessibilityIdentifier("settings.tags.applyCompilationToAllTracks")
                             .accessibilityValue(applyCompilationToAllTracks ? "On" : "Off")
                     }
-                    .padding(EdgeInsets(top: 4, leading: 5, bottom: 4, trailing: 4))
+                    .padding(.vertical, 4)
                 }
                 .controlSize(.mini)
             }
@@ -172,14 +178,16 @@ struct TagWriteSettingsView: View {
                 GroupBox("Picture Management") {
                     VStack(alignment: .leading, spacing: 6) {
                         Toggle("Save Front Cover to all Tracks", isOn: $saveFrontCoverToAllTracks)
+                            .padding(.horizontal, 2)
                             .accessibilityIdentifier("settings.tags.saveFrontCoverToAllTracks")
                             .accessibilityValue(saveFrontCoverToAllTracks ? "On" : "Off")
                         
                         Toggle("Save all Pictures to all Tracks", isOn: $saveAllPicturesToAllTracks)
+                            .padding(.horizontal, 2)
                             .accessibilityIdentifier("settings.tags.saveAllPicturesToAllTracks")
                             .accessibilityValue(saveAllPicturesToAllTracks ? "On" : "Off")
                     }
-                    .padding(EdgeInsets(top: 4, leading: 5, bottom: 4, trailing: 4))
+                    .padding(.vertical, 4)
                 }
                 .controlSize(.mini)
             }

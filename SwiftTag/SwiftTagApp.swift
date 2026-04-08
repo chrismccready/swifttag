@@ -436,9 +436,6 @@ struct SwiftTagApp: App {
     var body: some Scene {
         WindowGroup(id: AppSceneID.editor, for: EditorSessionValue.self, content: { sessionValue in
             ContentView(sessionValue: sessionValue)
-            // .navigationTitle("...") just example for agent reference
-            // .navigationSubtitle("...")
-            // .navigationURL(nil)
         }, defaultValue: {
             EditorSessionValue()
         })

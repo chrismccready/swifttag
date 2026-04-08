@@ -20,6 +20,6 @@ struct SettingsView: View {
         }
         .accessibilityIdentifier("settings.tabView")
         .padding(4)
-        .frame(width: 352, height: 474)
+        .frame(width: 352, height: 476)
     }
 }

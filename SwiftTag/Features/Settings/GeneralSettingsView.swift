@@ -22,19 +22,22 @@ struct GeneralSettingsView: View {
     
     var body: some View {
         Form {
-            LabeledContent("FLAC File Save (⌘S)") {
+            GroupBox("FLAC File Save (⌘S)") {
                 HStack {
                     Text("Write:")
+                        .padding(.leading, 2)
                     Picker("", selection: defaultSavePayload) {
                         ForEach(SavePayloadOption.allCases) { option in
                             Text(option.displayName).tag(option)
                         }
                     }
+                    .padding(.trailing, 2)
                     .accessibilityIdentifier("settings.general.defaultSavePayload")
                 }
+                .padding(.top, 4)
                 HStack {
-                    Spacer()
-                    Text("  To:")
+                    Text("To:")
+                        .padding(.leading, 14)
                     Picker("", selection: defaultSaveScope) {
                         ForEach(SaveScopeOption.allCases) { option in
                             Text(option.displayName).tag(option)
@@ -43,7 +46,9 @@ struct GeneralSettingsView: View {
                     .accessibilityIdentifier("settings.general.defaultSaveScope")
                 }
                 .padding(.top, 1)
+                .padding(.bottom, 4)
             }
+            .labelsHidden()
             .pickerStyle(.segmented)
             .controlSize(.regular)
 
@@ -51,14 +56,16 @@ struct GeneralSettingsView: View {
                 GroupBox("SwiftTag Document Save (⌘S)") {
                     VStack(alignment: .leading, spacing: 6) {
                         Toggle("Save referenced document", isOn: $saveReferencedSwiftTagDocument)
+                            .padding(.horizontal, 2)
                             .accessibilityIdentifier("settings.general.saveReferencedSwiftTagDocument")
                             .accessibilityValue(saveReferencedSwiftTagDocument ? "On" : "Off")
                         
                         Toggle("Ask to save new document", isOn: $askToSaveNewSwiftTagDocument)
+                            .padding(.horizontal, 2)
                             .accessibilityIdentifier("settings.general.askToSaveNewSwiftTagDocument")
                             .accessibilityValue(askToSaveNewSwiftTagDocument ? "On" : "Off")
                     }
-                    .padding(EdgeInsets(top: 4, leading: 5, bottom: 4, trailing: 4))
+                    .padding(.vertical, 4)
                 }
                 .controlSize(.mini)
             }
