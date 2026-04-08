@@ -25,6 +25,8 @@ final class SwiftTagUITests: XCTestCase {
         static let settingsTabView = "settings.tabView"
         static let defaultSavePayload = "settings.general.defaultSavePayload"
         static let defaultSaveScope = "settings.general.defaultSaveScope"
+        static let saveReferencedSwiftTagDocument = "settings.general.saveReferencedSwiftTagDocument"
+        static let askToSaveNewSwiftTagDocument = "settings.general.askToSaveNewSwiftTagDocument"
         static let zeroPadTrackNumber = "settings.tags.zeroPadTrackNumber"
         static let trackCountKeyStrategy = "settings.tags.trackCountKeyStrategy"
         static let zeroPadDiscNumber = "settings.tags.zeroPadDiscNumber"
@@ -32,6 +34,7 @@ final class SwiftTagUITests: XCTestCase {
         static let navigationTitleProbe = "uiTest.navigation.title"
         static let navigationSubtitleProbe = "uiTest.navigation.subtitle"
         static let navigationDocumentURLProbe = "uiTest.navigation.documentURL"
+        static let saveNewSwiftTagDocumentPromptProbe = "uiTest.saveNewSwiftTagDocumentPrompt"
     }
 
     private enum PlaceholderText {
@@ -297,7 +300,7 @@ final class SwiftTagUITests: XCTestCase {
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
         clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
         saveFileInSavePanel(in: app, destinationURL: swiftTagDocumentURL)
-        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
         XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
 
         app.terminate()
@@ -590,14 +593,14 @@ final class SwiftTagUITests: XCTestCase {
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
         clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
         saveFileInSavePanel(in: app, destinationURL: swiftTagDocumentURL)
-        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
         XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
 
         let liveTitleField = app.textFields.matching(NSPredicate(format: "value == %@", "Test Title")).firstMatch
         XCTAssertTrue(liveTitleField.waitForExistence(timeout: 10.0))
         clearAndType(in: app, element: liveTitleField, text: liveChangedTitle)
         clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
-        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
 
         app.terminate()
 
@@ -653,7 +656,7 @@ final class SwiftTagUITests: XCTestCase {
         selectImportedTrackForEditing(in: saveApp, expectedTitle: multiPictureTitle, timeout: 20.0)
         clickMenuItem(in: saveApp, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
         saveFileInSavePanel(in: saveApp, destinationURL: swiftTagDocumentURL)
-        XCTAssertFalse(saveApp.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: saveApp, timeout: 1.0))
         XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
         saveApp.terminate()
 
@@ -671,7 +674,7 @@ final class SwiftTagUITests: XCTestCase {
         XCTAssertTrue(liveAlbumField.waitForExistence(timeout: 10.0))
         clearAndType(in: modifierApp, element: liveAlbumField, text: changedAlbum)
         clickMenuItem(in: modifierApp, menuBarItem: "File", menuItem: "Save")
-        XCTAssertFalse(modifierApp.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: modifierApp, timeout: 1.0))
         modifierApp.terminate()
 
         let reopenedApp = try launchApp(exposeNavigationMetadata: true)
@@ -740,7 +743,7 @@ final class SwiftTagUITests: XCTestCase {
         clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
         saveFileInSavePanel(in: app, destinationURL: swiftTagDocumentURL)
 
-        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
         XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
         XCTAssertTrue(waitForNavigationTitle(in: window, expectedValue: swiftTagDocumentURL.lastPathComponent, timeout: 10.0))
         XCTAssertTrue(
@@ -751,6 +754,213 @@ final class SwiftTagUITests: XCTestCase {
             )
         )
         XCTAssertTrue(waitForTextFieldValueAnywhere(in: app, expectedValue: "Test Title", timeout: 10.0))
+    }
+
+    @MainActor
+    func testFileMenuSaveAutoSavesReferencedSwiftTagDocumentWhenSettingEnabled() throws {
+        let persistentFixtureName = "auto-save-referenced-\(UUID().uuidString)"
+        let updatedAlbum = "Updated Album \(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Auto Saved Referenced \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        try? FileManager.default.removeItem(at: swiftTagDocumentURL)
+
+        let app = try launchApp(
+            importFixture: true,
+            persistentFixtureName: persistentFixtureName,
+            resetSaveSettings: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: false,
+            exposeNavigationMetadata: true
+        )
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
+        saveFileInSavePanel(in: app, destinationURL: swiftTagDocumentURL)
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
+
+    clearAndType(in: app, element: editableAlbumField(in: app), text: updatedAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        XCTAssertTrue(waitForNavigationTitle(in: window, expectedValue: swiftTagDocumentURL.lastPathComponent, timeout: 10.0))
+        XCTAssertTrue(
+            waitForSwiftTagDocumentTagValue(
+                in: swiftTagDocumentURL,
+                key: "ALBUM",
+                expectedValue: updatedAlbum,
+                timeout: 10.0
+            )
+        )
+
+        app.terminate()
+
+        let reopenedApp = try launchApp(resetSaveSettings: false, exposeNavigationMetadata: true)
+        reopenedApp.activate()
+        let reopenedWindow = try openSavedSwiftTagDocumentWindow(
+            in: reopenedApp,
+            documentURL: swiftTagDocumentURL
+        )
+
+        XCTAssertEqual(swiftTagDocumentTagValue(in: swiftTagDocumentURL, key: "ALBUM"), updatedAlbum)
+        XCTAssertTrue(
+            waitForNavigationSubtitle(
+                in: reopenedWindow,
+                expectedValue: "Tracks: 1 (0) • Tag Δ: 0 (0) • Picture Δ: 0 (0)",
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
+    func testFileMenuSavePromptsToCreateSwiftTagDocumentWhenSettingsEnabled() throws {
+        let promptedAlbum = "Prompted Album \(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Prompt Created \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        try? FileManager.default.removeItem(at: swiftTagDocumentURL)
+
+        let app = try launchApp(
+            importFixture: true,
+            resetSaveSettings: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: true,
+            exposeNavigationMetadata: true
+        )
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        clearAndType(in: app, element: editableAlbumField(in: app), text: promptedAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+
+        XCTAssertTrue(waitForSaveNewSwiftTagDocumentPromptState(in: window, expectedValue: "presented", timeout: 5.0))
+        clickSaveNewSwiftTagDocumentPromptButton(in: app, title: "Save")
+        saveFileInSavePanel(in: app, destinationURL: swiftTagDocumentURL)
+
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
+        XCTAssertTrue(waitForNavigationTitle(in: window, expectedValue: swiftTagDocumentURL.lastPathComponent, timeout: 10.0))
+        XCTAssertTrue(
+            waitForNavigationDocumentURL(
+                in: window,
+                expectedValue: swiftTagDocumentURL.standardizedFileURL.path,
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
+    func testFileMenuSaveDoNotSaveSuppressesPromptInSameWindow() throws {
+        let firstAlbum = "Do Not Save First \(UUID().uuidString)"
+        let secondAlbum = "Do Not Save Second \(UUID().uuidString)"
+
+        let app = try launchApp(
+            importFixture: true,
+            resetSaveSettings: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: true,
+            exposeNavigationMetadata: true
+        )
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        clearAndType(in: app, element: editableAlbumField(in: app), text: firstAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+
+        XCTAssertTrue(waitForSaveNewSwiftTagDocumentPromptState(in: window, expectedValue: "presented", timeout: 5.0))
+        clickSaveNewSwiftTagDocumentPromptButton(in: app, title: "Do Not Save")
+        XCTAssertTrue(waitForNavigationDocumentURL(in: window, expectedValue: "absent", timeout: 10.0))
+        XCTAssertTrue(waitForSaveNewSwiftTagDocumentPromptState(in: window, expectedValue: "hidden", timeout: 5.0))
+
+        clearAndType(in: app, element: editableAlbumField(in: app), text: secondAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+
+        XCTAssertTrue(waitForSaveNewSwiftTagDocumentPromptState(in: window, expectedValue: "hidden", timeout: 2.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        XCTAssertTrue(waitForNavigationDocumentURL(in: window, expectedValue: "absent", timeout: 10.0))
+    }
+
+    @MainActor
+    func testFileMenuSavePromptsAgainAfterCancelingNewSwiftTagDocumentSavePanel() throws {
+        let firstAlbum = "Canceled Prompt First \(UUID().uuidString)"
+        let secondAlbum = "Canceled Prompt Second \(UUID().uuidString)"
+
+        let app = try launchApp(
+            importFixture: true,
+            resetSaveSettings: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: true,
+            exposeNavigationMetadata: true
+        )
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        clearAndType(in: app, element: editableAlbumField(in: app), text: firstAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+
+        XCTAssertTrue(waitForSaveNewSwiftTagDocumentPromptState(in: window, expectedValue: "presented", timeout: 5.0))
+        clickSaveNewSwiftTagDocumentPromptButton(in: app, title: "Save")
+        XCTAssertTrue(waitForSavePanel(in: app, timeout: 5.0))
+        cancelSavePanel(in: app)
+        XCTAssertTrue(waitForNavigationDocumentURL(in: window, expectedValue: "absent", timeout: 10.0))
+        XCTAssertTrue(waitForSaveNewSwiftTagDocumentPromptState(in: window, expectedValue: "hidden", timeout: 5.0))
+
+        clearAndType(in: app, element: editableAlbumField(in: app), text: secondAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+
+        XCTAssertTrue(waitForSaveNewSwiftTagDocumentPromptState(in: window, expectedValue: "presented", timeout: 5.0))
+    }
+
+    @MainActor
+    func testFileMenuSaveShowsSwiftTagSaveErrorWhileKeepingFlacSaveResult() throws {
+        let persistentFixtureName = "follow-on-save-error-\(UUID().uuidString)"
+        let updatedAlbum = "Follow On Error Album \(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Follow On Save Error \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        try? FileManager.default.removeItem(at: swiftTagDocumentURL)
+
+        let app = try launchApp(
+            importFixture: true,
+            persistentFixtureName: persistentFixtureName,
+            resetSaveSettings: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: true,
+            failSwiftTagDocumentSave: true,
+            exposeNavigationMetadata: true,
+        )
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        clearAndType(in: app, element: editableAlbumField(in: app), text: updatedAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+
+        XCTAssertTrue(waitForSaveNewSwiftTagDocumentPromptState(in: window, expectedValue: "presented", timeout: 5.0))
+        clickSaveNewSwiftTagDocumentPromptButton(in: app, title: "Save")
+        saveFileInSavePanel(in: app, destinationURL: swiftTagDocumentURL)
+
+            let saveErrorDialog = try XCTUnwrap(waitForSaveErrorPresentation(in: app, timeout: 10.0))
+            let okButton = saveErrorDialog.buttons["OK"].firstMatch
+            XCTAssertTrue(okButton.waitForExistence(timeout: 2.0))
+            okButton.click()
+        app.terminate()
+
+        let relaunchedApp = try launchApp(
+            importFixture: true,
+            persistentFixtureName: persistentFixtureName,
+            reuseImportedFixture: true,
+            resetSaveSettings: false
+        )
+        selectImportedTrackForEditing(in: relaunchedApp, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: relaunchedApp,
+                identifier: UIID.albumTextField,
+                expectedValue: updatedAlbum,
+                timeout: 10.0
+            )
+        )
     }
 
     @MainActor
@@ -829,7 +1039,7 @@ final class SwiftTagUITests: XCTestCase {
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
         clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Should Not Persist")
         performSavePictures(in: app)
-        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
 
         app.terminate()
 
@@ -865,7 +1075,7 @@ final class SwiftTagUITests: XCTestCase {
 
         clearAndType(in: app, element: app.textFields[UIID.albumTextField], text: "Default Save Should Not Persist")
         clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
-        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
 
         app.terminate()
 
@@ -908,6 +1118,9 @@ final class SwiftTagUITests: XCTestCase {
         saveSwiftTagDocumentPath: String? = nil,
         openSwiftTagDocumentPath: String? = nil,
         resetSaveSettings: Bool = true,
+        saveReferencedSwiftTagDocument: Bool? = nil,
+        askToSaveNewSwiftTagDocument: Bool? = nil,
+        failSwiftTagDocumentSave: Bool = false,
         openSaveNotificationRecordID: String? = nil,
         exposeNavigationMetadata: Bool = false,
         enableFileActions: Bool = false,
@@ -921,6 +1134,16 @@ final class SwiftTagUITests: XCTestCase {
         if resetSaveSettings {
             app.launchEnvironment["UITEST_RESET_SAVE_SETTINGS"] = "1"
             app.launchArguments.append("-UITEST_RESET_SAVE_SETTINGS")
+        }
+        if let saveReferencedSwiftTagDocument {
+            app.launchEnvironment["UITEST_SAVE_REFERENCED_SWIFTTAG_DOCUMENT"] = saveReferencedSwiftTagDocument ? "1" : "0"
+        }
+        if let askToSaveNewSwiftTagDocument {
+            app.launchEnvironment["UITEST_ASK_TO_SAVE_NEW_SWIFTTAG_DOCUMENT"] = askToSaveNewSwiftTagDocument ? "1" : "0"
+        }
+        if failSwiftTagDocumentSave {
+            app.launchEnvironment["UITEST_FAIL_SWIFTTAG_SAVE"] = "1"
+            app.launchArguments.append("-UITEST_FAIL_SWIFTTAG_SAVE")
         }
         if importFixture {
             let fixturePath = fixtureFlacPath(fileName: fixtureFileName)
@@ -1133,7 +1356,7 @@ final class SwiftTagUITests: XCTestCase {
 
         clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
         saveFileInSavePanel(in: app, destinationURL: swiftTagDocumentURL)
-        XCTAssertFalse(app.alerts["Save Error"].waitForExistence(timeout: 1.0))
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
         XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
 
         let flacURL = try referencedFlacURL(in: swiftTagDocumentURL)
@@ -1249,6 +1472,19 @@ final class SwiftTagUITests: XCTestCase {
     private func openSettings(in app: XCUIApplication) {
         app.typeKey(",", modifierFlags: .command)
         XCTAssertTrue(settingsControl(in: app, identifier: UIID.settingsTabView).waitForExistence(timeout: 2.0))
+    }
+
+    private func enableSwiftTagDocumentFollowOnSaveSettings(
+        in app: XCUIApplication,
+        askToSaveNewDocument: Bool
+    ) {
+        openSettings(in: app)
+        clickSettingsTab(in: app, named: "General")
+        XCTAssertTrue(settingsControl(in: app, identifier: UIID.saveReferencedSwiftTagDocument).waitForExistence(timeout: 2.0))
+        setToggle(in: app, identifier: UIID.saveReferencedSwiftTagDocument, isOn: true)
+        XCTAssertTrue(settingsControl(in: app, identifier: UIID.askToSaveNewSwiftTagDocument).waitForExistence(timeout: 2.0))
+        setToggle(in: app, identifier: UIID.askToSaveNewSwiftTagDocument, isOn: askToSaveNewDocument)
+        typeEscape(in: app)
     }
 
     private func clickSettingsTab(in app: XCUIApplication, named tabName: String) {
@@ -1548,6 +1784,80 @@ final class SwiftTagUITests: XCTestCase {
             expectedValue: expectedValue,
             timeout: timeout
         )
+    }
+
+    private func waitForSaveNewSwiftTagDocumentPromptState(
+        in window: XCUIElement,
+        expectedValue: String,
+        timeout: TimeInterval = 5.0
+    ) -> Bool {
+        waitForStaticTextLabel(
+            in: window,
+            identifier: UIID.saveNewSwiftTagDocumentPromptProbe,
+            expectedValue: expectedValue,
+            timeout: timeout
+        )
+    }
+
+    private func clickSaveNewSwiftTagDocumentPromptButton(in app: XCUIApplication, title: String) {
+        let dialogButton = app.dialogs.buttons[title].firstMatch
+        if dialogButton.waitForExistence(timeout: 1.0) {
+            if dialogButton.isHittable {
+                dialogButton.click()
+            } else if title == "Save" {
+                app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+            } else {
+                XCTFail("Prompt button '\(title)' exists but is not hittable.")
+            }
+            return
+        }
+
+        let sheetButton = app.sheets.buttons[title].firstMatch
+        if sheetButton.waitForExistence(timeout: 1.0) {
+            if sheetButton.isHittable {
+                sheetButton.click()
+            } else if title == "Save" {
+                app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+            } else {
+                XCTFail("Prompt button '\(title)' exists but is not hittable.")
+            }
+            return
+        }
+
+        if title == "Save" {
+            app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+            return
+        }
+
+        XCTFail("Prompt button '\(title)' was not found in dialog or sheet containers.")
+    }
+
+    private func waitForSaveErrorPresentation(
+        in app: XCUIApplication,
+        timeout: TimeInterval = 5.0
+    ) -> XCUIElement? {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            let dialog = app.dialogs.containing(.staticText, identifier: "Save Error").firstMatch
+            if dialog.exists {
+                return dialog
+            }
+
+            let sheet = app.sheets.containing(.staticText, identifier: "Save Error").firstMatch
+            if sheet.exists {
+                return sheet
+            }
+
+            let alert = app.alerts["Save Error"].firstMatch
+            if alert.exists {
+                return alert
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return nil
     }
 
     private func waitForWindowCount(
@@ -1891,6 +2201,47 @@ final class SwiftTagUITests: XCTestCase {
         }
 
         return app.dialogs.firstMatch
+    }
+
+    private func cancelSavePanel(in app: XCUIApplication) {
+        let savePanel = currentSavePanel(in: app)
+        XCTAssertTrue(savePanel.waitForExistence(timeout: 5.0))
+
+        let cancelButton = savePanel.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancelButton.waitForExistence(timeout: 5.0))
+        cancelButton.click()
+    }
+
+    private func swiftTagDocumentTagValue(in documentURL: URL, key: String) -> String? {
+        let infoPlistURL = documentURL.appendingPathComponent("Info.plist")
+        guard let plistData = try? Data(contentsOf: infoPlistURL),
+              let plist = try? PropertyListSerialization.propertyList(from: plistData, format: nil) as? [String: Any],
+              let tracks = plist["Tracks"] as? [[String: Any]],
+              let firstTrack = tracks.first,
+              let tags = firstTrack["Tags"] as? [String: String] else {
+            return nil
+        }
+
+        return tags[key]
+    }
+
+    private func waitForSwiftTagDocumentTagValue(
+        in documentURL: URL,
+        key: String,
+        expectedValue: String,
+        timeout: TimeInterval = 10.0
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            if swiftTagDocumentTagValue(in: documentURL, key: key) == expectedValue {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return swiftTagDocumentTagValue(in: documentURL, key: key) == expectedValue
     }
 
     private func replaceText(in app: XCUIApplication, element: XCUIElement, text: String) {

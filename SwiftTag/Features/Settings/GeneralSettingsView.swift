@@ -3,6 +3,8 @@ import SwiftUI
 struct GeneralSettingsView: View {
     @AppStorage(SaveSettingsKey.defaultSavePayload) private var defaultSavePayloadRawValue: String = SaveSettingsDefaults.defaultSavePayload.rawValue
     @AppStorage(SaveSettingsKey.defaultSaveScope) private var defaultSaveScopeRawValue: String = SaveSettingsDefaults.defaultSaveScope.rawValue
+    @AppStorage(SaveSettingsKey.saveReferencedSwiftTagDocument) private var saveReferencedSwiftTagDocument: Bool = SaveSettingsDefaults.saveReferencedSwiftTagDocument
+    @AppStorage(SaveSettingsKey.askToSaveNewSwiftTagDocument) private var askToSaveNewSwiftTagDocument: Bool = SaveSettingsDefaults.askToSaveNewSwiftTagDocument
     
     private var defaultSavePayload: Binding<SavePayloadOption> {
         Binding(
@@ -20,7 +22,7 @@ struct GeneralSettingsView: View {
     
     var body: some View {
         Form {
-            LabeledContent("On Save (⌘S)") {
+            LabeledContent("FLAC File Save (⌘S)") {
                 HStack {
                     Text("Write:")
                     Picker("", selection: defaultSavePayload) {
@@ -44,6 +46,22 @@ struct GeneralSettingsView: View {
             }
             .pickerStyle(.segmented)
             .controlSize(.regular)
+
+            Section {
+                GroupBox("SwiftTag Document Save (⌘S)") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Toggle("Save referenced document", isOn: $saveReferencedSwiftTagDocument)
+                            .accessibilityIdentifier("settings.general.saveReferencedSwiftTagDocument")
+                            .accessibilityValue(saveReferencedSwiftTagDocument ? "On" : "Off")
+                        
+                        Toggle("Ask to save new document", isOn: $askToSaveNewSwiftTagDocument)
+                            .accessibilityIdentifier("settings.general.askToSaveNewSwiftTagDocument")
+                            .accessibilityValue(askToSaveNewSwiftTagDocument ? "On" : "Off")
+                    }
+                    .padding(EdgeInsets(top: 4, leading: 5, bottom: 4, trailing: 4))
+                }
+                .controlSize(.mini)
+            }
         }
         .formStyle(.grouped)
     }

@@ -17,6 +17,23 @@ struct ContentView: View {
         case removeSelectedTracks
     }
 
+    private enum SwiftTagDocumentSaveDestinationMode {
+        case rememberedOrPrompt
+        case rememberedOnly
+        case promptForNewDocument
+    }
+
+    private enum SwiftTagDocumentSaveFlowError: LocalizedError {
+        case uiTestForcedFailure
+
+        var errorDescription: String? {
+            switch self {
+            case .uiTestForcedFailure:
+                return "Simulated SwiftTag document save failure."
+            }
+        }
+    }
+
     private struct TrackMonitoringReferenceKey: Equatable {
         let id: UUID
         let sourceFilePath: String?
@@ -61,8 +78,10 @@ struct ContentView: View {
     @State private var pendingImporterAddsFiles: Bool = false
     @State private var isImportErrorPresented: Bool = false
     @State private var isSaveErrorPresented: Bool = false
+    @State private var isSaveNewSwiftTagDocumentPromptPresented: Bool = false
     @State private var isDestructiveAlertPresented: Bool = false
     @State private var isAlbumArtSheetPresented: Bool = false
+    @State private var askToSaveNewSwiftTagDocumentOk: Bool = true
     @State private var importErrorMessage: String = ""
     @State private var saveErrorMessage: String = ""
     @State private var destructiveAlertContext: DestructiveAlertContext?
@@ -81,6 +100,8 @@ struct ContentView: View {
     @Environment(\.openWindow) private var openWindow
     @AppStorage(SaveSettingsKey.defaultSavePayload) private var defaultSavePayloadRawValue: String = SaveSettingsDefaults.defaultSavePayload.rawValue
     @AppStorage(SaveSettingsKey.defaultSaveScope) private var defaultSaveScopeRawValue: String = SaveSettingsDefaults.defaultSaveScope.rawValue
+    @AppStorage(SaveSettingsKey.saveReferencedSwiftTagDocument) private var saveReferencedSwiftTagDocument: Bool = SaveSettingsDefaults.saveReferencedSwiftTagDocument
+    @AppStorage(SaveSettingsKey.askToSaveNewSwiftTagDocument) private var askToSaveNewSwiftTagDocument: Bool = SaveSettingsDefaults.askToSaveNewSwiftTagDocument
     @AppStorage(SaveSettingsKey.zeroPadTrackNumber) private var zeroPadTrackNumber: Bool = SaveSettingsDefaults.zeroPadTrackNumber
     @AppStorage(SaveSettingsKey.trackCountKeyStrategy) private var trackCountKeyStrategyRawValue: String = SaveSettingsDefaults.trackCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.zeroPadDiscNumber) private var zeroPadDiscNumber: Bool = SaveSettingsDefaults.zeroPadDiscNumber
@@ -691,6 +712,8 @@ struct ContentView: View {
                 .accessibilityIdentifier("uiTest.navigation.subtitle")
             Text(metadata.documentURL?.path ?? "absent")
                 .accessibilityIdentifier("uiTest.navigation.documentURL")
+            Text(isSaveNewSwiftTagDocumentPromptPresented ? "presented" : "hidden")
+                .accessibilityIdentifier("uiTest.saveNewSwiftTagDocumentPrompt")
         }
         .font(.caption2)
         .padding(2)
@@ -964,6 +987,17 @@ struct ContentView: View {
             } message: {
                 Text(saveErrorMessage)
             }
+            .alert("Save New SwiftTag Document?", isPresented: $isSaveNewSwiftTagDocumentPromptPresented) {
+                Button("Cancel", role: .cancel) {}
+                Button("Do Not Save") {
+                    askToSaveNewSwiftTagDocumentOk = false
+                }
+                Button("Save") {
+                    handleSaveNewSwiftTagDocumentPromptSaveAction()
+                }
+            } message: {
+                Text("Save a new SwiftTag document for this window? Future Save commands will update it automatically.")
+            }
             .alert(
                 destructiveAlertContext?.title ?? "Unsaved Changes",
                 isPresented: $isDestructiveAlertPresented
@@ -1141,7 +1175,9 @@ struct ContentView: View {
                 trackCountKeyStrategy: TrackCountKeyStrategy(rawValue: trackCountKeyStrategyRawValue) ?? SaveSettingsDefaults.trackCountKeyStrategy,
                 zeroPadDiscNumber: zeroPadDiscNumber,
                 discCountKeyStrategy: DiscCountKeyStrategy(rawValue: discCountKeyStrategyRawValue) ?? SaveSettingsDefaults.discCountKeyStrategy
-            )
+            ),
+            saveReferencedSwiftTagDocument: saveReferencedSwiftTagDocument,
+            askToSaveNewSwiftTagDocument: askToSaveNewSwiftTagDocument
         )
     }
 
@@ -1177,6 +1213,7 @@ struct ContentView: View {
 
         let settings = saveSettingsSnapshot
         let effectivePayload = payload ?? settings.payload
+        let isDefaultSaveCommand = payload == nil
         guard canSave(payload: effectivePayload) else {
             return
         }
@@ -1207,10 +1244,18 @@ struct ContentView: View {
                     await SaveNotificationCoordinator.shared.schedulePreparedSuccessNotification(notificationPayload)
                 }
                 await dismissSaveStatusAfterSuccessIfNeeded()
+                handleSwiftTagDocumentFollowOnSave(
+                    SwiftTagDocumentFollowOnSaveDecision.resolve(
+                        isDefaultSaveCommand: isDefaultSaveCommand,
+                        saveReferencedSwiftTagDocument: settings.saveReferencedSwiftTagDocument,
+                        askToSaveNewSwiftTagDocument: settings.askToSaveNewSwiftTagDocument,
+                        askToSaveNewSwiftTagDocumentOk: askToSaveNewSwiftTagDocumentOk,
+                        hasReferencedSwiftTagDocument: viewModel.swiftTagDocumentSaveState().destinationURL != nil
+                    )
+                )
             } catch {
                 await dismissSaveStatusImmediately()
-                saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                isSaveErrorPresented = true
+                presentSaveError(error)
             }
 
             isSaveOperationRunning = false
@@ -1223,37 +1268,108 @@ struct ContentView: View {
         }
         syncTrackPictureRecordsFromAlbumArt()
 
-        let currentState = viewModel.swiftTagDocumentSaveState()
-        let destinationURL: URL
-        if let rememberedURL = currentState.destinationURL {
-            destinationURL = rememberedURL
-        } else {
-            guard let selectedURL = promptForSwiftTagDocumentDestination() else {
-                return
-            }
-            destinationURL = selectedURL
-        }
-
         isSaveOperationRunning = true
         Task { @MainActor in
-            do {
-                let exportTracks = try viewModel.validatedSwiftTagDocumentExportTracks()
-                let postSaveMutationSourceURL = exportTracks.first?.sourceFileURL
-                let result = try SwiftTagDocumentPackageWriter.save(
-                    tracks: exportTracks,
-                    state: currentState,
-                    to: destinationURL
-                )
-                viewModel.rememberSwiftTagDocumentSave(result)
-                registerEditorSession()
-                performUITestPostSaveReferenceMutationIfNeeded(sourceURL: postSaveMutationSourceURL)
-            } catch {
-                saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                isSaveErrorPresented = true
+            defer {
+                isSaveOperationRunning = false
             }
 
-            isSaveOperationRunning = false
+            do {
+                _ = try performSwiftTagDocumentSave(using: .rememberedOrPrompt)
+            } catch {
+                presentSaveError(error)
+            }
         }
+    }
+
+    private func handleSwiftTagDocumentFollowOnSave(_ action: SwiftTagDocumentFollowOnSaveAction) {
+        switch action {
+        case .none:
+            return
+        case .saveReferencedDocument:
+            do {
+                _ = try performSwiftTagDocumentSave(using: .rememberedOnly)
+            } catch {
+                presentFollowOnSwiftTagDocumentSaveError(error)
+            }
+        case .promptForNewDocument:
+            isSaveNewSwiftTagDocumentPromptPresented = true
+        }
+    }
+
+    private func handleSaveNewSwiftTagDocumentPromptSaveAction() {
+        guard !isSaveOperationRunning, canSaveSwiftTagDocument else {
+            return
+        }
+
+        syncTrackPictureRecordsFromAlbumArt()
+        isSaveOperationRunning = true
+        Task { @MainActor in
+            defer {
+                isSaveOperationRunning = false
+            }
+
+            do {
+                _ = try performSwiftTagDocumentSave(using: .promptForNewDocument)
+            } catch {
+                presentFollowOnSwiftTagDocumentSaveError(error)
+            }
+        }
+    }
+
+    private func performSwiftTagDocumentSave(using destinationMode: SwiftTagDocumentSaveDestinationMode) throws -> Bool {
+        let currentState = viewModel.swiftTagDocumentSaveState()
+        guard let destinationURL = resolveSwiftTagDocumentDestination(
+            using: destinationMode,
+            currentState: currentState
+        ) else {
+            return false
+        }
+
+        let exportTracks = try viewModel.validatedSwiftTagDocumentExportTracks()
+        let postSaveMutationSourceURL = exportTracks.first?.sourceFileURL
+
+        if uiTestLaunchFlagEnabled("UITEST_FAIL_SWIFTTAG_SAVE") {
+            throw SwiftTagDocumentSaveFlowError.uiTestForcedFailure
+        }
+
+        let result = try SwiftTagDocumentPackageWriter.save(
+            tracks: exportTracks,
+            state: currentState,
+            to: destinationURL
+        )
+        viewModel.rememberSwiftTagDocumentSave(result)
+        registerEditorSession()
+        performUITestPostSaveReferenceMutationIfNeeded(sourceURL: postSaveMutationSourceURL)
+        return true
+    }
+
+    private func resolveSwiftTagDocumentDestination(
+        using destinationMode: SwiftTagDocumentSaveDestinationMode,
+        currentState: SwiftTagDocumentSaveState
+    ) -> URL? {
+        switch destinationMode {
+        case .rememberedOrPrompt:
+            if let rememberedURL = currentState.destinationURL {
+                return rememberedURL
+            }
+            return promptForSwiftTagDocumentDestination()
+        case .rememberedOnly:
+            return currentState.destinationURL
+        case .promptForNewDocument:
+            return promptForSwiftTagDocumentDestination()
+        }
+    }
+
+    private func presentSaveError(_ error: Error) {
+        saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        isSaveErrorPresented = true
+    }
+
+    private func presentFollowOnSwiftTagDocumentSaveError(_ error: Error) {
+        let description = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        saveErrorMessage = "FLAC changes were saved, but the SwiftTag document could not be saved.\n\n\(description)"
+        isSaveErrorPresented = true
     }
 
     private func promptForSwiftTagDocumentDestination() -> URL? {

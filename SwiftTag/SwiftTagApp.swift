@@ -429,6 +429,7 @@ struct SwiftTagApp: App {
 
     init() {
         resetUITestSaveSettingsIfNeeded()
+        applyUITestSaveSettingsOverridesIfNeeded()
         seedUITestNotificationRouteIfNeeded()
     }
 
@@ -470,6 +471,18 @@ struct SwiftTagApp: App {
 
         UserDefaults.standard.removePersistentDomain(forName: bundleIdentifier)
         UserDefaults.standard.synchronize()
+    }
+
+    private func applyUITestSaveSettingsOverridesIfNeeded() {
+        let environment = ProcessInfo.processInfo.environment
+
+        if let rawValue = environment["UITEST_SAVE_REFERENCED_SWIFTTAG_DOCUMENT"] {
+            UserDefaults.standard.set(rawValue == "1", forKey: SaveSettingsKey.saveReferencedSwiftTagDocument)
+        }
+
+        if let rawValue = environment["UITEST_ASK_TO_SAVE_NEW_SWIFTTAG_DOCUMENT"] {
+            UserDefaults.standard.set(rawValue == "1", forKey: SaveSettingsKey.askToSaveNewSwiftTagDocument)
+        }
     }
 
     private func seedUITestNotificationRouteIfNeeded() {

@@ -27,3 +27,7 @@ build/
 ## Codex
 # Ignore Codex generated files
 .codex/
+
+## VSCode
+# Ignore VSCode workspace settings
+.vscode/

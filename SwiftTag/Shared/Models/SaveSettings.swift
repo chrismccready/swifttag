@@ -100,6 +100,8 @@ enum DiscCountKeyStrategy: String, CaseIterable, Identifiable, Codable {
 enum SaveSettingsKey {
     static let defaultSavePayload = "settings.defaultSavePayload"
     static let defaultSaveScope = "settings.defaultSaveScope"
+    static let saveReferencedSwiftTagDocument = "settings.saveReferencedSwiftTagDocument"
+    static let askToSaveNewSwiftTagDocument = "settings.askToSaveNewSwiftTagDocument"
     static let zeroPadTrackNumber = "settings.zeroPadTrackNumber"
     static let trackCountKeyStrategy = "settings.trackCountKeyStrategy"
     static let zeroPadDiscNumber = "settings.zeroPadDiscNumber"
@@ -113,6 +115,8 @@ enum SaveSettingsKey {
 enum SaveSettingsDefaults {
     static let defaultSavePayload = SavePayloadOption.writeTagsAndPictures
     static let defaultSaveScope = SaveScopeOption.allTracks
+    static let saveReferencedSwiftTagDocument = false
+    static let askToSaveNewSwiftTagDocument = false
     static let zeroPadTrackNumber = true
     static let trackCountKeyStrategy = TrackCountKeyStrategy.both
     static let zeroPadDiscNumber = true
@@ -121,6 +125,36 @@ enum SaveSettingsDefaults {
     static let applyCompilationToAllTracks = false
     static let saveFrontCoverToAllTracks = false
     static let saveAllPicturesToAllTracks = false
+}
+
+enum SwiftTagDocumentFollowOnSaveAction: Equatable {
+    case none
+    case saveReferencedDocument
+    case promptForNewDocument
+}
+
+enum SwiftTagDocumentFollowOnSaveDecision {
+    static func resolve(
+        isDefaultSaveCommand: Bool,
+        saveReferencedSwiftTagDocument: Bool,
+        askToSaveNewSwiftTagDocument: Bool,
+        askToSaveNewSwiftTagDocumentOk: Bool,
+        hasReferencedSwiftTagDocument: Bool
+    ) -> SwiftTagDocumentFollowOnSaveAction {
+        guard isDefaultSaveCommand, saveReferencedSwiftTagDocument else {
+            return .none
+        }
+
+        if hasReferencedSwiftTagDocument {
+            return .saveReferencedDocument
+        }
+
+        guard askToSaveNewSwiftTagDocument, askToSaveNewSwiftTagDocumentOk else {
+            return .none
+        }
+
+        return .promptForNewDocument
+    }
 }
 
 struct TagWriteOptions {
@@ -134,4 +168,6 @@ struct SaveSettingsSnapshot {
     let payload: SavePayloadOption
     let scope: SaveScopeOption
     let tagWriteOptions: TagWriteOptions
+    let saveReferencedSwiftTagDocument: Bool
+    let askToSaveNewSwiftTagDocument: Bool
 }

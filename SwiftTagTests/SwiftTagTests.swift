@@ -3028,6 +3028,84 @@ struct SwiftTagTests {
     }
 
     @Test
+    func swiftTagDocumentFollowOnSaveDecisionReturnsNoActionWhenAutoSaveIsOff() {
+        #expect(
+            SwiftTagDocumentFollowOnSaveDecision.resolve(
+                isDefaultSaveCommand: true,
+                saveReferencedSwiftTagDocument: false,
+                askToSaveNewSwiftTagDocument: true,
+                askToSaveNewSwiftTagDocumentOk: true,
+                hasReferencedSwiftTagDocument: true
+            ) == .none
+        )
+    }
+
+    @Test
+    func swiftTagDocumentFollowOnSaveDecisionReturnsSaveExistingWhenReferenceExists() {
+        #expect(
+            SwiftTagDocumentFollowOnSaveDecision.resolve(
+                isDefaultSaveCommand: true,
+                saveReferencedSwiftTagDocument: true,
+                askToSaveNewSwiftTagDocument: false,
+                askToSaveNewSwiftTagDocumentOk: true,
+                hasReferencedSwiftTagDocument: true
+            ) == .saveReferencedDocument
+        )
+    }
+
+    @Test
+    func swiftTagDocumentFollowOnSaveDecisionReturnsNoActionWhenAskSettingIsOff() {
+        #expect(
+            SwiftTagDocumentFollowOnSaveDecision.resolve(
+                isDefaultSaveCommand: true,
+                saveReferencedSwiftTagDocument: true,
+                askToSaveNewSwiftTagDocument: false,
+                askToSaveNewSwiftTagDocumentOk: true,
+                hasReferencedSwiftTagDocument: false
+            ) == .none
+        )
+    }
+
+    @Test
+    func swiftTagDocumentFollowOnSaveDecisionReturnsPromptWhenAskSettingAndGateAreOn() {
+        #expect(
+            SwiftTagDocumentFollowOnSaveDecision.resolve(
+                isDefaultSaveCommand: true,
+                saveReferencedSwiftTagDocument: true,
+                askToSaveNewSwiftTagDocument: true,
+                askToSaveNewSwiftTagDocumentOk: true,
+                hasReferencedSwiftTagDocument: false
+            ) == .promptForNewDocument
+        )
+    }
+
+    @Test
+    func swiftTagDocumentFollowOnSaveDecisionReturnsNoActionWhenPromptGateIsOff() {
+        #expect(
+            SwiftTagDocumentFollowOnSaveDecision.resolve(
+                isDefaultSaveCommand: true,
+                saveReferencedSwiftTagDocument: true,
+                askToSaveNewSwiftTagDocument: true,
+                askToSaveNewSwiftTagDocumentOk: false,
+                hasReferencedSwiftTagDocument: false
+            ) == .none
+        )
+    }
+
+    @Test
+    func swiftTagDocumentFollowOnSaveDecisionReturnsNoActionForAlternateSaveCommands() {
+        #expect(
+            SwiftTagDocumentFollowOnSaveDecision.resolve(
+                isDefaultSaveCommand: false,
+                saveReferencedSwiftTagDocument: true,
+                askToSaveNewSwiftTagDocument: true,
+                askToSaveNewSwiftTagDocumentOk: true,
+                hasReferencedSwiftTagDocument: true
+            ) == .none
+        )
+    }
+
+    @Test
     func flacWriteMapperAppliesZeroPaddingToTotalCountKeys() {
         let track = Track(tags: [
             TagKey.trackNumber: "2",
