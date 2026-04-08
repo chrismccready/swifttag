@@ -1780,14 +1780,18 @@ final class TagEditorViewModel {
         snapshot: TrackFileSnapshot
     ) -> Bool {
         if !snapshot.pictureRecords.isEmpty || !currentPictures.isEmpty {
-            return canonicalPictureRecords(currentPictures) != canonicalPictureRecords(snapshot.pictureRecords)
+            return canonicalPictureRecords(currentPictures, normalizeImageMetadata: false) !=
+                canonicalPictureRecords(snapshot.pictureRecords, normalizeImageMetadata: false)
         }
 
         return writablePicturesByType(from: currentPictures) != snapshot.picturesByType
     }
 
-    private func canonicalPictureRecords(_ pictures: [FlacWritablePictureRecord]) -> [FlacWritablePictureRecord] {
-        PictureRecordCanonicalizer.canonicalize(pictures)
+    private func canonicalPictureRecords(
+        _ pictures: [FlacWritablePictureRecord],
+        normalizeImageMetadata: Bool = true
+    ) -> [FlacWritablePictureRecord] {
+        PictureRecordCanonicalizer.canonicalize(pictures, normalizeImageMetadata: normalizeImageMetadata)
     }
 
     private func differingFileValues(
