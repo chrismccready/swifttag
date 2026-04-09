@@ -816,6 +816,80 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testControlSSavesReferencedSwiftTagDocumentWithoutSavingFlacFiles() throws {
+        let persistentFixtureName = "control-s-document-only-\(UUID().uuidString)"
+        let updatedAlbum = "Control Save Album \(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Control Save Document \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        try? FileManager.default.removeItem(at: swiftTagDocumentURL)
+
+        let saveApp = try launchApp(
+            importFixture: true,
+            persistentFixtureName: persistentFixtureName,
+            resetSaveSettings: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: false,
+            exposeNavigationMetadata: true
+        )
+        let saveWindow = saveApp.windows.firstMatch
+
+        selectImportedTrackForEditing(in: saveApp, expectedTitle: "Test Title", timeout: 20.0)
+        clickMenuItem(in: saveApp, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
+        saveFileInSavePanel(in: saveApp, destinationURL: swiftTagDocumentURL)
+        XCTAssertNil(waitForSaveErrorPresentation(in: saveApp, timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
+
+        clearAndType(in: saveApp, element: editableAlbumField(in: saveApp), text: updatedAlbum)
+        focusWindow(saveWindow)
+        performSaveSwiftTagDocumentShortcut(in: saveApp)
+
+        XCTAssertNil(waitForSaveErrorPresentation(in: saveApp, timeout: 1.0))
+        XCTAssertTrue(
+            waitForSwiftTagDocumentTagValue(
+                in: swiftTagDocumentURL,
+                key: "ALBUM",
+                expectedValue: updatedAlbum,
+                timeout: 10.0
+            )
+        )
+        saveApp.terminate()
+
+        let liveFlacApp = try launchApp(
+            importFixture: true,
+            persistentFixtureName: persistentFixtureName,
+            reuseImportedFixture: true,
+            resetSaveSettings: false
+        )
+        selectImportedTrackForEditing(in: liveFlacApp, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: liveFlacApp,
+                identifier: UIID.albumTextField,
+                expectedValue: "Test Album",
+                timeout: 10.0
+            )
+        )
+        liveFlacApp.terminate()
+
+        let reopenedDocumentApp = try launchApp(exposeNavigationMetadata: true)
+        reopenedDocumentApp.activate()
+        let reopenedWindow = try openSavedSwiftTagDocumentWindow(
+            in: reopenedDocumentApp,
+            documentURL: swiftTagDocumentURL
+        )
+
+        selectImportedTrackForEditing(in: reopenedDocumentApp, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForNavigationSubtitle(
+                in: reopenedWindow,
+                expectedValue: "Tracks: 1 (1) • Tag Δ: 1 (1) • Picture Δ: 0 (0)",
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
     func testFileMenuSavePromptsToCreateSwiftTagDocumentWhenSettingsEnabled() throws {
         let promptedAlbum = "Prompted Album \(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
@@ -1889,6 +1963,11 @@ final class SwiftTagUITests: XCTestCase {
     private func performSavePictures(in app: XCUIApplication) {
         app.activate()
         app.typeKey("s", modifierFlags: [.command, .option])
+    }
+
+    private func performSaveSwiftTagDocumentShortcut(in app: XCUIApplication) {
+        app.activate()
+        app.typeKey("s", modifierFlags: [.control])
     }
 
     private func typeEscape(in app: XCUIApplication) {
