@@ -847,9 +847,7 @@ struct ContentView: View {
                 refreshTrackMonitoring()
                 loadUITestStateIfNeeded()
                 loadReopenRecordIfNeeded()
-                UnsavedChangesCoordinator.shared.register(sessionID: sessionValue.sessionID) {
-                    currentUnsavedEditCountsForLoadedTracks()
-                }
+                registerUnsavedChangesSession()
             }
             .onChange(of: sessionValue.reopenRecordID) { _, _ in
                 loadReopenRecordIfNeeded()
@@ -956,8 +954,11 @@ struct ContentView: View {
         commandFocusedContent
             .preferredColorScheme(themePreference.preferredColorScheme)
             .background(
-                WindowCloseGuardRepresentable(sessionID: sessionValue.sessionID) {
-                    UnsavedChangesCoordinator.shared.confirmCloseWindowIfNeeded(for: sessionValue.sessionID)
+                WindowCloseGuardRepresentable(sessionID: sessionValue.sessionID) { window in
+                    UnsavedChangesCoordinator.shared.confirmCloseWindowIfNeeded(
+                        for: sessionValue.sessionID,
+                        window: window
+                    )
                 } onWindowDidBecomeKey: {
                     EditorWindowCoordinator.shared.markSessionFocused(sessionValue.sessionID)
                 } onWindowWillClose: {
@@ -1218,32 +1219,14 @@ struct ContentView: View {
             return
         }
 
-        let scope = settings.scope
-        let trackCount = viewModel.saveTrackCount(for: settings.scope)
-
         Task { @MainActor in
             isSaveOperationRunning = true
+            defer {
+                isSaveOperationRunning = false
+            }
 
             do {
-                if trackCount > 0 {
-                    beginSaveStatus(totalTrackCount: trackCount, scope: scope)
-                }
-
-                let saveResult = try await viewModel.save(
-                    payload: effectivePayload,
-                    scope: scope,
-                    tagWriteOptions: settings.tagWriteOptions,
-                    albumArtPictures: currentAlbumArtPictures,
-                    editorSessionID: sessionValue.sessionID,
-                    progress: updateSaveStatus(currentTrackIndex:totalTrackCount:currentTrackName:)
-                )
-                refreshTrackMonitoring()
-                registerEditorSession()
-                let notificationPayload = SaveNotificationCoordinator.shared.prepareSuccessNotification(for: saveResult)
-                Task {
-                    await SaveNotificationCoordinator.shared.schedulePreparedSuccessNotification(notificationPayload)
-                }
-                await dismissSaveStatusAfterSuccessIfNeeded()
+                try await performFlacSave(payload: effectivePayload, settings: settings)
                 handleSwiftTagDocumentFollowOnSave(
                     SwiftTagDocumentFollowOnSaveDecision.resolve(
                         isDefaultSaveCommand: isDefaultSaveCommand,
@@ -1254,11 +1237,41 @@ struct ContentView: View {
                     )
                 )
             } catch {
-                await dismissSaveStatusImmediately()
                 presentSaveError(error)
             }
+        }
+    }
 
-            isSaveOperationRunning = false
+    private func performFlacSave(
+        payload: SavePayloadOption,
+        settings: SaveSettingsSnapshot
+    ) async throws {
+        let scope = settings.scope
+        let trackCount = viewModel.saveTrackCount(for: scope)
+
+        if trackCount > 0 {
+            beginSaveStatus(totalTrackCount: trackCount, scope: scope)
+        }
+
+        do {
+            let saveResult = try await viewModel.save(
+                payload: payload,
+                scope: scope,
+                tagWriteOptions: settings.tagWriteOptions,
+                albumArtPictures: currentAlbumArtPictures,
+                editorSessionID: sessionValue.sessionID,
+                progress: updateSaveStatus(currentTrackIndex:totalTrackCount:currentTrackName:)
+            )
+            refreshTrackMonitoring()
+            registerEditorSession()
+            let notificationPayload = SaveNotificationCoordinator.shared.prepareSuccessNotification(for: saveResult)
+            Task {
+                await SaveNotificationCoordinator.shared.schedulePreparedSuccessNotification(notificationPayload)
+            }
+            await dismissSaveStatusAfterSuccessIfNeeded()
+        } catch {
+            await dismissSaveStatusImmediately()
+            throw error
         }
     }
 
@@ -1384,6 +1397,122 @@ struct ContentView: View {
         savePanel.nameFieldStringValue = defaultSwiftTagDocumentFileName()
 
         return savePanel.runModal() == .OK ? savePanel.url : nil
+    }
+
+    private func registerUnsavedChangesSession() {
+        UnsavedChangesCoordinator.shared.register(sessionID: sessionValue.sessionID) {
+            currentUnsavedChangesSessionContext()
+        } actionHandler: { choice, trigger in
+            await performUnsavedChangesAction(choice, trigger: trigger)
+        }
+    }
+
+    private func currentUnsavedChangesSessionContext() -> UnsavedChangesSessionContext {
+        let editCounts = currentUnsavedEditCountsForLoadedTracks()
+        let saveState = viewModel.swiftTagDocumentSaveState()
+        let destinationName = saveState.destinationURL?.lastPathComponent.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return UnsavedChangesSessionContext(
+            editCounts: UnsavedChangesEditCounts(
+                tagEdits: editCounts.tagEdits,
+                pictureEdits: editCounts.pictureEdits
+            ),
+            hasReferencedSwiftTagDocument: saveState.destinationURL != nil,
+            referencedSwiftTagDocumentName: destinationName?.isEmpty == false ? destinationName : nil
+        )
+    }
+
+    private func performUnsavedChangesAction(
+        _ choice: UnsavedChangesSaveChoice,
+        trigger _: UnsavedChangesPromptTrigger
+    ) async -> UnsavedChangesActionResult {
+        switch choice {
+        case .saveFlacFiles:
+            return await performUnsavedChangesFlacSave()
+        case .saveReferencedSwiftTagDocument:
+            return await performUnsavedChangesSwiftTagSave(
+                using: .rememberedOnly,
+                errorPresenter: presentSaveError
+            )
+        case .saveFlacFilesAndReferencedSwiftTagDocument:
+            let flacResult = await performUnsavedChangesFlacSave()
+            guard flacResult == .completed else {
+                return flacResult
+            }
+            return await performUnsavedChangesSwiftTagSave(
+                using: .rememberedOnly,
+                errorPresenter: presentFollowOnSwiftTagDocumentSaveError
+            )
+        case .saveNewSwiftTagDocument:
+            return await performUnsavedChangesSwiftTagSave(
+                using: .promptForNewDocument,
+                errorPresenter: presentSaveError
+            )
+        case .saveFlacFilesAndNewSwiftTagDocument:
+            let flacResult = await performUnsavedChangesFlacSave()
+            guard flacResult == .completed else {
+                return flacResult
+            }
+            return await performUnsavedChangesSwiftTagSave(
+                using: .promptForNewDocument,
+                errorPresenter: presentFollowOnSwiftTagDocumentSaveError
+            )
+        }
+    }
+
+    private func performUnsavedChangesFlacSave() async -> UnsavedChangesActionResult {
+        guard !isSaveOperationRunning else {
+            return .failed
+        }
+
+        syncTrackPictureRecordsFromAlbumArt()
+        let settings = saveSettingsSnapshot
+        let payload = settings.payload
+        guard viewModel.canSave(
+            payload: payload,
+            scope: settings.scope,
+            tagWriteOptions: settings.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures
+        ) else {
+            presentSaveError(TagEditorSaveError.noTracksToSave)
+            return .failed
+        }
+
+        isSaveOperationRunning = true
+        defer {
+            isSaveOperationRunning = false
+        }
+
+        do {
+            try await performFlacSave(payload: payload, settings: settings)
+            return .completed
+        } catch {
+            presentSaveError(error)
+            return .failed
+        }
+    }
+
+    private func performUnsavedChangesSwiftTagSave(
+        using destinationMode: SwiftTagDocumentSaveDestinationMode,
+        errorPresenter: (Error) -> Void
+    ) async -> UnsavedChangesActionResult {
+        guard !isSaveOperationRunning, canSaveSwiftTagDocument else {
+            return .failed
+        }
+
+        syncTrackPictureRecordsFromAlbumArt()
+        isSaveOperationRunning = true
+        defer {
+            isSaveOperationRunning = false
+        }
+
+        do {
+            let didSave = try performSwiftTagDocumentSave(using: destinationMode)
+            return didSave ? .completed : .cancelled
+        } catch {
+            errorPresenter(error)
+            return .failed
+        }
     }
 
     private func performUITestPostSaveReferenceMutationIfNeeded(sourceURL: URL?) {
@@ -2361,13 +2490,13 @@ extension FocusedValues {
 
 private struct WindowCloseGuardRepresentable: NSViewRepresentable {
     let sessionID: UUID
-    let shouldAllowClose: () -> Bool
+    let shouldAllowClose: (NSWindow) -> Bool
     let onWindowDidBecomeKey: () -> Void
     let onWindowWillClose: () -> Void
 
     init(
         sessionID: UUID,
-        shouldAllowClose: @escaping () -> Bool,
+        shouldAllowClose: @escaping (NSWindow) -> Bool,
         onWindowDidBecomeKey: @escaping () -> Void = {},
         onWindowWillClose: @escaping () -> Void = {}
     ) {
@@ -2403,7 +2532,7 @@ private struct WindowCloseGuardRepresentable: NSViewRepresentable {
 
     final class Coordinator: NSObject, NSWindowDelegate, EditorWindowSessionIdentifying {
         var sessionID: UUID
-        var shouldAllowClose: () -> Bool
+        var shouldAllowClose: (NSWindow) -> Bool
         var onWindowDidBecomeKey: () -> Void
         var onWindowWillClose: () -> Void
 
@@ -2411,7 +2540,7 @@ private struct WindowCloseGuardRepresentable: NSViewRepresentable {
 
         init(
             sessionID: UUID,
-            shouldAllowClose: @escaping () -> Bool,
+            shouldAllowClose: @escaping (NSWindow) -> Bool,
             onWindowDidBecomeKey: @escaping () -> Void,
             onWindowWillClose: @escaping () -> Void
         ) {
@@ -2422,7 +2551,7 @@ private struct WindowCloseGuardRepresentable: NSViewRepresentable {
         }
 
         func windowShouldClose(_ sender: NSWindow) -> Bool {
-            shouldAllowClose()
+            shouldAllowClose(sender)
         }
 
         func windowDidBecomeKey(_ notification: Notification) {

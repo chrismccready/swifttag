@@ -913,6 +913,50 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testCloseWindowWithUnsavedChangesShowsExpandedNewDocumentChoices() throws {
+        let app = try launchApp(importFixture: true)
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        clearAndType(in: app, element: editableAlbumField(in: app), text: "Close Prompt Album \(UUID().uuidString)")
+
+        app.typeKey("w", modifierFlags: .command)
+
+        let sheet = window.sheets.firstMatch
+        XCTAssertTrue(sheet.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(sheet.buttons["Save FLAC files"].firstMatch.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(sheet.buttons["Save New SwiftTag Document..."].firstMatch.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(sheet.buttons["Save FLAC files & New SwiftTag Document..."].firstMatch.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(sheet.buttons["Close Window"].firstMatch.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(sheet.buttons["Cancel"].firstMatch.waitForExistence(timeout: 5.0))
+
+        typeEscape(in: app)
+        XCTAssertTrue(window.waitForExistence(timeout: 5.0))
+    }
+
+    @MainActor
+    func testCloseWindowSaveNewSwiftTagDocumentCancelKeepsWindowOpen() throws {
+        let app = try launchApp(importFixture: true)
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        clearAndType(in: app, element: editableAlbumField(in: app), text: "Close Save Panel Cancel \(UUID().uuidString)")
+
+        app.typeKey("w", modifierFlags: .command)
+
+    let sheet = window.sheets.firstMatch
+    XCTAssertTrue(sheet.waitForExistence(timeout: 5.0))
+    let saveNewButton = sheet.buttons["Save New SwiftTag Document..."].firstMatch
+        XCTAssertTrue(saveNewButton.waitForExistence(timeout: 5.0))
+        saveNewButton.click()
+        XCTAssertTrue(waitForSavePanel(in: app, timeout: 5.0))
+        cancelSavePanel(in: app)
+
+        XCTAssertTrue(window.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(editableAlbumField(in: app).waitForExistence(timeout: 5.0))
+    }
+
+    @MainActor
     func testFileMenuSaveShowsSwiftTagSaveErrorWhileKeepingFlacSaveResult() throws {
         let persistentFixtureName = "follow-on-save-error-\(UUID().uuidString)"
         let updatedAlbum = "Follow On Error Album \(UUID().uuidString)"

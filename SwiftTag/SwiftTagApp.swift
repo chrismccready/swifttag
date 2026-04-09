@@ -43,7 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        UnsavedChangesCoordinator.shared.confirmQuitIfNeeded() ? .terminateNow : .terminateCancel
+        UnsavedChangesCoordinator.shared.applicationShouldTerminate(sender)
     }
 
     func userNotificationCenter(
@@ -305,10 +305,6 @@ private struct AppCommands: Commands {
     }
 
     private func closeKeyWindow() {
-        if let sessionDelegate = NSApp.keyWindow?.delegate as? EditorWindowSessionIdentifying {
-            EditorWindowCoordinator.shared.markSessionClosing(sessionDelegate.editorSessionID)
-        }
-
         if NSApp.sendAction(#selector(NSWindow.performClose(_:)), to: nil, from: nil) {
             return
         }

@@ -87,6 +87,20 @@ struct SwiftTagTests {
         )
     }
 
+    private static func followOnSaveActionsMatch(
+        _ lhs: SwiftTagDocumentFollowOnSaveAction,
+        _ rhs: SwiftTagDocumentFollowOnSaveAction
+    ) -> Bool {
+        switch (lhs, rhs) {
+        case (.none, .none),
+             (.saveReferencedDocument, .saveReferencedDocument),
+             (.promptForNewDocument, .promptForNewDocument):
+            return true
+        default:
+            return false
+        }
+    }
+
     private static func trackWithSnapshot(
         tags: [String: String],
         fileTags: [String: String]? = nil,
@@ -161,6 +175,76 @@ struct SwiftTagTests {
         #expect(!SaveSettingsDefaults.applyCompilationToAllTracks)
         #expect(!SaveSettingsDefaults.saveFrontCoverToAllTracks)
         #expect(!SaveSettingsDefaults.saveAllPicturesToAllTracks)
+    }
+
+    @Test
+    func unsavedChangesChoiceResolverBypassesPromptWithoutUnsavedEdits() {
+        let configuration = UnsavedChangesChoiceResolver.resolve(
+            trigger: .closeWindow,
+            context: UnsavedChangesSessionContext(
+                editCounts: UnsavedChangesEditCounts(tagEdits: 0, pictureEdits: 0),
+                hasReferencedSwiftTagDocument: false,
+                referencedSwiftTagDocumentName: nil
+            )
+        )
+
+        #expect(configuration == nil)
+    }
+
+    @Test
+    func unsavedChangesChoiceResolverUsesReferencedDocumentActionsWhenAvailable() {
+        let configuration = UnsavedChangesChoiceResolver.resolve(
+            trigger: .closeWindow,
+            context: UnsavedChangesSessionContext(
+                editCounts: UnsavedChangesEditCounts(tagEdits: 2, pictureEdits: 1),
+                hasReferencedSwiftTagDocument: true,
+                referencedSwiftTagDocumentName: "Session Save.swifttag"
+            )
+        )
+
+        #expect(configuration?.discardTitle == "Close Window")
+        #expect(configuration?.saveChoices.map(\.title) == [
+            "Save FLAC files",
+            "Save Session Save.swifttag",
+            "Save FLAC files & Session Save.swifttag"
+        ])
+    }
+
+    @Test
+    func unsavedChangesChoiceResolverUsesNewDocumentActionsWithoutReference() {
+        let configuration = UnsavedChangesChoiceResolver.resolve(
+            trigger: .quitApplication,
+            context: UnsavedChangesSessionContext(
+                editCounts: UnsavedChangesEditCounts(tagEdits: 3, pictureEdits: 0),
+                hasReferencedSwiftTagDocument: false,
+                referencedSwiftTagDocumentName: nil
+            )
+        )
+
+        #expect(configuration?.discardTitle == "Quit")
+        #expect(configuration?.saveChoices.map(\.title) == [
+            "Save FLAC files",
+            "Save New SwiftTag Document...",
+            "Save FLAC files & New SwiftTag Document..."
+        ])
+    }
+
+    @Test
+    func unsavedChangesChoiceResolverFallsBackToGenericReferencedDocumentLabel() {
+        let configuration = UnsavedChangesChoiceResolver.resolve(
+            trigger: .closeWindow,
+            context: UnsavedChangesSessionContext(
+                editCounts: UnsavedChangesEditCounts(tagEdits: 1, pictureEdits: 1),
+                hasReferencedSwiftTagDocument: true,
+                referencedSwiftTagDocumentName: nil
+            )
+        )
+
+        #expect(configuration?.saveChoices.map(\.title) == [
+            "Save FLAC files",
+            "Save SwiftTag Document",
+            "Save FLAC files & SwiftTag Document"
+        ])
     }
 
     @Test
@@ -3029,80 +3113,80 @@ struct SwiftTagTests {
 
     @Test
     func swiftTagDocumentFollowOnSaveDecisionReturnsNoActionWhenAutoSaveIsOff() {
-        #expect(
-            SwiftTagDocumentFollowOnSaveDecision.resolve(
-                isDefaultSaveCommand: true,
-                saveReferencedSwiftTagDocument: false,
-                askToSaveNewSwiftTagDocument: true,
-                askToSaveNewSwiftTagDocumentOk: true,
-                hasReferencedSwiftTagDocument: true
-            ) == .none
+        let action = SwiftTagDocumentFollowOnSaveDecision.resolve(
+            isDefaultSaveCommand: true,
+            saveReferencedSwiftTagDocument: false,
+            askToSaveNewSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocumentOk: true,
+            hasReferencedSwiftTagDocument: true
         )
+
+        #expect(Self.followOnSaveActionsMatch(action, .none))
     }
 
     @Test
     func swiftTagDocumentFollowOnSaveDecisionReturnsSaveExistingWhenReferenceExists() {
-        #expect(
-            SwiftTagDocumentFollowOnSaveDecision.resolve(
-                isDefaultSaveCommand: true,
-                saveReferencedSwiftTagDocument: true,
-                askToSaveNewSwiftTagDocument: false,
-                askToSaveNewSwiftTagDocumentOk: true,
-                hasReferencedSwiftTagDocument: true
-            ) == .saveReferencedDocument
+        let action = SwiftTagDocumentFollowOnSaveDecision.resolve(
+            isDefaultSaveCommand: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: false,
+            askToSaveNewSwiftTagDocumentOk: true,
+            hasReferencedSwiftTagDocument: true
         )
+
+        #expect(Self.followOnSaveActionsMatch(action, .saveReferencedDocument))
     }
 
     @Test
     func swiftTagDocumentFollowOnSaveDecisionReturnsNoActionWhenAskSettingIsOff() {
-        #expect(
-            SwiftTagDocumentFollowOnSaveDecision.resolve(
-                isDefaultSaveCommand: true,
-                saveReferencedSwiftTagDocument: true,
-                askToSaveNewSwiftTagDocument: false,
-                askToSaveNewSwiftTagDocumentOk: true,
-                hasReferencedSwiftTagDocument: false
-            ) == .none
+        let action = SwiftTagDocumentFollowOnSaveDecision.resolve(
+            isDefaultSaveCommand: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: false,
+            askToSaveNewSwiftTagDocumentOk: true,
+            hasReferencedSwiftTagDocument: false
         )
+
+        #expect(Self.followOnSaveActionsMatch(action, .none))
     }
 
     @Test
     func swiftTagDocumentFollowOnSaveDecisionReturnsPromptWhenAskSettingAndGateAreOn() {
-        #expect(
-            SwiftTagDocumentFollowOnSaveDecision.resolve(
-                isDefaultSaveCommand: true,
-                saveReferencedSwiftTagDocument: true,
-                askToSaveNewSwiftTagDocument: true,
-                askToSaveNewSwiftTagDocumentOk: true,
-                hasReferencedSwiftTagDocument: false
-            ) == .promptForNewDocument
+        let action = SwiftTagDocumentFollowOnSaveDecision.resolve(
+            isDefaultSaveCommand: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocumentOk: true,
+            hasReferencedSwiftTagDocument: false
         )
+
+        #expect(Self.followOnSaveActionsMatch(action, .promptForNewDocument))
     }
 
     @Test
     func swiftTagDocumentFollowOnSaveDecisionReturnsNoActionWhenPromptGateIsOff() {
-        #expect(
-            SwiftTagDocumentFollowOnSaveDecision.resolve(
-                isDefaultSaveCommand: true,
-                saveReferencedSwiftTagDocument: true,
-                askToSaveNewSwiftTagDocument: true,
-                askToSaveNewSwiftTagDocumentOk: false,
-                hasReferencedSwiftTagDocument: false
-            ) == .none
+        let action = SwiftTagDocumentFollowOnSaveDecision.resolve(
+            isDefaultSaveCommand: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocumentOk: false,
+            hasReferencedSwiftTagDocument: false
         )
+
+        #expect(Self.followOnSaveActionsMatch(action, .none))
     }
 
     @Test
     func swiftTagDocumentFollowOnSaveDecisionReturnsNoActionForAlternateSaveCommands() {
-        #expect(
-            SwiftTagDocumentFollowOnSaveDecision.resolve(
-                isDefaultSaveCommand: false,
-                saveReferencedSwiftTagDocument: true,
-                askToSaveNewSwiftTagDocument: true,
-                askToSaveNewSwiftTagDocumentOk: true,
-                hasReferencedSwiftTagDocument: true
-            ) == .none
+        let action = SwiftTagDocumentFollowOnSaveDecision.resolve(
+            isDefaultSaveCommand: false,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocumentOk: true,
+            hasReferencedSwiftTagDocument: true
         )
+
+        #expect(Self.followOnSaveActionsMatch(action, .none))
     }
 
     @Test
