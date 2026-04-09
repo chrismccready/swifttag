@@ -1420,7 +1420,6 @@ struct ContentView: View {
     private func currentUnsavedChangesSessionContext() -> UnsavedChangesSessionContext {
         let editCounts = currentUnsavedEditCountsForLoadedTracks()
         let saveState = viewModel.swiftTagDocumentSaveState()
-        let destinationName = saveState.destinationURL?.lastPathComponent.trimmingCharacters(in: .whitespacesAndNewlines)
 
         return UnsavedChangesSessionContext(
             editCounts: UnsavedChangesEditCounts(
@@ -1428,7 +1427,7 @@ struct ContentView: View {
                 pictureEdits: editCounts.pictureEdits
             ),
             hasReferencedSwiftTagDocument: saveState.destinationURL != nil,
-            referencedSwiftTagDocumentName: destinationName?.isEmpty == false ? destinationName : nil
+            referencedSwiftTagDocumentURL: saveState.destinationURL
         )
     }
 

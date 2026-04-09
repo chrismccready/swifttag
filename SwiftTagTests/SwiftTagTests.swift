@@ -184,7 +184,7 @@ struct SwiftTagTests {
             context: UnsavedChangesSessionContext(
                 editCounts: UnsavedChangesEditCounts(tagEdits: 0, pictureEdits: 0),
                 hasReferencedSwiftTagDocument: false,
-                referencedSwiftTagDocumentName: nil
+                referencedSwiftTagDocumentURL: nil
             )
         )
 
@@ -198,7 +198,7 @@ struct SwiftTagTests {
             context: UnsavedChangesSessionContext(
                 editCounts: UnsavedChangesEditCounts(tagEdits: 2, pictureEdits: 1),
                 hasReferencedSwiftTagDocument: true,
-                referencedSwiftTagDocumentName: "Session Save.swifttag"
+                referencedSwiftTagDocumentURL: URL(fileURLWithPath: "/tmp/Session Save.swifttag")
             )
         )
 
@@ -217,7 +217,7 @@ struct SwiftTagTests {
             context: UnsavedChangesSessionContext(
                 editCounts: UnsavedChangesEditCounts(tagEdits: 3, pictureEdits: 0),
                 hasReferencedSwiftTagDocument: false,
-                referencedSwiftTagDocumentName: nil
+                referencedSwiftTagDocumentURL: nil
             )
         )
 
@@ -236,7 +236,7 @@ struct SwiftTagTests {
             context: UnsavedChangesSessionContext(
                 editCounts: UnsavedChangesEditCounts(tagEdits: 1, pictureEdits: 1),
                 hasReferencedSwiftTagDocument: true,
-                referencedSwiftTagDocumentName: nil
+                referencedSwiftTagDocumentURL: nil
             )
         )
 
@@ -244,6 +244,26 @@ struct SwiftTagTests {
             "Save FLAC files",
             "Save SwiftTag Document",
             "Save FLAC files & SwiftTag Document"
+        ])
+    }
+
+    @Test
+    func unsavedChangesChoiceResolverTruncatesReferencedDocumentLabelInMiddle() {
+        let configuration = UnsavedChangesChoiceResolver.resolve(
+            trigger: .closeWindow,
+            context: UnsavedChangesSessionContext(
+                editCounts: UnsavedChangesEditCounts(tagEdits: 1, pictureEdits: 0),
+                hasReferencedSwiftTagDocument: true,
+                referencedSwiftTagDocumentURL: URL(
+                    fileURLWithPath: "/tmp/Very Long Album Name Deluxe Edition.swifttag"
+                )
+            )
+        )
+
+        #expect(configuration?.saveChoices.map(\.title) == [
+            "Save FLAC files",
+            "Save Very Long Al…on.swifttag",
+            "Save FLAC files & Very Long Al…on.swifttag"
         ])
     }
 

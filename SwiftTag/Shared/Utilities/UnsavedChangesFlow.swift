@@ -12,7 +12,7 @@ struct UnsavedChangesEditCounts: Equatable {
 struct UnsavedChangesSessionContext: Equatable {
     let editCounts: UnsavedChangesEditCounts
     let hasReferencedSwiftTagDocument: Bool
-    let referencedSwiftTagDocumentName: String?
+    let referencedSwiftTagDocumentURL: URL?
 }
 
 enum UnsavedChangesPromptTrigger: Equatable {
@@ -66,7 +66,7 @@ enum UnsavedChangesSaveChoice: Equatable {
             return "SwiftTag Document"
         }
 
-        return trimmedName
+        return trimmedName.truncated(limit: 24, position: .middle)
     }
 }
 
@@ -99,10 +99,11 @@ enum UnsavedChangesChoiceResolver {
 
         let saveChoices: [UnsavedChangesSaveChoice]
         if context.hasReferencedSwiftTagDocument {
+            let referencedDocumentName = context.referencedSwiftTagDocumentURL?.lastPathComponent
             saveChoices = [
                 .saveFlacFiles,
-                .saveReferencedSwiftTagDocument(name: context.referencedSwiftTagDocumentName),
-                .saveFlacFilesAndReferencedSwiftTagDocument(name: context.referencedSwiftTagDocumentName)
+                .saveReferencedSwiftTagDocument(name: referencedDocumentName),
+                .saveFlacFilesAndReferencedSwiftTagDocument(name: referencedDocumentName)
             ]
         } else {
             saveChoices = [
