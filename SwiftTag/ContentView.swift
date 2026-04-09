@@ -696,24 +696,34 @@ struct ContentView: View {
                     .zIndex(1)
             }
 
-            if uiTestLaunchFlagEnabled("UITEST_EXPOSE_NAVIGATION_METADATA") {
-                uiTestNavigationMetadataProbe
+            if uiTestLaunchFlagEnabled("UITEST_EXPOSE_NAVIGATION_METADATA") ||
+                uiTestLaunchFlagEnabled("UITEST_EXPOSE_DIFF_METADATA") {
+                uiTestMetadataProbe
                     .zIndex(2)
             }
         }
     }
 
-    private var uiTestNavigationMetadataProbe: some View {
+    private var uiTestMetadataProbe: some View {
         let metadata = navigationMetadata
         return VStack(alignment: .leading, spacing: 2) {
-            Text(metadata.title)
-                .accessibilityIdentifier("uiTest.navigation.title")
-            Text(metadata.subtitle)
-                .accessibilityIdentifier("uiTest.navigation.subtitle")
-            Text(metadata.documentURL?.path ?? "absent")
-                .accessibilityIdentifier("uiTest.navigation.documentURL")
-            Text(isSaveNewSwiftTagDocumentPromptPresented ? "presented" : "hidden")
-                .accessibilityIdentifier("uiTest.saveNewSwiftTagDocumentPrompt")
+            if uiTestLaunchFlagEnabled("UITEST_EXPOSE_NAVIGATION_METADATA") {
+                Text(metadata.title)
+                    .accessibilityIdentifier("uiTest.navigation.title")
+                Text(metadata.subtitle)
+                    .accessibilityIdentifier("uiTest.navigation.subtitle")
+                Text(metadata.documentURL?.path ?? "absent")
+                    .accessibilityIdentifier("uiTest.navigation.documentURL")
+                Text(isSaveNewSwiftTagDocumentPromptPresented ? "presented" : "hidden")
+                    .accessibilityIdentifier("uiTest.saveNewSwiftTagDocumentPrompt")
+            }
+
+            if uiTestLaunchFlagEnabled("UITEST_EXPOSE_DIFF_METADATA") {
+                Text(hasAlbumExternallyModifiedDifference ? "external" : "none")
+                    .accessibilityIdentifier("uiTest.diff.album.externalState")
+                Text(viewModel.selectedExternalFileValue(forAnyOf: [TagKey.album]) ?? "absent")
+                    .accessibilityIdentifier("uiTest.diff.album.externalFileValue")
+            }
         }
         .font(.caption2)
         .padding(2)

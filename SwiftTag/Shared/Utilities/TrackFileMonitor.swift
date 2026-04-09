@@ -46,11 +46,16 @@ final class TrackFileMonitor {
 
             let monitoredPath = Self.monitoredPath(for: sourceFileURL)
             if var existingObservation = observationsByTrackID[track.id] {
-                if existingObservation.monitoredPath == monitoredPath {
+                let pointsToCurrentPath = Self.fileDescriptor(
+                    existingObservation.fileDescriptor,
+                    pointsToPath: monitoredPath
+                )
+
+                if existingObservation.monitoredPath == monitoredPath && pointsToCurrentPath {
                     continue
                 }
 
-                if Self.fileDescriptor(existingObservation.fileDescriptor, pointsToPath: monitoredPath) {
+                if pointsToCurrentPath {
                     existingObservation.monitoredPath = monitoredPath
                     observationsByTrackID[track.id] = existingObservation
                     continue

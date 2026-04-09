@@ -1211,6 +1211,34 @@ final class TagEditorViewModel {
         }
     }
 
+    func selectedExternalFileValue(forAnyOf keys: [String], in selection: Set<UUID>? = nil) -> String? {
+        let trackIDs = selection ?? selectedTrackIDs
+        let normalizedKeys = keys.map(normalizedTagKey)
+        guard !trackIDs.isEmpty else {
+            return nil
+        }
+
+        let values = trackItems.compactMap { track -> String? in
+            guard trackIDs.contains(track.id), let differences = track.externalDifferences else {
+                return nil
+            }
+
+            for key in normalizedKeys {
+                if let value = differences.fileValuesByTag[key] {
+                    return value
+                }
+            }
+
+            return nil
+        }
+
+        guard let firstValue = values.first else {
+            return nil
+        }
+
+        return values.allSatisfy { $0 == firstValue } ? firstValue : mixedSelectionMarker
+    }
+
     func hasExternalPictureDifference(in selection: Set<UUID>? = nil) -> Bool {
         let trackIDs = selection ?? Set(trackItems.map(\.id))
         return trackItems.contains { track in

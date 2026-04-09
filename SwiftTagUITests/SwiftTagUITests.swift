@@ -35,6 +35,8 @@ final class SwiftTagUITests: XCTestCase {
         static let navigationSubtitleProbe = "uiTest.navigation.subtitle"
         static let navigationDocumentURLProbe = "uiTest.navigation.documentURL"
         static let saveNewSwiftTagDocumentPromptProbe = "uiTest.saveNewSwiftTagDocumentPrompt"
+        static let albumExternalStateProbe = "uiTest.diff.album.externalState"
+        static let albumExternalFileValueProbe = "uiTest.diff.album.externalFileValue"
     }
 
     private enum PlaceholderText {
@@ -1042,6 +1044,220 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testNewWindowsCanBeSelectedAndEditedDeterministicallyWithOpenPanel() throws {
+        let firstFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
+        let secondFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
+        let firstAlbum = "Window A Album \(UUID().uuidString)"
+        let firstAlbumArtist = "Window A Artist \(UUID().uuidString)"
+        let secondAlbum = "Window B Album \(UUID().uuidString)"
+        let secondAlbumArtist = "Window B Artist \(UUID().uuidString)"
+
+        let app = try launchApp()
+        XCTAssertTrue(waitForWindowCount(in: app, minimumCount: 1, timeout: 10.0))
+
+        let existingWindowIdentifiers = Set(currentWindowIdentifiers(in: app))
+        app.typeKey("n", modifierFlags: .command)
+        let firstNewWindowIdentifier = waitForNewWindowIdentifier(
+            in: app,
+            excluding: existingWindowIdentifiers,
+            timeout: 10.0
+        )
+        let firstNewWindow = window(in: app, identifier: firstNewWindowIdentifier)
+        XCTAssertTrue(firstNewWindow.waitForExistence(timeout: 10.0))
+
+        let firstNewWindowIdentifiers = Set(currentWindowIdentifiers(in: app))
+        app.typeKey("n", modifierFlags: .command)
+        let secondNewWindowIdentifier = waitForNewWindowIdentifier(
+            in: app,
+            excluding: firstNewWindowIdentifiers,
+            timeout: 10.0
+        )
+        let secondNewWindow = window(in: app, identifier: secondNewWindowIdentifier)
+        XCTAssertTrue(secondNewWindow.waitForExistence(timeout: 10.0))
+        XCTAssertNotEqual(firstNewWindowIdentifier, secondNewWindowIdentifier)
+
+        focusWindow(firstNewWindow)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Add FLAC files...")
+        chooseFileInOpenPanel(in: app, path: firstFixtureURL.path)
+        selectImportedTrackForEditing(in: firstNewWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        clearAndType(in: app, element: editableAlbumField(in: firstNewWindow), text: firstAlbum)
+        clearAndType(in: app, element: editableAlbumArtistField(in: firstNewWindow), text: firstAlbumArtist)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: firstNewWindow,
+                identifier: UIID.albumTextField,
+                expectedValue: firstAlbum,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: firstNewWindow,
+                identifier: UIID.albumArtistTextField,
+                expectedValue: firstAlbumArtist,
+                timeout: 10.0
+            )
+        )
+
+        focusWindow(secondNewWindow)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Add FLAC files...")
+        chooseFileInOpenPanel(in: app, path: secondFixtureURL.path)
+        selectImportedTrackForEditing(in: secondNewWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        clearAndType(in: app, element: editableAlbumField(in: secondNewWindow), text: secondAlbum)
+        clearAndType(in: app, element: editableAlbumArtistField(in: secondNewWindow), text: secondAlbumArtist)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: secondNewWindow,
+                identifier: UIID.albumTextField,
+                expectedValue: secondAlbum,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: secondNewWindow,
+                identifier: UIID.albumArtistTextField,
+                expectedValue: secondAlbumArtist,
+                timeout: 10.0
+            )
+        )
+
+        focusWindow(firstNewWindow)
+        selectImportedTrackForEditing(in: firstNewWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: firstNewWindow,
+                identifier: UIID.albumTextField,
+                expectedValue: firstAlbum,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: firstNewWindow,
+                identifier: UIID.albumArtistTextField,
+                expectedValue: firstAlbumArtist,
+                timeout: 10.0
+            )
+        )
+
+        focusWindow(secondNewWindow)
+        selectImportedTrackForEditing(in: secondNewWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: secondNewWindow,
+                identifier: UIID.albumTextField,
+                expectedValue: secondAlbum,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: secondNewWindow,
+                identifier: UIID.albumArtistTextField,
+                expectedValue: secondAlbumArtist,
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
+    func testRepeatedExternalSavesAcrossWindowsContinueUpdatingObservedAlbumDifference() throws {
+        let sharedFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
+        let firstSavedAlbum = "Shared Window Album A \(UUID().uuidString)"
+        let secondSavedAlbum = "Shared Window Album B \(UUID().uuidString)"
+
+        let app = try launchApp(exposeDiffMetadata: true)
+        let (editingWindow, observingWindow) = try openSharedFixtureInTwoNewWindows(app: app, fixtureURL: sharedFixtureURL)
+
+        focusWindow(editingWindow)
+        selectImportedTrackForEditing(in: editingWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        clearAndType(in: app, element: editableAlbumField(in: editingWindow), text: firstSavedAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+
+        focusWindow(observingWindow)
+        selectImportedTrackForEditing(in: observingWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: observingWindow,
+                identifier: UIID.albumExternalStateProbe,
+                expectedValue: "external",
+                timeout: 20.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: observingWindow,
+                identifier: UIID.albumExternalFileValueProbe,
+                expectedValue: firstSavedAlbum,
+                timeout: 20.0
+            )
+        )
+
+        focusWindow(editingWindow)
+        selectImportedTrackForEditing(in: editingWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        clearAndType(in: app, element: editableAlbumField(in: editingWindow), text: secondSavedAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+
+        focusWindow(observingWindow)
+        selectImportedTrackForEditing(in: observingWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: observingWindow,
+                identifier: UIID.albumExternalFileValueProbe,
+                expectedValue: secondSavedAlbum,
+                timeout: 20.0
+            )
+        )
+    }
+
+    @MainActor
+    func testConflictingSaveInSecondWindowUpdatesFirstWindowObservedAlbumDifference() throws {
+        let sharedFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
+        let firstSavedAlbum = "Shared First Album \(UUID().uuidString)"
+        let conflictingAlbum = "Shared Conflict Album \(UUID().uuidString)"
+
+        let app = try launchApp(exposeDiffMetadata: true)
+        let (firstWindow, secondWindow) = try openSharedFixtureInTwoNewWindows(app: app, fixtureURL: sharedFixtureURL)
+
+        focusWindow(firstWindow)
+        selectImportedTrackForEditing(in: firstWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        clearAndType(in: app, element: editableAlbumField(in: firstWindow), text: firstSavedAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+
+        focusWindow(secondWindow)
+        selectImportedTrackForEditing(in: secondWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: secondWindow,
+                identifier: UIID.albumExternalFileValueProbe,
+                expectedValue: firstSavedAlbum,
+                timeout: 20.0
+            )
+        )
+
+        clearAndType(in: app, element: editableAlbumField(in: secondWindow), text: conflictingAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+
+        focusWindow(firstWindow)
+        selectImportedTrackForEditing(in: firstWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: firstWindow,
+                identifier: UIID.albumExternalFileValueProbe,
+                expectedValue: conflictingAlbum,
+                timeout: 20.0
+            )
+        )
+    }
+
+    @MainActor
     func testSettingsWindowPersistsSavePreferencesAcrossRelaunch() throws {
         let app = try launchApp(resetSaveSettings: true)
 
@@ -1167,6 +1383,7 @@ final class SwiftTagUITests: XCTestCase {
         failSwiftTagDocumentSave: Bool = false,
         openSaveNotificationRecordID: String? = nil,
         exposeNavigationMetadata: Bool = false,
+        exposeDiffMetadata: Bool = false,
         enableFileActions: Bool = false,
         postSaveRenameBasename: String? = nil,
         postSaveDeleteAfterRename: Bool = false,
@@ -1277,6 +1494,10 @@ final class SwiftTagUITests: XCTestCase {
         if exposeNavigationMetadata {
             app.launchEnvironment["UITEST_EXPOSE_NAVIGATION_METADATA"] = "1"
             app.launchArguments.append("-UITEST_EXPOSE_NAVIGATION_METADATA")
+        }
+        if exposeDiffMetadata {
+            app.launchEnvironment["UITEST_EXPOSE_DIFF_METADATA"] = "1"
+            app.launchArguments.append("-UITEST_EXPOSE_DIFF_METADATA")
         }
         if enableFileActions {
             app.launchEnvironment["UITEST_ENABLE_FILE_ACTIONS"] = "1"
@@ -1695,6 +1916,23 @@ final class SwiftTagUITests: XCTestCase {
         )
     }
 
+    private func selectImportedTrackForEditing(
+        in window: XCUIElement,
+        app: XCUIApplication,
+        expectedTitle: String,
+        timeout: TimeInterval = 10.0
+    ) {
+        let titleField = window.descendants(matching: .textField)
+            .matching(NSPredicate(format: "value == %@", expectedTitle))
+            .firstMatch
+        XCTAssertTrue(titleField.waitForExistence(timeout: timeout), "Expected imported track title field '\(expectedTitle)' to exist in the target window.")
+        titleField.click()
+        XCTAssertTrue(
+            waitForEnabledState(of: editableAlbumField(in: window), expectedValue: true, timeout: timeout),
+            "Album field did not become editable after selecting imported track '\(expectedTitle)' in the target window."
+        )
+    }
+
     private func editableAlbumField(in app: XCUIApplication) -> XCUIElement {
         app.textFields.matching(
             NSPredicate(
@@ -1705,6 +1943,27 @@ final class SwiftTagUITests: XCTestCase {
         ).firstMatch
     }
 
+    private func editableAlbumField(in scope: XCUIElement) -> XCUIElement {
+        scope.descendants(matching: .textField).matching(
+            NSPredicate(
+                format: "identifier == %@ AND value != %@",
+                UIID.albumTextField,
+                PlaceholderText.noSelection
+            )
+        ).firstMatch
+    }
+
+    private func editableAlbumArtistField(in scope: XCUIElement) -> XCUIElement {
+        scope.descendants(matching: .textField).matching(identifier: UIID.albumArtistTextField).firstMatch
+    }
+
+    private func focusWindow(_ window: XCUIElement) {
+        XCTAssertTrue(window.waitForExistence(timeout: 5.0))
+        if window.isHittable {
+            window.click()
+        }
+    }
+
     private func waitForTextFieldValue(
         in app: XCUIApplication,
         identifier: String,
@@ -1712,6 +1971,29 @@ final class SwiftTagUITests: XCTestCase {
         timeout: TimeInterval = 10.0
     ) -> Bool {
         let textField = app.textFields[identifier]
+        guard textField.waitForExistence(timeout: timeout) else {
+            return false
+        }
+
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if let value = textField.value as? String, value == expectedValue {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForTextFieldValue(
+        in scope: XCUIElement,
+        identifier: String,
+        expectedValue: String,
+        timeout: TimeInterval = 10.0
+    ) -> Bool {
+        let textField = scope.descendants(matching: .textField).matching(identifier: identifier).firstMatch
         guard textField.waitForExistence(timeout: timeout) else {
             return false
         }
@@ -1738,6 +2020,32 @@ final class SwiftTagUITests: XCTestCase {
 
         repeat {
             if app.textFields.matching(predicate).count > 0 {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForStaticTextValue(
+        in scope: XCUIElement,
+        identifier: String,
+        expectedValue: String,
+        timeout: TimeInterval = 10.0
+    ) -> Bool {
+        let text = scope.descendants(matching: .staticText).matching(identifier: identifier).firstMatch
+        guard text.waitForExistence(timeout: timeout) else {
+            return false
+        }
+
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if let value = text.value as? String, value == expectedValue {
+                return true
+            }
+            if text.label == expectedValue {
                 return true
             }
 
@@ -1930,24 +2238,37 @@ final class SwiftTagUITests: XCTestCase {
         app.windows.allElementsBoundByIndex.map(windowIdentifier)
     }
 
-    private func waitForNewWindow(
+    private func window(in app: XCUIApplication, identifier: String) -> XCUIElement {
+        app.windows[identifier]
+    }
+
+    private func waitForNewWindowIdentifier(
         in app: XCUIApplication,
         excluding existingIdentifiers: Set<String>,
         timeout: TimeInterval
-    ) -> XCUIElement {
+    ) -> String {
         let deadline = Date().addingTimeInterval(timeout)
 
         repeat {
             for window in app.windows.allElementsBoundByIndex {
-                if !existingIdentifiers.contains(windowIdentifier(window)) {
-                    return window
+                let identifier = windowIdentifier(window)
+                if !existingIdentifiers.contains(identifier) {
+                    return identifier
                 }
             }
 
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         } while Date() < deadline
 
-        return app.windows.firstMatch
+        return windowIdentifier(app.windows.firstMatch)
+    }
+
+    private func waitForNewWindow(
+        in app: XCUIApplication,
+        excluding existingIdentifiers: Set<String>,
+        timeout: TimeInterval
+    ) -> XCUIElement {
+        app.windows[waitForNewWindowIdentifier(in: app, excluding: existingIdentifiers, timeout: timeout)]
     }
 
     private func windowIdentifier(_ window: XCUIElement) -> String {
@@ -1994,6 +2315,47 @@ final class SwiftTagUITests: XCTestCase {
         }
 
         return didOpen
+    }
+
+    private func openSharedFixtureInTwoNewWindows(
+        app: XCUIApplication,
+        fixtureURL: URL,
+        expectedTitle: String = "Test Title"
+    ) throws -> (XCUIElement, XCUIElement) {
+        XCTAssertTrue(waitForWindowCount(in: app, minimumCount: 1, timeout: 10.0))
+
+        let existingWindowIdentifiers = Set(currentWindowIdentifiers(in: app))
+        app.typeKey("n", modifierFlags: .command)
+        let firstWindowIdentifier = waitForNewWindowIdentifier(
+            in: app,
+            excluding: existingWindowIdentifiers,
+            timeout: 10.0
+        )
+        let firstWindow = window(in: app, identifier: firstWindowIdentifier)
+        XCTAssertTrue(firstWindow.waitForExistence(timeout: 10.0))
+
+        let firstWindowIdentifiers = Set(currentWindowIdentifiers(in: app))
+        app.typeKey("n", modifierFlags: .command)
+        let secondWindowIdentifier = waitForNewWindowIdentifier(
+            in: app,
+            excluding: firstWindowIdentifiers,
+            timeout: 10.0
+        )
+        let secondWindow = window(in: app, identifier: secondWindowIdentifier)
+        XCTAssertTrue(secondWindow.waitForExistence(timeout: 10.0))
+        XCTAssertNotEqual(firstWindowIdentifier, secondWindowIdentifier)
+
+        focusWindow(firstWindow)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Add FLAC files...")
+        chooseFileInOpenPanel(in: app, path: fixtureURL.path)
+        selectImportedTrackForEditing(in: firstWindow, app: app, expectedTitle: expectedTitle, timeout: 20.0)
+
+        focusWindow(secondWindow)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Add FLAC files...")
+        chooseFileInOpenPanel(in: app, path: fixtureURL.path)
+        selectImportedTrackForEditing(in: secondWindow, app: app, expectedTitle: expectedTitle, timeout: 20.0)
+
+        return (firstWindow, secondWindow)
     }
 
     private func openSavedSwiftTagDocumentWindow(

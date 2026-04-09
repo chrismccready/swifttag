@@ -2865,6 +2865,101 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func trackFileMonitorSamePathRewriteContinuesObservingFutureChanges() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "rewrite-monitor-source.flac")
+        let bookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let metadata = try FlacMetadataService.readTags(for: fileURL)
+        let importedPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+        let albumArtPictures = importedPicturesByType.map { pictureType, data in
+            FlacWritablePictureRecord(
+                type: pictureType,
+                mimeType: "image/png",
+                description: "",
+                data: data
+            )
+        }
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = metadata.tags[TagKey.album] ?? ""
+        viewModel.albumArtist = metadata.tags[TagKey.albumArtist] ?? metadata.tags["ALBUM ARTIST"] ?? ""
+        viewModel.importedFlacPicturesByType = importedPicturesByType
+        viewModel.trackItems = [
+            Track(
+                tags: FlacImportMapper.mapTrackTags(
+                    sourceTags: metadata.tags,
+                    fileURL: fileURL,
+                    defaultDate: .now
+                ),
+                flacPicturesByType: importedPicturesByType,
+                sourceFileURL: fileURL,
+                securityScopedBookmarkData: bookmarkData,
+                latestFileSnapshot: nil
+            )
+        ]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        let monitor = TrackFileMonitor()
+        defer { monitor.stopAll() }
+
+        @MainActor
+        func onChange(_ event: TrackFileMonitorEvent) {
+            viewModel.refreshTrackFileState(
+                for: event.trackID,
+                currentPath: event.currentPath,
+                tagWriteOptions: Self.defaultTagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+            monitor.replaceObservations(for: viewModel.trackItems, onChange: onChange)
+        }
+
+        monitor.replaceObservations(for: viewModel.trackItems, onChange: onChange)
+
+        let firstAlbum = "Rewrite Monitor First \(UUID().uuidString)"
+        let secondAlbum = "Rewrite Monitor Second \(UUID().uuidString)"
+
+        var firstTags = metadata.tags
+        firstTags[TagKey.album] = firstAlbum
+        let usedTempRewriteForFirstSave = try FlacMetadataService.writeMetadata(
+            tags: firstTags,
+            to: fileURL,
+            writeTags: true,
+            writePictures: false
+        )
+        #expect(usedTempRewriteForFirstSave)
+
+        let firstObserved = await Self.waitUntil {
+            viewModel.trackItems.first?.externalDifferences?.fileValuesByTag[TagKey.album] == firstAlbum
+        }
+        #expect(firstObserved)
+        #expect(!viewModel.hasDeletedFile(for: trackID))
+
+        var secondTags = firstTags
+        secondTags[TagKey.album] = secondAlbum
+        let usedTempRewriteForSecondSave = try FlacMetadataService.writeMetadata(
+            tags: secondTags,
+            to: fileURL,
+            writeTags: true,
+            writePictures: false
+        )
+        #expect(usedTempRewriteForSecondSave)
+
+        let secondObserved = await Self.waitUntil {
+            viewModel.trackItems.first?.externalDifferences?.fileValuesByTag[TagKey.album] == secondAlbum
+        }
+        #expect(secondObserved)
+        #expect(!viewModel.hasDeletedFile(for: trackID))
+    }
+
+    @Test
+    @MainActor
     func trackFileMonitorRenamesNeverInterpretTrackAsDeleted() async throws {
         let originalURL = try Self.tempFixtureCopyURL(name: "rename-monitor-source.flac")
         let bookmarkData = try originalURL.bookmarkData(
