@@ -287,6 +287,8 @@ struct SwiftTagDocumentTests {
         #expect(manifest["Id"] as? String == result.documentID.uuidString)
         #expect(manifest["Version"] as? String == SwiftTagDocumentType.version)
         #expect(manifest["Fingerprint"] as? String == result.fingerprint)
+        let swiftTags = try #require(manifest["SwiftTags"] as? [String: String])
+        #expect(swiftTags["Author"] == "SwiftTag")
 
         let manifestTracks = try #require(manifest["Tracks"] as? [[String: Any]])
         #expect(manifestTracks.count == 2)

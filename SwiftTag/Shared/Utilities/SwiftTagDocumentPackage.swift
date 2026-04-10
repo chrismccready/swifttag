@@ -186,12 +186,24 @@ private struct SwiftTagDocumentManifest: Codable, Equatable {
     let version: String
     let fingerprint: String
     let tracks: [SwiftTagDocumentManifestTrack]
+    let swiftTags: SwiftTagDocumentMetadata
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
         case version = "Version"
         case fingerprint = "Fingerprint"
         case tracks = "Tracks"
+        case swiftTags = "SwiftTags"
+    }
+}
+
+private struct SwiftTagDocumentMetadata: Codable, Equatable {
+    let author: String
+
+    static let `default` = SwiftTagDocumentMetadata(author: "SwiftTag")
+
+    enum CodingKeys: String, CodingKey {
+        case author = "Author"
     }
 }
 
@@ -520,7 +532,8 @@ enum SwiftTagDocumentPackageWriter {
             id: documentID.uuidString,
             version: SwiftTagDocumentType.version,
             fingerprint: documentFingerprint,
-            tracks: manifestTracks
+            tracks: manifestTracks,
+            swiftTags: .default
         )
 
         let assetFilePairs: [(String, Data)] = assetCandidatesByHash.values.compactMap { candidate in
