@@ -23,13 +23,25 @@ struct ContentView: View {
         case promptForNewDocument
     }
 
+    private enum DeletedSwiftTagDocumentRecoveryChoice {
+        case saveNewDocument
+        case recreateOriginal
+        case cancel
+    }
+
     private enum SwiftTagDocumentSaveFlowError: LocalizedError {
         case uiTestForcedFailure
+        case failedToResolveSecurityScopedDocument(path: String)
+        case failedToAccessSecurityScopedDocument(path: String)
 
         var errorDescription: String? {
             switch self {
             case .uiTestForcedFailure:
                 return "Simulated SwiftTag document save failure."
+            case let .failedToResolveSecurityScopedDocument(path):
+                return "Failed to resolve security-scoped access for \(path). Reopen the document and try again."
+            case let .failedToAccessSecurityScopedDocument(path):
+                return "Failed to access \(path) for saving."
             }
         }
     }
@@ -96,6 +108,7 @@ struct ContentView: View {
     @State private var loadedReopenRecordID: UUID?
     @State private var uiTestFileActionTask: Task<Void, Never>?
     @State private var trackFileMonitor: TrackFileMonitor = .init()
+    @State private var swiftTagDocumentMonitor: SwiftTagDocumentMonitor = .init()
     @FocusState private var focusedMiscTagKeyRowID: MiscTagRow.ID?
     @Environment(\.openWindow) private var openWindow
     @AppStorage(SaveSettingsKey.defaultSavePayload) private var defaultSavePayloadRawValue: String = SaveSettingsDefaults.defaultSavePayload.rawValue
@@ -855,6 +868,7 @@ struct ContentView: View {
                 syncAlbumArtContext()
                 configureWindowRouting()
                 refreshTrackMonitoring()
+                refreshSwiftTagDocumentMonitoring()
                 loadUITestStateIfNeeded()
                 loadReopenRecordIfNeeded()
                 registerUnsavedChangesSession()
@@ -882,6 +896,7 @@ struct ContentView: View {
             .onChange(of: viewModel.swiftTagDocumentSaveState()) { _, _ in
                 registerEditorSession()
                 refreshTrackMonitoring()
+                refreshSwiftTagDocumentMonitoring()
             }
             .onChange(of: autoUpdateTrackTotal) { _, _ in
                 applyAutoTrackTotalIfNeeded()
@@ -1243,7 +1258,7 @@ struct ContentView: View {
                         saveReferencedSwiftTagDocument: settings.saveReferencedSwiftTagDocument,
                         askToSaveNewSwiftTagDocument: settings.askToSaveNewSwiftTagDocument,
                         askToSaveNewSwiftTagDocumentOk: askToSaveNewSwiftTagDocumentOk,
-                        hasReferencedSwiftTagDocument: viewModel.swiftTagDocumentSaveState().destinationURL != nil
+                        hasReferencedSwiftTagDocument: viewModel.swiftTagDocumentSaveState().hasReferencedDocument
                     )
                 )
             } catch {
@@ -1342,10 +1357,16 @@ struct ContentView: View {
 
     private func performSwiftTagDocumentSave(using destinationMode: SwiftTagDocumentSaveDestinationMode) throws -> Bool {
         let currentState = viewModel.swiftTagDocumentSaveState()
-        guard let destinationURL = resolveSwiftTagDocumentDestination(
-            using: destinationMode,
-            currentState: currentState
-        ) else {
+        let destinationURL: URL?
+        if currentState.isDeleted, destinationMode != .promptForNewDocument {
+            destinationURL = resolveDeletedSwiftTagDocumentRecoveryDestination(currentState: currentState)
+        } else {
+            destinationURL = resolveSwiftTagDocumentDestination(
+                using: destinationMode,
+                currentState: currentState
+            )
+        }
+        guard let destinationURL else {
             return false
         }
 
@@ -1356,15 +1377,76 @@ struct ContentView: View {
             throw SwiftTagDocumentSaveFlowError.uiTestForcedFailure
         }
 
-        let result = try SwiftTagDocumentPackageWriter.save(
-            tracks: exportTracks,
-            state: currentState,
-            to: destinationURL
-        )
+        let result = try withAccessingResolvedSwiftTagDocumentDestination(
+            currentState: currentState,
+            destinationMode: destinationMode,
+            destinationURL: destinationURL
+        ) { resolvedDestinationURL in
+            try SwiftTagDocumentPackageWriter.save(
+                tracks: exportTracks,
+                state: currentState,
+                to: resolvedDestinationURL
+            )
+        }
         viewModel.rememberSwiftTagDocumentSave(result)
         registerEditorSession()
         performUITestPostSaveReferenceMutationIfNeeded(sourceURL: postSaveMutationSourceURL)
         return true
+    }
+
+    private func withAccessingResolvedSwiftTagDocumentDestination<T>(
+        currentState: SwiftTagDocumentSaveState,
+        destinationMode: SwiftTagDocumentSaveDestinationMode,
+        destinationURL: URL,
+        _ body: (URL) throws -> T
+    ) throws -> T {
+        let normalizedDestinationURL = destinationURL.standardizedFileURL
+        guard let resolvedDestinationURL = try resolvedSecurityScopedSwiftTagDocumentDestination(
+            currentState: currentState,
+            destinationMode: destinationMode,
+            destinationURL: normalizedDestinationURL
+        ) else {
+            return try body(normalizedDestinationURL)
+        }
+
+        let didAccess = resolvedDestinationURL.startAccessingSecurityScopedResource()
+        guard didAccess else {
+            throw SwiftTagDocumentSaveFlowError.failedToAccessSecurityScopedDocument(
+                path: resolvedDestinationURL.path
+            )
+        }
+        defer {
+            resolvedDestinationURL.stopAccessingSecurityScopedResource()
+        }
+
+        return try body(resolvedDestinationURL)
+    }
+
+    private func resolvedSecurityScopedSwiftTagDocumentDestination(
+        currentState: SwiftTagDocumentSaveState,
+        destinationMode: SwiftTagDocumentSaveDestinationMode,
+        destinationURL: URL
+    ) throws -> URL? {
+        guard !currentState.isDeleted,
+              destinationMode != .promptForNewDocument,
+              let bookmarkData = currentState.securityScopedBookmarkData,
+              currentState.liveDestinationURL?.standardizedFileURL == destinationURL else {
+            return nil
+        }
+
+        do {
+            var isStale = false
+            return try URL(
+                resolvingBookmarkData: bookmarkData,
+                options: [.withSecurityScope, .withoutUI],
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ).standardizedFileURL
+        } catch {
+            throw SwiftTagDocumentSaveFlowError.failedToResolveSecurityScopedDocument(
+                path: destinationURL.path
+            )
+        }
     }
 
     private func resolveSwiftTagDocumentDestination(
@@ -1373,15 +1455,81 @@ struct ContentView: View {
     ) -> URL? {
         switch destinationMode {
         case .rememberedOrPrompt:
-            if let rememberedURL = currentState.destinationURL {
+            if let rememberedURL = currentState.liveDestinationURL {
                 return rememberedURL
             }
             return promptForSwiftTagDocumentDestination()
         case .rememberedOnly:
-            return currentState.destinationURL
+            return currentState.liveDestinationURL
         case .promptForNewDocument:
             return promptForSwiftTagDocumentDestination()
         }
+    }
+
+    private func resolveDeletedSwiftTagDocumentRecoveryDestination(
+        currentState: SwiftTagDocumentSaveState
+    ) -> URL? {
+        switch promptForDeletedSwiftTagDocumentRecovery(currentState: currentState) {
+        case .saveNewDocument:
+            return promptForSwiftTagDocumentDestination()
+        case .recreateOriginal:
+            return currentState.navigationDocumentURL
+        case .cancel:
+            return nil
+        }
+    }
+
+    private func promptForDeletedSwiftTagDocumentRecovery(
+        currentState: SwiftTagDocumentSaveState
+    ) -> DeletedSwiftTagDocumentRecoveryChoice {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Referenced SwiftTag Document Was Deleted"
+
+        let documentName = currentState.documentDisplayName ?? "SwiftTag Document"
+        let canRecreateOriginal = canRecreateDeletedSwiftTagDocument(at: currentState.navigationDocumentURL)
+        if canRecreateOriginal {
+            alert.informativeText =
+                "\(documentName) is no longer available. Save to a new file or recreate it at the original location."
+        } else {
+            alert.informativeText =
+                "\(documentName) is no longer available. Save to a new file to keep using this session."
+        }
+
+        alert.addButton(withTitle: "Save New File...")
+        if canRecreateOriginal {
+            alert.addButton(withTitle: "Recreate Original")
+        }
+        alert.addButton(withTitle: "Cancel")
+        alert.buttons.last?.keyEquivalent = "\u{1b}"
+
+        let response = alert.runModal()
+        let firstButton = NSApplication.ModalResponse.alertFirstButtonReturn
+        if response == firstButton {
+            return .saveNewDocument
+        }
+
+        if canRecreateOriginal,
+           response == NSApplication.ModalResponse(rawValue: firstButton.rawValue + 1) {
+            return .recreateOriginal
+        }
+
+        return .cancel
+    }
+
+    private func canRecreateDeletedSwiftTagDocument(at documentURL: URL?) -> Bool {
+        guard let documentURL else {
+            return false
+        }
+
+        let parentDirectoryURL = documentURL.deletingLastPathComponent()
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: parentDirectoryURL.path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            return false
+        }
+
+        return FileManager.default.isWritableFile(atPath: parentDirectoryURL.path)
     }
 
     private func presentSaveError(_ error: Error) {
@@ -1426,8 +1574,8 @@ struct ContentView: View {
                 tagEdits: editCounts.tagEdits,
                 pictureEdits: editCounts.pictureEdits
             ),
-            hasReferencedSwiftTagDocument: saveState.destinationURL != nil,
-            referencedSwiftTagDocumentURL: saveState.destinationURL
+            hasReferencedSwiftTagDocument: saveState.hasReferencedDocument,
+            referencedSwiftTagDocumentURL: saveState.navigationDocumentURL
         )
     }
 
@@ -1652,6 +1800,7 @@ struct ContentView: View {
                     albumArtPictures: currentAlbumArtPictures
                 )
                 refreshTrackMonitoring()
+                refreshSwiftTagDocumentMonitoring()
                 registerEditorSession()
             } catch {
                 importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
@@ -1692,6 +1841,8 @@ struct ContentView: View {
         UnsavedChangesCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
         trackFileMonitor.stopAll()
         trackFileMonitor = .init()
+        swiftTagDocumentMonitor.stopAll()
+        swiftTagDocumentMonitor = .init()
         viewModel = .init()
         albumArtViewModel = .init()
         saveStatusState = nil
@@ -1721,7 +1872,7 @@ struct ContentView: View {
         EditorWindowCoordinator.shared.register(
             sessionValue: sessionValue,
             trackReferences: viewModel.importedTrackReferences,
-            swiftTagDocumentURL: swiftTagDocumentState.destinationURL,
+            swiftTagDocumentURL: swiftTagDocumentState.liveDestinationURL,
             swiftTagDocumentID: swiftTagDocumentState.documentID
         )
     }
@@ -1796,6 +1947,19 @@ struct ContentView: View {
                     importErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                     isImportErrorPresented = true
                 }
+            }
+        }
+    }
+
+    private func refreshSwiftTagDocumentMonitoring() {
+        swiftTagDocumentMonitor.replaceObservation(with: viewModel.swiftTagDocumentSaveState()) { event in
+            let didChange = viewModel.refreshSwiftTagDocumentSaveState(currentPath: event.currentPath)
+            if didChange {
+                registerEditorSession()
+            }
+
+            DispatchQueue.main.async {
+                refreshSwiftTagDocumentMonitoring()
             }
         }
     }

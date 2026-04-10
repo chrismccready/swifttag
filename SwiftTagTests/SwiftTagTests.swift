@@ -71,6 +71,13 @@ struct SwiftTagTests {
         return fileURL
     }
 
+    private static func tempPackageURL(name: String) throws -> URL {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        return directoryURL.appendingPathComponent(name).appendingPathExtension(SwiftTagDocumentType.fileExtension)
+    }
+
     private static func importedTrack(fileURL: URL, tags: [String: String]) -> Track {
         Track(
             tags: tags,
@@ -1845,6 +1852,52 @@ struct SwiftTagTests {
 
         #expect(metadata.title == "Session.swifttag")
         #expect(metadata.documentDisplayName == "Session.swifttag")
+        #expect(metadata.documentURL == documentURL.standardizedFileURL)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataShowsDeletedAssociatedDocumentState() throws {
+        let track = Track(
+            album: "Album",
+            tags: [
+                TagKey.album: "Album",
+                TagKey.title: "Track",
+                TagKey.filename: "track.flac"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/track.flac")
+        )
+        let documentURL = try Self.tempPackageURL(name: "Deleted Session")
+        let saveResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/track.flac",
+                    tags: [TagKey.title: "Track"],
+                    pictures: [],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/track.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: "fingerprint"
+                )
+            ],
+            state: .init(),
+            to: documentURL
+        )
+        try FileManager.default.removeItem(at: documentURL)
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.rememberSwiftTagDocumentSave(saveResult)
+
+        let didRefresh = viewModel.refreshSwiftTagDocumentSaveState(allowMissingRetry: false)
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(didRefresh)
+        #expect(metadata.title == "Deleted Session.swifttag (deleted)")
+        #expect(metadata.documentDisplayName == "Deleted Session.swifttag")
         #expect(metadata.documentURL == documentURL.standardizedFileURL)
     }
 
@@ -4627,6 +4680,58 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
         XCTAssertTrue(didRouteDocuments)
         XCTAssertEqual(openedSessions, [sessionValue])
         XCTAssertNil(deliveredDocumentURL)
+    }
+
+    @MainActor
+    func testEditorWindowCoordinatorRoutesMovedSwiftTagDocumentByDocumentID() throws {
+        let coordinator = EditorWindowCoordinator.shared
+        coordinator.resetForTesting()
+
+        let tempDirectoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDirectoryURL, withIntermediateDirectories: true)
+        let originalDocumentURL = tempDirectoryURL
+            .appendingPathComponent("coordinator-document")
+            .appendingPathExtension(SwiftTagDocumentType.fileExtension)
+        let saveResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/track.flac",
+                    tags: [TagKey.title: "Track"],
+                    pictures: [],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/track.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: "fingerprint"
+                )
+            ],
+            state: .init(),
+            to: originalDocumentURL
+        )
+
+        let movedDirectoryURL = originalDocumentURL.deletingLastPathComponent()
+            .appendingPathComponent("Moved", isDirectory: true)
+        try FileManager.default.createDirectory(at: movedDirectoryURL, withIntermediateDirectories: true)
+        let movedDocumentURL = movedDirectoryURL.appendingPathComponent(originalDocumentURL.lastPathComponent)
+        try FileManager.default.moveItem(at: originalDocumentURL, to: movedDocumentURL)
+
+        let sessionValue = EditorSessionValue(sessionID: UUID())
+        coordinator.register(
+            sessionValue: sessionValue,
+            trackReferences: [],
+            swiftTagDocumentURL: originalDocumentURL,
+            swiftTagDocumentID: saveResult.documentID
+        )
+
+        var openedSessions: [EditorSessionValue] = []
+        coordinator.setOpenEditorWindowAction { openedSession in
+            openedSessions.append(openedSession)
+        }
+        coordinator.registerSwiftTagDocumentOpenHandler(sessionID: sessionValue.sessionID) { _ in }
+
+        let didRouteDocuments = coordinator.routeOpenedSwiftTagDocuments([movedDocumentURL])
+
+        XCTAssertTrue(didRouteDocuments)
+        XCTAssertEqual(openedSessions, [sessionValue])
     }
 
     @MainActor

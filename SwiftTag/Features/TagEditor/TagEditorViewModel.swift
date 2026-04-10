@@ -53,6 +53,7 @@ final class TagEditorViewModel {
     private let totalTrackTagKeys: [String] = ["TOTALTRACKS", "TRACKTOTAL"]
     private let totalDiscTagKeys: [String] = ["TOTALDISCS", "DISCTOTAL"]
     private var pendingMissingRefreshTasks: [UUID: Task<Void, Never>] = [:]
+    private var pendingSwiftTagDocumentMissingRefreshTask: Task<Void, Never>?
     private var pendingAlbumValue: String = ""
     private var pendingAlbumArtistValue: String = ""
     private var rememberedSwiftTagDocumentSaveState: SwiftTagDocumentSaveState = .init()
@@ -219,16 +220,26 @@ final class TagEditorViewModel {
     }
 
     func rememberSwiftTagDocumentSave(_ result: SwiftTagDocumentSaveResult) {
-        rememberedSwiftTagDocumentSaveState.destinationURL = result.destinationURL
-        rememberedSwiftTagDocumentSaveState.documentID = result.documentID
+        rememberedSwiftTagDocumentSaveState = makeSwiftTagDocumentSaveState(
+            destinationURL: result.destinationURL,
+            documentID: result.documentID,
+            securityScopedBookmarkData: result.securityScopedBookmarkData,
+            availability: .available
+        )
+        cancelPendingSwiftTagDocumentMissingRefresh()
     }
 
     func loadSwiftTagDocument(
         _ document: SwiftTagDocumentImportResult,
         tagWriteOptions: TagWriteOptions
     ) {
-        rememberedSwiftTagDocumentSaveState.destinationURL = document.documentURL
-        rememberedSwiftTagDocumentSaveState.documentID = document.documentID
+        rememberedSwiftTagDocumentSaveState = makeSwiftTagDocumentSaveState(
+            destinationURL: document.documentURL,
+            documentID: document.documentID,
+            securityScopedBookmarkData: document.securityScopedBookmarkData,
+            availability: .available
+        )
+        cancelPendingSwiftTagDocumentMissingRefresh()
         selectedTrackIDs.removeAll()
         selectedMiscTagRowIDs.removeAll()
         originalMiscTagKeyByRowID.removeAll()
@@ -476,8 +487,9 @@ final class TagEditorViewModel {
         tagWriteOptions: TagWriteOptions,
         albumArtPictures: [FlacWritablePictureRecord]
     ) -> EditorNavigationMetadata {
-        let documentURL = rememberedSwiftTagDocumentSaveState.destinationURL?.standardizedFileURL
-        let documentDisplayName = documentURL?.lastPathComponent
+        let documentState = rememberedSwiftTagDocumentSaveState
+        let documentURL = documentState.navigationDocumentURL
+        let documentDisplayName = documentState.documentDisplayName
         let allTrackIDs = Set(trackItems.map(\.id))
         let selectedTrackCount = trackItems.count(where: { selectedTrackIDs.contains($0.id) })
         let totalDifferenceCounts = differenceCounts(
@@ -492,7 +504,7 @@ final class TagEditorViewModel {
         )
 
         return EditorNavigationMetadata(
-            title: editorNavigationTitle(documentDisplayName: documentDisplayName),
+            title: editorNavigationTitle(documentState: documentState),
             subtitle: [
                 "Tracks: \(trackItems.count) (\(selectedTrackCount))",
                 "Tag \u{0394}: \(totalDifferenceCounts.tagEdits) (\(selectedDifferenceCounts.tagEdits))",
@@ -501,6 +513,46 @@ final class TagEditorViewModel {
             documentURL: documentURL,
             documentDisplayName: documentDisplayName
         )
+    }
+
+    @discardableResult
+    func refreshSwiftTagDocumentSaveState(
+        currentPath: String? = nil,
+        allowMissingRetry: Bool = true
+    ) -> Bool {
+        guard rememberedSwiftTagDocumentSaveState.hasReferencedDocument else {
+            cancelPendingSwiftTagDocumentMissingRefresh()
+            return false
+        }
+
+        if let resolvedReference = resolvedSwiftTagDocumentReference(currentPath: currentPath) {
+            cancelPendingSwiftTagDocumentMissingRefresh()
+            let updatedState = makeSwiftTagDocumentSaveState(
+                destinationURL: resolvedReference.fileURL,
+                documentID: rememberedSwiftTagDocumentSaveState.documentID,
+                securityScopedBookmarkData: resolvedReference.refreshedBookmarkData,
+                availability: .available
+            )
+            guard updatedState != rememberedSwiftTagDocumentSaveState else {
+                return false
+            }
+
+            rememberedSwiftTagDocumentSaveState = updatedState
+            return true
+        }
+
+        if allowMissingRetry {
+            scheduleMissingSwiftTagDocumentRefresh()
+            return false
+        }
+
+        let deletedState = makeDeletedSwiftTagDocumentSaveState()
+        guard deletedState != rememberedSwiftTagDocumentSaveState else {
+            return false
+        }
+
+        rememberedSwiftTagDocumentSaveState = deletedState
+        return true
     }
 
     func selectedDateBinding() -> Binding<Date>? {
@@ -953,6 +1005,7 @@ final class TagEditorViewModel {
             trackItems.append(contentsOf: importedTracks)
             importedFlacPicturesByType.merge(importedPicturesByType) { existing, _ in existing }
         } else {
+            cancelPendingSwiftTagDocumentMissingRefresh()
             rememberedSwiftTagDocumentSaveState = .init()
             importedFlacPicturesByType = importedPicturesByType
             trackItems = importedTracks
@@ -2001,9 +2054,141 @@ final class TagEditorViewModel {
         return "Unknown track"
     }
 
-    private func editorNavigationTitle(documentDisplayName: String?) -> String {
-        if let documentDisplayName, !documentDisplayName.isEmpty {
-            return documentDisplayName
+    private func makeSwiftTagDocumentSaveState(
+        destinationURL: URL?,
+        documentID: UUID?,
+        securityScopedBookmarkData: Data?,
+        availability: SwiftTagDocumentAvailability
+    ) -> SwiftTagDocumentSaveState {
+        let normalizedDestinationURL = destinationURL?.standardizedFileURL
+        let lastKnownDisplayName = normalizedDestinationURL?.lastPathComponent ??
+            rememberedSwiftTagDocumentSaveState.lastKnownDisplayName
+
+        return SwiftTagDocumentSaveState(
+            destinationURL: normalizedDestinationURL,
+            documentID: documentID,
+            securityScopedBookmarkData: securityScopedBookmarkData,
+            lastKnownDisplayName: lastKnownDisplayName,
+            availability: availability
+        )
+    }
+
+    private func makeDeletedSwiftTagDocumentSaveState() -> SwiftTagDocumentSaveState {
+        SwiftTagDocumentSaveState(
+            destinationURL: rememberedSwiftTagDocumentSaveState.navigationDocumentURL,
+            documentID: rememberedSwiftTagDocumentSaveState.documentID,
+            securityScopedBookmarkData: rememberedSwiftTagDocumentSaveState.securityScopedBookmarkData,
+            lastKnownDisplayName: rememberedSwiftTagDocumentSaveState.documentDisplayName,
+            availability: .deleted
+        )
+    }
+
+    private func resolvedSwiftTagDocumentReference(
+        currentPath: String? = nil
+    ) -> ResolvedTrackFileReference? {
+        let currentFileURL: URL? = {
+            guard let currentPath else {
+                return nil
+            }
+
+            let trimmedCurrentPath = currentPath.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedCurrentPath.isEmpty else {
+                return nil
+            }
+
+            let candidateURL = URL(fileURLWithPath: trimmedCurrentPath).standardizedFileURL
+            guard FileManager.default.fileExists(atPath: candidateURL.path) else {
+                return nil
+            }
+
+            return candidateURL
+        }()
+
+        if let bookmarkData = rememberedSwiftTagDocumentSaveState.securityScopedBookmarkData {
+            do {
+                var isStale = false
+                let resolvedURL = try URL(
+                    resolvingBookmarkData: bookmarkData,
+                    options: [.withSecurityScope, .withoutUI],
+                    relativeTo: nil,
+                    bookmarkDataIsStale: &isStale
+                ).standardizedFileURL
+                let didAccess = resolvedURL.startAccessingSecurityScopedResource()
+                defer {
+                    if didAccess {
+                        resolvedURL.stopAccessingSecurityScopedResource()
+                    }
+                }
+
+                if didAccess, FileManager.default.fileExists(atPath: resolvedURL.path) {
+                    return ResolvedTrackFileReference(
+                        fileURL: resolvedURL,
+                        refreshedBookmarkData: try? resolvedURL.bookmarkData(
+                            options: URL.BookmarkCreationOptions.withSecurityScope,
+                            includingResourceValuesForKeys: nil,
+                            relativeTo: nil
+                        )
+                    )
+                }
+            } catch {
+                // Fall back to the remembered URL when the bookmark can no longer resolve.
+            }
+        }
+
+        if let currentFileURL,
+           FileManager.default.fileExists(atPath: currentFileURL.path) {
+            return ResolvedTrackFileReference(
+                fileURL: currentFileURL,
+                refreshedBookmarkData: try? currentFileURL.bookmarkData(
+                    options: URL.BookmarkCreationOptions.withSecurityScope,
+                    includingResourceValuesForKeys: nil,
+                    relativeTo: nil
+                )
+            )
+        }
+
+        if let rememberedURL = rememberedSwiftTagDocumentSaveState.navigationDocumentURL,
+           FileManager.default.fileExists(atPath: rememberedURL.path) {
+            return ResolvedTrackFileReference(
+                fileURL: rememberedURL,
+                refreshedBookmarkData: try? rememberedURL.bookmarkData(
+                    options: URL.BookmarkCreationOptions.withSecurityScope,
+                    includingResourceValuesForKeys: nil,
+                    relativeTo: nil
+                )
+            )
+        }
+
+        return nil
+    }
+
+    private func scheduleMissingSwiftTagDocumentRefresh() {
+        guard pendingSwiftTagDocumentMissingRefreshTask == nil else {
+            return
+        }
+
+        pendingSwiftTagDocumentMissingRefreshTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            guard let self else {
+                return
+            }
+
+            self.pendingSwiftTagDocumentMissingRefreshTask = nil
+            _ = self.refreshSwiftTagDocumentSaveState(allowMissingRetry: false)
+        }
+    }
+
+    private func cancelPendingSwiftTagDocumentMissingRefresh() {
+        pendingSwiftTagDocumentMissingRefreshTask?.cancel()
+        pendingSwiftTagDocumentMissingRefreshTask = nil
+    }
+
+    private func editorNavigationTitle(documentState: SwiftTagDocumentSaveState) -> String {
+        if let documentDisplayName = documentState.documentDisplayName,
+           !documentDisplayName.isEmpty {
+            return documentState.isDeleted
+                ? "\(documentDisplayName) (deleted)"
+                : documentDisplayName
         }
 
         let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }

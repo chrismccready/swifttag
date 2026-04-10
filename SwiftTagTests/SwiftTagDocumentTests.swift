@@ -322,6 +322,7 @@ struct SwiftTagDocumentTests {
         #expect(loadedDocument.documentURL == destinationURL.standardizedFileURL)
         #expect(loadedDocument.documentID == saveResult.documentID)
         #expect(loadedDocument.fingerprint == saveResult.fingerprint)
+        #expect(loadedDocument.securityScopedBookmarkData != nil)
         let loadedTrack = try #require(loadedDocument.tracks.first)
         #expect(loadedTrack.sourceFileURL?.path == "/tmp/reader.flac")
         #expect(loadedTrack.securityScopedBookmarkData == Data([0x0A, 0x0B]))
@@ -525,6 +526,75 @@ struct SwiftTagDocumentTests {
             tagWriteOptions: Self.defaultTagWriteOptions,
             albumArtPictures: []
         ))
+    }
+
+    @MainActor
+    @Test
+    func tagEditorViewModelRefreshesRenamedAssociatedSwiftTagDocumentReference() throws {
+        let originalDocumentURL = try Self.tempPackageURL(name: "associated-document-original")
+        let saveResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/track.flac",
+                    tags: [TagKey.title: "Track"],
+                    pictures: [],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/track.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: "fingerprint"
+                )
+            ],
+            state: .init(),
+            to: originalDocumentURL
+        )
+        let renamedDocumentURL = originalDocumentURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("associated-document-renamed.swifttag")
+        try FileManager.default.moveItem(at: originalDocumentURL, to: renamedDocumentURL)
+
+        let viewModel = TagEditorViewModel()
+        viewModel.rememberSwiftTagDocumentSave(saveResult)
+
+        let didRefresh = viewModel.refreshSwiftTagDocumentSaveState(allowMissingRetry: false)
+        let state = viewModel.swiftTagDocumentSaveState()
+
+        #expect(didRefresh)
+        #expect(state.liveDestinationURL == renamedDocumentURL.standardizedFileURL)
+        #expect(state.navigationDocumentURL == renamedDocumentURL.standardizedFileURL)
+        #expect(state.documentDisplayName == "associated-document-renamed.swifttag")
+        #expect(!state.isDeleted)
+    }
+
+    @MainActor
+    @Test
+    func tagEditorViewModelRefreshMarksDeletedAssociatedSwiftTagDocumentState() throws {
+        let documentURL = try Self.tempPackageURL(name: "associated-document-deleted")
+        let saveResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/track.flac",
+                    tags: [TagKey.title: "Track"],
+                    pictures: [],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/track.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: "fingerprint"
+                )
+            ],
+            state: .init(),
+            to: documentURL
+        )
+        try FileManager.default.removeItem(at: documentURL)
+
+        let viewModel = TagEditorViewModel()
+        viewModel.rememberSwiftTagDocumentSave(saveResult)
+
+        let didRefresh = viewModel.refreshSwiftTagDocumentSaveState(allowMissingRetry: false)
+        let state = viewModel.swiftTagDocumentSaveState()
+
+        #expect(didRefresh)
+        #expect(state.isDeleted)
+        #expect(state.liveDestinationURL == nil)
+        #expect(state.navigationDocumentURL == documentURL.standardizedFileURL)
+        #expect(state.documentDisplayName == "associated-document-deleted.swifttag")
     }
 
     @MainActor
@@ -912,6 +982,56 @@ struct SwiftTagDocumentTests {
         )
         #expect(viewModel.trackItems.first?.externalDifferences == nil)
         #expect(!viewModel.hasDeletedFile(for: trackID))
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentMonitorTracksAssociatedDocumentRename() async throws {
+        let originalDocumentURL = try Self.tempPackageURL(name: "associated-monitor-original")
+        let saveResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/track.flac",
+                    tags: [TagKey.title: "Track"],
+                    pictures: [],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/track.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: "fingerprint"
+                )
+            ],
+            state: .init(),
+            to: originalDocumentURL
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.rememberSwiftTagDocumentSave(saveResult)
+        let monitor = SwiftTagDocumentMonitor()
+        defer { monitor.stopAll() }
+
+        @MainActor
+        func onChange(_ event: SwiftTagDocumentMonitorEvent) {
+            _ = viewModel.refreshSwiftTagDocumentSaveState(currentPath: event.currentPath)
+            monitor.replaceObservation(with: viewModel.swiftTagDocumentSaveState(), onChange: onChange)
+        }
+
+        monitor.replaceObservation(with: viewModel.swiftTagDocumentSaveState(), onChange: onChange)
+
+        let renamedDocumentURL = originalDocumentURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("associated-monitor-renamed.swifttag")
+        try FileManager.default.moveItem(at: originalDocumentURL, to: renamedDocumentURL)
+
+        let sawRename = await Self.waitUntil {
+            viewModel.swiftTagDocumentSaveState().liveDestinationURL == renamedDocumentURL.standardizedFileURL
+        }
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(sawRename)
+        #expect(metadata.title == "associated-monitor-renamed.swifttag")
+        #expect(metadata.documentURL == renamedDocumentURL.standardizedFileURL)
     }
 }
 

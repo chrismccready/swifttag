@@ -351,7 +351,16 @@ final class EditorWindowCoordinator {
     }
 
     private func existingSession(forSwiftTagDocumentURL documentURL: URL) -> EditorSessionValue? {
-        guard let sessionValue = sessionBySwiftTagDocumentPath[documentURL.standardizedFileURL.path] else {
+        if let sessionValue = sessionBySwiftTagDocumentPath[documentURL.standardizedFileURL.path] {
+            return liveSessionValue(
+                for: sessionValue,
+                requiresExternalOpenHandler: false,
+                requiresSwiftTagDocumentOpenHandler: true
+            )
+        }
+
+        guard let documentID = SwiftTagDocumentPackageIdentity.documentID(at: documentURL),
+              let sessionValue = sessionBySwiftTagDocumentID[documentID] else {
             return nil
         }
 

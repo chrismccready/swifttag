@@ -14,12 +14,76 @@ extension UTType {
 struct SwiftTagDocumentSaveState: Equatable {
     var destinationURL: URL?
     var documentID: UUID?
+    var securityScopedBookmarkData: Data?
+    var lastKnownDisplayName: String?
+    var availability: SwiftTagDocumentAvailability = .available
+
+    var liveDestinationURL: URL? {
+        guard availability == .available else {
+            return nil
+        }
+
+        return destinationURL?.standardizedFileURL
+    }
+
+    var navigationDocumentURL: URL? {
+        destinationURL?.standardizedFileURL
+    }
+
+    var documentDisplayName: String? {
+        if let liveName = liveDestinationURL?.lastPathComponent,
+           !liveName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return liveName
+        }
+
+        if let lastKnownDisplayName,
+           !lastKnownDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return lastKnownDisplayName
+        }
+
+        if let destinationName = destinationURL?.lastPathComponent,
+           !destinationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return destinationName
+        }
+
+        return nil
+    }
+
+    var hasReferencedDocument: Bool {
+        liveDestinationURL != nil ||
+            navigationDocumentURL != nil ||
+            documentID != nil ||
+            securityScopedBookmarkData != nil ||
+            documentDisplayName != nil
+    }
+
+    var isDeleted: Bool {
+        availability == .deleted
+    }
+}
+
+enum SwiftTagDocumentAvailability: String, Codable, Equatable {
+    case available
+    case deleted
 }
 
 struct SwiftTagDocumentSaveResult: Equatable {
     let destinationURL: URL
     let documentID: UUID
     let fingerprint: String
+    let securityScopedBookmarkData: Data?
+
+    init(
+        destinationURL: URL,
+        documentID: UUID,
+        fingerprint: String,
+        securityScopedBookmarkData: Data? = nil
+    ) {
+        self.destinationURL = destinationURL
+        self.documentID = documentID
+        self.fingerprint = fingerprint
+        self.securityScopedBookmarkData = securityScopedBookmarkData
+    }
 }
 
 struct SwiftTagDocumentImportTrack: Equatable {
@@ -36,6 +100,43 @@ struct SwiftTagDocumentImportResult: Equatable {
     let documentID: UUID
     let fingerprint: String
     let tracks: [SwiftTagDocumentImportTrack]
+    let securityScopedBookmarkData: Data?
+
+    init(
+        documentURL: URL,
+        documentID: UUID,
+        fingerprint: String,
+        tracks: [SwiftTagDocumentImportTrack],
+        securityScopedBookmarkData: Data? = nil
+    ) {
+        self.documentURL = documentURL
+        self.documentID = documentID
+        self.fingerprint = fingerprint
+        self.tracks = tracks
+        self.securityScopedBookmarkData = securityScopedBookmarkData
+    }
+}
+
+enum SwiftTagDocumentPackageIdentity {
+    static func documentID(
+        at documentURL: URL,
+        fileManager: FileManager = .default
+    ) -> UUID? {
+        guard fileManager.fileExists(atPath: documentURL.path) else {
+            return nil
+        }
+
+        let infoPlistURL = documentURL
+            .appendingPathComponent(SwiftTagDocumentPackageConstants.infoPlistFileName)
+        guard let plistData = try? Data(contentsOf: infoPlistURL),
+              let plist = try? PropertyListSerialization.propertyList(from: plistData, options: [], format: nil),
+              let dictionary = plist as? [String: Any],
+              let rawID = dictionary["Id"] as? String else {
+            return nil
+        }
+
+        return UUID(uuidString: rawID)
+    }
 }
 
 struct SwiftTagDocumentExportTrack: Equatable {
@@ -195,7 +296,12 @@ enum SwiftTagDocumentPackageReader {
                 documentURL: normalizedDocumentURL,
                 documentID: package.documentID,
                 fingerprint: package.manifest.fingerprint,
-                tracks: tracks
+                tracks: tracks,
+                securityScopedBookmarkData: try? normalizedDocumentURL.bookmarkData(
+                    options: .withSecurityScope,
+                    includingResourceValuesForKeys: nil,
+                    relativeTo: nil
+                )
             )
         } catch let error as SwiftTagDocumentPackageError {
             throw error
@@ -309,7 +415,12 @@ enum SwiftTagDocumentPackageWriter {
         return SwiftTagDocumentSaveResult(
             destinationURL: normalizedDestinationURL,
             documentID: package.documentID,
-            fingerprint: package.manifest.fingerprint
+            fingerprint: package.manifest.fingerprint,
+            securityScopedBookmarkData: try? normalizedDestinationURL.bookmarkData(
+                options: .withSecurityScope,
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
         )
     }
 
@@ -576,20 +687,7 @@ enum SwiftTagDocumentPackageWriter {
     }
 
     private static func existingDocumentID(at destinationURL: URL, fileManager: FileManager) -> UUID? {
-        guard fileManager.fileExists(atPath: destinationURL.path) else {
-            return nil
-        }
-
-        let infoPlistURL = destinationURL
-            .appendingPathComponent(SwiftTagDocumentPackageConstants.infoPlistFileName)
-        guard let plistData = try? Data(contentsOf: infoPlistURL),
-              let plist = try? PropertyListSerialization.propertyList(from: plistData, options: [], format: nil),
-              let dictionary = plist as? [String: Any],
-              let rawID = dictionary["Id"] as? String else {
-            return nil
-        }
-
-        return UUID(uuidString: rawID)
+        SwiftTagDocumentPackageIdentity.documentID(at: destinationURL, fileManager: fileManager)
     }
 
     private static func normalizedFileURLString(_ url: URL?) -> String {

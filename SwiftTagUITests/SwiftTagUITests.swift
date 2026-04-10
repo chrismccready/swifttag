@@ -890,6 +890,66 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testControlSSavesMovedReferencedSwiftTagDocumentAfterExternalMove() throws {
+        let persistentFixtureName = "control-s-moved-document-\(UUID().uuidString)"
+        let updatedAlbum = "Moved Document Album \(UUID().uuidString)"
+        let originalDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Moved Document Original \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        let movedDirectoryURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Moved SwiftTag Documents \(UUID().uuidString)", isDirectory: true)
+        let movedDocumentURL = movedDirectoryURL
+            .appendingPathComponent("Moved Referenced Document \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        try? FileManager.default.removeItem(at: originalDocumentURL)
+        try? FileManager.default.removeItem(at: movedDocumentURL)
+        try FileManager.default.createDirectory(at: movedDirectoryURL, withIntermediateDirectories: true)
+
+        let app = try launchApp(
+            importFixture: true,
+            persistentFixtureName: persistentFixtureName,
+            resetSaveSettings: true,
+            saveReferencedSwiftTagDocument: true,
+            askToSaveNewSwiftTagDocument: false,
+            exposeNavigationMetadata: true
+        )
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
+        saveFileInSavePanel(in: app, destinationURL: originalDocumentURL)
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: originalDocumentURL, timeout: 10.0))
+
+        try FileManager.default.moveItem(at: originalDocumentURL, to: movedDocumentURL)
+
+        XCTAssertTrue(waitForFileExistence(at: movedDocumentURL, timeout: 10.0))
+        XCTAssertTrue(waitForNavigationTitle(in: window, expectedValue: movedDocumentURL.lastPathComponent, timeout: 10.0))
+        XCTAssertTrue(
+            waitForNavigationDocumentURL(
+                in: window,
+                expectedValue: movedDocumentURL.standardizedFileURL.path,
+                timeout: 10.0
+            )
+        )
+
+        clearAndType(in: app, element: editableAlbumField(in: app), text: updatedAlbum)
+        focusWindow(window)
+        performSaveSwiftTagDocumentShortcut(in: app)
+
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 2.0))
+        XCTAssertTrue(
+            waitForSwiftTagDocumentTagValue(
+                in: movedDocumentURL,
+                key: "ALBUM",
+                expectedValue: updatedAlbum,
+                timeout: 10.0
+            )
+        )
+        XCTAssertFalse(FileManager.default.fileExists(atPath: originalDocumentURL.path))
+    }
+
+    @MainActor
     func testFileMenuSavePromptsToCreateSwiftTagDocumentWhenSettingsEnabled() throws {
         let promptedAlbum = "Prompted Album \(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
