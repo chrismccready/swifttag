@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import Testing
 import ViewInspector
@@ -644,6 +645,33 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func tagEditorCoreTagsViewDimsCompilationCheckboxImageWhenDisabled() throws {
+        let button = try hostedCompilationCheckbox(
+            for: makeCoreTagsView(
+                isTrackTotalAutoUpdateEnabled: false,
+                compilationState: .mixed,
+                isCompilationEditable: false
+            )
+        )
+
+        let cell = try #require(button.cell as? NSButtonCell)
+        #expect(button.state == .mixed)
+        #expect(!button.isEnabled)
+        #expect(cell.imageDimsWhenDisabled)
+    }
+
+    @Test
+    func tagEditorCoreTagsViewCompilationCheckboxRespectsSwiftUIDisabledEnvironment() throws {
+        let button = try hostedCompilationCheckbox(
+            for: makeCoreTagsView(isTrackTotalAutoUpdateEnabled: false)
+                .disabled(true)
+        )
+
+        #expect(button.state == .off)
+        #expect(!button.isEnabled)
+    }
+
+    @Test
     func tagEditorCoreTagsViewSourcePlacesCompilationBetweenTotalDiscsAndGenre() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -840,7 +868,32 @@ struct TrackStatusViewInspectorTests {
         )
     }
 
-    private func makeCoreTagsView(isTrackTotalAutoUpdateEnabled: Bool) -> TagEditorCoreTagsView {
+    private func hostedCompilationCheckbox<Content: View>(for rootView: Content) throws -> NSButton {
+        let hostingView = NSHostingView(rootView: rootView)
+        hostingView.frame = NSRect(origin: .zero, size: hostingView.fittingSize)
+        hostingView.layoutSubtreeIfNeeded()
+        return try #require(findFirstButton(in: hostingView))
+    }
+
+    private func findFirstButton(in view: NSView) -> NSButton? {
+        if let button = view as? NSButton {
+            return button
+        }
+
+        for subview in view.subviews {
+            if let button = findFirstButton(in: subview) {
+                return button
+            }
+        }
+
+        return nil
+    }
+
+    private func makeCoreTagsView(
+        isTrackTotalAutoUpdateEnabled: Bool,
+        compilationState: CompilationToggleState = .off,
+        isCompilationEditable: Bool = true
+    ) -> TagEditorCoreTagsView {
         TagEditorCoreTagsView(
             totalTracksBinding: .constant("2"),
             isTotalTracksMixedSelection: false,
@@ -859,8 +912,8 @@ struct TrackStatusViewInspectorTests {
             hasTotalDiscsInternalDifference: false,
             selectedNumberBinding: .constant("1"),
             selectedDiscBinding: .constant("1"),
-            compilationState: .off,
-            isCompilationEditable: true,
+            compilationState: compilationState,
+            isCompilationEditable: isCompilationEditable,
             onSetCompilationEnabled: { _ in },
             selectedGenreBinding: .constant("Genre"),
             selectedArtistBinding: .constant("Artist"),

@@ -282,6 +282,8 @@ struct TagEditorCoreTagsView: View {
 }
 
 private struct MixedStateCheckbox: NSViewRepresentable {
+    @AppStorage(FeedbackSettingsKey.trackToTrackDiffColor)
+    private var trackToTrackDiffColorRawValue: String = FeedbackSettingsDefaults.trackToTrackDiffColor
     let state: CompilationToggleState
     let isEnabled: Bool
     let onChange: (Bool) -> Void
@@ -295,7 +297,15 @@ private struct MixedStateCheckbox: NSViewRepresentable {
         button.allowsMixedState = true
         button.setButtonType(.switch)
         button.imagePosition = .imageOnly
+        button.setAccessibilityIdentifier("coreTags.compilationCheckbox")
+        button.setAccessibilityLabel("Compilation")
+        if let cell = button.cell as? NSButtonCell {
+            // AppKit switch buttons only dim their associated text by default when disabled.
+            // Because this checkbox is image-only, dim the image too so disabled state stays visible.
+            cell.imageDimsWhenDisabled = true
+        }
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.wantsLayer = true
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: 18),
             button.heightAnchor.constraint(equalToConstant: 18)
@@ -306,15 +316,11 @@ private struct MixedStateCheckbox: NSViewRepresentable {
     func updateNSView(_ nsView: NSButton, context: Context) {
         context.coordinator.onChange = onChange
         context.coordinator.state = state
-        nsView.state = switch state {
-        case .off:
-            .off
-        case .on:
-            .on
-        case .mixed:
-            .mixed
-        }
-        nsView.isEnabled = isEnabled
+        nsView.isEnabled = isEnabled && context.environment.isEnabled
+        nsView.state = state.nsControlStateValue
+        nsView.needsDisplay = true
+        nsView.layer?.backgroundColor = state == .mixed ? AppColorStorage.color(from: trackToTrackDiffColorRawValue, fallback: .systemOrange).cgColor
+                                                        : (nsView.isEnabled ? NSColor.quaternarySystemFill.cgColor : NSColor.quinarySystemFill.cgColor)
     }
 
     final class Coordinator: NSObject {
@@ -334,15 +340,21 @@ private struct MixedStateCheckbox: NSViewRepresentable {
             }
 
             state = nextState
-            sender.state = switch nextState {
-            case .off:
-                .off
-            case .on:
-                .on
-            case .mixed:
-                .mixed
-            }
+            sender.state = nextState.nsControlStateValue
             onChange(nextState == .on)
+        }
+    }
+}
+
+private extension CompilationToggleState {
+    var nsControlStateValue: NSControl.StateValue {
+        switch self {
+        case .off:
+            .off
+        case .on:
+            .on
+        case .mixed:
+            .mixed
         }
     }
 }

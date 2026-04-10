@@ -22,6 +22,7 @@ final class SwiftTagUITests: XCTestCase {
         static let albumArtistTextField = "albumArtistTextField"
         static let trackStatusIcon = "trackStatusIcon"
         static let trackFilenameText = "trackFilenameText"
+        static let compilationCheckbox = "coreTags.compilationCheckbox"
         static let settingsTabView = "settings.tabView"
         static let defaultSavePayload = "settings.general.defaultSavePayload"
         static let defaultSaveScope = "settings.general.defaultSaveScope"
@@ -1198,6 +1199,29 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testCompilationCheckboxRetainsOnStateWhenSelectedTrackIsLocked() throws {
+        let app = try launchApp(importFixture: true)
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(waitForEnabledState(of: compilationCheckbox(in: app), expectedValue: true, timeout: 5.0))
+
+        setToggle(in: app, identifier: UIID.compilationCheckbox, isOn: true)
+        XCTAssertTrue(isToggleOn(in: app, identifier: UIID.compilationCheckbox))
+
+        openTrackContextMenu(in: app, expectedTitle: "Test Title")
+        let lockMenuItem = app.menuItems["Lock Selected Track"].firstMatch
+        XCTAssertTrue(lockMenuItem.waitForExistence(timeout: 2.0))
+        lockMenuItem.click()
+
+        XCTAssertTrue(waitForEnabledState(of: editableAlbumField(in: app), expectedValue: false, timeout: 5.0))
+        XCTAssertTrue(waitForEnabledState(of: compilationCheckbox(in: app), expectedValue: false, timeout: 5.0))
+        XCTAssertTrue(
+            isToggleOn(in: app, identifier: UIID.compilationCheckbox),
+            "Compilation checkbox lost its on-state after locking the selected track."
+        )
+    }
+
+    @MainActor
     func testNewWindowsCanBeSelectedAndEditedDeterministicallyWithOpenPanel() throws {
         let firstFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let secondFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
@@ -2114,6 +2138,16 @@ final class SwiftTagUITests: XCTestCase {
 
     private func editableAlbumArtistField(in scope: XCUIElement) -> XCUIElement {
         scope.descendants(matching: .textField).matching(identifier: UIID.albumArtistTextField).firstMatch
+    }
+
+    private func compilationCheckbox(in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: UIID.compilationCheckbox).firstMatch
+    }
+
+    private func openTrackContextMenu(in app: XCUIApplication, expectedTitle: String) {
+        let titleField = app.textFields.matching(NSPredicate(format: "value == %@", expectedTitle)).firstMatch
+        XCTAssertTrue(titleField.waitForExistence(timeout: 10.0))
+        titleField.rightClick()
     }
 
     private func focusWindow(_ window: XCUIElement) {

@@ -546,7 +546,7 @@ final class TagEditorViewModel {
     }
 
     func compilationToggleState(applyToAllTracks: Bool) -> CompilationToggleState? {
-        let trackIndices = compilationTrackIndices(applyToAllTracks: applyToAllTracks)
+        let trackIndices = compilationStateTrackIndices(applyToAllTracks: applyToAllTracks)
         guard !trackIndices.isEmpty else {
             return nil
         }
@@ -562,15 +562,15 @@ final class TagEditorViewModel {
     }
 
     func compilationTrackIDs(applyToAllTracks: Bool) -> Set<UUID> {
-        Set(compilationTrackIndices(applyToAllTracks: applyToAllTracks).map { trackItems[$0].id })
+        Set(compilationStateTrackIndices(applyToAllTracks: applyToAllTracks).map { trackItems[$0].id })
     }
 
     func canEditCompilation(applyToAllTracks: Bool) -> Bool {
-        !compilationTrackIndices(applyToAllTracks: applyToAllTracks).isEmpty
+        !compilationEditableTrackIndices(applyToAllTracks: applyToAllTracks).isEmpty
     }
 
     func setCompilationEnabled(_ isEnabled: Bool, applyToAllTracks: Bool) {
-        for index in compilationTrackIndices(applyToAllTracks: applyToAllTracks) {
+        for index in compilationEditableTrackIndices(applyToAllTracks: applyToAllTracks) {
             CompilationTag.setEnabled(isEnabled, in: &trackItems[index].tags)
             clearExternallyModifiedDifference(forTrackAt: index, keys: [TagKey.compilation])
         }
@@ -2480,12 +2480,31 @@ final class TagEditorViewModel {
         return normalizedTagValue(totalDiscs)
     }
 
-    private func compilationTrackIndices(applyToAllTracks: Bool) -> [Int] {
+    private func compilationStateTrackIndices(applyToAllTracks: Bool) -> [Int] {
+        let editableTrackIndices = compilationEditableTrackIndices(applyToAllTracks: applyToAllTracks)
+        if !editableTrackIndices.isEmpty {
+            return editableTrackIndices
+        }
+
+        return compilationScopedTrackIndices(applyToAllTracks: applyToAllTracks)
+    }
+
+    private func compilationEditableTrackIndices(applyToAllTracks: Bool) -> [Int] {
         trackItems.indices.filter { index in
             guard !trackItems[index].isLocked else {
                 return false
             }
 
+            if applyToAllTracks {
+                return true
+            }
+
+            return selectedTrackIDs.contains(trackItems[index].id)
+        }
+    }
+
+    private func compilationScopedTrackIndices(applyToAllTracks: Bool) -> [Int] {
+        trackItems.indices.filter { index in
             if applyToAllTracks {
                 return true
             }

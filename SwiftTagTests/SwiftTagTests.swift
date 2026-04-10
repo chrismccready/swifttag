@@ -3863,6 +3863,26 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func tagEditorViewModelCompilationToggleRetainsSelectedLockedTrackStateWhenReadOnly() {
+        let lockedSelected = Track(
+            tags: [
+                TagKey.title: "Locked On",
+                TagKey.filename: "locked-on.flac",
+                TagKey.compilation: "YES"
+            ],
+            isLocked: true
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [lockedSelected]
+        viewModel.selectedTrackIDs = [lockedSelected.id]
+
+        #expect(!viewModel.canEditCompilation(applyToAllTracks: false))
+        #expect(viewModel.compilationToggleState(applyToAllTracks: false) == .on)
+        #expect(viewModel.compilationTrackIDs(applyToAllTracks: false) == [lockedSelected.id])
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelCompilationToggleAppliesToAllUnlockedTracksWithoutSelection() {
         let unlockedOff = Track(
             tags: [
