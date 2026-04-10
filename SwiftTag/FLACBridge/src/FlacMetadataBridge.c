@@ -171,24 +171,33 @@ static int strings_equal_case_insensitive(const char *lhs, const char *rhs) {
     return *lhs == '\0' && *rhs == '\0';
 }
 
-static int ensure_single_png_icon_picture(const FlacWritePicture *pictures, size_t picture_count, char **error_message) {
+static int ensure_restricted_icon_pictures(const FlacWritePicture *pictures, size_t picture_count, char **error_message) {
     size_t type1_count = 0;
+    size_t type2_count = 0;
 
     for (size_t i = 0; i < picture_count; i++) {
         const FlacWritePicture *picture = &pictures[i];
-        if (picture->type != 1) {
+        if (picture->type == 1) {
+            type1_count += 1;
+            if (type1_count > 1) {
+                set_error(error_message, "FLAC picture type 1 allows only a single PNG icon per file.");
+                return -1;
+            }
+
+            if (!strings_equal_case_insensitive(picture->mime_type, "image/png")) {
+                set_error(error_message, "FLAC picture type 1 must use MIME type image/png.");
+                return -1;
+            }
+
             continue;
         }
 
-        type1_count += 1;
-        if (type1_count > 1) {
-            set_error(error_message, "FLAC picture type 1 allows only a single PNG icon per file.");
-            return -1;
-        }
-
-        if (!strings_equal_case_insensitive(picture->mime_type, "image/png")) {
-            set_error(error_message, "FLAC picture type 1 must use MIME type image/png.");
-            return -1;
+        if (picture->type == 2) {
+            type2_count += 1;
+            if (type2_count > 1) {
+                set_error(error_message, "FLAC picture type 2 allows only a single icon per file.");
+                return -1;
+            }
         }
     }
 
@@ -597,7 +606,7 @@ int flac_write_metadata(
         return 0;
     }
 
-    if (write_pictures && pictures != NULL && ensure_single_png_icon_picture(pictures, picture_count, error_message) != 0) {
+    if (write_pictures && pictures != NULL && ensure_restricted_icon_pictures(pictures, picture_count, error_message) != 0) {
         return -1;
     }
 

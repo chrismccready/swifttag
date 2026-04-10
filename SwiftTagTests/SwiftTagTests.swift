@@ -41,6 +41,23 @@ struct SwiftTagTests {
         return pngData
     }
 
+    private static func jpegData(color: NSColor) throws -> Data {
+        let imageSize = NSSize(width: 2, height: 2)
+        let image = NSImage(size: imageSize)
+        image.lockFocus()
+        color.setFill()
+        NSBezierPath(rect: NSRect(origin: .zero, size: imageSize)).fill()
+        image.unlockFocus()
+
+        guard let tiffData = image.tiffRepresentation,
+              let bitmapRepresentation = NSBitmapImageRep(data: tiffData),
+              let jpegData = bitmapRepresentation.representation(using: .jpeg, properties: [:]) else {
+            throw NSError(domain: "SwiftTagTests", code: 2)
+        }
+
+        return jpegData
+    }
+
     private static func tempFixtureCopyURL(name: String) throws -> URL {
         let directoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -4146,6 +4163,43 @@ struct SwiftTagTests {
                 writeTags: false,
                 writePictures: true
             )
+        }
+    }
+
+    @Test
+    func flacMetadataServiceRejectsMultipleTypeTwoPictures() throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "write-type2-multiple.flac")
+        let firstIcon = try Self.pngData(color: .black)
+        let secondIcon = try Self.jpegData(color: .white)
+
+        do {
+            try FlacMetadataService.writeMetadata(
+                pictures: [
+                    FlacWritablePictureRecord(
+                        type: 2,
+                        mimeType: "image/png",
+                        description: "Icon 1",
+                        data: firstIcon
+                    ),
+                    FlacWritablePictureRecord(
+                        type: 2,
+                        mimeType: "image/jpeg",
+                        description: "Icon 2",
+                        data: secondIcon
+                    )
+                ],
+                to: fileURL,
+                writeTags: false,
+                writePictures: true
+            )
+            Issue.record("Expected duplicate type 2 picture write to fail.")
+        } catch let error as FlacMetadataServiceError {
+            switch error {
+            case let .bridgeFailed(message):
+                #expect(message == "FLAC picture type 2 allows only a single icon per file.")
+            }
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
         }
     }
 
