@@ -149,7 +149,6 @@ struct SwiftTagDocumentExportTrack: Equatable {
 }
 
 enum SwiftTagDocumentPackageError: LocalizedError {
-    case noTracks
     case unsupportedPictureFormat(mimeType: String)
     case invalidDestination
     case failedToWritePackage(message: String)
@@ -160,8 +159,6 @@ enum SwiftTagDocumentPackageError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .noTracks:
-            return "There are no loaded tracks available to save into a SwiftTag document."
         case let .unsupportedPictureFormat(mimeType):
             if mimeType.isEmpty {
                 return "SwiftTag document export supports only JPEG and PNG picture assets."

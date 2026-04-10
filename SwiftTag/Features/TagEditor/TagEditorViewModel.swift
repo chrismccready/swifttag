@@ -329,7 +329,7 @@ final class TagEditorViewModel {
     }
 
     func canSaveSwiftTagDocument() -> Bool {
-        !trackItems.isEmpty || rememberedSwiftTagDocumentSaveState.hasReferencedDocument
+        true
     }
 
     func swiftTagDocumentExportTracks() -> [SwiftTagDocumentExportTrack] {

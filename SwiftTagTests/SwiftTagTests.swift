@@ -380,10 +380,10 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
-    func tagEditorViewModelCanSaveReferencedSwiftTagDocumentWithoutTracks() {
+    func tagEditorViewModelCanSaveSwiftTagDocumentWithoutTracks() {
         let viewModel = TagEditorViewModel()
 
-        #expect(!viewModel.canSaveSwiftTagDocument())
+        #expect(viewModel.canSaveSwiftTagDocument())
 
         viewModel.rememberSwiftTagDocumentSave(
             SwiftTagDocumentSaveResult(
