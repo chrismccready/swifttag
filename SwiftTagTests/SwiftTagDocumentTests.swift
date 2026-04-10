@@ -32,6 +32,19 @@ struct SwiftTagDocumentTests {
         return fileURL
     }
 
+    private static func bookmarkBackedTrack(fileURL: URL, tags: [String: String]) throws -> Track {
+        let bookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        return Track(
+            tags: tags,
+            sourceFileURL: fileURL,
+            securityScopedBookmarkData: bookmarkData
+        )
+    }
+
     @MainActor
     private static func waitUntil(
         timeoutNanoseconds: UInt64 = 2_000_000_000,
@@ -293,6 +306,22 @@ struct SwiftTagDocumentTests {
     }
 
     @Test
+    func swiftTagDocumentWriterAllowsEmptyTrackList() throws {
+        let destinationURL = try Self.tempPackageURL(name: "empty-package")
+
+        let result = try SwiftTagDocumentPackageWriter.save(
+            tracks: [],
+            state: .init(),
+            to: destinationURL
+        )
+        let loadedDocument = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+
+        #expect(loadedDocument.documentURL == destinationURL.standardizedFileURL)
+        #expect(loadedDocument.documentID == result.documentID)
+        #expect(loadedDocument.tracks.isEmpty)
+    }
+
+    @Test
     func swiftTagDocumentReaderLoadsWrittenPackage() throws {
         let sharedPNG = try Self.pngData(color: .systemOrange)
         let sharedPicture = FlacWritablePictureRecord(
@@ -530,6 +559,35 @@ struct SwiftTagDocumentTests {
 
     @MainActor
     @Test
+    func tagEditorViewModelLoadCapturesReferencedDocumentTrackListBaselineForPathlessTracks() throws {
+        let document = SwiftTagDocumentImportResult(
+            documentURL: try Self.tempPackageURL(name: "pathless-baseline"),
+            documentID: UUID(),
+            fingerprint: UUID().uuidString,
+            tracks: [
+                SwiftTagDocumentImportTrack(
+                    documentTrackFingerprint: UUID().uuidString,
+                    sourceFileURL: nil,
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: nil,
+                    tags: [TagKey.title: "Pathless Track"],
+                    pictures: []
+                )
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+
+        #expect(!viewModel.hasReferencedSwiftTagDocumentTrackListDifference())
+
+        viewModel.trackItems.append(Track(tags: [TagKey.title: "Added Pathless Track"]))
+
+        #expect(viewModel.hasReferencedSwiftTagDocumentTrackListDifference())
+    }
+
+    @MainActor
+    @Test
     func tagEditorViewModelRefreshesRenamedAssociatedSwiftTagDocumentReference() throws {
         let originalDocumentURL = try Self.tempPackageURL(name: "associated-document-original")
         let saveResult = try SwiftTagDocumentPackageWriter.save(
@@ -595,6 +653,60 @@ struct SwiftTagDocumentTests {
         #expect(state.liveDestinationURL == nil)
         #expect(state.navigationDocumentURL == documentURL.standardizedFileURL)
         #expect(state.documentDisplayName == "associated-document-deleted.swifttag")
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentNavigationMetadataShowsDirtyDeletedAssociatedDocumentState() throws {
+        let trackURL = try Self.tempFixtureCopyURL(name: "dirty-deleted-track.flac")
+        let bookmarkData = try trackURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let track = Track(
+            tags: [
+                TagKey.title: "Track",
+                TagKey.filename: trackURL.lastPathComponent
+            ],
+            sourceFileURL: trackURL,
+            securityScopedBookmarkData: bookmarkData
+        )
+        let documentURL = try Self.tempPackageURL(name: "dirty-deleted-session")
+        let saveResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: trackURL.path,
+                    tags: [TagKey.title: "Track"],
+                    pictures: [],
+                    sourceFileURL: trackURL,
+                    securityScopedBookmarkData: bookmarkData,
+                    flacFingerprint: nil
+                )
+            ],
+            state: .init(),
+            to: documentURL
+        )
+        try FileManager.default.removeItem(at: documentURL)
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.rememberSwiftTagDocumentSave(saveResult)
+        viewModel.trackItems.append(
+            try Self.bookmarkBackedTrack(
+                fileURL: try Self.tempFixtureCopyURL(name: "dirty-deleted-added.flac"),
+                tags: [TagKey.title: "Added", TagKey.filename: "dirty-deleted-added.flac"]
+            )
+        )
+
+        let didRefresh = viewModel.refreshSwiftTagDocumentSaveState(allowMissingRetry: false)
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(didRefresh)
+        #expect(metadata.title == "dirty-deleted-session.swifttag* (deleted)")
     }
 
     @MainActor

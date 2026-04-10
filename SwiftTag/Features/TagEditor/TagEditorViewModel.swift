@@ -9,6 +9,151 @@ struct EditorNavigationMetadata: Equatable {
     let documentDisplayName: String?
 }
 
+fileprivate enum TrackBookmarkIdentityResolver {
+    static func identity(for track: Track) -> String? {
+        identity(
+            bookmarkData: track.securityScopedBookmarkData,
+            fallbackFileURL: track.sourceFileURL
+        )
+    }
+
+    static func identity(for fileURL: URL?) -> String {
+        guard let fileURL else {
+            return ""
+        }
+
+        if let bookmarkData = try? fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        ),
+           let resolvedPath = resolvedPath(from: bookmarkData) {
+            return resolvedPath
+        }
+
+        return normalizedPath(for: fileURL) ?? ""
+    }
+
+    static func identity(
+        bookmarkData: Data?,
+        fallbackFileURL: URL?
+    ) -> String? {
+        if let bookmarkData,
+           let resolvedPath = resolvedPath(from: bookmarkData) {
+            return resolvedPath
+        }
+
+        return normalizedPath(for: fallbackFileURL)
+    }
+
+    static func identity(
+        bookmarkData: Data?,
+        fallbackSourceFilePath: String?
+    ) -> String? {
+        if let bookmarkData,
+           let resolvedPath = resolvedPath(from: bookmarkData) {
+            return resolvedPath
+        }
+
+        return normalizedPath(for: fallbackSourceFilePath)
+    }
+
+    static func normalizedPath(for fileURL: URL?) -> String? {
+        guard let fileURL else {
+            return nil
+        }
+
+        return fileURL.standardizedFileURL.resolvingSymlinksInPath().path
+    }
+
+    static func normalizedPath(for filePath: String?) -> String? {
+        guard let filePath else {
+            return nil
+        }
+
+        let trimmedFilePath = filePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedFilePath.isEmpty else {
+            return nil
+        }
+
+        return URL(fileURLWithPath: trimmedFilePath)
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
+            .path
+    }
+
+    static func resolvedPath(from bookmarkData: Data) -> String? {
+        do {
+            var isStale = false
+            let resolvedURL = try URL(
+                resolvingBookmarkData: bookmarkData,
+                options: [.withSecurityScope, .withoutUI],
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            )
+            let didAccess = resolvedURL.startAccessingSecurityScopedResource()
+            defer {
+                if didAccess {
+                    resolvedURL.stopAccessingSecurityScopedResource()
+                }
+            }
+            return normalizedPath(for: resolvedURL)
+        } catch {
+            return nil
+        }
+    }
+}
+
+@MainActor
+struct ReferencedSwiftTagDocumentTrackList: Equatable {
+    struct Entry: Equatable {
+        let securityScopedBookmarkData: Data?
+        let sourceFilePath: String?
+        let sessionTrackID: UUID
+
+        init(track: Track) {
+            securityScopedBookmarkData = track.securityScopedBookmarkData
+            sourceFilePath = TrackBookmarkIdentityResolver.normalizedPath(for: track.sourceFileURL)
+            sessionTrackID = track.id
+        }
+
+        fileprivate func resolvedIdentity() -> Identity {
+            if let normalizedPath = TrackBookmarkIdentityResolver.identity(
+                bookmarkData: securityScopedBookmarkData,
+                fallbackSourceFilePath: sourceFilePath
+            ) {
+                return .filePath(normalizedPath)
+            }
+
+            return .sessionTrackID(sessionTrackID)
+        }
+    }
+
+    fileprivate enum Identity: Equatable {
+        case filePath(String)
+        case sessionTrackID(UUID)
+    }
+
+    let entries: [Entry]
+
+    static func make(from tracks: [Track]) -> Self {
+        Self(entries: tracks.map(Entry.init(track:)))
+    }
+
+    static func differs(
+        current: Self,
+        baseline: Self?
+    ) -> Bool {
+        guard let baseline else {
+            return false
+        }
+
+        let currentIdentities = current.entries.map { $0.resolvedIdentity() }
+        let baselineIdentities = baseline.entries.map { $0.resolvedIdentity() }
+        return currentIdentities != baselineIdentities
+    }
+}
+
 enum TagEditorSaveError: LocalizedError {
     case noTracksToSave
     case failedToResolveAccess(path: String)
@@ -57,6 +202,7 @@ final class TagEditorViewModel {
     private var pendingAlbumValue: String = ""
     private var pendingAlbumArtistValue: String = ""
     private var rememberedSwiftTagDocumentSaveState: SwiftTagDocumentSaveState = .init()
+    private var referencedSwiftTagDocumentTrackListBaseline: ReferencedSwiftTagDocumentTrackList?
 
     init() {
         trackItems = []
@@ -183,7 +329,7 @@ final class TagEditorViewModel {
     }
 
     func canSaveSwiftTagDocument() -> Bool {
-        !trackItems.isEmpty
+        !trackItems.isEmpty || rememberedSwiftTagDocumentSaveState.hasReferencedDocument
     }
 
     func swiftTagDocumentExportTracks() -> [SwiftTagDocumentExportTrack] {
@@ -227,6 +373,7 @@ final class TagEditorViewModel {
             availability: .available
         )
         cancelPendingSwiftTagDocumentMissingRefresh()
+        acceptCurrentTrackListAsReferencedSwiftTagDocumentBaseline()
     }
 
     func loadSwiftTagDocument(
@@ -276,8 +423,20 @@ final class TagEditorViewModel {
 
         importedFlacPicturesByType = importedPicturesByType
         trackItems = loadedTracks
+        acceptCurrentTrackListAsReferencedSwiftTagDocumentBaseline()
         syncCurrentStateAsSaved(tagWriteOptions: tagWriteOptions, albumArtPictures: [])
         reloadMiscTagRowsFromSelection()
+    }
+
+    func hasReferencedSwiftTagDocumentTrackListDifference() -> Bool {
+        guard rememberedSwiftTagDocumentSaveState.hasReferencedDocument else {
+            return false
+        }
+
+        return ReferencedSwiftTagDocumentTrackList.differs(
+            current: ReferencedSwiftTagDocumentTrackList.make(from: trackItems),
+            baseline: referencedSwiftTagDocumentTrackListBaseline
+        )
     }
 
     func refreshLoadedTrackFileStates(
@@ -504,7 +663,10 @@ final class TagEditorViewModel {
         )
 
         return EditorNavigationMetadata(
-            title: editorNavigationTitle(documentState: documentState),
+            title: editorNavigationTitle(
+                documentState: documentState,
+                hasReferencedSwiftTagDocumentTrackListDifference: hasReferencedSwiftTagDocumentTrackListDifference()
+            ),
             subtitle: [
                 "Tracks: \(trackItems.count) (\(selectedTrackCount))",
                 "Tag \u{0394}: \(totalDifferenceCounts.tagEdits) (\(selectedDifferenceCounts.tagEdits))",
@@ -1007,6 +1169,7 @@ final class TagEditorViewModel {
         } else {
             cancelPendingSwiftTagDocumentMissingRefresh()
             rememberedSwiftTagDocumentSaveState = .init()
+            referencedSwiftTagDocumentTrackListBaseline = nil
             importedFlacPicturesByType = importedPicturesByType
             trackItems = importedTracks
             selectedTrackIDs.removeAll()
@@ -2183,12 +2346,27 @@ final class TagEditorViewModel {
         pendingSwiftTagDocumentMissingRefreshTask = nil
     }
 
-    private func editorNavigationTitle(documentState: SwiftTagDocumentSaveState) -> String {
+    private func acceptCurrentTrackListAsReferencedSwiftTagDocumentBaseline() {
+        guard rememberedSwiftTagDocumentSaveState.hasReferencedDocument else {
+            referencedSwiftTagDocumentTrackListBaseline = nil
+            return
+        }
+
+        referencedSwiftTagDocumentTrackListBaseline = ReferencedSwiftTagDocumentTrackList.make(from: trackItems)
+    }
+
+    private func editorNavigationTitle(
+        documentState: SwiftTagDocumentSaveState,
+        hasReferencedSwiftTagDocumentTrackListDifference: Bool
+    ) -> String {
         if let documentDisplayName = documentState.documentDisplayName,
            !documentDisplayName.isEmpty {
-            return documentState.isDeleted
-                ? "\(documentDisplayName) (deleted)"
+            let markedDocumentDisplayName = hasReferencedSwiftTagDocumentTrackListDifference
+                ? "\(documentDisplayName)*"
                 : documentDisplayName
+            return documentState.isDeleted
+                ? "\(markedDocumentDisplayName) (deleted)"
+                : markedDocumentDisplayName
         }
 
         let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
@@ -2417,49 +2595,15 @@ final class TagEditorViewModel {
     }
 
     private func bookmarkIdentity(for track: Track) -> String {
-        if let bookmarkData = track.securityScopedBookmarkData,
-           let resolvedPath = resolvedPathFromBookmarkData(bookmarkData) {
-            return resolvedPath
-        }
-
-        return bookmarkIdentity(for: track.sourceFileURL)
+        TrackBookmarkIdentityResolver.identity(for: track) ?? ""
     }
 
     private func bookmarkIdentity(for fileURL: URL?) -> String {
-        guard let fileURL else {
-            return ""
-        }
-        if let bookmarkData = try? fileURL.bookmarkData(
-            options: .withSecurityScope,
-            includingResourceValuesForKeys: nil,
-            relativeTo: nil
-        ),
-           let resolvedPath = resolvedPathFromBookmarkData(bookmarkData) {
-            return resolvedPath
-        }
-
-        return fileURL.standardizedFileURL.resolvingSymlinksInPath().path
+        TrackBookmarkIdentityResolver.identity(for: fileURL)
     }
 
     private func resolvedPathFromBookmarkData(_ bookmarkData: Data) -> String? {
-        do {
-            var isStale = false
-            let resolvedURL = try URL(
-                resolvingBookmarkData: bookmarkData,
-                options: [.withSecurityScope, .withoutUI],
-                relativeTo: nil,
-                bookmarkDataIsStale: &isStale
-            )
-            let didAccess = resolvedURL.startAccessingSecurityScopedResource()
-            defer {
-                if didAccess {
-                    resolvedURL.stopAccessingSecurityScopedResource()
-                }
-            }
-            return resolvedURL.standardizedFileURL.resolvingSymlinksInPath().path
-        } catch {
-            return nil
-        }
+        TrackBookmarkIdentityResolver.resolvedPath(from: bookmarkData)
     }
 
     private func applyLegacySharedMetadataIfNeeded() {

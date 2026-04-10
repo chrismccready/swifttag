@@ -13,6 +13,19 @@ struct UnsavedChangesSessionContext: Equatable {
     let editCounts: UnsavedChangesEditCounts
     let hasReferencedSwiftTagDocument: Bool
     let referencedSwiftTagDocumentURL: URL?
+    let hasReferencedSwiftTagDocumentTrackListDifference: Bool
+
+    init(
+        editCounts: UnsavedChangesEditCounts,
+        hasReferencedSwiftTagDocument: Bool,
+        referencedSwiftTagDocumentURL: URL?,
+        hasReferencedSwiftTagDocumentTrackListDifference: Bool = false
+    ) {
+        self.editCounts = editCounts
+        self.hasReferencedSwiftTagDocument = hasReferencedSwiftTagDocument
+        self.referencedSwiftTagDocumentURL = referencedSwiftTagDocumentURL
+        self.hasReferencedSwiftTagDocumentTrackListDifference = hasReferencedSwiftTagDocumentTrackListDifference
+    }
 }
 
 enum UnsavedChangesPromptTrigger: Equatable {
@@ -74,6 +87,19 @@ struct UnsavedChangesDialogConfiguration: Equatable {
     let trigger: UnsavedChangesPromptTrigger
     let editCounts: UnsavedChangesEditCounts
     let saveChoices: [UnsavedChangesSaveChoice]
+    let isReferencedSwiftTagDocumentTrackListDifferenceOnly: Bool
+
+    init(
+        trigger: UnsavedChangesPromptTrigger,
+        editCounts: UnsavedChangesEditCounts,
+        saveChoices: [UnsavedChangesSaveChoice],
+        isReferencedSwiftTagDocumentTrackListDifferenceOnly: Bool = false
+    ) {
+        self.trigger = trigger
+        self.editCounts = editCounts
+        self.saveChoices = saveChoices
+        self.isReferencedSwiftTagDocumentTrackListDifferenceOnly = isReferencedSwiftTagDocumentTrackListDifferenceOnly
+    }
 
     var alertTitle: String {
         trigger.alertTitle
@@ -84,7 +110,11 @@ struct UnsavedChangesDialogConfiguration: Equatable {
     }
 
     var informativeText: String {
-        "There are pending changes that have not been saved: \(editCounts.tagEdits) tag edits, \(editCounts.pictureEdits) picture edits. Choose how to continue."
+        if isReferencedSwiftTagDocumentTrackListDifferenceOnly {
+            return "The referenced SwiftTag document track list no longer matches the current session. Choose how to continue."
+        }
+
+        return "There are pending changes that have not been saved: \(editCounts.tagEdits) tag edits, \(editCounts.pictureEdits) picture edits. Choose how to continue."
     }
 }
 
@@ -93,30 +123,42 @@ enum UnsavedChangesChoiceResolver {
         trigger: UnsavedChangesPromptTrigger,
         context: UnsavedChangesSessionContext
     ) -> UnsavedChangesDialogConfiguration? {
-        guard context.editCounts.hasUnsavedEdits else {
-            return nil
+        if context.editCounts.hasUnsavedEdits {
+            let saveChoices: [UnsavedChangesSaveChoice]
+            if context.hasReferencedSwiftTagDocument {
+                let referencedDocumentName = context.referencedSwiftTagDocumentURL?.lastPathComponent
+                saveChoices = [
+                    .saveFlacFiles,
+                    .saveReferencedSwiftTagDocument(name: referencedDocumentName),
+                    .saveFlacFilesAndReferencedSwiftTagDocument(name: referencedDocumentName)
+                ]
+            } else {
+                saveChoices = [
+                    .saveFlacFiles,
+                    .saveNewSwiftTagDocument,
+                    .saveFlacFilesAndNewSwiftTagDocument
+                ]
+            }
+
+            return UnsavedChangesDialogConfiguration(
+                trigger: trigger,
+                editCounts: context.editCounts,
+                saveChoices: saveChoices
+            )
         }
 
-        let saveChoices: [UnsavedChangesSaveChoice]
-        if context.hasReferencedSwiftTagDocument {
-            let referencedDocumentName = context.referencedSwiftTagDocumentURL?.lastPathComponent
-            saveChoices = [
-                .saveFlacFiles,
-                .saveReferencedSwiftTagDocument(name: referencedDocumentName),
-                .saveFlacFilesAndReferencedSwiftTagDocument(name: referencedDocumentName)
-            ]
-        } else {
-            saveChoices = [
-                .saveFlacFiles,
-                .saveNewSwiftTagDocument,
-                .saveFlacFilesAndNewSwiftTagDocument
-            ]
+        guard context.hasReferencedSwiftTagDocument,
+              context.hasReferencedSwiftTagDocumentTrackListDifference else {
+            return nil
         }
 
         return UnsavedChangesDialogConfiguration(
             trigger: trigger,
             editCounts: context.editCounts,
-            saveChoices: saveChoices
+            saveChoices: [
+                .saveReferencedSwiftTagDocument(name: context.referencedSwiftTagDocumentURL?.lastPathComponent)
+            ],
+            isReferencedSwiftTagDocumentTrackListDifferenceOnly: true
         )
     }
 }

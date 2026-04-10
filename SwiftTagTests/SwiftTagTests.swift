@@ -85,6 +85,24 @@ struct SwiftTagTests {
         )
     }
 
+    private static func bookmarkBackedTrack(
+        fileURL: URL,
+        tags: [String: String],
+        fingerprint: String? = nil
+    ) throws -> Track {
+        let bookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        return Track(
+            tags: tags,
+            sourceFileURL: fileURL,
+            securityScopedBookmarkData: bookmarkData,
+            fingerprint: fingerprint
+        )
+    }
+
     private static var defaultTagWriteOptions: TagWriteOptions {
         TagWriteOptions(
             zeroPadTrackNumber: SaveSettingsDefaults.zeroPadTrackNumber,
@@ -271,6 +289,165 @@ struct SwiftTagTests {
             "Save FLAC files",
             "Save Very Long Al…on.swifttag",
             "Save FLAC files & Very Long Al…on.swifttag"
+        ])
+    }
+
+    @Test
+    @MainActor
+    func referencedSwiftTagDocumentTrackListIgnoresTagOnlyDifferencesForMatchingBookmarkURLs() throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "track-list-tag-only.flac")
+        let bookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let baseline = ReferencedSwiftTagDocumentTrackList.make(from: [
+            Track(
+                tags: [TagKey.title: "Original Title", TagKey.filename: fileURL.lastPathComponent],
+                sourceFileURL: fileURL,
+                securityScopedBookmarkData: bookmarkData,
+                fingerprint: Self.fixtureFingerprint
+            )
+        ])
+        let current = ReferencedSwiftTagDocumentTrackList.make(from: [
+            Track(
+                tags: [TagKey.title: "Changed Title", TagKey.filename: fileURL.lastPathComponent],
+                sourceFileURL: fileURL,
+                securityScopedBookmarkData: bookmarkData,
+                fingerprint: Self.fixtureFingerprint
+            )
+        ])
+
+        #expect(!ReferencedSwiftTagDocumentTrackList.differs(current: current, baseline: baseline))
+    }
+
+    @Test
+    @MainActor
+    func referencedSwiftTagDocumentTrackListTreatsDifferentBookmarkURLsWithSameFingerprintAsDifferentTracks() throws {
+        let firstURL = try Self.tempFixtureCopyURL(name: "track-list-same-fingerprint-a.flac")
+        let secondURL = try Self.tempFixtureCopyURL(name: "track-list-same-fingerprint-b.flac")
+        let baseline = ReferencedSwiftTagDocumentTrackList.make(from: [
+            try Self.bookmarkBackedTrack(
+                fileURL: firstURL,
+                tags: [TagKey.title: "First", TagKey.filename: firstURL.lastPathComponent],
+                fingerprint: Self.fixtureFingerprint
+            )
+        ])
+        let current = ReferencedSwiftTagDocumentTrackList.make(from: [
+            try Self.bookmarkBackedTrack(
+                fileURL: secondURL,
+                tags: [TagKey.title: "Second", TagKey.filename: secondURL.lastPathComponent],
+                fingerprint: Self.fixtureFingerprint
+            )
+        ])
+
+        #expect(ReferencedSwiftTagDocumentTrackList.differs(current: current, baseline: baseline))
+    }
+
+    @Test
+    @MainActor
+    func referencedSwiftTagDocumentTrackListTreatsOrderOnlyChangesAsDirty() throws {
+        let firstURL = try Self.tempFixtureCopyURL(name: "track-list-order-first.flac")
+        let secondURL = try Self.tempFixtureCopyURL(name: "track-list-order-second.flac")
+        let firstTrack = try Self.bookmarkBackedTrack(
+            fileURL: firstURL,
+            tags: [TagKey.title: "First", TagKey.filename: firstURL.lastPathComponent],
+            fingerprint: Self.fixtureFingerprint
+        )
+        let secondTrack = try Self.bookmarkBackedTrack(
+            fileURL: secondURL,
+            tags: [TagKey.title: "Second", TagKey.filename: secondURL.lastPathComponent],
+            fingerprint: Self.fixtureFingerprint
+        )
+        let baseline = ReferencedSwiftTagDocumentTrackList.make(from: [firstTrack, secondTrack])
+        let current = ReferencedSwiftTagDocumentTrackList.make(from: [secondTrack, firstTrack])
+
+        #expect(ReferencedSwiftTagDocumentTrackList.differs(current: current, baseline: baseline))
+    }
+
+    @Test
+    @MainActor
+    func referencedSwiftTagDocumentTrackListTreatsSessionOnlyTrackAdditionAsDirty() {
+        let sessionTrack = Track(tags: [TagKey.title: "Session Track"])
+        let baseline = ReferencedSwiftTagDocumentTrackList.make(from: [sessionTrack])
+        let current = ReferencedSwiftTagDocumentTrackList.make(from: [
+            sessionTrack,
+            Track(tags: [TagKey.title: "Added Session Track"])
+        ])
+
+        #expect(ReferencedSwiftTagDocumentTrackList.differs(current: current, baseline: baseline))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelCanSaveReferencedSwiftTagDocumentWithoutTracks() {
+        let viewModel = TagEditorViewModel()
+
+        #expect(!viewModel.canSaveSwiftTagDocument())
+
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: URL(fileURLWithPath: "/tmp/Empty Session.swifttag"),
+                documentID: UUID(),
+                fingerprint: "document-fingerprint"
+            )
+        )
+
+        #expect(viewModel.canSaveSwiftTagDocument())
+    }
+
+    @Test
+    func unsavedChangesChoiceResolverUsesReferencedDocumentActionForTrackListDifferenceOnlyWhenClosing() {
+        let configuration = UnsavedChangesChoiceResolver.resolve(
+            trigger: .closeWindow,
+            context: UnsavedChangesSessionContext(
+                editCounts: UnsavedChangesEditCounts(tagEdits: 0, pictureEdits: 0),
+                hasReferencedSwiftTagDocument: true,
+                referencedSwiftTagDocumentURL: URL(fileURLWithPath: "/tmp/Session Save.swifttag"),
+                hasReferencedSwiftTagDocumentTrackListDifference: true
+            )
+        )
+
+        #expect(configuration?.discardTitle == "Close Window")
+        #expect(configuration?.saveChoices.map(\.title) == ["Save Session Save.swifttag"])
+        #expect(
+            configuration?.informativeText
+                == "The referenced SwiftTag document track list no longer matches the current session. Choose how to continue."
+        )
+    }
+
+    @Test
+    func unsavedChangesChoiceResolverUsesReferencedDocumentActionForTrackListDifferenceOnlyWhenQuitting() {
+        let configuration = UnsavedChangesChoiceResolver.resolve(
+            trigger: .quitApplication,
+            context: UnsavedChangesSessionContext(
+                editCounts: UnsavedChangesEditCounts(tagEdits: 0, pictureEdits: 0),
+                hasReferencedSwiftTagDocument: true,
+                referencedSwiftTagDocumentURL: URL(fileURLWithPath: "/tmp/Session Save.swifttag"),
+                hasReferencedSwiftTagDocumentTrackListDifference: true
+            )
+        )
+
+        #expect(configuration?.discardTitle == "Quit")
+        #expect(configuration?.saveChoices.map(\.title) == ["Save Session Save.swifttag"])
+    }
+
+    @Test
+    func unsavedChangesChoiceResolverKeepsExistingFlacPromptWhenTrackListDifferenceAlsoExists() {
+        let configuration = UnsavedChangesChoiceResolver.resolve(
+            trigger: .closeWindow,
+            context: UnsavedChangesSessionContext(
+                editCounts: UnsavedChangesEditCounts(tagEdits: 2, pictureEdits: 1),
+                hasReferencedSwiftTagDocument: true,
+                referencedSwiftTagDocumentURL: URL(fileURLWithPath: "/tmp/Session Save.swifttag"),
+                hasReferencedSwiftTagDocumentTrackListDifference: true
+            )
+        )
+
+        #expect(configuration?.saveChoices.map(\.title) == [
+            "Save FLAC files",
+            "Save Session Save.swifttag",
+            "Save FLAC files & Session Save.swifttag"
         ])
     }
 
@@ -1899,6 +2076,140 @@ struct SwiftTagTests {
         #expect(metadata.title == "Deleted Session.swifttag (deleted)")
         #expect(metadata.documentDisplayName == "Deleted Session.swifttag")
         #expect(metadata.documentURL == documentURL.standardizedFileURL)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataAppendsMarkerForReferencedDocumentTrackListDifference() throws {
+        let firstURL = try Self.tempFixtureCopyURL(name: "navigation-dirty-first.flac")
+        let secondURL = try Self.tempFixtureCopyURL(name: "navigation-dirty-second.flac")
+        let firstTrack = try Self.bookmarkBackedTrack(
+            fileURL: firstURL,
+            tags: [TagKey.title: "First", TagKey.filename: firstURL.lastPathComponent],
+            fingerprint: Self.fixtureFingerprint
+        )
+        let secondTrack = try Self.bookmarkBackedTrack(
+            fileURL: secondURL,
+            tags: [TagKey.title: "Second", TagKey.filename: secondURL.lastPathComponent],
+            fingerprint: Self.fixtureFingerprint
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack, secondTrack]
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: URL(fileURLWithPath: "/tmp/Session.swifttag"),
+                documentID: UUID(),
+                fingerprint: "document-fingerprint"
+            )
+        )
+
+        viewModel.trackItems.removeLast()
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(viewModel.hasReferencedSwiftTagDocumentTrackListDifference())
+        #expect(metadata.title == "Session.swifttag*")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataDoesNotAppendMarkerForTagOnlyReferencedDocumentDifferences() throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "navigation-tag-only.flac")
+        let track = try Self.bookmarkBackedTrack(
+            fileURL: fileURL,
+            tags: [TagKey.title: "Original Title", TagKey.filename: fileURL.lastPathComponent],
+            fingerprint: Self.fixtureFingerprint
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: URL(fileURLWithPath: "/tmp/Session.swifttag"),
+                documentID: UUID(),
+                fingerprint: "document-fingerprint"
+            )
+        )
+
+        viewModel.trackItems[0].tags[TagKey.title] = "Changed Title"
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(!viewModel.hasReferencedSwiftTagDocumentTrackListDifference())
+        #expect(metadata.title == "Session.swifttag")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelReferencedDocumentTrackListBaselineUsesMostRecentBookmarkResolvedURLAfterRename() throws {
+        let originalURL = try Self.tempFixtureCopyURL(name: "track-list-rename-source.flac")
+        let track = try Self.bookmarkBackedTrack(
+            fileURL: originalURL,
+            tags: [TagKey.title: "Original", TagKey.filename: originalURL.lastPathComponent],
+            fingerprint: Self.fixtureFingerprint
+        )
+        let renamedURL = originalURL.deletingLastPathComponent().appendingPathComponent("track-list-rename-target.flac")
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: URL(fileURLWithPath: "/tmp/Session.swifttag"),
+                documentID: UUID(),
+                fingerprint: "document-fingerprint-a"
+            )
+        )
+
+        try FileManager.default.moveItem(at: originalURL, to: renamedURL)
+
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(!viewModel.hasReferencedSwiftTagDocumentTrackListDifference())
+        #expect(metadata.title == "Session.swifttag")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelRememberSwiftTagDocumentSaveRefreshesReferencedDocumentTrackListBaseline() throws {
+        let firstURL = try Self.tempFixtureCopyURL(name: "track-list-baseline-first.flac")
+        let secondURL = try Self.tempFixtureCopyURL(name: "track-list-baseline-second.flac")
+        let firstTrack = try Self.bookmarkBackedTrack(
+            fileURL: firstURL,
+            tags: [TagKey.title: "First", TagKey.filename: firstURL.lastPathComponent],
+            fingerprint: Self.fixtureFingerprint
+        )
+        let secondTrack = try Self.bookmarkBackedTrack(
+            fileURL: secondURL,
+            tags: [TagKey.title: "Second", TagKey.filename: secondURL.lastPathComponent],
+            fingerprint: Self.fixtureFingerprint
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack]
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: URL(fileURLWithPath: "/tmp/Session.swifttag"),
+                documentID: UUID(),
+                fingerprint: "document-fingerprint-a"
+            )
+        )
+
+        viewModel.trackItems.append(secondTrack)
+        #expect(viewModel.hasReferencedSwiftTagDocumentTrackListDifference())
+
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: URL(fileURLWithPath: "/tmp/Session.swifttag"),
+                documentID: UUID(),
+                fingerprint: "document-fingerprint-b"
+            )
+        )
+
+        #expect(!viewModel.hasReferencedSwiftTagDocumentTrackListDifference())
     }
 
     @Test

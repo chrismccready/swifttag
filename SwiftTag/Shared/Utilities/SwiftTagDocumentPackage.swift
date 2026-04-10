@@ -395,10 +395,6 @@ enum SwiftTagDocumentPackageWriter {
         to destinationURL: URL,
         fileManager: FileManager = .default
     ) throws -> SwiftTagDocumentSaveResult {
-        guard !tracks.isEmpty else {
-            throw SwiftTagDocumentPackageError.noTracks
-        }
-
         let normalizedDestinationURL = normalizedDestinationURL(destinationURL)
         guard !normalizedDestinationURL.lastPathComponent.isEmpty else {
             throw SwiftTagDocumentPackageError.invalidDestination

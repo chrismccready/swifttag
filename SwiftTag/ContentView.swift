@@ -1575,7 +1575,8 @@ struct ContentView: View {
                 pictureEdits: editCounts.pictureEdits
             ),
             hasReferencedSwiftTagDocument: saveState.hasReferencedDocument,
-            referencedSwiftTagDocumentURL: saveState.navigationDocumentURL
+            referencedSwiftTagDocumentURL: saveState.navigationDocumentURL,
+            hasReferencedSwiftTagDocumentTrackListDifference: viewModel.hasReferencedSwiftTagDocumentTrackListDifference()
         )
     }
 
