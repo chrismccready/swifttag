@@ -36,6 +36,7 @@ final class EditorWindowCoordinator {
 
     func setOpenEditorWindowAction(_ action: @escaping (EditorSessionValue) -> Void) {
         fallbackOpenEditorWindowAction = action
+        flushPendingBootstrapWindowOpenIfNeeded()
         flushPendingSessionsToOpenIfNeeded()
     }
 
@@ -228,7 +229,7 @@ final class EditorWindowCoordinator {
 
         if !appIsActive,
            registrationBySessionID.isEmpty,
-           currentOpenEditorWindowAction() == nil {
+           shouldAwaitBootstrapWindowRegistration() {
             pendingBootstrapFiles = normalizedFlacFiles(from: pendingBootstrapFiles + flacFiles)
             return true
         }
@@ -257,6 +258,22 @@ final class EditorWindowCoordinator {
         }
     }
 
+    private func flushPendingBootstrapWindowOpenIfNeeded() {
+        guard !pendingBootstrapFiles.isEmpty,
+              registrationBySessionID.isEmpty,
+              openEditorWindowActionBySessionID.isEmpty,
+              !hasVisibleUnregisteredWindow else {
+            return
+        }
+
+        let bootstrapFiles = pendingBootstrapFiles
+        pendingBootstrapFiles.removeAll()
+
+        let bootstrapSessionValue = EditorSessionValue()
+        enqueuePendingFiles(bootstrapFiles, for: bootstrapSessionValue.sessionID)
+        openEditorWindow(for: bootstrapSessionValue)
+    }
+
     private func currentOpenEditorWindowAction() -> ((EditorSessionValue) -> Void)? {
         if let activeSessionID,
            !closingSessionIDs.contains(activeSessionID),
@@ -273,6 +290,17 @@ final class EditorWindowCoordinator {
         }
 
         return fallbackOpenEditorWindowAction
+    }
+
+    private func shouldAwaitBootstrapWindowRegistration() -> Bool {
+        currentOpenEditorWindowAction() == nil
+            || (openEditorWindowActionBySessionID.isEmpty && hasVisibleUnregisteredWindow)
+    }
+
+    private var hasVisibleUnregisteredWindow: Bool {
+        NSApp.windows.contains { window in
+            window.isVisible && !window.isMiniaturized
+        }
     }
 
     private func enqueuePendingFiles(_ urls: [URL], for sessionID: UUID) {

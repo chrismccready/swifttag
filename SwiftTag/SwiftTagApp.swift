@@ -126,6 +126,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 }
 
 private struct AppCommands: Commands {
+    @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.showTomlSheet) private var showTomlSheet
     @FocusedValue(\.showFlacImporter) private var showFlacImporter
     @FocusedValue(\.showReadOnlyFlacImporter) private var showReadOnlyFlacImporter
@@ -156,6 +157,8 @@ private struct AppCommands: Commands {
     @FocusedValue(\.canPerformRemoveSelectedTracks) private var canPerformRemoveSelectedTracks
 
     var body: some Commands {
+        let _ = configureEditorWindowFallback()
+
         CommandGroup(after: .newItem) {
             Button("Add FLAC files...") {
                 if showAddFlacImporter != nil {
@@ -278,6 +281,12 @@ private struct AppCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: [.control])
             .disabled(!(canPerformSaveSwiftTagDocument ?? false))
+        }
+    }
+
+    private func configureEditorWindowFallback() {
+        EditorWindowCoordinator.shared.setOpenEditorWindowAction { sessionValue in
+            openWindow(id: AppSceneID.editor, value: sessionValue)
         }
     }
 

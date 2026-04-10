@@ -225,6 +225,26 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testFinderLaunchOpenShowsVisibleImportedFlacWindow() throws {
+        let flacURL = try prepareReadableFlacFixture(fileName: Self.fixtureFileName)
+        let app = try launchAppByOpeningFileWithSwiftTag(url: flacURL)
+        let window = app.windows.firstMatch
+
+        XCTAssertTrue(window.waitForExistence(timeout: 10.0))
+        XCTAssertTrue(waitForHittableState(of: window, expectedValue: true, timeout: 10.0))
+
+        selectImportedTrackForEditing(in: window, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: window,
+                identifier: UIID.albumTextField,
+                expectedValue: "Test Album",
+                timeout: 5.0
+            )
+        )
+    }
+
+    @MainActor
     func testReopeningClosedSwiftTagDocumentReloadsDocumentContents() throws {
         let savedAlbum = "Saved UI Album \(UUID().uuidString)"
         let savedTitle = "Saved Document Title \(UUID().uuidString)"
@@ -2456,6 +2476,74 @@ final class SwiftTagUITests: XCTestCase {
         return didOpen
     }
 
+    private func launchAppByOpeningFileWithSwiftTag(
+        url: URL,
+        timeout: TimeInterval = 10.0
+    ) throws -> XCUIApplication {
+        let applicationURL = resolvedSwiftTagApplicationURL()
+        terminateRunningSwiftTagIfNeeded()
+
+        guard let applicationURL else {
+            XCTFail("SwiftTag application URL could not be resolved.")
+            throw NSError(domain: "SwiftTagUITests", code: 1)
+        }
+
+        let app = XCUIApplication()
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+
+        let completionExpectation = XCTestExpectation(
+            description: "launch \(url.lastPathComponent) in SwiftTag via Finder-style open"
+        )
+        var openError: Error?
+
+        NSWorkspace.shared.open(
+            [url],
+            withApplicationAt: applicationURL,
+            configuration: configuration
+        ) { _, error in
+            openError = error
+            completionExpectation.fulfill()
+        }
+
+        let waitResult = XCTWaiter.wait(for: [completionExpectation], timeout: timeout)
+        XCTAssertEqual(waitResult, .completed)
+        XCTAssertNil(openError)
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: timeout))
+        return app
+    }
+
+    private func resolvedSwiftTagApplicationURL() -> URL? {
+        if let runningApplicationURL = NSRunningApplication
+            .runningApplications(withBundleIdentifier: Self.appBundleIdentifier)
+            .first?
+            .bundleURL {
+            return runningApplicationURL
+        }
+
+        return NSWorkspace.shared.urlForApplication(withBundleIdentifier: Self.appBundleIdentifier)
+    }
+
+    private func terminateRunningSwiftTagIfNeeded(timeout: TimeInterval = 5.0) {
+        let runningApplications = NSRunningApplication
+            .runningApplications(withBundleIdentifier: Self.appBundleIdentifier)
+
+        for runningApplication in runningApplications {
+            _ = runningApplication.forceTerminate()
+        }
+
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if NSRunningApplication.runningApplications(
+                withBundleIdentifier: Self.appBundleIdentifier
+            ).isEmpty {
+                return
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+    }
+
     private func openSharedFixtureInTwoNewWindows(
         app: XCUIApplication,
         fixtureURL: URL,
@@ -2830,6 +2918,23 @@ final class SwiftTagUITests: XCTestCase {
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
             if element.exists && element.isEnabled == expectedValue {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForHittableState(
+        of element: XCUIElement,
+        expectedValue: Bool,
+        timeout: TimeInterval = 2.0
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if element.exists && element.isHittable == expectedValue {
                 return true
             }
 
