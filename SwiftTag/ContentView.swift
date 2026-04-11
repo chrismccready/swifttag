@@ -2618,14 +2618,15 @@ struct ContentView: View {
     @ViewBuilder
     var body: some View {
         let metadata = navigationMetadata
+        let metadataTitle = metadata.title.truncated(limit: 64, position: .middle)
         if let documentURL = metadata.documentURL {
             presentedContent
-                .navigationTitle(metadata.title)
+                .navigationTitle(metadataTitle)
                 .navigationSubtitle(metadata.subtitle)
                 .navigationDocument(documentURL)
         } else {
             presentedContent
-                .navigationTitle(metadata.title)
+                .navigationTitle(metadataTitle)
                 .navigationSubtitle(metadata.subtitle)
         }
     }
