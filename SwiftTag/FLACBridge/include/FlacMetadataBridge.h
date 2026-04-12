@@ -36,6 +36,12 @@ typedef struct {
 } FlacPictureResult;
 
 typedef struct {
+    uint32_t sample_rate;
+    uint64_t total_samples;
+    char *fingerprint;
+} FlacStreamInfoResult;
+
+typedef struct {
     const char *key;
     const char *value;
 } FlacWriteTagPair;
@@ -58,6 +64,7 @@ typedef struct {
 // On error, if error_message is non-NULL, caller must call flac_free_c_string.
 int flac_read_tags(const char *file_path, FlacTagResult *out_result, char **error_message);
 int flac_read_pictures(const char *file_path, FlacPictureResult *out_result, char **error_message);
+int flac_read_streaminfo(const char *file_path, FlacStreamInfoResult *out_result, char **error_message);
 int flac_read_fingerprint(const char *file_path, char **out_fingerprint, char **error_message);
 int flac_write_metadata(
     const char *file_path,
@@ -74,6 +81,7 @@ int flac_write_metadata(
 
 void flac_free_tag_result(FlacTagResult *result);
 void flac_free_picture_result(FlacPictureResult *result);
+void flac_free_streaminfo_result(FlacStreamInfoResult *result);
 void flac_free_c_string(char *value);
 
 #ifdef __cplusplus

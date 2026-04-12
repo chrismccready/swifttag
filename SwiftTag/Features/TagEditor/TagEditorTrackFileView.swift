@@ -7,6 +7,7 @@ struct TagEditorTrackFileView: View {
     let trackItems: [Track]
     var selection: Binding<Set<UUID>>
     var showsFingerprintColumn: Binding<Bool>
+    var showsDurationColumn: Binding<Bool>
     let titleBindingForTrack: (UUID) -> Binding<String>?
     let statusPresentationForTrack: (UUID) -> TrackStatusPresentation?
     let isTrackLocked: (UUID) -> Bool
@@ -58,6 +59,10 @@ struct TagEditorTrackFileView: View {
         showsFingerprintColumn.wrappedValue ? "Hide Fingerprint Column" : "Show Fingerprint Column"
     }
 
+    private var durationColumnMenuTitle: String {
+        showsDurationColumn.wrappedValue ? "Hide Duration Column" : "Show Duration Column"
+    }
+
     var body: some View {
         Table(sortedTrackItems, selection: selection) {
             TableColumn("") { track in
@@ -101,6 +106,16 @@ struct TagEditorTrackFileView: View {
                 }
             }
             .width(min: 140, max: 800)
+
+            if showsDurationColumn.wrappedValue {
+                TableColumn("Duration") { track in
+                    Text(TrackDurationFormatter.string(from: track.duration))
+                        .foregroundStyle(.primary)
+                        .monospacedDigit()
+                }
+                .width(58)
+                .alignment(.center)
+            }
 
             TableColumn("Filename") { track in
                 Text(track.displayFileName)
@@ -161,6 +176,10 @@ struct TagEditorTrackFileView: View {
 
             Button(fingerprintColumnMenuTitle) {
                 showsFingerprintColumn.wrappedValue.toggle()
+            }
+
+            Button(durationColumnMenuTitle) {
+                showsDurationColumn.wrappedValue.toggle()
             }
         }
         .onDrop(of: [.fileURL], isTargeted: nil, perform: onDropFlacFiles)

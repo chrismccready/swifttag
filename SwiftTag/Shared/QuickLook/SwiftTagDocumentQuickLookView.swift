@@ -28,9 +28,15 @@ struct SwiftTagDocumentQuickLookView: View {
 
                 if !snapshot.trackRows.isEmpty {
                     VStack(alignment: .leading, spacing: layout.trackRowSpacing) {
-                        ForEach(Array(snapshot.trackRows.enumerated()), id: \.offset) { _, row in
-                            metadataText(row.text)
-                                .applyQuickLookItalic(if: row.isEllipsis)
+                        ForEach(Array(snapshot.trackRows.enumerated()), id: \.offset) { offset, row in
+                            HStack(spacing: 0) {
+                                metadataText(row.leadingText)
+                                    .applyQuickLookItalic(if: row.isEllipsis)
+                                    .frame(maxWidth: .infinity, alignment: .init(horizontal: .leading, vertical: .center))
+                                Spacer(minLength: 4)
+                                metadataText(row.durationText)
+                                    .frame(minWidth: layout.durationColumnMinWidth, alignment: .trailing)
+                            }
                         }
                     }
                     .padding(.top, layout.trackSectionSpacing)

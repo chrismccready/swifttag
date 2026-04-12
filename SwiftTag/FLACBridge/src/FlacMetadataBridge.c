@@ -552,6 +552,40 @@ int flac_read_pictures(const char *file_path, FlacPictureResult *out_result, cha
     return 0;
 }
 
+int flac_read_streaminfo(const char *file_path, FlacStreamInfoResult *out_result, char **error_message) {
+    if (out_result == NULL || file_path == NULL) {
+        set_error(error_message, "Invalid arguments for flac_read_streaminfo.");
+        return -1;
+    }
+
+    out_result->sample_rate = 0;
+    out_result->total_samples = 0;
+    out_result->fingerprint = NULL;
+
+    FLAC__StreamMetadata streaminfo;
+    memset(&streaminfo, 0, sizeof(streaminfo));
+
+    if (!FLAC__metadata_get_streaminfo(file_path, &streaminfo)) {
+        set_error(error_message, "FLAC__metadata_get_streaminfo failed for file.");
+        return -1;
+    }
+
+    if (streaminfo.type != FLAC__METADATA_TYPE_STREAMINFO) {
+        set_error(error_message, "FLAC stream info metadata block was unavailable.");
+        return -1;
+    }
+
+    out_result->sample_rate = streaminfo.data.stream_info.sample_rate;
+    out_result->total_samples = (uint64_t)streaminfo.data.stream_info.total_samples;
+
+    if (copy_streaminfo_md5_hex(streaminfo.data.stream_info.md5sum, &out_result->fingerprint) != 0) {
+        set_error(error_message, "Out of memory while collecting FLAC fingerprint.");
+        return -1;
+    }
+
+    return 0;
+}
+
 int flac_read_fingerprint(const char *file_path, char **out_fingerprint, char **error_message) {
     if (out_fingerprint == NULL || file_path == NULL) {
         set_error(error_message, "Invalid arguments for flac_read_fingerprint.");
@@ -738,6 +772,17 @@ void flac_free_picture_result(FlacPictureResult *result) {
 
     result->pictures = NULL;
     result->count = 0;
+}
+
+void flac_free_streaminfo_result(FlacStreamInfoResult *result) {
+    if (result == NULL) {
+        return;
+    }
+
+    free(result->fingerprint);
+    result->fingerprint = NULL;
+    result->sample_rate = 0;
+    result->total_samples = 0;
 }
 
 void flac_free_c_string(char *value) {

@@ -47,6 +47,7 @@ struct SwiftTagQuickLookTests {
         albumArtist: String = "Album Artist",
         artist: String = "Album Artist",
         trackNumber: String? = nil,
+        duration: TimeInterval? = nil,
         pictures: [FlacWritablePictureRecord] = []
     ) -> SwiftTagDocumentImportTrack {
         var tags: [String: String] = [
@@ -64,6 +65,7 @@ struct SwiftTagQuickLookTests {
             sourceFileURL: nil,
             securityScopedBookmarkData: nil,
             flacFingerprint: nil,
+            duration: duration,
             tags: tags,
             pictures: pictures
         )
@@ -85,6 +87,7 @@ struct SwiftTagQuickLookTests {
         albumArtist: String = "Album Artist",
         artist: String = "Album Artist",
         trackNumber: String? = nil,
+        duration: TimeInterval? = nil,
         pictures: [FlacWritablePictureRecord] = []
     ) -> SwiftTagDocumentExportTrack {
         var tags: [String: String] = [
@@ -103,7 +106,8 @@ struct SwiftTagQuickLookTests {
             pictures: pictures,
             sourceFileURL: URL(fileURLWithPath: "/tmp/\(sortKey).flac"),
             securityScopedBookmarkData: nil,
-            flacFingerprint: nil
+            flacFingerprint: nil,
+            duration: duration
         )
     }
 
@@ -120,6 +124,7 @@ struct SwiftTagQuickLookTests {
             metadataLineSpacing: 8,
             trackSectionSpacing: 28,
             trackRowSpacing: 6,
+            durationColumnMinWidth: 72,
             backgroundBlurRadius: 28,
             backgroundOverlayOpacity: 0.42,
             textShadowRadius: 4
@@ -229,7 +234,7 @@ struct SwiftTagQuickLookTests {
         )
 
         #expect(snapshot.sharedArtist == "Different Artist")
-        #expect(snapshot.trackRows.map(\.text) == ["1 One", "2 Two", "..."])
+        #expect(snapshot.trackRows.map(\.leadingText) == ["1 One", "2 Two", "..."])
         #expect(snapshot.usesEllipsisRow)
     }
 
@@ -243,7 +248,36 @@ struct SwiftTagQuickLookTests {
 
         let snapshot = SwiftTagDocumentQuickLookSnapshot.make(from: document)
 
-        #expect(snapshot.trackRows.map(\.text) == ["2 Alpha", "2 Beta", "x Gamma"])
+        #expect(snapshot.trackRows.map(\.leadingText) == ["2 Alpha", "2 Beta", "x Gamma"])
+    }
+
+    @Test
+    func quickLookSnapshotFormatsTrailingDurationsAndLeavesUnknownDurationEmpty() {
+        let document = Self.importResult(tracks: [
+            Self.importTrack(title: "Minute Track", trackNumber: "01", duration: 65.9),
+            Self.importTrack(title: "Hour Track", trackNumber: "02", duration: 3_661.9),
+            Self.importTrack(title: "Unknown Track", trackNumber: "03", duration: nil),
+        ])
+
+        let snapshot = SwiftTagDocumentQuickLookSnapshot.make(from: document)
+
+        #expect(snapshot.trackRows.map(\.leadingText) == ["1 Minute Track", "2 Hour Track", "3 Unknown Track"])
+        #expect(snapshot.trackRows.map(\.durationText) == ["01:05", "01:01:01", ""])
+    }
+
+    @Test
+    func quickLookViewSourceUsesSpacerBeforeTrailingDurationText() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Shared")
+            .appendingPathComponent("QuickLook")
+            .appendingPathComponent("SwiftTagDocumentQuickLookView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains("Spacer()"))
+        #expect(source.contains("metadataText(row.durationText)"))
     }
 
     @MainActor

@@ -332,6 +332,7 @@ struct SwiftTagDocumentTests {
             description: "Cover (front)",
             data: sharedPNG
         ).withComputedPictureMetadata()
+        let duration = 3_661.75
         let destinationURL = try Self.tempPackageURL(name: "reader-roundtrip")
         let saveResult = try SwiftTagDocumentPackageWriter.save(
             tracks: [
@@ -341,7 +342,8 @@ struct SwiftTagDocumentTests {
                     pictures: [sharedPicture],
                     sourceFileURL: URL(fileURLWithPath: "/tmp/reader.flac"),
                     securityScopedBookmarkData: Data([0x0A, 0x0B]),
-                    flacFingerprint: "reader-fingerprint"
+                    flacFingerprint: "reader-fingerprint",
+                    duration: duration
                 )
             ],
             state: .init(),
@@ -358,6 +360,7 @@ struct SwiftTagDocumentTests {
         #expect(loadedTrack.sourceFileURL?.path == "/tmp/reader.flac")
         #expect(loadedTrack.securityScopedBookmarkData == Data([0x0A, 0x0B]))
         #expect(loadedTrack.flacFingerprint == "reader-fingerprint")
+        #expect(loadedTrack.duration == duration)
         #expect(loadedTrack.tags[TagKey.title] == "Reader Track")
         #expect(loadedTrack.pictures.count == 1)
         let loadedPicture = try #require(loadedTrack.pictures.first)
@@ -369,6 +372,62 @@ struct SwiftTagDocumentTests {
         #expect(loadedPicture.height == sharedPicture.height)
         #expect(loadedPicture.depth == sharedPicture.depth)
         #expect(loadedPicture.colors == sharedPicture.colors)
+    }
+
+    @Test
+    func swiftTagDocumentWriterPersistsTrackDurationWithFullPrecision() throws {
+        let duration = 125.875
+        let destinationURL = try Self.tempPackageURL(name: "duration-roundtrip")
+
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/duration.flac",
+                    tags: [TagKey.title: "Duration Track"],
+                    pictures: [],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/duration.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: "duration-fingerprint",
+                    duration: duration
+                )
+            ],
+            state: .init(),
+            to: destinationURL
+        )
+
+        let manifest = try Self.plistDictionary(at: destinationURL.appendingPathComponent("Info.plist"))
+        let manifestTracks = try #require(manifest["Tracks"] as? [[String: Any]])
+        #expect(manifestTracks.first?["Duration"] as? Double == duration)
+
+        let loadedDocument = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        #expect(loadedDocument.tracks.first?.duration == duration)
+    }
+
+    @Test
+    func swiftTagDocumentReaderLeavesDurationNilWhenManifestOmitsDuration() throws {
+        let destinationURL = try Self.tempPackageURL(name: "duration-omitted")
+
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/no-duration.flac",
+                    tags: [TagKey.title: "No Duration"],
+                    pictures: [],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/no-duration.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: nil
+                )
+            ],
+            state: .init(),
+            to: destinationURL
+        )
+
+        let manifest = try Self.plistDictionary(at: destinationURL.appendingPathComponent("Info.plist"))
+        let manifestTracks = try #require(manifest["Tracks"] as? [[String: Any]])
+        #expect(manifestTracks.first?["Duration"] == nil)
+
+        let loadedDocument = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        #expect(loadedDocument.tracks.first?.duration == nil)
     }
 
     @Test
@@ -481,6 +540,53 @@ struct SwiftTagDocumentTests {
         #expect(firstResult.fingerprint == secondResult.fingerprint)
     }
 
+    @Test
+    func swiftTagDocumentFingerprintIgnoresDurationOnlyChanges() throws {
+        let firstDestinationURL = try Self.tempPackageURL(name: "duration-fingerprint-a")
+        let secondDestinationURL = try Self.tempPackageURL(name: "duration-fingerprint-b")
+        let baseTrack = SwiftTagDocumentExportTrack(
+            sortKey: "/tmp/duration-fingerprint.flac",
+            tags: [TagKey.title: "Fingerprint Track"],
+            pictures: [],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/duration-fingerprint.flac"),
+            securityScopedBookmarkData: nil,
+            flacFingerprint: "duration-fingerprint"
+        )
+
+        let firstResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: baseTrack.sortKey,
+                    tags: baseTrack.tags,
+                    pictures: baseTrack.pictures,
+                    sourceFileURL: baseTrack.sourceFileURL,
+                    securityScopedBookmarkData: baseTrack.securityScopedBookmarkData,
+                    flacFingerprint: baseTrack.flacFingerprint,
+                    duration: 61.5
+                )
+            ],
+            state: .init(),
+            to: firstDestinationURL
+        )
+        let secondResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: baseTrack.sortKey,
+                    tags: baseTrack.tags,
+                    pictures: baseTrack.pictures,
+                    sourceFileURL: baseTrack.sourceFileURL,
+                    securityScopedBookmarkData: baseTrack.securityScopedBookmarkData,
+                    flacFingerprint: baseTrack.flacFingerprint,
+                    duration: 3_661.5
+                )
+            ],
+            state: .init(),
+            to: secondDestinationURL
+        )
+
+        #expect(firstResult.fingerprint == secondResult.fingerprint)
+    }
+
     @MainActor
     @Test
     func tagEditorViewModelExportsCurrentEditorTagsForSwiftTagDocument() {
@@ -519,6 +625,7 @@ struct SwiftTagDocumentTests {
             description: "Cover (front)",
             data: try Self.pngData(color: .systemPink)
         ).withComputedPictureMetadata()
+        let duration = 125.25
         let destinationURL = try Self.tempPackageURL(name: "view-model-load")
         let saveResult = try SwiftTagDocumentPackageWriter.save(
             tracks: [
@@ -533,7 +640,8 @@ struct SwiftTagDocumentTests {
                     pictures: [frontCover],
                     sourceFileURL: URL(fileURLWithPath: "/tmp/view-model-load.flac"),
                     securityScopedBookmarkData: nil,
-                    flacFingerprint: "loaded-fingerprint"
+                    flacFingerprint: "loaded-fingerprint",
+                    duration: duration
                 )
             ],
             state: .init(),
@@ -549,6 +657,7 @@ struct SwiftTagDocumentTests {
         #expect(viewModel.swiftTagDocumentSaveState().documentID == saveResult.documentID)
         #expect(loadedTrack.tags[TagKey.title] == "Loaded Track")
         #expect(loadedTrack.album == "Loaded Album")
+        #expect(loadedTrack.duration == duration)
         #expect(loadedTrack.latestFileSnapshot != nil)
         #expect(loadedTrack.preservesEditorStateDuringFileRefresh)
         #expect(!viewModel.canSave(

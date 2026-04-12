@@ -18,6 +18,7 @@ struct FlacMetadataRecord {
     let tags: [String: String]
     let pictures: [FlacPictureRecord]
     let fingerprint: String?
+    let duration: TimeInterval?
 }
 
 enum UITestFlacOverrideWriter {
@@ -135,7 +136,7 @@ enum FlacMetadataService {
     static func readTags(for fileURL: URL) throws -> FlacMetadataRecord {
         var result = FlacTagResult(pairs: nil, count: 0)
         var pictureResult = FlacPictureResult(pictures: nil, count: 0)
-        var fingerprintPointer: UnsafeMutablePointer<CChar>? = nil
+        var streamInfoResult = FlacStreamInfoResult(sample_rate: 0, total_samples: 0, fingerprint: nil)
         var errorMessage: UnsafeMutablePointer<CChar>? = nil
 
         let status: Int32 = fileURL.path.withCString { filePath in
@@ -145,9 +146,7 @@ enum FlacMetadataService {
         defer {
             flac_free_tag_result(&result)
             flac_free_picture_result(&pictureResult)
-            if let fingerprintPointer {
-                flac_free_c_string(fingerprintPointer)
-            }
+            flac_free_streaminfo_result(&streamInfoResult)
             if let errorMessage {
                 flac_free_c_string(errorMessage)
             }
@@ -167,12 +166,12 @@ enum FlacMetadataService {
             throw FlacMetadataServiceError.bridgeFailed(message: message)
         }
 
-        let fingerprintStatus: Int32 = fileURL.path.withCString { filePath in
-            flac_read_fingerprint(filePath, &fingerprintPointer, &errorMessage)
+        let streamInfoStatus: Int32 = fileURL.path.withCString { filePath in
+            flac_read_streaminfo(filePath, &streamInfoResult, &errorMessage)
         }
 
-        guard fingerprintStatus == 0 else {
-            let message = errorMessage.map { String(cString: $0) } ?? "Unknown FLAC fingerprint bridge error."
+        guard streamInfoStatus == 0 else {
+            let message = errorMessage.map { String(cString: $0) } ?? "Unknown FLAC stream info bridge error."
             throw FlacMetadataServiceError.bridgeFailed(message: message)
         }
 
@@ -219,11 +218,15 @@ enum FlacMetadataService {
             }
         }
 
-        let fingerprint = fingerprintPointer
+        let fingerprint = streamInfoResult.fingerprint
             .map { String(cString: $0).trimmingCharacters(in: .whitespacesAndNewlines) }
             .flatMap { $0.isEmpty ? nil : $0 }
+        let duration = duration(
+            sampleRate: streamInfoResult.sample_rate,
+            totalSamples: streamInfoResult.total_samples
+        )
 
-        return FlacMetadataRecord(tags: tags, pictures: pictures, fingerprint: fingerprint)
+        return FlacMetadataRecord(tags: tags, pictures: pictures, fingerprint: fingerprint, duration: duration)
     }
 
     @discardableResult
@@ -395,5 +398,16 @@ enum FlacMetadataService {
         }
 
         return try flacPictures.withUnsafeBufferPointer(body)
+    }
+
+    private static func duration(
+        sampleRate: UInt32,
+        totalSamples: UInt64
+    ) -> TimeInterval? {
+        guard sampleRate > 0, totalSamples > 0 else {
+            return nil
+        }
+
+        return Double(totalSamples) / Double(sampleRate)
     }
 }

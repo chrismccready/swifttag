@@ -127,6 +127,7 @@ enum SwiftTagDocumentPackageWriter {
                     flacFileURL: normalizedFileURLString(track.sourceFileURL),
                     flacFileBookmark: track.securityScopedBookmarkData,
                     flacFingerprint: normalizedOptionalString(track.flacFingerprint),
+                    duration: track.duration,
                     tags: normalizedTags,
                     pictures: manifestPictures
                 )

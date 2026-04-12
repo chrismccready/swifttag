@@ -11,6 +11,28 @@ extension UTType {
     static let swiftTagDocument = UTType(exportedAs: SwiftTagDocumentType.identifier, conformingTo: .package)
 }
 
+enum TrackDurationFormatter {
+    static func string(from duration: TimeInterval?) -> String {
+        guard let duration,
+              duration.isFinite,
+              duration >= 0,
+              duration <= Double(Int.max) else {
+            return ""
+        }
+
+        let totalSeconds = Int(duration.rounded(.down))
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+
+        if hours > 0 {
+            return String(format: "%2d:%02d:%02d", hours, minutes, seconds)
+        }
+
+        return String(format: "%2d:%02d", minutes, seconds)
+    }
+}
+
 struct SwiftTagDocumentSaveState: Equatable {
     var destinationURL: URL?
     var documentID: UUID?
@@ -91,8 +113,27 @@ struct SwiftTagDocumentImportTrack: Equatable {
     let sourceFileURL: URL?
     let securityScopedBookmarkData: Data?
     let flacFingerprint: String?
+    let duration: TimeInterval?
     let tags: [String: String]
     let pictures: [FlacWritablePictureRecord]
+
+    init(
+        documentTrackFingerprint: String,
+        sourceFileURL: URL?,
+        securityScopedBookmarkData: Data?,
+        flacFingerprint: String?,
+        duration: TimeInterval? = nil,
+        tags: [String: String],
+        pictures: [FlacWritablePictureRecord]
+    ) {
+        self.documentTrackFingerprint = documentTrackFingerprint
+        self.sourceFileURL = sourceFileURL
+        self.securityScopedBookmarkData = securityScopedBookmarkData
+        self.flacFingerprint = flacFingerprint
+        self.duration = duration
+        self.tags = tags
+        self.pictures = pictures
+    }
 }
 
 struct SwiftTagDocumentImportResult: Equatable {
@@ -146,6 +187,25 @@ struct SwiftTagDocumentExportTrack: Equatable {
     let sourceFileURL: URL?
     let securityScopedBookmarkData: Data?
     let flacFingerprint: String?
+    let duration: TimeInterval?
+
+    init(
+        sortKey: String,
+        tags: [String: String],
+        pictures: [FlacWritablePictureRecord],
+        sourceFileURL: URL?,
+        securityScopedBookmarkData: Data?,
+        flacFingerprint: String?,
+        duration: TimeInterval? = nil
+    ) {
+        self.sortKey = sortKey
+        self.tags = tags
+        self.pictures = pictures
+        self.sourceFileURL = sourceFileURL
+        self.securityScopedBookmarkData = securityScopedBookmarkData
+        self.flacFingerprint = flacFingerprint
+        self.duration = duration
+    }
 }
 
 enum SwiftTagDocumentPackageError: LocalizedError {

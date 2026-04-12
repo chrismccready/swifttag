@@ -31,6 +31,7 @@ struct SwiftTagDocumentManifestTrack: Codable, Equatable {
     let flacFileURL: String
     let flacFileBookmark: Data?
     let flacFingerprint: String?
+    let duration: TimeInterval?
     let tags: [String: String]
     let pictures: [SwiftTagDocumentManifestPicture]
 
@@ -39,6 +40,7 @@ struct SwiftTagDocumentManifestTrack: Codable, Equatable {
         case flacFileURL = "FLAC File URL"
         case flacFileBookmark = "FLAC File Bookmark"
         case flacFingerprint = "FLAC Fingerprint"
+        case duration = "Duration"
         case tags = "Tags"
         case pictures = "Pictures"
     }

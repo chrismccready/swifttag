@@ -109,6 +109,7 @@ enum FeedbackSettingsKey {
     static let saveNotificationMode = "settings.feedback.saveNotificationMode"
     static let themePreference = "settings.feedback.themePreference"
     static let showTrackFingerprintColumn = "settings.feedback.showTrackFingerprintColumn"
+    static let showTrackDurationColumn = "settings.feedback.showTrackDurationColumn"
     static let trackToTrackDiffColor = "settings.feedback.trackToTrackDiffColor"
     static let trackToFileDiffColor = "settings.feedback.trackToFileDiffColor"
     static let externallyModifiedDiffColor = "settings.feedback.externallyModifiedDiffColor"
@@ -126,6 +127,7 @@ enum FeedbackSettingsDefaults {
     static let saveNotificationMode = SaveNotificationMode.whenNotFrontmost
     static let themePreference = AppThemePreference.system
     static let showTrackFingerprintColumn = true
+    static let showTrackDurationColumn = true
     static let trackToTrackDiffColor = AppColorStorage.archive(Color.orange, fallback: .systemOrange)
     static let trackToFileDiffColor = AppColorStorage.archive(Color.primary, fallback: .labelColor)
     static let externallyModifiedDiffColor = AppColorStorage.archive(Color.red, fallback: .systemRed)

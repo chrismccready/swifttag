@@ -348,7 +348,8 @@ final class TagEditorViewModel {
                 pictures: canonicalPictureRecords(picturesForTrack(at: index, fallback: [])),
                 sourceFileURL: track.sourceFileURL,
                 securityScopedBookmarkData: track.securityScopedBookmarkData,
-                flacFingerprint: track.fingerprint
+                flacFingerprint: track.fingerprint,
+                duration: track.duration
             )
         }
     }
@@ -417,6 +418,7 @@ final class TagEditorViewModel {
                 sourceFileURL: documentTrack.sourceFileURL,
                 securityScopedBookmarkData: documentTrack.securityScopedBookmarkData,
                 fingerprint: documentTrack.flacFingerprint,
+                duration: documentTrack.duration,
                 preservesEditorStateDuringFileRefresh: true
             )
         }
@@ -1158,6 +1160,7 @@ final class TagEditorViewModel {
                         fingerprint: metadata.fingerprint
                     ),
                     fingerprint: metadata.fingerprint,
+                    duration: metadata.duration,
                     isLocked: locked
                 )
             )
@@ -1610,6 +1613,7 @@ final class TagEditorViewModel {
                 updatedTrackItems[index].sourceFileURL = fileURL
                 updatedTrackItems[index].securityScopedBookmarkData = refreshedBookmarkData
                 updatedTrackItems[index].fingerprint = metadata.fingerprint
+                updatedTrackItems[index].duration = metadata.duration
                 updatedTrackItems[index].preservesEditorStateDuringFileRefresh = false
                 updatedTrackItems[index].latestFileSnapshot = TrackFileSnapshot(
                     tags: FlacWriteMapper.makeTags(
@@ -1681,6 +1685,7 @@ final class TagEditorViewModel {
         let metadata = try FlacMetadataService.readTags(for: fileURL)
         let picturesByType = writablePicturesByType(from: albumArtPictures)
         trackItems[index].fingerprint = metadata.fingerprint
+        trackItems[index].duration = metadata.duration
         trackItems[index].preservesEditorStateDuringFileRefresh = false
         trackItems[index].latestFileSnapshot = TrackFileSnapshot(
             tags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
@@ -1736,6 +1741,7 @@ final class TagEditorViewModel {
                 }
                 self.cancelPendingMissingRefresh(for: self.trackItems[index].id)
                 self.trackItems[index].fingerprint = metadata.fingerprint
+                self.trackItems[index].duration = metadata.duration
                 self.trackItems[index].externalDifferences = self.externalDifferences(
                     for: index,
                     fileSnapshot: fileSnapshot,

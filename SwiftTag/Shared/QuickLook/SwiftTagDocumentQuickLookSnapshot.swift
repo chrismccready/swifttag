@@ -13,6 +13,7 @@ struct SwiftTagDocumentQuickLookLayout: Equatable {
     let metadataLineSpacing: CGFloat
     let trackSectionSpacing: CGFloat
     let trackRowSpacing: CGFloat
+    let durationColumnMinWidth: CGFloat
     let backgroundBlurRadius: CGFloat
     let backgroundOverlayOpacity: Double
     let textShadowRadius: CGFloat
@@ -22,13 +23,14 @@ struct SwiftTagDocumentQuickLookLayout: Equatable {
         horizontalPadding: 46,
         topPadding: 52,
         bottomPadding: 46,
-        albumFontSize: 26,
-        metadataFontSize: 18,
+        albumFontSize: 24,
+        metadataFontSize: 16,
         titleLineHeightMultiplier: 1.2,
         bodyLineHeightMultiplier: 1.25,
         metadataLineSpacing: 6,
         trackSectionSpacing: 20,
         trackRowSpacing: 4,
+        durationColumnMinWidth: 58,
         backgroundBlurRadius: 14,
         backgroundOverlayOpacity: 0.42,
         textShadowRadius: 3
@@ -65,10 +67,11 @@ struct SwiftTagDocumentQuickLookSnapshot: Equatable {
     }
 
     struct TrackRow: Equatable {
-        let text: String
+        let leadingText: String
+        let durationText: String
         let isEllipsis: Bool
 
-        static let ellipsis = TrackRow(text: "...", isEllipsis: true)
+        static let ellipsis = TrackRow(leadingText: "...", durationText: "", isEllipsis: true)
     }
 
     let album: String
@@ -147,7 +150,8 @@ struct SwiftTagDocumentQuickLookSnapshot: Equatable {
             PreparedTrack(
                 manifestIndex: index,
                 rawTrackNumber: normalizedValue(track.tags[QuickLookTagKey.trackNumber]),
-                title: normalizedValue(track.tags[QuickLookTagKey.title]) ?? ""
+                title: normalizedValue(track.tags[QuickLookTagKey.title]) ?? "",
+                duration: track.duration
             )
         }
 
@@ -155,7 +159,13 @@ struct SwiftTagDocumentQuickLookSnapshot: Equatable {
             .sorted { lhs, rhs in
                 comparePreparedTracks(lhs, rhs)
             }
-            .map { TrackRow(text: $0.displayText, isEllipsis: false) }
+            .map {
+                TrackRow(
+                    leadingText: $0.displayLeadingText,
+                    durationText: $0.displayDurationText,
+                    isEllipsis: false
+                )
+            }
     }
 
     private static func comparePreparedTracks(_ lhs: PreparedTrack, _ rhs: PreparedTrack) -> Bool {
@@ -219,6 +229,7 @@ private struct PreparedTrack {
     let manifestIndex: Int
     let rawTrackNumber: String?
     let title: String
+    let duration: TimeInterval?
 
     var numericTrackNumber: Int? {
         guard let rawTrackNumber else {
@@ -236,9 +247,13 @@ private struct PreparedTrack {
         return rawTrackNumber
     }
 
-    var displayText: String {
+    var displayLeadingText: String {
         let components = [displayTrackNumber, title.isEmpty ? nil : title].compactMap { $0 }
 
-        return components.joined(separator: " ")
+        return components.joined(separator: "  ")
+    }
+
+    var displayDurationText: String {
+        TrackDurationFormatter.string(from: duration)
     }
 }

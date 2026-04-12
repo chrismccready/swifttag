@@ -33,6 +33,7 @@ struct TrackStatusViewInspectorTests {
             trackItems: [track],
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(true),
+            showsDurationColumn: .constant(false),
             titleBindingForTrack: { _ in .constant("Track A") },
             statusPresentationForTrack: { _ in
                 TrackStatusPresentation(systemImageName: "fish.fill", help: "Editor matches file.")
@@ -72,6 +73,7 @@ struct TrackStatusViewInspectorTests {
             trackItems: [track],
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(true),
+            showsDurationColumn: .constant(false),
             titleBindingForTrack: { _ in .constant("Track A") },
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in false },
@@ -198,6 +200,7 @@ struct TrackStatusViewInspectorTests {
             trackItems: [track],
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(true),
+            showsDurationColumn: .constant(false),
             titleBindingForTrack: { _ in .constant("Locked Track") },
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in true },
@@ -235,6 +238,7 @@ struct TrackStatusViewInspectorTests {
             trackItems: [track],
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(true),
+            showsDurationColumn: .constant(false),
             titleBindingForTrack: { _ in .constant("Unlocked Track") },
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in false },
@@ -550,7 +554,7 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
-    func tagEditorTrackFileViewDeclaresStatusColumnBeforeTrackNumberTitleAndFilenameInSource() throws {
+    func tagEditorTrackFileViewDeclaresStatusDurationAndFingerprintColumnsInSourceOrder() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -562,13 +566,15 @@ struct TrackStatusViewInspectorTests {
         let statusRange = try #require(source.range(of: "TableColumn(\"\")"))
         let trackNumberRange = try #require(source.range(of: "TableColumn(\"#\")"))
         let titleRange = try #require(source.range(of: "TableColumn(\"Title\")"))
+        let durationRange = try #require(source.range(of: "TableColumn(\"Duration\")"))
         let filenameRange = try #require(source.range(of: "TableColumn(\"Filename\")"))
         let fingerprintRange = try #require(source.range(of: "TableColumn(\"Fingerprint (ffp)\")"))
 
         #expect(statusRange.lowerBound < trackNumberRange.lowerBound)
         #expect(trackNumberRange.lowerBound < titleRange.lowerBound)
         #expect(statusRange.lowerBound < titleRange.lowerBound)
-        #expect(titleRange.lowerBound < filenameRange.lowerBound)
+        #expect(titleRange.lowerBound < durationRange.lowerBound)
+        #expect(durationRange.lowerBound < filenameRange.lowerBound)
         #expect(filenameRange.lowerBound < fingerprintRange.lowerBound)
     }
 
@@ -580,6 +586,7 @@ struct TrackStatusViewInspectorTests {
             trackItems: [track],
             selection: .constant(Set([track.id])),
             showsFingerprintColumn: .constant(false),
+            showsDurationColumn: .constant(false),
             titleBindingForTrack: { _ in .constant("Track A") },
             statusPresentationForTrack: { _ in nil },
             isTrackLocked: { _ in false },
@@ -610,6 +617,44 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func tagEditorTrackFileViewReceivesDurationColumnVisibilityBinding() throws {
+        let track = makeTrack(id: UUID(), title: "Track A", filename: "track-a.flac")
+
+        let sut = TagEditorTrackFileView(
+            trackItems: [track],
+            selection: .constant(Set([track.id])),
+            showsFingerprintColumn: .constant(false),
+            showsDurationColumn: .constant(true),
+            titleBindingForTrack: { _ in .constant("Track A") },
+            statusPresentationForTrack: { _ in nil },
+            isTrackLocked: { _ in false },
+            hasDeletedFile: { _ in false },
+            hasTrackToTrackTitleDifference: { _ in false },
+            hasTrackToFileTitleDifference: { _ in false },
+            hasExternallyModifiedTitleDifference: { _ in false },
+            onToggleLockSelection: {},
+            lockMenuTitle: "Lock Selected Track",
+            canToggleLockSelection: true,
+            onSetTrackTotalToCount: {},
+            setTrackTotalMenuTitle: "Set Track Total (1)",
+            canSetTrackTotal: true,
+            onAddFlacFiles: {},
+            onAddReadOnlyFlacFiles: {},
+            canAddFlacFiles: true,
+            onReloadSelectedTracks: {},
+            reloadSelectedTracksTitle: "Reload Selected Track",
+            canReloadSelectedTracks: false,
+            onRemoveSelectedTracks: {},
+            removeSelectedTracksTitle: "Remove Selected Track",
+            canRemoveSelectedTracks: false,
+            onDropFlacFiles: { _ in false }
+        )
+
+        let actualView = try sut.inspect().find(TagEditorTrackFileView.self).actualView()
+        #expect(actualView.showsDurationColumn.wrappedValue)
+    }
+
+    @Test
     func tagEditorTrackFileViewSourceDeclaresFingerprintToggleContextMenuAction() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -624,6 +669,23 @@ struct TrackStatusViewInspectorTests {
         #expect(source.contains("\"Hide Fingerprint Column\""))
         #expect(source.contains("\"Show Fingerprint Column\""))
         #expect(source.contains("Button(fingerprintColumnMenuTitle)"))
+    }
+
+    @Test
+    func tagEditorTrackFileViewSourceDeclaresDurationToggleContextMenuAction() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("TagEditor")
+            .appendingPathComponent("TagEditorTrackFileView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains("private var durationColumnMenuTitle"))
+        #expect(source.contains("\"Hide Duration\""))
+        #expect(source.contains("\"Show Duration\""))
+        #expect(source.contains("Button(durationColumnMenuTitle)"))
     }
 
     @Test

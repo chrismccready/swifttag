@@ -125,6 +125,7 @@ struct ContentView: View {
     @AppStorage(SaveSettingsKey.saveAllPicturesToAllTracks) private var saveAllPicturesToAllTracks: Bool = SaveSettingsDefaults.saveAllPicturesToAllTracks
     @AppStorage(FeedbackSettingsKey.themePreference) private var themePreferenceRawValue: String = FeedbackSettingsDefaults.themePreference.rawValue
     @AppStorage(FeedbackSettingsKey.showTrackFingerprintColumn) private var showTrackFingerprintColumn: Bool = FeedbackSettingsDefaults.showTrackFingerprintColumn
+    @AppStorage(FeedbackSettingsKey.showTrackDurationColumn) private var showTrackDurationColumn: Bool = FeedbackSettingsDefaults.showTrackDurationColumn
     @AppStorage(FeedbackSettingsKey.formatOnTrackTotalMismatch) private var formatOnTrackTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnTrackTotalMismatch
     @AppStorage(FeedbackSettingsKey.formatOnDiscTotalMismatch) private var formatOnDiscTotalMismatch: Bool = FeedbackSettingsDefaults.formatOnDiscTotalMismatch
 
@@ -601,6 +602,7 @@ struct ContentView: View {
             trackItems: trackItems,
             selectedTrackIDsBinding: selectedTrackIDsBinding,
             showsFingerprintColumnBinding: $showTrackFingerprintColumn,
+            showsDurationColumnBinding: $showTrackDurationColumn,
             titleBindingForTrack: titleBinding(for:),
             statusPresentationForTrack: trackStatusPresentationLookup,
             isTrackLocked: viewModel.isTrackLocked(_:),

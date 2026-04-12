@@ -13,6 +13,7 @@ struct Track: Identifiable {
     var latestFileSnapshot: TrackFileSnapshot?
     var externalDifferences: TrackExternalDifferences?
     var fingerprint: String?
+    var duration: TimeInterval?
     var isLocked: Bool
     var preservesEditorStateDuringFileRefresh: Bool
 
@@ -88,6 +89,7 @@ struct Track: Identifiable {
         latestFileSnapshot: TrackFileSnapshot? = nil,
         externalDifferences: TrackExternalDifferences? = nil,
         fingerprint: String? = nil,
+        duration: TimeInterval? = nil,
         isLocked: Bool = false,
         preservesEditorStateDuringFileRefresh: Bool = false
     ) {
@@ -114,6 +116,7 @@ struct Track: Identifiable {
         self.latestFileSnapshot = latestFileSnapshot
         self.externalDifferences = externalDifferences
         self.fingerprint = Track.normalizedOptionalValue(fingerprint)
+        self.duration = Track.normalizedDuration(duration)
         self.isLocked = isLocked
         self.preservesEditorStateDuringFileRefresh = preservesEditorStateDuringFileRefresh
     }
@@ -134,5 +137,15 @@ struct Track: Identifiable {
 
         let trimmedValue = normalizedSharedValue(value)
         return trimmedValue.isEmpty ? nil : trimmedValue
+    }
+
+    private static func normalizedDuration(_ value: TimeInterval?) -> TimeInterval? {
+        guard let value,
+              value.isFinite,
+              value >= 0 else {
+            return nil
+        }
+
+        return value
     }
 }
