@@ -37,6 +37,11 @@ struct SwiftTagDocumentQuickLookView: View {
                                 metadataText(row.durationText)
                                     .frame(minWidth: layout.durationColumnMinWidth, alignment: .trailing)
                             }
+                            .background(alignment: .center) {
+                                RoundedRectangle(cornerRadius: 8, style: .circular)
+                                    .fill(offset % 2 == 0 ? Color.primary.opacity(0.08) : Color.clear)
+                                    .padding(EdgeInsets(top: -2, leading: -5, bottom: -3, trailing: -5))
+                            }
                         }
                     }
                     .padding(.top, layout.trackSectionSpacing)

@@ -23,8 +23,8 @@ struct SwiftTagDocumentQuickLookLayout: Equatable {
         horizontalPadding: 46,
         topPadding: 52,
         bottomPadding: 46,
-        albumFontSize: 24,
-        metadataFontSize: 16,
+        albumFontSize: 22,
+        metadataFontSize: 14,
         titleLineHeightMultiplier: 1.2,
         bodyLineHeightMultiplier: 1.25,
         metadataLineSpacing: 6,
@@ -113,9 +113,14 @@ struct SwiftTagDocumentQuickLookSnapshot: Equatable {
     }
 
     private static func preferredAlbum(in document: SwiftTagDocumentImportResult) -> String {
-        sharedNonEmptyValue(for: QuickLookTagKey.album, in: document.tracks)
-            ?? firstNonEmptyValue(for: QuickLookTagKey.album, in: document.tracks)
-            ?? document.documentURL.deletingPathExtension().lastPathComponent
+        let normalizedValues = Set(document.tracks.map { normalizedValue($0.tags[QuickLookTagKey.album]) ?? nil } )
+        guard let firstValue = (normalizedValues.compactMap { $0 }.first) else {
+            return document.documentURL.lastPathComponent
+          }
+          if normalizedValues.count == 1 {
+            return firstValue
+          }
+          return "Mix"
     }
 
     private static func sharedAlbumArtist(in tracks: [SwiftTagDocumentImportTrack]) -> String? {
