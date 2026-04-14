@@ -427,6 +427,38 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func albumArtSheetViewDeclaresPictureDescriptionEditorInSource() throws {
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: false,
+            saveStatusPresentation: nil
+        )
+
+        let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
+        #expect(actualView.canEditDescriptionForSlot(.frontCover))
+        #expect(actualView.descriptionValidationForSlot(.frontCover, "Draft")?.isLegal == true)
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtSheetView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains("Divider()"))
+        #expect(source.contains("Button(\"Edit Description...\")"))
+        #expect(source.contains("Text(\"Picture Description\")"))
+        #expect(source.contains("Text(\"Original Description\")"))
+        #expect(source.contains("TextEditor(text: $stagedPictureDescription)"))
+        #expect(source.contains(".sheet(isPresented: $isPictureDescriptionSheetPresented"))
+        #expect(source.contains(".alert(\"Description Too Large\""))
+        #expect(source.contains("Button(\"Ok\") {}"))
+        #expect(source.contains("Button(\"Cancel\", role: .cancel)"))
+        #expect(source.contains("Button(\"Save\")"))
+    }
+
+    @Test
     func albumArtWellViewDeclaresCopyAndPasteCommandsInSource() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -683,8 +715,8 @@ struct TrackStatusViewInspectorTests {
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
         #expect(source.contains("private var durationColumnMenuTitle"))
-        #expect(source.contains("\"Hide Duration\""))
-        #expect(source.contains("\"Show Duration\""))
+        #expect(source.contains("\"Hide Duration Column\""))
+        #expect(source.contains("\"Show Duration Column\""))
         #expect(source.contains("Button(durationColumnMenuTitle)"))
     }
 
@@ -878,12 +910,12 @@ struct TrackStatusViewInspectorTests {
         typePictureScope: AlbumArtPictureScope = .allTrackPictures,
         isTypePictureScopeDisabled: Bool = false,
         canGoToPreviousPicture: Bool = false,
-        canGoToNextPicture: Bool = false
+        canGoToNextPicture: Bool = false,
+        canEditDescription: Bool = true
     ) -> AlbumArtSheetView {
         AlbumArtSheetView(
             isSaveOperationRunning: isSaveOperationRunning,
             isEditingEnabled: true,
-            showsPictureDifferenceOverlay: false,
             saveStatusPresentation: saveStatusPresentation,
             albumArtTypes: [
                 AlbumArtType(
@@ -911,6 +943,14 @@ struct TrackStatusViewInspectorTests {
             pictureCountForSlot: { _ in (pictureCount, pinCount) },
             infoOverlayStateForSlot: { _ in infoOverlayState },
             metadataForSlot: { _ in metadata },
+            canEditDescriptionForSlot: { _ in canEditDescription },
+            descriptionValidationForSlot: { _, description in
+                FlacPictureDescriptionValidation(
+                    maximumDescriptionBytes: 1_024,
+                    proposedDescriptionBytes: description.lengthOfBytes(using: .utf8)
+                )
+            },
+            onSaveDescriptionForSlot: { _, _ in },
             hasCrossTypeDuplicateForSlot: { _ in false },
             scopeLabelText: "All Tracks",
             typePictureScopeForSlot: { _ in typePictureScope },
@@ -926,7 +966,8 @@ struct TrackStatusViewInspectorTests {
             onPreviousPicture: { _ in },
             onNextPicture: { _ in },
             onLastPicture: { _ in },
-            onRemovePicture: { _ in }
+            onRemovePicture: { _ in },
+            showsPictureDifferenceOverlayForSlot: { _ in false }
         )
     }
 

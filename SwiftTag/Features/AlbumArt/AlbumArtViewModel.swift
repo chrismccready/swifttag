@@ -268,6 +268,88 @@ final class AlbumArtViewModel {
         )
     }
 
+    func canEditCurrentPictureDescription(for slot: AlbumArtSlot) -> Bool {
+        guard let currentReference = currentReference(for: slot),
+              picturePool[currentReference.poolItemID] != nil else {
+            return false
+        }
+
+        return !descriptionEditTargetTrackIDs(for: slot).isEmpty
+    }
+
+    func currentPictureDescriptionValidation(
+        for slot: AlbumArtSlot,
+        proposedDescription: String
+    ) -> FlacPictureDescriptionValidation? {
+        guard let currentReference = currentReference(for: slot),
+              let poolItem = picturePool[currentReference.poolItemID] else {
+            return nil
+        }
+
+        return FlacPictureDescriptionBudget.validation(
+            mimeType: currentReference.mimeType,
+            pictureData: poolItem.data,
+            proposedDescription: proposedDescription
+        )
+    }
+
+    @discardableResult
+    func updateCurrentPictureDescription(
+        _ description: String,
+        for slot: AlbumArtSlot,
+        albumArtTypes: [AlbumArtType]
+    ) -> Bool {
+        guard let currentReference = currentReference(for: slot) else {
+            return false
+        }
+
+        let targetTrackIDs = descriptionEditTargetTrackIDs(for: slot)
+        guard !targetTrackIDs.isEmpty else {
+            return false
+        }
+
+        var didUpdate = false
+
+        for trackID in targetTrackIDs {
+            var refs = trackReferencesByTrackID[trackID, default: []]
+
+            for index in refs.indices {
+                guard refs[index].slot == slot,
+                      refs[index].poolItemID == currentReference.poolItemID else {
+                    continue
+                }
+
+                let existingReference = refs[index]
+                guard existingReference.description != description else {
+                    continue
+                }
+
+                let wasPinned = isReferencePinned(existingReference, for: trackID)
+                clearReferencePinState(existingReference, for: trackID)
+
+                let updatedReference = AlbumArtTrackReference(
+                    id: existingReference.id,
+                    poolItemID: existingReference.poolItemID,
+                    slot: existingReference.slot,
+                    mimeType: existingReference.mimeType,
+                    description: description
+                )
+                refs[index] = updatedReference
+                setReferencePinned(updatedReference, for: trackID, isPinned: wasPinned)
+                didUpdate = true
+            }
+
+            trackReferencesByTrackID[trackID] = refs
+        }
+
+        guard didUpdate else {
+            return false
+        }
+
+        syncLegacySlotImages(albumArtTypes: albumArtTypes)
+        return true
+    }
+
     func infoOverlayMessages(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> [AlbumArtInfoOverlayMessage] {
         resolvedInfoOverlayState(for: slot, albumArtTypes: albumArtTypes)?.messages ?? []
     }
@@ -1132,6 +1214,17 @@ final class AlbumArtViewModel {
 
     private func manualTrackPinTargetTrackIDs(for slot: AlbumArtSlot) -> [UUID] {
         editableTrackIDs(for: slotEffectiveScope(for: slot))
+    }
+
+    private func descriptionEditTargetTrackIDs(for slot: AlbumArtSlot) -> [UUID] {
+        guard let currentPoolItemID = currentReference(for: slot)?.poolItemID else {
+            return []
+        }
+
+        return editableTrackIDs(for: slotEffectiveScope(for: slot)).filter { trackID in
+            trackReferencesByTrackID[trackID, default: []]
+                .contains(where: { $0.slot == slot && $0.poolItemID == currentPoolItemID })
+        }
     }
 
     private func removalTargetTrackIDs() -> [UUID] {

@@ -38,6 +38,15 @@ final class SwiftTagUITests: XCTestCase {
         static let saveNewSwiftTagDocumentPromptProbe = "uiTest.saveNewSwiftTagDocumentPrompt"
         static let albumExternalStateProbe = "uiTest.diff.album.externalState"
         static let albumExternalFileValueProbe = "uiTest.diff.album.externalFileValue"
+        static let frontCoverPictureExternalStateProbe = "uiTest.diff.picture.frontCover.externalState"
+        static let albumArtImageWell = "albumArtImageWell"
+        static let albumArtSheet = "albumArt.sheet"
+        static let albumArtSheetPictureDescription = "albumArt.sheet.pictureDescription"
+        static let albumArtSheetPictureDescriptionEditor = "albumArt.sheet.pictureDescription.editor"
+        static let albumArtSheetPictureDescriptionSaveButton = "albumArt.sheet.pictureDescription.saveButton"
+        static let albumArtSheetCurrentSlot = "albumArt.sheet.currentSlot"
+        static let albumArtSheetExternalDifferenceState = "albumArt.sheet.externalDifferenceState"
+        static let albumArtSheetSlotPrefix = "albumArt.sheet.slot."
     }
 
     private enum PlaceholderText {
@@ -1436,6 +1445,114 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testPictureDescriptionSaveInSecondWindowShowsExternalPictureDifferenceInFirstWindow() throws {
+        let sharedFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
+        let updatedDescription = "Observed External Description \(UUID().uuidString)"
+
+        let app = try launchApp(exposeDiffMetadata: true)
+        let (firstWindow, secondWindow) = try openSharedFixtureInTwoNewWindows(app: app, fixtureURL: sharedFixtureURL)
+
+        focusWindow(secondWindow)
+        selectImportedTrackForEditing(in: secondWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        let secondWindowAlbumArtSheet = openAlbumArtSheet(in: secondWindow, app: app)
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: secondWindowAlbumArtSheet,
+                identifier: UIID.albumArtSheetCurrentSlot,
+                expectedValue: "Front Cover",
+                timeout: 10.0
+            )
+        )
+        editCurrentAlbumArtDescription(
+            in: secondWindowAlbumArtSheet,
+            app: app,
+            description: updatedDescription
+        )
+        performSavePictures(in: app)
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        closeAlbumArtSheet(in: app)
+
+        focusWindow(firstWindow)
+        selectImportedTrackForEditing(in: firstWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: firstWindow,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "exclamationmark.triangle",
+                timeout: 20.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: firstWindow,
+                identifier: UIID.frontCoverPictureExternalStateProbe,
+                expectedValue: "external",
+                timeout: 20.0
+            )
+        )
+    }
+
+    @MainActor
+    func testPictureBrowserShowsExternalOverlayOnlyForDifferingSlot() throws {
+        let sharedFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
+        let updatedDescription = "Slot Scoped External Description \(UUID().uuidString)"
+
+        let app = try launchApp()
+        let (firstWindow, secondWindow) = try openSharedFixtureInTwoNewWindows(app: app, fixtureURL: sharedFixtureURL)
+
+        focusWindow(secondWindow)
+        selectImportedTrackForEditing(in: secondWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        let secondWindowAlbumArtSheet = openAlbumArtSheet(in: secondWindow, app: app)
+        editCurrentAlbumArtDescription(
+            in: secondWindowAlbumArtSheet,
+            app: app,
+            description: updatedDescription
+        )
+        performSavePictures(in: app)
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        closeAlbumArtSheet(in: app)
+
+        focusWindow(firstWindow)
+        selectImportedTrackForEditing(in: firstWindow, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        let firstWindowAlbumArtSheet = openAlbumArtSheet(in: firstWindow, app: app)
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: firstWindowAlbumArtSheet,
+                identifier: UIID.albumArtSheetCurrentSlot,
+                expectedValue: "Front Cover",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: firstWindowAlbumArtSheet,
+                identifier: UIID.albumArtSheetExternalDifferenceState,
+                expectedValue: "external",
+                timeout: 20.0
+            )
+        )
+
+        selectAlbumArtSlot(in: app, component: "backCover")
+
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: firstWindowAlbumArtSheet,
+                identifier: UIID.albumArtSheetCurrentSlot,
+                expectedValue: "Back Cover",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: firstWindowAlbumArtSheet,
+                identifier: UIID.albumArtSheetExternalDifferenceState,
+                expectedValue: "none",
+                timeout: 20.0
+            )
+        )
+    }
+
+    @MainActor
     func testSettingsWindowPersistsSavePreferencesAcrossRelaunch() throws {
         let app = try launchApp(resetSaveSettings: true)
 
@@ -2069,6 +2186,87 @@ final class SwiftTagUITests: XCTestCase {
         app.typeKey("s", modifierFlags: [.command, .option])
     }
 
+    private func openAlbumArtSheet(in window: XCUIElement, app: XCUIApplication) -> XCUIElement {
+        let albumArtWell = window.descendants(matching: .any)
+            .matching(identifier: UIID.albumArtImageWell)
+            .firstMatch
+        XCTAssertTrue(albumArtWell.waitForExistence(timeout: 10.0))
+        albumArtWell.rightClick()
+
+        let menuItem = app.menuItems["Show Picture Browser"].firstMatch
+        XCTAssertTrue(menuItem.waitForExistence(timeout: 5.0))
+        menuItem.click()
+
+        let imageWell = app.descendants(matching: .any)
+            .matching(identifier: "albumArt.sheet.imageWell")
+            .firstMatch
+        XCTAssertTrue(imageWell.waitForExistence(timeout: 10.0))
+
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: app,
+                identifier: UIID.albumArtSheetCurrentSlot,
+                expectedValue: "Front Cover",
+                timeout: 10.0
+            )
+        )
+
+        return app
+    }
+
+    private func editCurrentAlbumArtDescription(
+        in albumArtSheet: XCUIElement,
+        app: XCUIApplication,
+        description: String
+    ) {
+        let imageWell = albumArtSheet.descendants(matching: .any)
+            .matching(identifier: "albumArt.sheet.imageWell")
+            .firstMatch
+        XCTAssertTrue(imageWell.waitForExistence(timeout: 10.0))
+        imageWell.rightClick()
+
+        let editDescriptionItem = app.menuItems["Edit Description..."].firstMatch
+        XCTAssertTrue(editDescriptionItem.waitForExistence(timeout: 5.0))
+        editDescriptionItem.click()
+
+        let descriptionSheet = app.descendants(matching: .any)
+            .matching(identifier: UIID.albumArtSheetPictureDescription)
+            .firstMatch
+        XCTAssertTrue(descriptionSheet.waitForExistence(timeout: 10.0))
+
+        let descriptionEditorCandidates = [
+            descriptionSheet.descendants(matching: .any)
+                .matching(identifier: UIID.albumArtSheetPictureDescriptionEditor)
+                .firstMatch,
+            descriptionSheet.descendants(matching: .textView).firstMatch,
+            descriptionSheet.descendants(matching: .scrollView).firstMatch
+        ]
+        if let descriptionEditor = descriptionEditorCandidates.first(where: { candidate in
+            candidate.waitForExistence(timeout: 1.0)
+        }) {
+            clearAndTypeInTextView(in: app, element: descriptionEditor, text: description)
+        } else {
+            descriptionSheet.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.55)).click()
+            app.typeKey("a", modifierFlags: .command)
+            app.typeText(description)
+        }
+
+        clickPictureDescriptionSave(in: app, descriptionSheet: descriptionSheet)
+        XCTAssertTrue(waitForExistence(of: descriptionSheet, expectedValue: false, timeout: 5.0))
+    }
+
+    private func closeAlbumArtSheet(in app: XCUIApplication) {
+        let imageWell = app.descendants(matching: .any)
+            .matching(identifier: "albumArt.sheet.imageWell")
+            .firstMatch
+        guard imageWell.waitForExistence(timeout: 2.0) else {
+            return
+        }
+
+        typeEscape(in: app)
+        XCTAssertTrue(waitForExistence(of: imageWell, expectedValue: false, timeout: 5.0))
+    }
+
     private func performSaveSwiftTagDocumentShortcut(in app: XCUIApplication) {
         app.activate()
         app.typeKey("s", modifierFlags: [.control])
@@ -2083,6 +2281,66 @@ final class SwiftTagUITests: XCTestCase {
         app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
         app.typeKey("a", modifierFlags: .command)
         app.typeText(text)
+    }
+
+    private func clearAndTypeInTextView(in app: XCUIApplication, element: XCUIElement, text: String) {
+        element.click()
+        app.typeKey("a", modifierFlags: .command)
+        app.typeText(text)
+    }
+
+    private func clickPictureDescriptionSave(in app: XCUIApplication, descriptionSheet: XCUIElement) {
+        let saveButtonCandidates = [
+            app.descendants(matching: .button)
+                .matching(identifier: UIID.albumArtSheetPictureDescriptionSaveButton)
+                .firstMatch,
+            app.descendants(matching: .any)
+                .matching(identifier: UIID.albumArtSheetPictureDescriptionSaveButton)
+                .firstMatch,
+            app.sheets.buttons["Save"].firstMatch,
+            app.dialogs.buttons["Save"].firstMatch
+        ]
+
+        if let saveButton = saveButtonCandidates.first(where: { candidate in
+            candidate.waitForExistence(timeout: 1.0)
+        }) {
+            if saveButton.isHittable {
+                saveButton.click()
+                return
+            }
+        }
+
+        // Move focus off the text editor so the sheet's default action can receive Return.
+        descriptionSheet.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)).click()
+        app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+    }
+
+    private func selectAlbumArtSlot(in app: XCUIApplication, component: String) {
+        let slotRow = app.descendants(matching: .any)
+            .matching(identifier: UIID.albumArtSheetSlotPrefix + component)
+            .firstMatch
+
+        if !slotRow.waitForExistence(timeout: 1.0) {
+            let backButtonCandidates = [
+                app.buttons["Back"].firstMatch,
+                app.descendants(matching: .button)
+                    .matching(identifier: "chevron.backward")
+                    .firstMatch
+            ]
+
+            if let backButton = backButtonCandidates.first(where: { candidate in
+                candidate.waitForExistence(timeout: 1.0)
+            }) {
+                backButton.click()
+            }
+        }
+
+        if !slotRow.waitForExistence(timeout: 5.0) {
+            XCTFail("Missing album art slot row \(component).")
+            return
+        }
+
+        slotRow.click()
     }
 
     private func selectImportedTrackForEditing(
@@ -2944,6 +3202,33 @@ final class SwiftTagUITests: XCTestCase {
         return false
     }
 
+    private func waitForLabeledElement(
+        in scope: XCUIElement,
+        identifier: String,
+        expectedLabel: String,
+        timeout: TimeInterval = 2.0
+    ) -> Bool {
+        let query = scope.descendants(matching: .any).matching(identifier: identifier)
+        let normalizedExpectedLabel = expectedLabel
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            for element in query.allElementsBoundByIndex where element.exists {
+                let normalizedLabel = element.label
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .lowercased()
+                if normalizedLabel == normalizedExpectedLabel {
+                    return true
+                }
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
     private func waitForEnabledState(
         of element: XCUIElement,
         expectedValue: Bool,
@@ -2952,6 +3237,23 @@ final class SwiftTagUITests: XCTestCase {
         let deadline = Date().addingTimeInterval(timeout)
         repeat {
             if element.exists && element.isEnabled == expectedValue {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func waitForExistence(
+        of element: XCUIElement,
+        expectedValue: Bool,
+        timeout: TimeInterval = 2.0
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if element.exists == expectedValue {
                 return true
             }
 

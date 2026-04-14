@@ -26,6 +26,55 @@ enum AlbumArtSlot: Hashable {
     case publisherLogo
 }
 
+extension AlbumArtSlot {
+    var accessibilityIdentifierComponent: String {
+        switch self {
+        case .other:
+            "other"
+        case .pngIcon:
+            "pngIcon"
+        case .otherIcon:
+            "otherIcon"
+        case .frontCover:
+            "frontCover"
+        case .backCover:
+            "backCover"
+        case .leaflet:
+            "leaflet"
+        case .media:
+            "media"
+        case .leadArtist:
+            "leadArtist"
+        case .artist:
+            "artist"
+        case .conductor:
+            "conductor"
+        case .band:
+            "band"
+        case .composer:
+            "composer"
+        case .lyricist:
+            "lyricist"
+        case .recordingStudioOrLocation:
+            "recordingStudioOrLocation"
+        case .recordingSession:
+            "recordingSession"
+        case .performance:
+            "performance"
+        case .captureFromMovieOrVideo:
+            "captureFromMovieOrVideo"
+        case .brightlyColoredFish:
+            "brightlyColoredFish"
+        case .illustration:
+            "illustration"
+        case .bandLogo:
+            "bandLogo"
+        case .publisherLogo:
+            "publisherLogo"
+        }
+    }
+}
+
 struct AlbumArtType: Identifiable {
     let flacPictureType: Int
     let flacDescription: String

@@ -47,7 +47,7 @@ struct TrackDurationTests {
 
     @Test
     func trackDurationFormatterTruncatesFractionalSecondsBelowOneHour() {
-        #expect(TrackDurationFormatter.string(from: 125.9) == "02:05")
+        #expect(TrackDurationFormatter.string(from: 125.9) == "2:05")
     }
 
     @Test

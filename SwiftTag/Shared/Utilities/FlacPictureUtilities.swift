@@ -1,5 +1,37 @@
 import Foundation
 
+struct FlacPictureDescriptionValidation: Equatable {
+    let maximumDescriptionBytes: Int
+    let proposedDescriptionBytes: Int
+
+    var isLegal: Bool {
+        proposedDescriptionBytes <= maximumDescriptionBytes
+    }
+}
+
+enum FlacPictureDescriptionBudget {
+    static let metadataPayloadMaxBytes = (1 << 24) - 1
+    static let fixedMetadataFieldBytes = 32
+    static let safetyBufferBytes = 256
+
+    static func validation(
+        mimeType: String,
+        pictureData: Data,
+        proposedDescription: String
+    ) -> FlacPictureDescriptionValidation {
+        let availableDescriptionBytes = metadataPayloadMaxBytes
+            - fixedMetadataFieldBytes
+            - safetyBufferBytes
+            - mimeType.lengthOfBytes(using: .utf8)
+            - pictureData.count
+
+        return FlacPictureDescriptionValidation(
+            maximumDescriptionBytes: max(0, availableDescriptionBytes),
+            proposedDescriptionBytes: proposedDescription.lengthOfBytes(using: .utf8)
+        )
+    }
+}
+
 extension FlacWritablePictureRecord {
     func withComputedPictureMetadata() -> FlacWritablePictureRecord {
         let specifications = PictureDataUtilities.computedSpecifications(from: data)

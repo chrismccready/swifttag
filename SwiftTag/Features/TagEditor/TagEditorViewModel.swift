@@ -1207,7 +1207,11 @@ final class TagEditorViewModel {
         reloadMiscTagRowsFromSelection()
     }
 
-    func setPictureRecordsByTrackID(_ recordsByTrackID: [UUID: [FlacWritablePictureRecord]]) {
+    func setPictureRecordsByTrackID(
+        _ recordsByTrackID: [UUID: [FlacWritablePictureRecord]],
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) {
         guard !recordsByTrackID.isEmpty else {
             return
         }
@@ -1219,6 +1223,15 @@ final class TagEditorViewModel {
             }
             updatedTrackItems[index].flacPictureRecords = records
             updatedTrackItems[index].flacPicturesByType = writablePicturesByType(from: records)
+            if let latestFileSnapshot = updatedTrackItems[index].latestFileSnapshot {
+                trackItems = updatedTrackItems
+                updatedTrackItems[index].externalDifferences = externalDifferences(
+                    for: index,
+                    fileSnapshot: latestFileSnapshot,
+                    tagWriteOptions: tagWriteOptions,
+                    albumArtPictures: albumArtPictures
+                )
+            }
         }
 
         trackItems = updatedTrackItems
@@ -1299,7 +1312,9 @@ final class TagEditorViewModel {
                         for: index,
                         fileURL: fileURL,
                         tagWriteOptions: tagWriteOptions,
-                        albumArtPictures: picturesForTrack
+                        albumArtPictures: picturesForTrack,
+                        wroteTags: payload.writesTags,
+                        wrotePictures: payload.writesPictures
                     )
                     savedTrackReferences.append(refreshedTrackReference)
                 }
@@ -1462,6 +1477,29 @@ final class TagEditorViewModel {
         let trackIDs = selection ?? Set(trackItems.map(\.id))
         return trackItems.contains { track in
             trackIDs.contains(track.id) && (track.externalDifferences?.hasPictureDifference ?? false)
+        }
+    }
+
+    func hasExternalPictureDifference(
+        for pictureType: Int,
+        in selection: Set<UUID>? = nil,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) -> Bool {
+        let trackIDs = selection ?? Set(trackItems.map(\.id))
+        return trackItems.indices.contains { index in
+            let track = trackItems[index]
+            guard trackIDs.contains(track.id),
+                  track.externalDifferences?.hasPictureDifference == true,
+                  let latestFileSnapshot = track.latestFileSnapshot else {
+                return false
+            }
+
+            let currentPictures = picturesForTrack(at: index, fallback: albumArtPictures)
+            return pictureRecordsDiffer(
+                currentPictures: currentPictures,
+                snapshot: latestFileSnapshot,
+                pictureType: pictureType
+            )
         }
     }
 
@@ -1680,22 +1718,44 @@ final class TagEditorViewModel {
         for index: Int,
         fileURL: URL,
         tagWriteOptions: TagWriteOptions,
-        albumArtPictures: [FlacWritablePictureRecord]
+        albumArtPictures: [FlacWritablePictureRecord],
+        wroteTags: Bool,
+        wrotePictures: Bool
     ) throws {
         let metadata = try FlacMetadataService.readTags(for: fileURL)
-        let picturesByType = writablePicturesByType(from: albumArtPictures)
+        let filePictureRecords = FlacImportMapper.mapWritablePictureRecords(
+            metadata.pictures,
+            normalizeImageMetadata: true
+        )
+        let filePicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+        let snapshotTags = wroteTags
+            ? expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions)
+            : metadata.tags
+        let snapshotPictureRecords = wrotePictures ? albumArtPictures : filePictureRecords
+        let snapshotPicturesByType = wrotePictures
+            ? writablePicturesByType(from: albumArtPictures)
+            : filePicturesByType
+        let fileSnapshot = makeFileSnapshot(
+            tags: snapshotTags,
+            picturesByType: snapshotPicturesByType,
+            pictureRecords: snapshotPictureRecords,
+            fingerprint: metadata.fingerprint
+        )
+
         trackItems[index].fingerprint = metadata.fingerprint
         trackItems[index].duration = metadata.duration
         trackItems[index].preservesEditorStateDuringFileRefresh = false
-        trackItems[index].latestFileSnapshot = TrackFileSnapshot(
-            tags: expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
-            picturesByType: picturesByType,
-            pictureRecords: canonicalPictureRecords(albumArtPictures),
-            fingerprint: metadata.fingerprint
-        )
+        trackItems[index].latestFileSnapshot = fileSnapshot
         trackItems[index].flacPictureRecords = albumArtPictures
-        trackItems[index].flacPicturesByType = picturesByType
-        trackItems[index].externalDifferences = nil
+        if wrotePictures {
+            trackItems[index].flacPicturesByType = snapshotPicturesByType
+        }
+        trackItems[index].externalDifferences = externalDifferences(
+            for: index,
+            fileSnapshot: fileSnapshot,
+            tagWriteOptions: tagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
     }
 
     private func refreshTrackFileState(
@@ -1735,13 +1795,10 @@ final class TagEditorViewModel {
                 )
 
                 self.applyResolvedTrackFileReference(resolvedReference, at: index)
-                if !self.trackItems[index].preservesEditorStateDuringFileRefresh {
-                    self.trackItems[index].flacPictureRecords = pictureRecords
-                    self.trackItems[index].flacPicturesByType = livePicturesByType
-                }
                 self.cancelPendingMissingRefresh(for: self.trackItems[index].id)
                 self.trackItems[index].fingerprint = metadata.fingerprint
                 self.trackItems[index].duration = metadata.duration
+                self.trackItems[index].latestFileSnapshot = fileSnapshot
                 self.trackItems[index].externalDifferences = self.externalDifferences(
                     for: index,
                     fileSnapshot: fileSnapshot,
@@ -2029,12 +2086,36 @@ final class TagEditorViewModel {
         currentPictures: [FlacWritablePictureRecord],
         snapshot: TrackFileSnapshot
     ) -> Bool {
-        if !snapshot.pictureRecords.isEmpty || !currentPictures.isEmpty {
-            return canonicalPictureRecords(currentPictures, normalizeImageMetadata: false) !=
-                canonicalPictureRecords(snapshot.pictureRecords, normalizeImageMetadata: false)
+        pictureRecordsDiffer(
+            currentPictures: currentPictures,
+            snapshot: snapshot,
+            pictureType: nil
+        )
+    }
+
+    private func pictureRecordsDiffer(
+        currentPictures: [FlacWritablePictureRecord],
+        snapshot: TrackFileSnapshot,
+        pictureType: Int?
+    ) -> Bool {
+        let filteredCurrentPictures = pictureType.map { pictureType in
+            currentPictures.filter { $0.type == pictureType }
+        } ?? currentPictures
+        let filteredSnapshotPictureRecords = pictureType.map { pictureType in
+            snapshot.pictureRecords.filter { $0.type == pictureType }
+        } ?? snapshot.pictureRecords
+
+        if !filteredSnapshotPictureRecords.isEmpty || !filteredCurrentPictures.isEmpty {
+            return canonicalPictureRecords(filteredCurrentPictures, normalizeImageMetadata: false) !=
+                canonicalPictureRecords(filteredSnapshotPictureRecords, normalizeImageMetadata: false)
         }
 
-        return writablePicturesByType(from: currentPictures) != snapshot.picturesByType
+        let currentPicturesByType = writablePicturesByType(from: filteredCurrentPictures)
+        let snapshotPicturesByType = pictureType.map { pictureType in
+            snapshot.picturesByType[pictureType].map { [pictureType: $0] } ?? [:]
+        } ?? snapshot.picturesByType
+
+        return currentPicturesByType != snapshotPicturesByType
     }
 
     private func canonicalPictureRecords(

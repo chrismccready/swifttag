@@ -234,7 +234,7 @@ struct SwiftTagQuickLookTests {
         )
 
         #expect(snapshot.sharedArtist == "Different Artist")
-        #expect(snapshot.trackRows.map(\.leadingText) == ["1 One", "2 Two", "..."])
+        #expect(snapshot.trackRows.map(\.leadingText) == ["1  One", "2  Two", "..."])
         #expect(snapshot.usesEllipsisRow)
     }
 
@@ -248,7 +248,7 @@ struct SwiftTagQuickLookTests {
 
         let snapshot = SwiftTagDocumentQuickLookSnapshot.make(from: document)
 
-        #expect(snapshot.trackRows.map(\.leadingText) == ["2 Alpha", "2 Beta", "x Gamma"])
+        #expect(snapshot.trackRows.map(\.leadingText) == ["2  Alpha", "2  Beta", "x  Gamma"])
     }
 
     @Test
@@ -261,8 +261,8 @@ struct SwiftTagQuickLookTests {
 
         let snapshot = SwiftTagDocumentQuickLookSnapshot.make(from: document)
 
-        #expect(snapshot.trackRows.map(\.leadingText) == ["1 Minute Track", "2 Hour Track", "3 Unknown Track"])
-        #expect(snapshot.trackRows.map(\.durationText) == ["01:05", "01:01:01", ""])
+        #expect(snapshot.trackRows.map(\.leadingText) == ["1  Minute Track", "2  Hour Track", "3  Unknown Track"])
+        #expect(snapshot.trackRows.map(\.durationText) == ["1:05", "1:01:01", ""])
     }
 
     @Test
@@ -276,7 +276,7 @@ struct SwiftTagQuickLookTests {
             .appendingPathComponent("SwiftTagDocumentQuickLookView.swift")
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
-        #expect(source.contains("Spacer()"))
+        #expect(source.contains("Spacer(minLength: 4)"))
         #expect(source.contains("metadataText(row.durationText)"))
     }
 

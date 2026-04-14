@@ -331,7 +331,7 @@ struct ContentView: View {
     }
 
     private var hasPictureDifference: Bool {
-        viewModel.hasExternalPictureDifference()
+        hasExternalPictureDifference(for: .frontCover)
     }
 
     private var hasTotalTracksExternalDifference: Bool {
@@ -738,6 +738,8 @@ struct ContentView: View {
                     .accessibilityIdentifier("uiTest.diff.album.externalState")
                 Text(viewModel.selectedExternalFileValue(forAnyOf: [TagKey.album]) ?? "absent")
                     .accessibilityIdentifier("uiTest.diff.album.externalFileValue")
+                Text(hasExternalPictureDifference(for: .frontCover) ? "external" : "none")
+                    .accessibilityIdentifier("uiTest.diff.picture.frontCover.externalState")
             }
         }
         .font(.caption2)
@@ -751,7 +753,6 @@ struct ContentView: View {
         AlbumArtSheetView(
             isSaveOperationRunning: isSaveOperationRunning,
             isEditingEnabled: isAlbumMetadataEditable,
-            showsPictureDifferenceOverlay: viewModel.hasExternalPictureDifference(),
             saveStatusPresentation: saveStatusState?.presentation,
             albumArtTypes: albumArtTypes,
             navigationPath: Binding(
@@ -806,6 +807,27 @@ struct ContentView: View {
             metadataForSlot: { slot in
                 albumArtViewModel.currentPictureMetadata(for: slot, albumArtTypes: albumArtTypes)
             },
+            canEditDescriptionForSlot: { slot in
+                albumArtViewModel.canEditCurrentPictureDescription(for: slot)
+            },
+            descriptionValidationForSlot: { slot, description in
+                albumArtViewModel.currentPictureDescriptionValidation(
+                    for: slot,
+                    proposedDescription: description
+                )
+            },
+            onSaveDescriptionForSlot: { slot, description in
+                guard albumArtViewModel.updateCurrentPictureDescription(
+                    description,
+                    for: slot,
+                    albumArtTypes: albumArtTypes
+                ) else {
+                    return
+                }
+
+                syncTrackPictureRecordsFromAlbumArt()
+                syncAlbumArtContext()
+            },
             hasCrossTypeDuplicateForSlot: { slot in
                 albumArtViewModel.hasCrossTypeDuplicate(for: slot)
             },
@@ -859,7 +881,8 @@ struct ContentView: View {
                 albumArtViewModel.removeCurrentPicture(for: slot, albumArtTypes: albumArtTypes)
                 syncTrackPictureRecordsFromAlbumArt()
                 syncAlbumArtContext()
-            }
+            },
+            showsPictureDifferenceOverlayForSlot: hasExternalPictureDifference(for:)
         )
     }
 
@@ -1211,6 +1234,17 @@ struct ContentView: View {
 
     private var currentAlbumArtPictures: [FlacWritablePictureRecord] {
         albumArtViewModel.flacPictures(albumArtTypes: albumArtTypes)
+    }
+
+    private func hasExternalPictureDifference(for slot: AlbumArtSlot) -> Bool {
+        guard let pictureType = albumArtTypes.first(where: { $0.slot == slot })?.flacPictureType else {
+            return false
+        }
+
+        return viewModel.hasExternalPictureDifference(
+            for: pictureType,
+            albumArtPictures: currentAlbumArtPictures
+        )
     }
 
     var navigationMetadata: EditorNavigationMetadata {
@@ -2185,7 +2219,11 @@ struct ContentView: View {
         guard !recordsByTrackID.isEmpty else {
             return
         }
-        viewModel.setPictureRecordsByTrackID(recordsByTrackID)
+        viewModel.setPictureRecordsByTrackID(
+            recordsByTrackID,
+            tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures
+        )
     }
 
     private func togglePictureBrowser() {

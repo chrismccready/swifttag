@@ -838,6 +838,39 @@ struct SwiftTagTests {
     }
 
     @Test
+    func flacPictureDescriptionBudgetReservesFixedFieldsAndSafetyBuffer() {
+        let pictureData = Data(repeating: 0x7F, count: 1_024)
+        let mimeType = "image/png"
+        let validation = FlacPictureDescriptionBudget.validation(
+            mimeType: mimeType,
+            pictureData: pictureData,
+            proposedDescription: String(repeating: "a", count: 32)
+        )
+
+        let expectedMaximumDescriptionBytes = FlacPictureDescriptionBudget.metadataPayloadMaxBytes
+            - FlacPictureDescriptionBudget.fixedMetadataFieldBytes
+            - FlacPictureDescriptionBudget.safetyBufferBytes
+            - mimeType.lengthOfBytes(using: .utf8)
+            - pictureData.count
+
+        #expect(validation.maximumDescriptionBytes == expectedMaximumDescriptionBytes)
+        #expect(validation.proposedDescriptionBytes == 32)
+        #expect(validation.isLegal)
+    }
+
+    @Test
+    func flacPictureDescriptionBudgetAllowsEmptyDescriptionWhenPictureFits() {
+        let validation = FlacPictureDescriptionBudget.validation(
+            mimeType: "image/png",
+            pictureData: Data(repeating: 0x01, count: 64),
+            proposedDescription: ""
+        )
+
+        #expect(validation.proposedDescriptionBytes == 0)
+        #expect(validation.isLegal)
+    }
+
+    @Test
     @MainActor
     func albumArtViewModelAppliesTypeThreeToFrontCoverSlot() throws {
         let frontCoverData = try Self.pngData(color: .red)
@@ -889,6 +922,82 @@ struct SwiftTagTests {
         #expect(trackARecords.first?.description == "Front A")
         #expect(trackBRecords.first?.mimeType == "image/jpeg")
         #expect(trackBRecords.first?.description == "Front B")
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelDescriptionEditUpdatesAllMatchingInScopeReferences() throws {
+        let sharedData = try Self.pngData(color: .purple)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let firstSelectedTrack = Track(
+            tags: [TagKey.title: "First"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front A", data: sharedData)
+            ]
+        )
+        let secondSelectedTrack = Track(
+            tags: [TagKey.title: "Second"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front B", data: sharedData)
+            ]
+        )
+        let outOfScopeTrack = Track(
+            tags: [TagKey.title: "Out"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Front Out", data: sharedData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(
+            trackItems: [firstSelectedTrack, secondSelectedTrack, outOfScopeTrack],
+            selectedTrackIDs: [firstSelectedTrack.id, secondSelectedTrack.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        let didUpdate = viewModel.updateCurrentPictureDescription(
+            "Edited Front",
+            for: .frontCover,
+            albumArtTypes: albumArtTypes
+        )
+
+        #expect(didUpdate)
+        #expect(viewModel.flacPictures(for: firstSelectedTrack.id, albumArtTypes: albumArtTypes).first?.description == "Edited Front")
+        #expect(viewModel.flacPictures(for: secondSelectedTrack.id, albumArtTypes: albumArtTypes).first?.description == "Edited Front")
+        #expect(viewModel.flacPictures(for: outOfScopeTrack.id, albumArtTypes: albumArtTypes).first?.description == "Front Out")
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelDescriptionEditPreservesUnpinnedReferences() throws {
+        let frontData = try Self.pngData(color: .brown)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Cover (front)", data: frontData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+        viewModel.configurePinSettings(saveFrontCoverToAllTracks: false, saveAllPicturesToAllTracks: false)
+        viewModel.setCurrentPicturePinned(false, for: .frontCover, albumArtTypes: albumArtTypes)
+
+        let didUpdate = viewModel.updateCurrentPictureDescription(
+            "Edited Cover",
+            for: .frontCover,
+            albumArtTypes: albumArtTypes
+        )
+
+        #expect(didUpdate)
+        #expect(!viewModel.isCurrentPicturePinned(for: .frontCover))
+        #expect(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).isEmpty)
+        #expect(viewModel.trackReferencesByTrackID[track.id, default: []].first?.description == "Edited Cover")
     }
 
     @Test
@@ -1860,7 +1969,16 @@ struct SwiftTagTests {
         let viewModel = TagEditorViewModel()
         viewModel.trackItems = [track]
 
-        viewModel.setPictureRecordsByTrackID([track.id: updatedRecords])
+        viewModel.setPictureRecordsByTrackID(
+            [track.id: updatedRecords],
+            tagWriteOptions: TagWriteOptions(
+                zeroPadTrackNumber: true,
+                trackCountKeyStrategy: .both,
+                zeroPadDiscNumber: true,
+                discCountKeyStrategy: .totalDiscs
+            ),
+            albumArtPictures: []
+        )
 
         let differences = viewModel.editorDifferenceCounts(
             for: [track.id],
@@ -1884,6 +2002,61 @@ struct SwiftTagTests {
             ),
             albumArtPictures: []
         ))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelTreatsDescriptionOnlyPictureChangesAsPictureEdits() throws {
+        let pictureData = try Self.pngData(color: .orange)
+        let originalRecords = [
+            FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Original", data: pictureData)
+        ]
+        let updatedRecords = [
+            FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Edited", data: pictureData)
+        ]
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: [
+                    TagKey.title: "Track",
+                    TagKey.trackNumber: "1",
+                    TagKey.discNumber: "1"
+                ],
+                flacPictureRecords: originalRecords,
+                sourceFileURL: URL(fileURLWithPath: "/tmp/picture-description-diff.flac")
+            )
+        ]
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.selectedTrackIDs = [trackID]
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        viewModel.setPictureRecordsByTrackID(
+            [trackID: updatedRecords],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let differences = viewModel.editorDifferenceCounts(
+            for: [trackID],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        let navigationMetadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(differences.tagEdits == 0)
+        #expect(differences.pictureEdits == 1)
+        #expect(viewModel.hasDifferences(
+            in: [trackID],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        ))
+        #expect(navigationMetadata.subtitle.contains("Tag Δ: 0 (0)"))
+        #expect(navigationMetadata.subtitle.contains("Picture Δ: 1 (1)"))
     }
 
     @Test
@@ -4303,6 +4476,120 @@ struct SwiftTagTests {
         #expect(rewrittenRecord.pictures.count == 1)
         #expect(rewrittenRecord.pictures.first?.type == 3)
         #expect(rewrittenRecord.pictures.first?.data == pictureData)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSavePicturesPersistsDescriptionOnlyPictureEdits() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "viewmodel-write-picture-description.flac")
+        let pictureData = try Self.pngData(color: .green)
+        let originalPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Original Description",
+            data: pictureData
+        )
+        let updatedPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Edited Description",
+            data: pictureData
+        )
+
+        _ = try FlacMetadataService.writeMetadata(
+            pictures: [originalPicture],
+            to: fileURL,
+            writeTags: false,
+            writePictures: true
+        )
+
+        let originalRecord = try FlacMetadataService.readTags(for: fileURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: originalRecord.tags,
+                flacPictureRecords: [updatedPicture],
+                sourceFileURL: fileURL,
+                latestFileSnapshot: TrackFileSnapshot(
+                    tags: originalRecord.tags,
+                    picturesByType: [3: pictureData],
+                    pictureRecords: [originalPicture]
+                )
+            )
+        ]
+
+        _ = try await viewModel.save(
+            payload: .writePictures,
+            scope: .allTracks,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: [updatedPicture],
+            editorSessionID: UUID()
+        )
+
+        let rewrittenRecord = try FlacMetadataService.readTags(for: fileURL)
+        #expect(rewrittenRecord.pictures.first?.description == "Edited Description")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSaveTagsLeavesDescriptionOnlyPictureEditsUnsaved() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "viewmodel-tag-save-keeps-picture-description.flac")
+        let pictureData = try Self.pngData(color: .cyan)
+        let originalPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Original Description",
+            data: pictureData
+        )
+        let updatedPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Edited Description",
+            data: pictureData
+        )
+
+        _ = try FlacMetadataService.writeMetadata(
+            pictures: [originalPicture],
+            to: fileURL,
+            writeTags: false,
+            writePictures: true
+        )
+
+        let originalRecord = try FlacMetadataService.readTags(for: fileURL)
+        let track = Track(
+            tags: originalRecord.tags,
+            flacPictureRecords: [updatedPicture],
+            sourceFileURL: fileURL,
+            latestFileSnapshot: TrackFileSnapshot(
+                tags: originalRecord.tags,
+                picturesByType: [3: pictureData],
+                pictureRecords: [originalPicture]
+            )
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.trackItems[0].album = "Tag Only Description Test"
+
+        _ = try await viewModel.save(
+            payload: .writeTags,
+            scope: .allTracks,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: [updatedPicture],
+            editorSessionID: UUID()
+        )
+
+        let rewrittenRecord = try FlacMetadataService.readTags(for: fileURL)
+        let differences = viewModel.editorDifferenceCounts(
+            for: [track.id],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: [updatedPicture]
+        )
+
+        #expect(rewrittenRecord.tags["ALBUM"] == "Tag Only Description Test")
+        #expect(rewrittenRecord.pictures.first?.description == "Original Description")
+        #expect(differences.tagEdits == 0)
+        #expect(differences.pictureEdits == 1)
     }
 
     @Test

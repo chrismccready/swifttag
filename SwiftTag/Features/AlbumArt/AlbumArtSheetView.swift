@@ -5,7 +5,6 @@ import UniformTypeIdentifiers
 struct AlbumArtSheetView: View {
     let isSaveOperationRunning: Bool
     let isEditingEnabled: Bool
-    let showsPictureDifferenceOverlay: Bool
     let saveStatusPresentation: SaveStatusPresentation?
     let albumArtTypes: [AlbumArtType]
     @Binding var navigationPath: [AlbumArtSlot]
@@ -27,6 +26,9 @@ struct AlbumArtSheetView: View {
     let pictureCountForSlot: (AlbumArtSlot) -> (count: Int, pinCount: Int)
     let infoOverlayStateForSlot: (AlbumArtSlot) -> AlbumArtInfoOverlayState?
     let metadataForSlot: (AlbumArtSlot) -> AlbumArtPictureMetadata?
+    let canEditDescriptionForSlot: (AlbumArtSlot) -> Bool
+    let descriptionValidationForSlot: (AlbumArtSlot, String) -> FlacPictureDescriptionValidation?
+    let onSaveDescriptionForSlot: (AlbumArtSlot, String) -> Void
     let hasCrossTypeDuplicateForSlot: (AlbumArtSlot) -> Bool
     let scopeLabelText: String
     let typePictureScopeForSlot: (AlbumArtSlot) -> AlbumArtPictureScope
@@ -43,12 +45,20 @@ struct AlbumArtSheetView: View {
     let onNextPicture: (AlbumArtSlot) -> Void
     let onLastPicture: (AlbumArtSlot) -> Void
     let onRemovePicture: (AlbumArtSlot) -> Void
+    let showsPictureDifferenceOverlayForSlot: (AlbumArtSlot) -> Bool
 
     @AppStorage(FeedbackSettingsKey.pictureStatusOverlayColor)
     private var pictureStatusOverlayColorRawValue: String = FeedbackSettingsDefaults.pictureStatusOverlayColor
 
     @AppStorage(FeedbackSettingsKey.formatOnDuplicatePicture)
     private var formatOnDuplicatePicture: Bool = FeedbackSettingsDefaults.formatOnDuplicatePicture
+
+    @State private var descriptionEditorSlot: AlbumArtSlot?
+    @State private var originalPictureDescription: String = ""
+    @State private var stagedPictureDescription: String = ""
+    @State private var isPictureDescriptionSheetPresented: Bool = false
+    @State private var isPictureDescriptionAlertPresented: Bool = false
+    @State private var pictureDescriptionAlertMessage: String = ""
 
     private func albumArtType(for slot: AlbumArtSlot) -> AlbumArtType? {
         albumArtTypes.first { $0.slot == slot }
@@ -83,6 +93,101 @@ struct AlbumArtSheetView: View {
         }
     }
 
+    private func beginDescriptionEdit(for slot: AlbumArtSlot) {
+        guard canEditDescriptionForSlot(slot),
+              let metadata = metadataForSlot(slot) else {
+            return
+        }
+
+        descriptionEditorSlot = slot
+        originalPictureDescription = metadata.description
+        stagedPictureDescription = metadata.description
+        isPictureDescriptionAlertPresented = false
+        pictureDescriptionAlertMessage = ""
+        isPictureDescriptionSheetPresented = true
+    }
+
+    private func dismissDescriptionEdit() {
+        isPictureDescriptionSheetPresented = false
+        descriptionEditorSlot = nil
+    }
+
+    private func saveDescriptionEdit() {
+        guard let slot = descriptionEditorSlot,
+              let validation = descriptionValidationForSlot(slot, stagedPictureDescription) else {
+            return
+        }
+
+        guard validation.isLegal else {
+            pictureDescriptionAlertMessage = "The description uses \(validation.proposedDescriptionBytes) UTF-8 bytes, but this picture can save at most \(validation.maximumDescriptionBytes) bytes after reserving the image payload, MIME type, fixed FLAC picture fields, and the 256-byte safety buffer."
+            isPictureDescriptionAlertPresented = true
+            return
+        }
+
+        onSaveDescriptionForSlot(slot, stagedPictureDescription)
+        dismissDescriptionEdit()
+    }
+
+    private func sidebarAccessibilityIdentifier(for slot: AlbumArtSlot) -> String {
+        "albumArt.sheet.slot.\(slot.accessibilityIdentifierComponent)"
+    }
+
+    @ViewBuilder
+    private var pictureDescriptionSheet: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Picture Description")
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Original Description")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(originalPictureDescription.isEmpty ? "None" : originalPictureDescription)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .accessibilityIdentifier("albumArt.sheet.pictureDescription.original")
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Description")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                TextEditor(text: $stagedPictureDescription)
+                    .font(.body)
+                    .frame(minHeight: 160)
+                    .padding(6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(.quaternary, lineWidth: 1)
+                    )
+                    .accessibilityIdentifier("albumArt.sheet.pictureDescription.editor")
+            }
+
+            HStack {
+                Spacer()
+                Button("Cancel", role: .cancel) {
+                    dismissDescriptionEdit()
+                }
+                .accessibilityIdentifier("albumArt.sheet.pictureDescription.cancelButton")
+                Button("Save") {
+                    saveDescriptionEdit()
+                }
+                .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("albumArt.sheet.pictureDescription.saveButton")
+            }
+        }
+        .padding(20)
+        .frame(width: 460)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("albumArt.sheet.pictureDescription")
+        .alert("Description Too Large", isPresented: $isPictureDescriptionAlertPresented) {
+            Button("Ok") {}
+        } message: {
+            Text(pictureDescriptionAlertMessage)
+        }
+    }
+
     @ViewBuilder
     private func navigationRow(for albumArtType: AlbumArtType) -> some View {
         let countSummary = pictureCountForSlot(albumArtType.slot)
@@ -108,10 +213,15 @@ struct AlbumArtSheetView: View {
                 )
                 .frame(width: 40, alignment: .trailing)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(sidebarAccessibilityIdentifier(for: albumArtType.slot))
     }
 
     @ViewBuilder
     private func pictureDetailView(for albumArtSlot: AlbumArtSlot) -> some View {
+        let showsPictureDifferenceOverlay = showsPictureDifferenceOverlayForSlot(albumArtSlot)
+        let slotName = albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art"
+
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .bottomLeading) {
                 AlbumArtWellView(
@@ -157,6 +267,11 @@ struct AlbumArtSheetView: View {
                         _ = onDropForSlot(AlbumArtWellView.pasteProvidersFromPasteboard(), albumArtSlot)
                     }
                     .disabled(!isEditingEnabled || isSaveOperationRunning || AlbumArtWellView.pasteProvidersFromPasteboard().isEmpty)
+                    Divider()
+                    Button("Edit Description...") {
+                        beginDescriptionEdit(for: albumArtSlot)
+                    }
+                    .disabled(!isEditingEnabled || isSaveOperationRunning || !canEditDescriptionForSlot(albumArtSlot))
                 }
                 .allowsHitTesting(isEditingEnabled && !isSaveOperationRunning)
                 .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
@@ -212,9 +327,17 @@ struct AlbumArtSheetView: View {
                 .font(.system(size: 1))
                 .foregroundStyle(.clear)
                 .accessibilityIdentifier("albumArt.sheet.imageWell.state")
+            Text(slotName)
+                .font(.system(size: 1))
+                .foregroundStyle(.clear)
+                .accessibilityIdentifier("albumArt.sheet.currentSlot")
+            Text(showsPictureDifferenceOverlay ? "external" : "none")
+                .font(.system(size: 1))
+                .foregroundStyle(.clear)
+                .accessibilityIdentifier("albumArt.sheet.externalDifferenceState")
         }
         .padding(22)
-        .navigationTitle(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art")
+        .navigationTitle(slotName)
         .toolbar {
             ToolbarItemGroup(placement: .automatic) {
                     Toggle(isOn: Binding(
@@ -360,5 +483,10 @@ struct AlbumArtSheetView: View {
             defaultFilename: exportDefaultFileName,
             onCompletion: onFileExportResult
         )
+        .sheet(isPresented: $isPictureDescriptionSheetPresented, onDismiss: {
+            descriptionEditorSlot = nil
+        }) {
+            pictureDescriptionSheet
+        }
     }
 }
