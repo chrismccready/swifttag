@@ -45,7 +45,8 @@ struct AlbumArtSheetView: View {
     let onNextPicture: (AlbumArtSlot) -> Void
     let onLastPicture: (AlbumArtSlot) -> Void
     let onRemovePicture: (AlbumArtSlot) -> Void
-    let showsPictureDifferenceOverlayForSlot: (AlbumArtSlot) -> Bool
+    let hasExternalPictureDifferenceForSlot: (AlbumArtSlot) -> Bool
+    let hasInternalPictureDifferenceForSlot: (AlbumArtSlot) -> Bool
 
     @AppStorage(FeedbackSettingsKey.pictureStatusOverlayColor)
     private var pictureStatusOverlayColorRawValue: String = FeedbackSettingsDefaults.pictureStatusOverlayColor
@@ -53,6 +54,12 @@ struct AlbumArtSheetView: View {
     @AppStorage(FeedbackSettingsKey.formatOnDuplicatePicture)
     private var formatOnDuplicatePicture: Bool = FeedbackSettingsDefaults.formatOnDuplicatePicture
 
+    @AppStorage(FeedbackSettingsKey.trackToFileDiffColor)
+    private var trackToFileDiffColorRawValue: String = FeedbackSettingsDefaults.trackToFileDiffColor
+
+    @AppStorage(FeedbackSettingsKey.externallyModifiedDiffColor)
+    private var externallyModifiedDiffColorRawValue: String = FeedbackSettingsDefaults.externallyModifiedDiffColor
+    
     @State private var descriptionEditorSlot: AlbumArtSlot?
     @State private var originalPictureDescription: String = ""
     @State private var stagedPictureDescription: String = ""
@@ -193,24 +200,26 @@ struct AlbumArtSheetView: View {
         let countSummary = pictureCountForSlot(albumArtType.slot)
         let hasCrossTypeDuplicate = hasCrossTypeDuplicateForSlot(albumArtType.slot)
         let hasCrossTypeDuplicateColor = AppColorStorage.color(from: pictureStatusOverlayColorRawValue, fallback: .systemOrange)
+        let hasInternalPictureDifference = hasInternalPictureDifferenceForSlot(albumArtType.slot)
+        let hasInternalPictureDifferenceColor = AppColorStorage.color(from: trackToFileDiffColorRawValue, fallback: .labelColor)
+        let hasExternalPictureDifference = hasExternalPictureDifferenceForSlot(albumArtType.slot)
+        let hasExternalPictureDifferenceColor = AppColorStorage.color(from: externallyModifiedDiffColorRawValue, fallback: .systemRed)
+        let textForegroundStyle = hasExternalPictureDifference ? AnyShapeStyle(hasExternalPictureDifferenceColor) :
+        (hasCrossTypeDuplicate ? AnyShapeStyle(hasCrossTypeDuplicateColor) :
+            (hasInternalPictureDifference ? AnyShapeStyle(hasInternalPictureDifferenceColor) :
+                AnyShapeStyle(.primary)))
 
         HStack(spacing: 0) {
             Text("\(albumArtType.navigationLinkName)")
                 .italic(hasCrossTypeDuplicate)
-                .foregroundStyle(
-                    hasCrossTypeDuplicate
-                    ? AnyShapeStyle(hasCrossTypeDuplicateColor)
-                    : AnyShapeStyle(.primary)
-                )
+                .fontWeight(hasInternalPictureDifference ? .bold : .regular)
+                .foregroundStyle(textForegroundStyle)
             Spacer()
             Text("\(countSummary.count) : \(countSummary.pinCount)")
                 .font(.caption)
                 .italic(hasCrossTypeDuplicate)
-                .foregroundStyle(
-                    hasCrossTypeDuplicate
-                    ? AnyShapeStyle(hasCrossTypeDuplicateColor)
-                    : AnyShapeStyle(.secondary)
-                )
+                .fontWeight(hasInternalPictureDifference ? .bold : .regular)
+                .foregroundStyle(textForegroundStyle)
                 .frame(width: 40, alignment: .trailing)
         }
         .accessibilityElement(children: .combine)
@@ -219,7 +228,7 @@ struct AlbumArtSheetView: View {
 
     @ViewBuilder
     private func pictureDetailView(for albumArtSlot: AlbumArtSlot) -> some View {
-        let showsPictureDifferenceOverlay = showsPictureDifferenceOverlayForSlot(albumArtSlot)
+        let showsPictureDifferenceOverlay = hasExternalPictureDifferenceForSlot(albumArtSlot)
         let slotName = albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art"
 
         VStack(alignment: .leading, spacing: 0) {

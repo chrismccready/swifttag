@@ -2965,6 +2965,84 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func tagEditorViewModelStatusPresentationUsesWarningForExternalPictureDifferences() {
+        let viewModel = TagEditorViewModel()
+        var track = Self.trackWithSnapshot(
+            tags: [
+                TagKey.title: "Title",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1",
+                TagKey.filename: "test.flac"
+            ]
+        )
+        track.externalDifferences = TrackExternalDifferences(
+            isDeleted: false,
+            fileValuesByTag: [:],
+            hasPictureDifference: true,
+            externallyModifiedPictureTypes: [3]
+        )
+        viewModel.trackItems = [track]
+
+        let presentation = viewModel.trackStatusPresentation(
+            for: track.id,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(presentation?.systemImageName == "exclamationmark.triangle")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelStatusPresentationUsesFishForInternalPictureDescriptionEdits() throws {
+        let pictureData = try Self.pngData(color: .systemOrange)
+        let originalRecords = [
+            FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Original", data: pictureData)
+        ]
+        let updatedRecords = [
+            FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Edited", data: pictureData)
+        ]
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: [
+                    TagKey.title: "Track",
+                    TagKey.trackNumber: "1",
+                    TagKey.discNumber: "1",
+                    TagKey.filename: "internal-picture-description-status.flac"
+                ],
+                flacPictureRecords: originalRecords,
+                sourceFileURL: URL(fileURLWithPath: "/tmp/internal-picture-description-status.flac")
+            )
+        ]
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.syncCurrentStateAsSaved(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        viewModel.setPictureRecordsByTrackID(
+            [trackID: updatedRecords],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let differences = try #require(viewModel.trackItems.first?.externalDifferences)
+        #expect(differences.hasPictureDifference)
+        #expect(!differences.hasExternallyModifiedPictureDifference)
+
+        let presentation = viewModel.trackStatusPresentation(
+            for: trackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(presentation?.systemImageName == "fish")
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelImportsReadOnlyTracksAsLocked() async throws {
         let fileURL = try Self.tempFixtureCopyURL(name: "read-only-import.flac")
         let viewModel = TagEditorViewModel()
@@ -3778,6 +3856,128 @@ struct SwiftTagTests {
                 albumArtPictures: []
             )
         )
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelClassifiesInternalPictureDescriptionEditsWithoutExternalOverlay() {
+        let originalData = Data([0x01, 0x02, 0x03])
+        let originalPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Original Description",
+            data: originalData
+        )
+        let updatedPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Edited Description",
+            data: originalData
+        )
+        let trackID = UUID()
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                id: trackID,
+                tags: [TagKey.title: "Title", TagKey.filename: "test.flac"],
+                flacPictureRecords: [originalPicture],
+                latestFileSnapshot: TrackFileSnapshot(
+                    tags: [TagKey.title: "Title"],
+                    picturesByType: [3: originalData],
+                    pictureRecords: [originalPicture]
+                )
+            )
+        ]
+
+        viewModel.setPictureRecordsByTrackID(
+            [trackID: [updatedPicture]],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: [updatedPicture]
+        )
+
+        #expect(
+            viewModel.hasInternalPictureDifference(
+                for: 3,
+                albumArtPictures: [updatedPicture]
+            )
+        )
+        #expect(
+            !viewModel.hasExternalPictureDifference(
+                for: 3,
+                albumArtPictures: [updatedPicture]
+            )
+        )
+        #expect(viewModel.trackItems[0].externalDifferences?.externallyModifiedPictureTypes.isEmpty == true)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelClassifiesExternalPictureDescriptionEditsAsOverlayOnly() throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "external-picture-description-diff.flac")
+        let pictureData = try Self.pngData(color: .magenta)
+        let originalPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Original Description",
+            data: pictureData
+        )
+        let updatedPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "External Description",
+            data: pictureData
+        )
+
+        _ = try FlacMetadataService.writeMetadata(
+            pictures: [originalPicture],
+            to: fileURL,
+            writeTags: false,
+            writePictures: true
+        )
+
+        let originalRecord = try FlacMetadataService.readTags(for: fileURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: originalRecord.tags,
+                flacPictureRecords: [originalPicture],
+                sourceFileURL: fileURL,
+                latestFileSnapshot: TrackFileSnapshot(
+                    tags: originalRecord.tags,
+                    picturesByType: [3: pictureData],
+                    pictureRecords: [originalPicture]
+                )
+            )
+        ]
+
+        _ = try FlacMetadataService.writeMetadata(
+            pictures: [updatedPicture],
+            to: fileURL,
+            writeTags: false,
+            writePictures: true
+        )
+
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.refreshTrackFileState(
+            for: trackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: [originalPicture]
+        )
+
+        #expect(
+            viewModel.hasExternalPictureDifference(
+                for: 3,
+                albumArtPictures: [originalPicture]
+            )
+        )
+        #expect(
+            !viewModel.hasInternalPictureDifference(
+                for: 3,
+                albumArtPictures: [originalPicture]
+            )
+        )
+        #expect(viewModel.trackItems[0].externalDifferences?.externallyModifiedPictureTypes == Set([3]))
     }
 
     @Test

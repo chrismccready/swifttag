@@ -375,6 +375,30 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func albumArtSheetViewUsesBoldSidebarTextForInternalPictureDifferences() throws {
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: false,
+            saveStatusPresentation: nil,
+            hasInternalPictureDifference: true
+        )
+
+        let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
+        #expect(actualView.hasInternalPictureDifferenceForSlot(.frontCover))
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtSheetView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains("let hasInternalPictureDifference = hasInternalPictureDifferenceForSlot(albumArtType.slot)"))
+        #expect(source.contains(".fontWeight(hasInternalPictureDifference ? .bold : .regular)"))
+    }
+
+    @Test
     func albumArtSheetViewProvidesOverlayAndMetadataForPresentedPicture() throws {
         let sut = makeAlbumArtSheetView(
             isSaveOperationRunning: false,
@@ -911,7 +935,8 @@ struct TrackStatusViewInspectorTests {
         isTypePictureScopeDisabled: Bool = false,
         canGoToPreviousPicture: Bool = false,
         canGoToNextPicture: Bool = false,
-        canEditDescription: Bool = true
+        canEditDescription: Bool = true,
+        hasInternalPictureDifference: Bool = false
     ) -> AlbumArtSheetView {
         AlbumArtSheetView(
             isSaveOperationRunning: isSaveOperationRunning,
@@ -967,7 +992,8 @@ struct TrackStatusViewInspectorTests {
             onNextPicture: { _ in },
             onLastPicture: { _ in },
             onRemovePicture: { _ in },
-            showsPictureDifferenceOverlayForSlot: { _ in false }
+            hasExternalPictureDifferenceForSlot: { _ in false },
+            hasInternalPictureDifferenceForSlot: { _ in hasInternalPictureDifference }
         )
     }
 

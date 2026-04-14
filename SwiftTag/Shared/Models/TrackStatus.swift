@@ -23,6 +23,15 @@ struct TrackExternalDifferences: Equatable {
     var isDeleted: Bool
     var fileValuesByTag: [String: String]
     var hasPictureDifference: Bool
+    var externallyModifiedPictureTypes: Set<Int> = []
+
+    var hasExternallyModifiedPictureDifference: Bool {
+        !externallyModifiedPictureTypes.isEmpty
+    }
+
+    var hasStatusPresentationDifferences: Bool {
+        isDeleted || !fileValuesByTag.isEmpty || hasExternallyModifiedPictureDifference
+    }
 
     var hasDifferences: Bool {
         isDeleted || !fileValuesByTag.isEmpty || hasPictureDifference

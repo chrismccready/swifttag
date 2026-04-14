@@ -882,7 +882,8 @@ struct ContentView: View {
                 syncTrackPictureRecordsFromAlbumArt()
                 syncAlbumArtContext()
             },
-            showsPictureDifferenceOverlayForSlot: hasExternalPictureDifference(for:)
+            hasExternalPictureDifferenceForSlot: hasExternalPictureDifference(for:),
+            hasInternalPictureDifferenceForSlot: hasInternalPictureDifference(for:)
         )
     }
 
@@ -1242,6 +1243,17 @@ struct ContentView: View {
         }
 
         return viewModel.hasExternalPictureDifference(
+            for: pictureType,
+            albumArtPictures: currentAlbumArtPictures
+        )
+    }
+
+    private func hasInternalPictureDifference(for slot: AlbumArtSlot) -> Bool {
+        guard let pictureType = albumArtTypes.first(where: { $0.slot == slot })?.flacPictureType else {
+            return false
+        }
+
+        return viewModel.hasInternalPictureDifference(
             for: pictureType,
             albumArtPictures: currentAlbumArtPictures
         )

@@ -1375,7 +1375,7 @@ final class TagEditorViewModel {
             return TrackStatusPresentation(systemImageName: "lock.fill", help: "Track is locked.")
         }
 
-        if let externalDifferences = track.externalDifferences, externalDifferences.hasDifferences {
+        if let externalDifferences = track.externalDifferences, externalDifferences.hasStatusPresentationDifferences {
             return TrackStatusPresentation(
                 systemImageName: "exclamationmark.triangle",
                 help: hoverHelp(for: externalDifferences)
@@ -1476,7 +1476,7 @@ final class TagEditorViewModel {
     func hasExternalPictureDifference(in selection: Set<UUID>? = nil) -> Bool {
         let trackIDs = selection ?? Set(trackItems.map(\.id))
         return trackItems.contains { track in
-            trackIDs.contains(track.id) && (track.externalDifferences?.hasPictureDifference ?? false)
+            trackIDs.contains(track.id) && !(track.externalDifferences?.externallyModifiedPictureTypes.isEmpty ?? true)
         }
     }
 
@@ -1489,7 +1489,7 @@ final class TagEditorViewModel {
         return trackItems.indices.contains { index in
             let track = trackItems[index]
             guard trackIDs.contains(track.id),
-                  track.externalDifferences?.hasPictureDifference == true,
+                  track.externalDifferences?.externallyModifiedPictureTypes.contains(pictureType) == true,
                   let latestFileSnapshot = track.latestFileSnapshot else {
                 return false
             }
@@ -1500,6 +1500,32 @@ final class TagEditorViewModel {
                 snapshot: latestFileSnapshot,
                 pictureType: pictureType
             )
+        }
+    }
+
+    func hasInternalPictureDifference(
+        for pictureType: Int,
+        in selection: Set<UUID>? = nil,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) -> Bool {
+        let trackIDs = selection ?? Set(trackItems.map(\.id))
+        return trackItems.indices.contains { index in
+            let track = trackItems[index]
+            guard trackIDs.contains(track.id),
+                  let latestFileSnapshot = track.latestFileSnapshot else {
+                return false
+            }
+
+            let currentPictures = picturesForTrack(at: index, fallback: albumArtPictures)
+            guard pictureRecordsDiffer(
+                currentPictures: currentPictures,
+                snapshot: latestFileSnapshot,
+                pictureType: pictureType
+            ) else {
+                return false
+            }
+
+            return !(track.externalDifferences?.externallyModifiedPictureTypes.contains(pictureType) ?? false)
         }
     }
 
@@ -1793,6 +1819,7 @@ final class TagEditorViewModel {
                     pictureRecords: pictureRecords,
                     fingerprint: metadata.fingerprint
                 )
+                let previousFileSnapshot = self.trackItems[index].latestFileSnapshot
 
                 self.applyResolvedTrackFileReference(resolvedReference, at: index)
                 self.cancelPendingMissingRefresh(for: self.trackItems[index].id)
@@ -1802,6 +1829,7 @@ final class TagEditorViewModel {
                 self.trackItems[index].externalDifferences = self.externalDifferences(
                     for: index,
                     fileSnapshot: fileSnapshot,
+                    previousFileSnapshot: previousFileSnapshot,
                     tagWriteOptions: tagWriteOptions,
                     albumArtPictures: albumArtPictures
                 )
@@ -2094,6 +2122,33 @@ final class TagEditorViewModel {
     }
 
     private func pictureRecordsDiffer(
+        between lhs: TrackFileSnapshot,
+        and rhs: TrackFileSnapshot,
+        pictureType: Int?
+    ) -> Bool {
+        let filteredLhsPictureRecords = pictureType.map { pictureType in
+            lhs.pictureRecords.filter { $0.type == pictureType }
+        } ?? lhs.pictureRecords
+        let filteredRhsPictureRecords = pictureType.map { pictureType in
+            rhs.pictureRecords.filter { $0.type == pictureType }
+        } ?? rhs.pictureRecords
+
+        if !filteredLhsPictureRecords.isEmpty || !filteredRhsPictureRecords.isEmpty {
+            return canonicalPictureRecords(filteredLhsPictureRecords, normalizeImageMetadata: false) !=
+                canonicalPictureRecords(filteredRhsPictureRecords, normalizeImageMetadata: false)
+        }
+
+        let lhsPicturesByType = pictureType.map { pictureType in
+            lhs.picturesByType[pictureType].map { [pictureType: $0] } ?? [:]
+        } ?? lhs.picturesByType
+        let rhsPicturesByType = pictureType.map { pictureType in
+            rhs.picturesByType[pictureType].map { [pictureType: $0] } ?? [:]
+        } ?? rhs.picturesByType
+
+        return lhsPicturesByType != rhsPicturesByType
+    }
+
+    private func pictureRecordsDiffer(
         currentPictures: [FlacWritablePictureRecord],
         snapshot: TrackFileSnapshot,
         pictureType: Int?
@@ -2150,6 +2205,7 @@ final class TagEditorViewModel {
     private func externalDifferences(
         for index: Int,
         fileSnapshot: TrackFileSnapshot,
+        previousFileSnapshot: TrackFileSnapshot? = nil,
         tagWriteOptions: TagWriteOptions,
         albumArtPictures: [FlacWritablePictureRecord]
     ) -> TrackExternalDifferences? {
@@ -2163,13 +2219,51 @@ final class TagEditorViewModel {
         )
         let picturesForTrack = picturesForTrack(at: index, fallback: albumArtPictures)
         let hasPictureDifference = pictureRecordsDiffer(currentPictures: picturesForTrack, snapshot: fileSnapshot)
+        let existingExternallyModifiedPictureTypes = trackItems[index].externalDifferences?.externallyModifiedPictureTypes ?? []
+        let currentDifferingPictureTypes = Set(
+            existingExternallyModifiedPictureTypes.union(
+                externallyModifiedPictureTypes(
+                    previousSnapshot: previousFileSnapshot,
+                    currentSnapshot: fileSnapshot
+                )
+            ).filter { pictureType in
+                pictureRecordsDiffer(
+                    currentPictures: picturesForTrack,
+                    snapshot: fileSnapshot,
+                    pictureType: pictureType
+                )
+            }
+        )
 
         let result = TrackExternalDifferences(
             isDeleted: false,
             fileValuesByTag: differences,
-            hasPictureDifference: hasPictureDifference
+            hasPictureDifference: hasPictureDifference,
+            externallyModifiedPictureTypes: currentDifferingPictureTypes
         )
         return result.hasDifferences ? result : nil
+    }
+
+    private func externallyModifiedPictureTypes(
+        previousSnapshot: TrackFileSnapshot?,
+        currentSnapshot: TrackFileSnapshot
+    ) -> Set<Int> {
+        guard let previousSnapshot else {
+            return []
+        }
+
+        let pictureTypes = Set(previousSnapshot.pictureRecords.map(\.type))
+            .union(previousSnapshot.picturesByType.keys)
+            .union(currentSnapshot.pictureRecords.map(\.type))
+            .union(currentSnapshot.picturesByType.keys)
+
+        return Set(pictureTypes.filter { pictureType in
+            pictureRecordsDiffer(
+                between: previousSnapshot,
+                and: currentSnapshot,
+                pictureType: pictureType
+            )
+        })
     }
 
     private func hoverHelp(for differences: TrackExternalDifferences) -> String {
@@ -2183,7 +2277,7 @@ final class TagEditorViewModel {
             lines.append("\(key): \(differences.fileValuesByTag[key] ?? "<missing>")")
         }
 
-        if differences.hasPictureDifference {
+        if differences.hasExternallyModifiedPictureDifference {
             lines.append("PICTURE: <different>")
         }
 

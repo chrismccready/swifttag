@@ -1445,6 +1445,49 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testPictureDescriptionEditKeepsInternalTrackStatusIcon() throws {
+        let updatedDescription = "Internal Description \(UUID().uuidString)"
+        let app = try launchApp(importFixture: true, exposeDiffMetadata: true)
+        let window = app.windows.firstMatch
+
+        XCTAssertTrue(window.waitForExistence(timeout: 10.0))
+        selectImportedTrackForEditing(in: window, app: app, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: window,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "fish.fill",
+                timeout: 10.0
+            )
+        )
+
+        let albumArtSheet = openAlbumArtSheet(in: window, app: app)
+        editCurrentAlbumArtDescription(
+            in: albumArtSheet,
+            app: app,
+            description: updatedDescription
+        )
+        closeAlbumArtSheet(in: app)
+
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: window,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "fish",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: window,
+                identifier: UIID.frontCoverPictureExternalStateProbe,
+                expectedValue: "none",
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
     func testPictureDescriptionSaveInSecondWindowShowsExternalPictureDifferenceInFirstWindow() throws {
         let sharedFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let updatedDescription = "Observed External Description \(UUID().uuidString)"
