@@ -459,7 +459,7 @@ struct TrackStatusViewInspectorTests {
 
         let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
         #expect(actualView.canEditDescriptionForSlot(.frontCover))
-        #expect(actualView.descriptionValidationForSlot(.frontCover, "Draft")?.isLegal == true)
+        #expect(actualView.descriptionValidationForSlot(.frontCover, "Draft")?.isValid == true)
 
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -477,6 +477,8 @@ struct TrackStatusViewInspectorTests {
         #expect(source.contains("TextEditor(text: $stagedPictureDescription)"))
         #expect(source.contains(".sheet(isPresented: $isPictureDescriptionSheetPresented"))
         #expect(source.contains(".alert(\"Description Too Large\""))
+        #expect(source.contains(".alert(\"Picture Too Large\""))
+        #expect(source.contains("Text(pictureImportAlertMessage)"))
         #expect(source.contains("Button(\"Ok\") {}"))
         #expect(source.contains("Button(\"Cancel\", role: .cancel)"))
         #expect(source.contains("Button(\"Save\")"))
@@ -936,7 +938,9 @@ struct TrackStatusViewInspectorTests {
         canGoToPreviousPicture: Bool = false,
         canGoToNextPicture: Bool = false,
         canEditDescription: Bool = true,
-        hasInternalPictureDifference: Bool = false
+        hasInternalPictureDifference: Bool = false,
+        isPictureImportAlertPresented: Bool = false,
+        pictureImportAlertMessage: String = ""
     ) -> AlbumArtSheetView {
         AlbumArtSheetView(
             isSaveOperationRunning: isSaveOperationRunning,
@@ -953,6 +957,8 @@ struct TrackStatusViewInspectorTests {
             navigationPath: .constant([.frontCover]),
             isFileImporterPresented: .constant(false),
             isFileExporterPresented: .constant(false),
+            isPictureImportAlertPresented: .constant(isPictureImportAlertPresented),
+            pictureImportAlertMessage: pictureImportAlertMessage,
             exportDocument: nil,
             exportContentType: .png,
             exportDefaultFileName: "cover",

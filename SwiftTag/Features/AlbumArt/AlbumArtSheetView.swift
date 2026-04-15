@@ -10,6 +10,8 @@ struct AlbumArtSheetView: View {
     @Binding var navigationPath: [AlbumArtSlot]
     @Binding var isFileImporterPresented: Bool
     @Binding var isFileExporterPresented: Bool
+    @Binding var isPictureImportAlertPresented: Bool
+    let pictureImportAlertMessage: String
     let exportDocument: AlbumArtExportDocument?
     let exportContentType: UTType
     let exportDefaultFileName: String
@@ -125,8 +127,12 @@ struct AlbumArtSheetView: View {
             return
         }
 
-        guard validation.isLegal else {
-            pictureDescriptionAlertMessage = "The description uses \(validation.proposedDescriptionBytes) UTF-8 bytes, but this picture can save at most \(validation.maximumDescriptionBytes) bytes after reserving the image payload, MIME type, fixed FLAC picture fields, and the 256-byte safety buffer."
+        guard validation.isValid else {
+            pictureDescriptionAlertMessage = """
+            The description uses \(validation.proposedDescriptionBytes) UTF-8 bytes, but this \
+            picture can save at most \(validation.maximumDescriptionBytes) bytes after reserving \
+            the image payload, MIME type, fixed FLAC picture fields, and 256-byte buffer.
+            """
             isPictureDescriptionAlertPresented = true
             return
         }
@@ -146,23 +152,29 @@ struct AlbumArtSheetView: View {
                 .font(.headline)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Original Description")
+                Text("Current Description")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text(originalPictureDescription.isEmpty ? "None" : originalPictureDescription)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(10)
-                    .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .accessibilityIdentifier("albumArt.sheet.pictureDescription.original")
+                ScrollView {
+                    VStack {
+                        Text(originalPictureDescription.isEmpty ? "None" : originalPictureDescription)
+                            .frame(maxWidth: .infinity, minHeight: 56, alignment: .topLeading)
+                            .padding(EdgeInsets(top: 5, leading: 6, bottom: 7, trailing: 6))
+                            .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .textSelection(.enabled)
+                            .accessibilityIdentifier("albumArt.sheet.pictureDescription.original")
+                    }
+                }
+                .frame(height: 56)
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Description")
+                Text("New Description")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 TextEditor(text: $stagedPictureDescription)
                     .font(.body)
-                    .frame(minHeight: 160)
+                    .frame(minHeight: 64, maxHeight: 64)
                     .padding(6)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -177,7 +189,7 @@ struct AlbumArtSheetView: View {
                     dismissDescriptionEdit()
                 }
                 .accessibilityIdentifier("albumArt.sheet.pictureDescription.cancelButton")
-                Button("Save") {
+                Button("Done") {
                     saveDescriptionEdit()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -205,9 +217,9 @@ struct AlbumArtSheetView: View {
         let hasExternalPictureDifference = hasExternalPictureDifferenceForSlot(albumArtType.slot)
         let hasExternalPictureDifferenceColor = AppColorStorage.color(from: externallyModifiedDiffColorRawValue, fallback: .systemRed)
         let textForegroundStyle = hasExternalPictureDifference ? AnyShapeStyle(hasExternalPictureDifferenceColor) :
-        (hasCrossTypeDuplicate ? AnyShapeStyle(hasCrossTypeDuplicateColor) :
-            (hasInternalPictureDifference ? AnyShapeStyle(hasInternalPictureDifferenceColor) :
-                AnyShapeStyle(.primary)))
+            (hasCrossTypeDuplicate ? AnyShapeStyle(hasCrossTypeDuplicateColor) :
+                (hasInternalPictureDifference ? AnyShapeStyle(hasInternalPictureDifferenceColor) :
+                    AnyShapeStyle(.primary)))
 
         HStack(spacing: 0) {
             Text("\(albumArtType.navigationLinkName)")
@@ -268,6 +280,7 @@ struct AlbumArtSheetView: View {
                         onPrepareExport(albumArtSlot)
                     }
                     .disabled(!hasImageForSlot(albumArtSlot))
+                    Divider()
                     Button("Copy \(navigationLinkName)") {
                         onCopyPictureForSlot(albumArtSlot)
                     }
@@ -317,7 +330,7 @@ struct AlbumArtSheetView: View {
             if let metadata = metadataForSlot(albumArtSlot) {
                 HStack(spacing: 0) {
                     Text("""
-                         \(metadata.descriptionText()) \(metadata.poolItemIDShort) \(metadata.inSlotReferenceCount) \
+                         \(metadata.descriptionText().truncated(limit: 36, position: .middle)) \(metadata.poolItemIDShort) \(metadata.inSlotReferenceCount) \
                          \(metadata.outOfSlotReferenceCount) \(metadata.pinCount) · \(metadata.mimeTypeText()) · \(metadata.byteCountText())
                          """)
                         .font(.caption)
@@ -496,6 +509,11 @@ struct AlbumArtSheetView: View {
             descriptionEditorSlot = nil
         }) {
             pictureDescriptionSheet
+        }
+        .alert("Picture Too Large", isPresented: $isPictureImportAlertPresented) {
+            Button("Ok") {}
+        } message: {
+            Text(pictureImportAlertMessage)
         }
     }
 }

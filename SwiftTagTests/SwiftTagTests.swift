@@ -855,7 +855,7 @@ struct SwiftTagTests {
 
         #expect(validation.maximumDescriptionBytes == expectedMaximumDescriptionBytes)
         #expect(validation.proposedDescriptionBytes == 32)
-        #expect(validation.isLegal)
+        #expect(validation.isValid)
     }
 
     @Test
@@ -867,7 +867,78 @@ struct SwiftTagTests {
         )
 
         #expect(validation.proposedDescriptionBytes == 0)
-        #expect(validation.isLegal)
+        #expect(validation.isValid)
+    }
+
+    @Test
+    func flacPictureDataBudgetReservesCurrentDescriptionAndSafetyBuffer() {
+        let mimeType = "image/png"
+        let currentDescription = "Edited Front Cover"
+        let pictureData = Data(repeating: 0x7F, count: 4_096)
+        let validation = FlacPictureDataBudget.validation(
+            mimeType: mimeType,
+            currentDescription: currentDescription,
+            proposedPictureData: pictureData
+        )
+
+        let expectedMaximumPictureBytes = FlacPictureDescriptionBudget.metadataPayloadMaxBytes
+            - FlacPictureDescriptionBudget.fixedMetadataFieldBytes
+            - FlacPictureDescriptionBudget.safetyBufferBytes
+            - mimeType.lengthOfBytes(using: .utf8)
+            - currentDescription.lengthOfBytes(using: .utf8)
+
+        #expect(validation.maximumPictureBytes == expectedMaximumPictureBytes)
+        #expect(validation.proposedPictureBytes == pictureData.count)
+        #expect(validation.isValid)
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelRejectsOversizedPictureImportAndShowsAlert() throws {
+        let frontData = try Self.pngData(color: .purple)
+        let currentDescription = "Edited Front Cover"
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(
+                    type: 3,
+                    mimeType: "image/png",
+                    description: currentDescription,
+                    data: frontData
+                )
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let maximumPictureBytes = try #require(
+            viewModel.currentPictureImportValidation(
+                for: .frontCover,
+                proposedPictureData: Data(),
+                mimeType: "image/png",
+                albumArtTypes: albumArtTypes
+            )?.maximumPictureBytes
+        )
+        let oversizedPictureData = Data(repeating: 0xFF, count: maximumPictureBytes + 1)
+
+        let didReject = viewModel.rejectOversizedPictureImportIfNeeded(
+            for: .frontCover,
+            pictureData: oversizedPictureData,
+            mimeType: "image/png",
+            albumArtTypes: albumArtTypes
+        )
+
+        #expect(didReject)
+        #expect(viewModel.isPictureImportAlertPresented)
+        #expect(viewModel.pictureImportAlertMessage.contains("current description"))
+        #expect(viewModel.pictureImportAlertMessage.contains("256-byte buffer"))
+        #expect(viewModel.pictureImportAlertMessage.contains("\(maximumPictureBytes) bytes"))
+        #expect(viewModel.trackReferencesByTrackID[track.id, default: []].count == 1)
+        #expect(viewModel.trackReferencesByTrackID[track.id, default: []].first?.description == currentDescription)
     }
 
     @Test

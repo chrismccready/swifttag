@@ -4,8 +4,17 @@ struct FlacPictureDescriptionValidation: Equatable {
     let maximumDescriptionBytes: Int
     let proposedDescriptionBytes: Int
 
-    var isLegal: Bool {
+    var isValid: Bool {
         proposedDescriptionBytes <= maximumDescriptionBytes
+    }
+}
+
+struct FlacPictureDataValidation: Equatable {
+    let maximumPictureBytes: Int
+    let proposedPictureBytes: Int
+
+    var isValid: Bool {
+        proposedPictureBytes <= maximumPictureBytes
     }
 }
 
@@ -13,6 +22,7 @@ enum FlacPictureDescriptionBudget {
     static let metadataPayloadMaxBytes = (1 << 24) - 1
     static let fixedMetadataFieldBytes = 32
     static let safetyBufferBytes = 256
+    static let editDescriptionBufferBytes = 256
 
     static func validation(
         mimeType: String,
@@ -28,6 +38,28 @@ enum FlacPictureDescriptionBudget {
         return FlacPictureDescriptionValidation(
             maximumDescriptionBytes: max(0, availableDescriptionBytes),
             proposedDescriptionBytes: proposedDescription.lengthOfBytes(using: .utf8)
+        )
+    }
+}
+
+enum FlacPictureDataBudget {
+    
+    
+    static func validation(
+        mimeType: String,
+        currentDescription: String,
+        proposedPictureData: Data
+    ) -> FlacPictureDataValidation {
+        let availablePictureBytes = FlacPictureDescriptionBudget.metadataPayloadMaxBytes
+            - FlacPictureDescriptionBudget.fixedMetadataFieldBytes
+            - FlacPictureDescriptionBudget.safetyBufferBytes
+            - FlacPictureDescriptionBudget.editDescriptionBufferBytes
+            - mimeType.lengthOfBytes(using: .utf8)
+            - currentDescription.lengthOfBytes(using: .utf8)
+
+        return FlacPictureDataValidation(
+            maximumPictureBytes: max(0, availablePictureBytes),
+            proposedPictureBytes: proposedPictureData.count
         )
     }
 }

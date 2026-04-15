@@ -767,6 +767,11 @@ struct ContentView: View {
                 get: { albumArtViewModel.isAlbumArtFileExporterPresented },
                 set: { albumArtViewModel.isAlbumArtFileExporterPresented = $0 }
             ),
+            isPictureImportAlertPresented: Binding(
+                get: { albumArtViewModel.isPictureImportAlertPresented },
+                set: { albumArtViewModel.isPictureImportAlertPresented = $0 }
+            ),
+            pictureImportAlertMessage: albumArtViewModel.pictureImportAlertMessage,
             exportDocument: albumArtViewModel.albumArtExportDocument,
             exportContentType: albumArtViewModel.albumArtExportContentType,
             exportDefaultFileName: albumArtViewModel.albumArtExportDefaultFileName,
@@ -787,9 +792,10 @@ struct ContentView: View {
                 }
             },
             onFileImportResult: { result in
-                albumArtViewModel.handleAlbumArtFileImportResult(result, albumArtTypes: albumArtTypes)
-                syncTrackPictureRecordsFromAlbumArt()
-                syncAlbumArtContext()
+                albumArtViewModel.handleAlbumArtFileImportResult(result, albumArtTypes: albumArtTypes) {
+                    syncTrackPictureRecordsFromAlbumArt()
+                    syncAlbumArtContext()
+                }
             },
             onFileExportResult: albumArtViewModel.handleAlbumArtFileExportResult(_:),
             itemProvidersForSlot: { slot in

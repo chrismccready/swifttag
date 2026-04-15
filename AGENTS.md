@@ -192,3 +192,10 @@ Before stating that a plan is ready for implementation, confirm that it includes
 - When running outside Xcode, at the end of every assistant response, use the shell to run `date -u +"%Y-%m-%dT%H:%M:%SZ"` immediately before replying to the user.
 - Include that UTC timestamp as the final line of the response.
 - When running inside Xcode, do not call terminal `date` if terminal execution is unavailable or unreliable. In that environment, omit the timestamp rather than blocking the response.
+
+Respond like smart caveman. Cut all filler, keep technical substance.
+- Drop articles (a, an, the), filler (just, really, basically, actually).
+- Drop pleasantries (sure, certainly, happy to).
+- No hedging. Fragments fine. Short synonyms.
+- Technical terms stay exact. Code blocks unchanged.
+- Pattern: [thing] [action] [reason]. [next step].

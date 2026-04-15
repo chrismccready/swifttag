@@ -93,6 +93,8 @@ final class AlbumArtViewModel {
     var albumArtExportContentType: UTType = .png
     var albumArtExportDefaultFileName: String = "Album Art"
     var albumArtNavigationPath: [AlbumArtSlot] = []
+    var isPictureImportAlertPresented: Bool = false
+    var pictureImportAlertMessage: String = ""
 
     // Legacy compatibility map still used by tests and existing call sites.
     var albumArtImages: [AlbumArtSlot: AlbumArtImageAsset] = [:]
@@ -291,6 +293,44 @@ final class AlbumArtViewModel {
             pictureData: poolItem.data,
             proposedDescription: proposedDescription
         )
+    }
+
+    func currentPictureImportValidation(
+        for slot: AlbumArtSlot,
+        proposedPictureData: Data,
+        mimeType: String,
+        albumArtTypes: [AlbumArtType]
+    ) -> FlacPictureDataValidation? {
+        let currentDescription = currentPictureImportDescription(for: slot, albumArtTypes: albumArtTypes)
+        return FlacPictureDataBudget.validation(
+            mimeType: mimeType,
+            currentDescription: currentDescription,
+            proposedPictureData: proposedPictureData
+        )
+    }
+
+    @discardableResult
+    func rejectOversizedPictureImportIfNeeded(
+        for slot: AlbumArtSlot,
+        pictureData: Data,
+        mimeType: String,
+        albumArtTypes: [AlbumArtType]
+    ) -> Bool {
+        guard let validation = currentPictureImportValidation(
+            for: slot,
+            proposedPictureData: pictureData,
+            mimeType: mimeType,
+            albumArtTypes: albumArtTypes
+        ),
+        !validation.isValid else {
+            return false
+        }
+
+        presentPictureImportAlert(
+            validation: validation,
+            currentDescription: currentPictureImportDescription(for: slot, albumArtTypes: albumArtTypes)
+        )
+        return true
     }
 
     @discardableResult
@@ -581,14 +621,15 @@ final class AlbumArtViewModel {
                 }
 
                 Task { @MainActor in
-                    self.applyDroppedImage(
+                    if self.applyDroppedImage(
                         image: image,
                         data: data,
                         type: UTType(preferredTypeIdentifier) ?? self.albumArtType(for: data),
                         for: albumArtSlot,
                         albumArtTypes: albumArtTypes
-                    )
-                    didUpdate()
+                    ) {
+                        didUpdate()
+                    }
                 }
             }
             return true
@@ -603,14 +644,15 @@ final class AlbumArtViewModel {
                 }
 
                 Task { @MainActor in
-                    self.applyDroppedImage(
+                    if self.applyDroppedImage(
                         image: image,
                         data: data,
                         type: self.albumArtType(for: url),
                         for: albumArtSlot,
                         albumArtTypes: albumArtTypes
-                    )
-                    didUpdate()
+                    ) {
+                        didUpdate()
+                    }
                 }
             }
             return true
@@ -644,14 +686,15 @@ final class AlbumArtViewModel {
             return
         }
 
-        applyDroppedImage(
+        if applyDroppedImage(
             image: image,
             data: data,
             type: albumArtType(for: selectedURL),
             for: pendingAlbumArtSlotForImport,
             albumArtTypes: albumArtTypes
-        )
-        didUpdate()
+        ) {
+            didUpdate()
+        }
     }
 
     func openAlbumArtFilePicker(for albumArtSlot: AlbumArtSlot) {
@@ -792,36 +835,49 @@ final class AlbumArtViewModel {
         albumArtImages = updated
     }
 
+    @discardableResult
     private func applyDroppedImage(
         image: NSImage,
         data: Data,
         type: UTType,
         for slot: AlbumArtSlot,
         albumArtTypes: [AlbumArtType]
-    ) {
+    ) -> Bool {
         let existingPoolID = existingPoolItemID(for: data)
-        let poolID = existingPoolID ?? upsertPoolItem(image: image, data: data)
         let mimeType = type.preferredMIMEType ?? "image/png"
         let targetTrackIDs = manualTrackPinTargetTrackIDs(for: slot)
 
         guard !targetTrackIDs.isEmpty else {
-            return
+            return false
         }
 
-        let targetTracksWithMatchingReference = targetTrackIDs.filter { trackID in
-            trackReferencesByTrackID[trackID, default: []]
-                .contains(where: { $0.slot == slot && $0.poolItemID == poolID })
+        if let existingPoolID {
+            let targetTracksWithMatchingReference = targetTrackIDs.filter { trackID in
+                trackReferencesByTrackID[trackID, default: []]
+                    .contains(where: { $0.slot == slot && $0.poolItemID == existingPoolID })
+            }
+
+            if targetTracksWithMatchingReference.count == targetTrackIDs.count {
+                focusSlotAfterAddingPicture(
+                    poolID: existingPoolID,
+                    for: slot,
+                    addedExistingPicture: true
+                )
+                syncLegacySlotImages(albumArtTypes: albumArtTypes)
+                return true
+            }
         }
 
-        if targetTracksWithMatchingReference.count == targetTrackIDs.count {
-            focusSlotAfterAddingPicture(
-                poolID: poolID,
-                for: slot,
-                addedExistingPicture: true
-            )
-            syncLegacySlotImages(albumArtTypes: albumArtTypes)
-            return
+        if rejectOversizedPictureImportIfNeeded(
+            for: slot,
+            pictureData: data,
+            mimeType: mimeType,
+            albumArtTypes: albumArtTypes
+        ) {
+            return false
         }
+
+        let poolID = existingPoolID ?? upsertPoolItem(image: image, data: data)
 
         if slot == .frontCover {
             let targetTracksWithFrontCover = targetTrackIDs.filter { trackID in
@@ -840,12 +896,12 @@ final class AlbumArtViewModel {
                         addedExistingPicture: true
                     )
                     syncLegacySlotImages(albumArtTypes: albumArtTypes)
-                    return
+                    return true
                 }
 
                 let action = chooseFrontCoverDropAction()
                 guard action != .cancel else {
-                    return
+                    return false
                 }
 
                 applyFrontCoverDrop(poolID: poolID, mimeType: mimeType, targetTrackIDs: targetTrackIDs, action: action)
@@ -855,13 +911,13 @@ final class AlbumArtViewModel {
                     addedExistingPicture: existingPoolID != nil
                 )
                 syncLegacySlotImages(albumArtTypes: albumArtTypes)
-                return
+                return true
             }
 
             if !targetTracksWithFrontCover.isEmpty {
                 let action = chooseFrontCoverDropAction()
                 guard action != .cancel else {
-                    return
+                    return false
                 }
                 applyFrontCoverDrop(poolID: poolID, mimeType: mimeType, targetTrackIDs: targetTrackIDs, action: action)
                 focusSlotAfterAddingPicture(
@@ -870,7 +926,7 @@ final class AlbumArtViewModel {
                     addedExistingPicture: false
                 )
                 syncLegacySlotImages(albumArtTypes: albumArtTypes)
-                return
+                return true
             }
         }
 
@@ -911,6 +967,7 @@ final class AlbumArtViewModel {
             addedExistingPicture: existingPoolID != nil
         )
         syncLegacySlotImages(albumArtTypes: albumArtTypes)
+        return true
     }
 
     private func focusSlotAfterAddingPicture(
@@ -1225,6 +1282,37 @@ final class AlbumArtViewModel {
             trackReferencesByTrackID[trackID, default: []]
                 .contains(where: { $0.slot == slot && $0.poolItemID == currentPoolItemID })
         }
+    }
+
+    private func currentPictureImportDescription(for slot: AlbumArtSlot, albumArtTypes: [AlbumArtType]) -> String {
+        if let currentReference = currentReference(for: slot) {
+            return currentReference.description
+        }
+
+        return albumArtTypes.first(where: { $0.slot == slot })?.flacDescription ?? ""
+    }
+
+    private func presentPictureImportAlert(
+        validation: FlacPictureDataValidation,
+        currentDescription: String
+    ) {
+        let descriptionBytes = currentDescription.lengthOfBytes(using: .utf8)
+        let proposedPictureSizeText = ByteCountFormatter.string(
+            fromByteCount: Int64(validation.proposedPictureBytes),
+            countStyle: .file
+        )
+        let maximumPictureSizeText = ByteCountFormatter.string(
+            fromByteCount: Int64(validation.maximumPictureBytes),
+            countStyle: .file
+        )
+
+        pictureImportAlertMessage = """
+        This picture is too large to embed in FLAC. It uses \(proposedPictureSizeText) \
+        (\(validation.proposedPictureBytes) bytes), but only \(maximumPictureSizeText) \
+        (\(validation.maximumPictureBytes) bytes) are available after reserving \(descriptionBytes) \
+        bytes for current description, required FLAC picture fields, and 256-byte buffer.
+        """
+        isPictureImportAlertPresented = true
     }
 
     private func removalTargetTrackIDs() -> [UUID] {
