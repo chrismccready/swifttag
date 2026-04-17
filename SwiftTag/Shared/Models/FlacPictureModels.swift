@@ -10,7 +10,7 @@ struct FlacPictureRecord {
     let colors: Int
     let data: Data
 
-    init(
+    nonisolated init(
         type: Int,
         mimeType: String,
         description: String,
@@ -41,7 +41,7 @@ struct FlacWritablePictureRecord: Equatable {
     let depth: Int
     let colors: Int
 
-    init(
+    nonisolated init(
         type: Int,
         mimeType: String,
         description: String,

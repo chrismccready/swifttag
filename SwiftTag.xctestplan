@@ -1,0 +1,38 @@
+{
+  "configurations" : [
+    {
+      "id" : "978966BE-05CF-4D84-9D51-DFD7690A744C",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:SwiftTag.xcodeproj",
+      "identifier" : "720E0C932F4E5E98000DD6E1",
+      "name" : "SwiftTag"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:SwiftTag.xcodeproj",
+        "identifier" : "720E0CA02F4E5E99000DD6E1",
+        "name" : "SwiftTagTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:SwiftTag.xcodeproj",
+        "identifier" : "720E0CAA2F4E5E99000DD6E1",
+        "name" : "SwiftTagUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -23,7 +23,7 @@
 		73A0B0000000000000000046 /* QuickLook/SwiftTagDocumentQuickLookBitmapRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A0B0000000000000000036 /* QuickLook/SwiftTagDocumentQuickLookBitmapRenderer.swift */; };
 		73A0B0000000000000000047 /* SwiftTagDocumentQuickLookPreviewProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A0B0000000000000000037 /* SwiftTagDocumentQuickLookPreviewProvider.swift */; };
 		73A0B0000000000000000048 /* SwiftTagQuickLookFallback.png in Resources */ = {isa = PBXBuildFile; fileRef = 73A0B0000000000000000039 /* SwiftTagQuickLookFallback.png */; };
-		73A0B0000000000000000049 /* SwiftTagQuickLookPreview.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 73A0B000000000000000003A /* SwiftTagQuickLookPreview.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		73A0B0000000000000000049 /* SwiftTagQuickLookPreview.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 73A0B000000000000000003A /* SwiftTagQuickLookPreview.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,15 +51,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		73A0B0000000000000000063 /* Embed App Extensions */ = {
+		73A0B0000000000000000063 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				73A0B0000000000000000049 /* SwiftTagQuickLookPreview.appex in Embed App Extensions */,
+				73A0B0000000000000000049 /* SwiftTagQuickLookPreview.appex in Embed Foundation Extensions */,
 			);
-			name = "Embed App Extensions";
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -69,6 +69,7 @@
 		720E0CA12F4E5E99000DD6E1 /* SwiftTagTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftTagTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		720E0CAB2F4E5E99000DD6E1 /* SwiftTagUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftTagUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		72294DE42F5AA04100840CFE /* test.flac */ = {isa = PBXFileReference; lastKnownFileType = file; path = test.flac; sourceTree = "<group>"; };
+		723D98472F921EF2008FCD26 /* SwiftTag.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = SwiftTag.xctestplan; sourceTree = "<group>"; };
 		725742B12F660DA200393914 /* testing-tools-review.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "testing-tools-review.md"; sourceTree = "<group>"; };
 		7268E8252F58C537009A1E37 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		7275A2332F521874001AE708 /* build-libflac.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-libflac.sh"; sourceTree = "<group>"; };
@@ -95,13 +96,6 @@
 			);
 			target = 720E0C932F4E5E98000DD6E1 /* SwiftTag */;
 		};
-		72D2D7DF2F69068000A22F6F /* Exceptions for "Plans" folder in "SwiftTag" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"9-AddUIFeedbackSettings.md",
-			);
-			target = 720E0C932F4E5E98000DD6E1 /* SwiftTag */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -125,9 +119,6 @@
 		};
 		7268E7DF2F58B67F009A1E37 /* Plans */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				72D2D7DF2F69068000A22F6F /* Exceptions for "Plans" folder in "SwiftTag" target */,
-			);
 			path = Plans;
 			sourceTree = "<group>";
 		};
@@ -174,6 +165,7 @@
 		720E0C8B2F4E5E98000DD6E1 = {
 			isa = PBXGroup;
 			children = (
+				723D98472F921EF2008FCD26 /* SwiftTag.xctestplan */,
 				720E0C962F4E5E98000DD6E1 /* SwiftTag */,
 				720E0CA42F4E5E99000DD6E1 /* SwiftTagTests */,
 				720E0CAE2F4E5E99000DD6E1 /* SwiftTagUITests */,
@@ -270,7 +262,7 @@
 				720E0C902F4E5E98000DD6E1 /* Sources */,
 				720E0C912F4E5E98000DD6E1 /* Frameworks */,
 				720E0C922F4E5E98000DD6E1 /* Resources */,
-				73A0B0000000000000000063 /* Embed App Extensions */,
+				73A0B0000000000000000063 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -361,7 +353,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2620;
-				LastUpgradeCheck = 2630;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					720E0C932F4E5E98000DD6E1 = {
 						CreatedOnToolsVersion = 26.2;

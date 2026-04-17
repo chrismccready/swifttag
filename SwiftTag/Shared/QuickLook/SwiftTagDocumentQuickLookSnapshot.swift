@@ -61,7 +61,7 @@ struct SwiftTagDocumentQuickLookLayout: Equatable {
 }
 
 struct SwiftTagDocumentQuickLookSnapshot: Equatable {
-    enum Background: Equatable {
+    enum Background {
         case documentPicture(Data)
         case fallback
     }
@@ -219,6 +219,22 @@ struct SwiftTagDocumentQuickLookSnapshot: Equatable {
 
         let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmedValue.isEmpty ? nil : trimmedValue
+    }
+}
+
+extension SwiftTagDocumentQuickLookSnapshot.Background: Equatable {
+    nonisolated static func ==(
+        lhs: SwiftTagDocumentQuickLookSnapshot.Background,
+        rhs: SwiftTagDocumentQuickLookSnapshot.Background
+    ) -> Bool {
+        switch (lhs, rhs) {
+        case let (.documentPicture(lhsData), .documentPicture(rhsData)):
+            lhsData == rhsData
+        case (.fallback, .fallback):
+            true
+        default:
+            false
+        }
     }
 }
 

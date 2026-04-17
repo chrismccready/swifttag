@@ -135,7 +135,7 @@ struct Track: Identifiable {
         return value
     }
 
-    private static func pictureRecord(type: Int, data: Data) -> FlacWritablePictureRecord {
+    nonisolated private static func pictureRecord(type: Int, data: Data) -> FlacWritablePictureRecord {
         let assetDetails = PictureDataUtilities.supportedAssetDetails(mimeType: "", data: data)
         let specifications = assetDetails?.specifications ?? .zero
 

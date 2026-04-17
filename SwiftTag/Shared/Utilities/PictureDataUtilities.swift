@@ -9,17 +9,17 @@ struct PictureDataSpecifications: Equatable, Codable {
     let depth: Int
     let colors: Int
 
-    static let zero = PictureDataSpecifications(width: 0, height: 0, depth: 0, colors: 0)
+    nonisolated static let zero = PictureDataSpecifications(width: 0, height: 0, depth: 0, colors: 0)
 }
 
 enum PictureDataUtilities {
-    private static let pngSignature = Data([137, 80, 78, 71, 13, 10, 26, 10])
+    nonisolated private static let pngSignature = Data([137, 80, 78, 71, 13, 10, 26, 10])
 
-    static func sha256Hex(of data: Data) -> String {
+    nonisolated static func sha256Hex(of data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
-    static func supportedAssetDetails(mimeType: String, data: Data) -> (mimeType: String, fileExtension: String, specifications: PictureDataSpecifications)? {
+    nonisolated static func supportedAssetDetails(mimeType: String, data: Data) -> (mimeType: String, fileExtension: String, specifications: PictureDataSpecifications)? {
         guard let type = supportedImageType(mimeType: mimeType, data: data) else {
             return nil
         }
@@ -31,7 +31,7 @@ enum PictureDataUtilities {
         )
     }
 
-    static func normalizedMimeType(mimeType: String, data: Data) -> String {
+    nonisolated static func normalizedMimeType(mimeType: String, data: Data) -> String {
         guard let type = supportedImageType(mimeType: mimeType, data: data) else {
             let trimmedMimeType = mimeType.trimmingCharacters(in: .whitespacesAndNewlines)
             return trimmedMimeType.isEmpty ? "application/octet-stream" : trimmedMimeType
@@ -40,7 +40,7 @@ enum PictureDataUtilities {
         return canonicalMimeType(for: type)
     }
 
-    static func computedSpecifications(from data: Data) -> PictureDataSpecifications {
+    nonisolated static func computedSpecifications(from data: Data) -> PictureDataSpecifications {
         if let pngSpecifications = pngSpecifications(from: data) {
             return pngSpecifications
         }
@@ -58,7 +58,7 @@ enum PictureDataUtilities {
         return PictureDataSpecifications(width: width, height: height, depth: depth, colors: 0)
     }
 
-    private static func pngSpecifications(from data: Data) -> PictureDataSpecifications? {
+    nonisolated private static func pngSpecifications(from data: Data) -> PictureDataSpecifications? {
         guard data.count >= pngSignature.count,
               data.prefix(pngSignature.count) == pngSignature else {
             return nil
@@ -119,7 +119,7 @@ enum PictureDataUtilities {
         return PictureDataSpecifications(width: width, height: height, depth: depth, colors: colors)
     }
 
-    private static func uint32BigEndian(in data: Data, at offset: Int) -> UInt32? {
+    nonisolated private static func uint32BigEndian(in data: Data, at offset: Int) -> UInt32? {
         guard offset >= 0, offset + 4 <= data.count else {
             return nil
         }
@@ -129,7 +129,7 @@ enum PictureDataUtilities {
         }
     }
 
-    private static func inferredBitsPerPixel(properties: [CFString: Any]?, image: CGImage?) -> Int {
+    nonisolated private static func inferredBitsPerPixel(properties: [CFString: Any]?, image: CGImage?) -> Int {
         let propertyBitsPerComponent = (properties?[kCGImagePropertyDepth] as? NSNumber)?.intValue ?? 0
         let propertyComponentCount = componentCount(for: properties?[kCGImagePropertyColorModel] as? String)
         let propertyHasAlpha = properties?[kCGImagePropertyHasAlpha] as? Bool
@@ -148,7 +148,7 @@ enum PictureDataUtilities {
         return image?.bitsPerPixel ?? 0
     }
 
-    private static func componentCount(for colorModel: String?) -> Int? {
+    nonisolated private static func componentCount(for colorModel: String?) -> Int? {
         let rgbColorModel = kCGImagePropertyColorModelRGB as String
         let grayColorModel = kCGImagePropertyColorModelGray as String
         let cmykColorModel = kCGImagePropertyColorModelCMYK as String
@@ -168,7 +168,7 @@ enum PictureDataUtilities {
         }
     }
 
-    private static func hasAlphaChannel(image: CGImage?, properties: [CFString: Any]?) -> Bool {
+    nonisolated private static func hasAlphaChannel(image: CGImage?, properties: [CFString: Any]?) -> Bool {
         if let image {
             switch image.alphaInfo {
             case .alphaOnly, .first, .last, .premultipliedFirst, .premultipliedLast:
@@ -183,7 +183,7 @@ enum PictureDataUtilities {
         return properties?[kCGImagePropertyHasAlpha] as? Bool ?? false
     }
 
-    private static func pngChannelCount(for colorType: UInt8?) -> Int {
+    nonisolated private static func pngChannelCount(for colorType: UInt8?) -> Int {
         switch colorType {
         case 0:
             return 1
@@ -200,7 +200,7 @@ enum PictureDataUtilities {
         }
     }
 
-    private static func supportedImageType(mimeType: String, data: Data) -> UTType? {
+    nonisolated private static func supportedImageType(mimeType: String, data: Data) -> UTType? {
         if let type = type(forMimeType: mimeType), let normalized = normalizedSupportedType(type) {
             return normalized
         }
@@ -214,7 +214,7 @@ enum PictureDataUtilities {
         return normalizedSupportedType(type)
     }
 
-    private static func type(forMimeType mimeType: String) -> UTType? {
+    nonisolated private static func type(forMimeType mimeType: String) -> UTType? {
         let trimmedMimeType = mimeType.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedMimeType.isEmpty else {
             return nil
@@ -223,7 +223,7 @@ enum PictureDataUtilities {
         return UTType(mimeType: trimmedMimeType)
     }
 
-    private static func normalizedSupportedType(_ type: UTType) -> UTType? {
+    nonisolated private static func normalizedSupportedType(_ type: UTType) -> UTType? {
         if type.conforms(to: .jpeg) {
             return .jpeg
         }
@@ -235,7 +235,7 @@ enum PictureDataUtilities {
         return nil
     }
 
-    private static func canonicalMimeType(for type: UTType) -> String {
+    nonisolated private static func canonicalMimeType(for type: UTType) -> String {
         if type.conforms(to: .jpeg) {
             return "image/jpeg"
         }
@@ -243,7 +243,7 @@ enum PictureDataUtilities {
         return "image/png"
     }
 
-    private static func canonicalFilenameExtension(for type: UTType) -> String {
+    nonisolated private static func canonicalFilenameExtension(for type: UTType) -> String {
         if type.conforms(to: .jpeg) {
             return "jpg"
         }
