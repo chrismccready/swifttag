@@ -1109,6 +1109,51 @@ struct SwiftTagDocumentTests {
 
     @MainActor
     @Test
+    func swiftTagDocumentLoadRefreshReportsExternalPictureDifferenceForChangedPictureType() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-external-picture-type.flac")
+        let baselineViewModel = TagEditorViewModel()
+        try await baselineViewModel.importFlacFiles([fileURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-external-picture-type")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try baselineViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        let originalPictures = try #require(baselineViewModel.trackItems.first?.flacPictureRecords)
+        let firstPicture = try #require(originalPictures.first)
+        var updatedPictures = originalPictures
+        updatedPictures[0] = Self.pictureRecord(firstPicture, description: "External Type Edit")
+        try Self.writeLivePictures(updatedPictures, to: fileURL)
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let loadedTrack = try #require(viewModel.trackItems.first)
+        #expect(
+            viewModel.hasExternalPictureDifference(
+                for: firstPicture.type,
+                in: [loadedTrack.id],
+                albumArtPictures: loadedTrack.flacPictureRecords
+            )
+        )
+        #expect(
+            !viewModel.hasInternalPictureDifference(
+                for: firstPicture.type,
+                in: [loadedTrack.id],
+                albumArtPictures: loadedTrack.flacPictureRecords
+            )
+        )
+    }
+
+    @MainActor
+    @Test
     func swiftTagDocumentNavigationMetadataCountsExternalTagAndPictureDifferences() async throws {
         let fileURL = try Self.tempFixtureCopyURL(name: "document-navigation-external-diffs.flac")
         let baselineViewModel = TagEditorViewModel()

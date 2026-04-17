@@ -1486,20 +1486,9 @@ final class TagEditorViewModel {
         albumArtPictures: [FlacWritablePictureRecord]
     ) -> Bool {
         let trackIDs = selection ?? Set(trackItems.map(\.id))
-        return trackItems.indices.contains { index in
-            let track = trackItems[index]
-            guard trackIDs.contains(track.id),
-                  track.externalDifferences?.externallyModifiedPictureTypes.contains(pictureType) == true,
-                  let latestFileSnapshot = track.latestFileSnapshot else {
-                return false
-            }
-
-            let currentPictures = picturesForTrack(at: index, fallback: albumArtPictures)
-            return pictureRecordsDiffer(
-                currentPictures: currentPictures,
-                snapshot: latestFileSnapshot,
-                pictureType: pictureType
-            )
+        return trackItems.contains { track in
+            trackIDs.contains(track.id) &&
+                track.externalDifferences?.externallyModifiedPictureTypes.contains(pictureType) == true
         }
     }
 

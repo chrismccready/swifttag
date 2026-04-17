@@ -145,6 +145,23 @@ struct AlbumArtSheetView: View {
         "albumArt.sheet.slot.\(slot.accessibilityIdentifierComponent)"
     }
 
+    private func sidebarAccessibilityValue(
+        hasCrossTypeDuplicate: Bool,
+        hasInternalPictureDifference: Bool,
+        hasExternalPictureDifference: Bool
+    ) -> String {
+        if hasExternalPictureDifference {
+            return "external"
+        }
+        if hasCrossTypeDuplicate {
+            return "duplicate"
+        }
+        if hasInternalPictureDifference {
+            return "internal"
+        }
+        return "none"
+    }
+
     @ViewBuilder
     private var pictureDescriptionSheet: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -216,6 +233,11 @@ struct AlbumArtSheetView: View {
         let hasInternalPictureDifferenceColor = AppColorStorage.color(from: trackToFileDiffColorRawValue, fallback: .labelColor)
         let hasExternalPictureDifference = hasExternalPictureDifferenceForSlot(albumArtType.slot)
         let hasExternalPictureDifferenceColor = AppColorStorage.color(from: externallyModifiedDiffColorRawValue, fallback: .systemRed)
+        let sidebarState = sidebarAccessibilityValue(
+            hasCrossTypeDuplicate: hasCrossTypeDuplicate,
+            hasInternalPictureDifference: hasInternalPictureDifference,
+            hasExternalPictureDifference: hasExternalPictureDifference
+        )
         let textForegroundStyle = hasExternalPictureDifference ? AnyShapeStyle(hasExternalPictureDifferenceColor) :
             (hasCrossTypeDuplicate ? AnyShapeStyle(hasCrossTypeDuplicateColor) :
                 (hasInternalPictureDifference ? AnyShapeStyle(hasInternalPictureDifferenceColor) :
@@ -236,6 +258,7 @@ struct AlbumArtSheetView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(sidebarAccessibilityIdentifier(for: albumArtType.slot))
+        .accessibilityValue(sidebarState)
     }
 
     @ViewBuilder

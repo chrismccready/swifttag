@@ -337,7 +337,7 @@ final class SwiftTagUITests: XCTestCase {
 
         app.terminate()
 
-        let reopenedApp = try launchApp(exposeNavigationMetadata: true)
+        let reopenedApp = try launchApp(exposeNavigationMetadata: true, exposeDiffMetadata: true)
         reopenedApp.activate()
         let reopenedWindow = try openSavedSwiftTagDocumentWindow(
             in: reopenedApp,
@@ -1559,7 +1559,7 @@ final class SwiftTagUITests: XCTestCase {
             )
         )
 
-        selectAlbumArtSlot(in: app, component: "backCover")
+        selectAlbumArtSlot(in: firstWindowAlbumArtSheet, app: app, component: "backCover")
 
         XCTAssertTrue(
             waitForStaticTextValue(
@@ -1575,6 +1575,205 @@ final class SwiftTagUITests: XCTestCase {
                 identifier: UIID.albumArtSheetExternalDifferenceState,
                 expectedValue: "none",
                 timeout: 20.0
+            )
+        )
+    }
+
+    @MainActor
+    func testReopeningSavedSwiftTagDocumentShowsExternalPictureDescriptionDifferenceInPictureBrowser() throws {
+        let persistentFixtureName = "saved-document-picture-description-\(UUID().uuidString)"
+        let updatedDescription = "Saved Document External Description \(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Saved Document Picture Description \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        try? FileManager.default.removeItem(at: swiftTagDocumentURL)
+
+        let saveApp = try launchApp(
+            importFixture: true,
+            persistentFixtureName: persistentFixtureName,
+            exposeNavigationMetadata: true
+        )
+        saveApp.activate()
+        selectImportedTrackForEditing(in: saveApp, expectedTitle: "Test Title", timeout: 20.0)
+        clickMenuItem(in: saveApp, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
+        saveFileInSavePanel(in: saveApp, destinationURL: swiftTagDocumentURL)
+        XCTAssertNil(waitForSaveErrorPresentation(in: saveApp, timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
+        saveApp.terminate()
+
+        let modifierApp = try launchApp(
+            importFixture: true,
+            persistentFixtureName: persistentFixtureName,
+            reuseImportedFixture: true
+        )
+        let modifierWindow = modifierApp.windows.firstMatch
+        modifierApp.activate()
+        selectImportedTrackForEditing(in: modifierApp, expectedTitle: "Test Title", timeout: 20.0)
+        let modifierAlbumArtSheet = openAlbumArtSheet(in: modifierWindow, app: modifierApp)
+        editCurrentAlbumArtDescription(
+            in: modifierAlbumArtSheet,
+            app: modifierApp,
+            description: updatedDescription
+        )
+        performSavePictures(in: modifierApp)
+        XCTAssertNil(waitForSaveErrorPresentation(in: modifierApp, timeout: 1.0))
+        modifierApp.terminate()
+
+        let reopenedApp = try launchApp(exposeNavigationMetadata: true)
+        reopenedApp.activate()
+        let reopenedWindow = try openSavedSwiftTagDocumentWindow(
+            in: reopenedApp,
+            documentURL: swiftTagDocumentURL
+        )
+
+        selectImportedTrackForEditing(in: reopenedWindow, app: reopenedApp, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: reopenedApp,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "exclamationmark.triangle",
+                timeout: 10.0
+            )
+        )
+        let reopenedAlbumArtSheet = openAlbumArtSheet(in: reopenedWindow, app: reopenedApp)
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: reopenedAlbumArtSheet,
+                identifier: UIID.albumArtSheetCurrentSlot,
+                expectedValue: "Front Cover",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: reopenedAlbumArtSheet,
+                identifier: UIID.albumArtSheetExternalDifferenceState,
+                expectedValue: "external",
+                timeout: 10.0
+            )
+        )
+        selectAlbumArtSlot(in: reopenedAlbumArtSheet, app: reopenedApp, component: "backCover")
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: reopenedAlbumArtSheet,
+                identifier: UIID.albumArtSheetCurrentSlot,
+                expectedValue: "Back Cover",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: reopenedAlbumArtSheet,
+                identifier: UIID.albumArtSheetExternalDifferenceState,
+                expectedValue: "none",
+                timeout: 10.0
+            )
+        )
+    }
+
+    @MainActor
+    func testReopeningSavedSwiftTagDocumentShowsExternalAddedPictureSlotInPictureBrowser() throws {
+        let persistentFixtureName = "saved-document-picture-slot-\(UUID().uuidString)"
+        let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Saved Document Picture Slot \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        let importedPictureURL = try temporaryPNGFixtureURL(
+            name: "added-back-cover-\(UUID().uuidString)",
+            color: .systemBlue
+        )
+        try? FileManager.default.removeItem(at: swiftTagDocumentURL)
+
+        let saveApp = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover",
+            persistentFixtureName: persistentFixtureName,
+            exposeNavigationMetadata: true
+        )
+        saveApp.activate()
+        selectImportedTrackForEditing(in: saveApp, expectedTitle: "Test Title", timeout: 20.0)
+        clickMenuItem(in: saveApp, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
+        saveFileInSavePanel(in: saveApp, destinationURL: swiftTagDocumentURL)
+        XCTAssertNil(waitForSaveErrorPresentation(in: saveApp, timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: swiftTagDocumentURL, timeout: 10.0))
+        saveApp.terminate()
+
+        let modifierApp = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover",
+            persistentFixtureName: persistentFixtureName,
+            reuseImportedFixture: true
+        )
+        let modifierWindow = modifierApp.windows.firstMatch
+        modifierApp.activate()
+        selectImportedTrackForEditing(in: modifierApp, expectedTitle: "Test Title", timeout: 20.0)
+        let modifierAlbumArtSheet = openAlbumArtSheet(in: modifierWindow, app: modifierApp)
+        selectAlbumArtSlot(in: modifierAlbumArtSheet, app: modifierApp, component: "backCover")
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: modifierAlbumArtSheet,
+                identifier: UIID.albumArtSheetCurrentSlot,
+                expectedValue: "Back Cover",
+                timeout: 10.0
+            )
+        )
+        importPictureIntoCurrentAlbumArtSlot(
+            in: modifierAlbumArtSheet,
+            app: modifierApp,
+            menuItemTitle: "Import Back Cover...",
+            imageURL: importedPictureURL
+        )
+        performSavePictures(in: modifierApp)
+        XCTAssertNil(waitForSaveErrorPresentation(in: modifierApp, timeout: 1.0))
+        modifierApp.terminate()
+
+        let reopenedApp = try launchApp(exposeNavigationMetadata: true, exposeDiffMetadata: true)
+        reopenedApp.activate()
+        let reopenedWindow = try openSavedSwiftTagDocumentWindow(
+            in: reopenedApp,
+            documentURL: swiftTagDocumentURL
+        )
+
+        selectImportedTrackForEditing(in: reopenedWindow, app: reopenedApp, expectedTitle: "Test Title", timeout: 20.0)
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: reopenedApp,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "exclamationmark.triangle",
+                timeout: 10.0
+            )
+        )
+        let reopenedAlbumArtSheet = openAlbumArtSheet(in: reopenedWindow, app: reopenedApp)
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: reopenedAlbumArtSheet,
+                identifier: UIID.albumArtSheetCurrentSlot,
+                expectedValue: "Front Cover",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: reopenedAlbumArtSheet,
+                identifier: UIID.albumArtSheetExternalDifferenceState,
+                expectedValue: "none",
+                timeout: 10.0
+            )
+        )
+        selectAlbumArtSlot(in: reopenedAlbumArtSheet, app: reopenedApp, component: "backCover")
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: reopenedAlbumArtSheet,
+                identifier: UIID.albumArtSheetCurrentSlot,
+                expectedValue: "Back Cover",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: reopenedAlbumArtSheet,
+                identifier: UIID.albumArtSheetExternalDifferenceState,
+                expectedValue: "external",
+                timeout: 10.0
             )
         )
     }
@@ -2285,6 +2484,24 @@ final class SwiftTagUITests: XCTestCase {
         XCTAssertTrue(waitForExistence(of: descriptionSheet, expectedValue: false, timeout: 5.0))
     }
 
+    private func importPictureIntoCurrentAlbumArtSlot(
+        in albumArtSheet: XCUIElement,
+        app: XCUIApplication,
+        menuItemTitle: String,
+        imageURL: URL
+    ) {
+        let imageWell = albumArtSheet.descendants(matching: .any)
+            .matching(identifier: "albumArt.sheet.imageWell")
+            .firstMatch
+        XCTAssertTrue(imageWell.waitForExistence(timeout: 10.0))
+        imageWell.rightClick()
+
+        let importItem = app.menuItems[menuItemTitle].firstMatch
+        XCTAssertTrue(importItem.waitForExistence(timeout: 5.0))
+        importItem.click()
+        chooseFileInOpenPanel(in: app, path: imageURL.path)
+    }
+
     private func closeAlbumArtSheet(in app: XCUIApplication) {
         let imageWell = app.descendants(matching: .any)
             .matching(identifier: "albumArt.sheet.imageWell")
@@ -2345,32 +2562,70 @@ final class SwiftTagUITests: XCTestCase {
         app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
     }
 
-    private func selectAlbumArtSlot(in app: XCUIApplication, component: String) {
-        let slotRow = app.descendants(matching: .any)
+    private func selectAlbumArtSlot(
+        in albumArtSheet: XCUIElement,
+        app: XCUIApplication,
+        component: String
+    ) {
+        showAlbumArtSlotList(in: albumArtSheet, app: app)
+
+        let slotRow = albumArtSheet.descendants(matching: .any)
             .matching(identifier: UIID.albumArtSheetSlotPrefix + component)
             .firstMatch
-
-        if !slotRow.waitForExistence(timeout: 1.0) {
-            let backButtonCandidates = [
-                app.buttons["Back"].firstMatch,
-                app.descendants(matching: .button)
-                    .matching(identifier: "chevron.backward")
-                    .firstMatch
-            ]
-
-            if let backButton = backButtonCandidates.first(where: { candidate in
-                candidate.waitForExistence(timeout: 1.0)
-            }) {
-                backButton.click()
-            }
-        }
-
         if !slotRow.waitForExistence(timeout: 5.0) {
             XCTFail("Missing album art slot row \(component).")
             return
         }
 
         slotRow.click()
+    }
+
+    private func showAlbumArtSlotList(in albumArtSheet: XCUIElement, app: XCUIApplication) {
+        let frontCoverRow = albumArtSheet.descendants(matching: .any)
+            .matching(identifier: UIID.albumArtSheetSlotPrefix + "frontCover")
+            .firstMatch
+        if frontCoverRow.waitForExistence(timeout: 1.0) {
+            return
+        }
+
+        let backButtonCandidates = [
+            albumArtSheet.buttons["Back"].firstMatch,
+            albumArtSheet.descendants(matching: .button)
+                .matching(identifier: "chevron.backward")
+                .firstMatch,
+            app.buttons["Back"].firstMatch,
+            app.descendants(matching: .button)
+                .matching(identifier: "chevron.backward")
+                .firstMatch
+        ]
+
+        if let backButton = backButtonCandidates.first(where: { candidate in
+            candidate.waitForExistence(timeout: 1.0)
+        }) {
+            backButton.click()
+        }
+    }
+
+    private func temporaryPNGFixtureURL(name: String, color: NSColor) throws -> URL {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftTagUITestImages", isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+
+        let imageURL = directoryURL.appendingPathComponent(name).appendingPathExtension("png")
+        try? FileManager.default.removeItem(at: imageURL)
+
+        let imageSize = NSSize(width: 24, height: 24)
+        let image = NSImage(size: imageSize)
+        image.lockFocus()
+        color.setFill()
+        NSBezierPath(rect: NSRect(origin: .zero, size: imageSize)).fill()
+        image.unlockFocus()
+
+        let tiffData = try XCTUnwrap(image.tiffRepresentation)
+        let bitmapRepresentation = try XCTUnwrap(NSBitmapImageRep(data: tiffData))
+        let pngData = try XCTUnwrap(bitmapRepresentation.representation(using: .png, properties: [:]))
+        try pngData.write(to: imageURL)
+        return imageURL
     }
 
     private func selectImportedTrackForEditing(
@@ -2566,6 +2821,7 @@ final class SwiftTagUITests: XCTestCase {
 
         return false
     }
+
 
     private func waitForNavigationTitle(
         in window: XCUIElement,
@@ -2927,6 +3183,7 @@ final class SwiftTagUITests: XCTestCase {
                 timeout: timeout
             )
         )
+        focusWindow(openedWindow)
         return openedWindow
     }
 
