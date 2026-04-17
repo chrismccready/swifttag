@@ -103,6 +103,22 @@ struct SwiftTagDocumentTests {
         return Array(PictureRecordCanonicalizer.canonicalize([firstPicture, secondPicture]).reversed())
     }
 
+    private static func pictureRecord(
+        _ picture: FlacWritablePictureRecord,
+        description: String
+    ) -> FlacWritablePictureRecord {
+        FlacWritablePictureRecord(
+            type: picture.type,
+            mimeType: picture.mimeType,
+            description: description,
+            data: picture.data,
+            width: picture.width,
+            height: picture.height,
+            depth: picture.depth,
+            colors: picture.colors
+        )
+    }
+
     private static func pngData(color: NSColor) throws -> Data {
         let imageSize = NSSize(width: 2, height: 2)
         let image = NSImage(size: imageSize)
@@ -969,6 +985,126 @@ struct SwiftTagDocumentTests {
             albumArtPictures: []
         )
         #expect(presentation?.systemImageName == "fish.fill")
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentLoadRefreshShowsFishForInternalTagDifferences() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-internal-tag-status.flac")
+        let baselineViewModel = TagEditorViewModel()
+        try await baselineViewModel.importFlacFiles([fileURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-internal-tag-status")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try baselineViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let loadedTrackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.trackItems[0].tags[TagKey.title] = "Internal Title Edit"
+        #expect(viewModel.trackItems[0].externalDifferences == nil)
+
+        let presentation = viewModel.trackStatusPresentation(
+            for: loadedTrackID,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(presentation?.systemImageName == "fish")
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentLoadRefreshShowsFishForInternalPictureDescriptionDifferences() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-internal-picture-status.flac")
+        let baselineViewModel = TagEditorViewModel()
+        try await baselineViewModel.importFlacFiles([fileURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-internal-picture-status")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try baselineViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let loadedTrack = try #require(viewModel.trackItems.first)
+        let firstPicture = try #require(loadedTrack.flacPictureRecords.first)
+        var updatedPictures = loadedTrack.flacPictureRecords
+        updatedPictures[0] = Self.pictureRecord(firstPicture, description: "Internal Picture Edit")
+
+        viewModel.setPictureRecordsByTrackID(
+            [loadedTrack.id: updatedPictures],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let differences = try #require(viewModel.trackItems.first?.externalDifferences)
+        #expect(differences.hasPictureDifference)
+        #expect(!differences.hasExternallyModifiedPictureDifference)
+
+        let presentation = viewModel.trackStatusPresentation(
+            for: loadedTrack.id,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(presentation?.systemImageName == "fish")
+    }
+
+    @MainActor
+    @Test
+    func swiftTagDocumentLoadRefreshShowsWarningForExternalPictureDifferences() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "document-external-picture-status.flac")
+        let baselineViewModel = TagEditorViewModel()
+        try await baselineViewModel.importFlacFiles([fileURL])
+
+        let destinationURL = try Self.tempPackageURL(name: "document-external-picture-status")
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: try baselineViewModel.validatedSwiftTagDocumentExportTracks(),
+            state: .init(),
+            to: destinationURL
+        )
+
+        let originalPictures = try #require(baselineViewModel.trackItems.first?.flacPictureRecords)
+        let firstPicture = try #require(originalPictures.first)
+        var updatedPictures = originalPictures
+        updatedPictures[0] = Self.pictureRecord(firstPicture, description: "External Picture Edit")
+        try Self.writeLivePictures(updatedPictures, to: fileURL)
+
+        let document = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let viewModel = TagEditorViewModel()
+        viewModel.loadSwiftTagDocument(document, tagWriteOptions: Self.defaultTagWriteOptions)
+        viewModel.refreshLoadedTrackFileStates(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let loadedTrack = try #require(viewModel.trackItems.first)
+        let differences = try #require(loadedTrack.externalDifferences)
+        #expect(differences.hasPictureDifference)
+        #expect(differences.hasExternallyModifiedPictureDifference)
+
+        let presentation = viewModel.trackStatusPresentation(
+            for: loadedTrack.id,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+        #expect(presentation?.systemImageName == "exclamationmark.triangle")
     }
 
     @MainActor

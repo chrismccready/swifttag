@@ -193,7 +193,7 @@ struct AlbumArtSheetView: View {
                     saveDescriptionEdit()
                 }
                 .keyboardShortcut(.defaultAction)
-                .accessibilityIdentifier("albumArt.sheet.pictureDescription.saveButton")
+                .accessibilityIdentifier("albumArt.sheet.pictureDescription.doneButton")
             }
         }
         .padding(20)

@@ -473,7 +473,7 @@ struct TrackStatusViewInspectorTests {
         #expect(source.contains("Divider()"))
         #expect(source.contains("Button(\"Edit Description...\")"))
         #expect(source.contains("Text(\"Picture Description\")"))
-        #expect(source.contains("Text(\"Original Description\")"))
+        #expect(source.contains("Text(\"Current Description\")"))
         #expect(source.contains("TextEditor(text: $stagedPictureDescription)"))
         #expect(source.contains(".sheet(isPresented: $isPictureDescriptionSheetPresented"))
         #expect(source.contains(".alert(\"Description Too Large\""))
@@ -481,7 +481,7 @@ struct TrackStatusViewInspectorTests {
         #expect(source.contains("Text(pictureImportAlertMessage)"))
         #expect(source.contains("Button(\"Ok\") {}"))
         #expect(source.contains("Button(\"Cancel\", role: .cancel)"))
-        #expect(source.contains("Button(\"Save\")"))
+        #expect(source.contains("Button(\"Done\")"))
     }
 
     @Test

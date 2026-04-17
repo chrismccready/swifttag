@@ -884,6 +884,7 @@ struct SwiftTagTests {
         let expectedMaximumPictureBytes = FlacPictureDescriptionBudget.metadataPayloadMaxBytes
             - FlacPictureDescriptionBudget.fixedMetadataFieldBytes
             - FlacPictureDescriptionBudget.safetyBufferBytes
+            - FlacPictureDescriptionBudget.editDescriptionBufferBytes
             - mimeType.lengthOfBytes(using: .utf8)
             - currentDescription.lengthOfBytes(using: .utf8)
 
@@ -5541,6 +5542,24 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
         let coordinator = EditorWindowCoordinator.shared
         coordinator.resetForTesting()
 
+        let existingSession = EditorSessionValue(sessionID: UUID())
+        coordinator.register(sessionValue: existingSession, trackReferences: [])
+
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try? FileManager.default.createDirectory(
+            at: temporaryDirectory,
+            withIntermediateDirectories: true
+        )
+        defer {
+            try? FileManager.default.removeItem(at: temporaryDirectory)
+        }
+
+        let bURL = temporaryDirectory.appendingPathComponent("b.flac")
+        let aURL = temporaryDirectory.appendingPathComponent("a.flac")
+        FileManager.default.createFile(atPath: bURL.path, contents: Data())
+        FileManager.default.createFile(atPath: aURL.path, contents: Data())
+
         var openedSession: EditorSessionValue?
         coordinator.setOpenEditorWindowAction { sessionValue in
             openedSession = sessionValue
@@ -5548,9 +5567,9 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
 
         let didRouteFiles = coordinator.routeFinderOpenedFiles(
             [
-                URL(fileURLWithPath: "/tmp/b.flac"),
-                URL(fileURLWithPath: "/tmp/a.flac"),
-                URL(fileURLWithPath: "/tmp/a.flac")
+                bURL,
+                aURL,
+                aURL
             ],
             appIsActive: false
         )
@@ -5568,7 +5587,8 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
             deliveredURLs = urls
         }
 
-        XCTAssertEqual(deliveredURLs.map(\.path), ["/tmp/a.flac", "/tmp/b.flac"])
+        XCTAssertNotEqual(openedSession.sessionID, existingSession.sessionID)
+        XCTAssertEqual(deliveredURLs, [aURL.standardizedFileURL, bURL.standardizedFileURL])
     }
 
     @MainActor

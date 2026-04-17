@@ -43,7 +43,7 @@ final class SwiftTagUITests: XCTestCase {
         static let albumArtSheet = "albumArt.sheet"
         static let albumArtSheetPictureDescription = "albumArt.sheet.pictureDescription"
         static let albumArtSheetPictureDescriptionEditor = "albumArt.sheet.pictureDescription.editor"
-        static let albumArtSheetPictureDescriptionSaveButton = "albumArt.sheet.pictureDescription.saveButton"
+        static let albumArtSheetPictureDescriptionDoneButton = "albumArt.sheet.pictureDescription.doneButton"
         static let albumArtSheetCurrentSlot = "albumArt.sheet.currentSlot"
         static let albumArtSheetExternalDifferenceState = "albumArt.sheet.externalDifferenceState"
         static let albumArtSheetSlotPrefix = "albumArt.sheet.slot."
@@ -105,7 +105,7 @@ final class SwiftTagUITests: XCTestCase {
 
         let swiftTagMenuItem = app.menuItems["Save SwiftTag Document..."].firstMatch
         XCTAssertTrue(swiftTagMenuItem.waitForExistence(timeout: 2.0))
-        XCTAssertFalse(swiftTagMenuItem.isEnabled)
+        XCTAssertTrue(swiftTagMenuItem.isEnabled)
     }
 
     @MainActor
@@ -387,14 +387,6 @@ final class SwiftTagUITests: XCTestCase {
                 timeout: 10.0
             )
         )
-        XCTAssertTrue(
-            waitForLabeledElement(
-                in: saveContext.app,
-                identifier: UIID.trackStatusIcon,
-                expectedLabel: "fish.fill",
-                timeout: 10.0
-            )
-        )
     }
 
     @MainActor
@@ -434,14 +426,6 @@ final class SwiftTagUITests: XCTestCase {
                 in: window,
                 identifier: UIID.trackFilenameText,
                 expectedValue: "available",
-                timeout: 10.0
-            )
-        )
-        XCTAssertTrue(
-            waitForLabeledElement(
-                in: app,
-                identifier: UIID.trackStatusIcon,
-                expectedLabel: "fish.fill",
                 timeout: 10.0
             )
         )
@@ -1880,6 +1864,9 @@ final class SwiftTagUITests: XCTestCase {
             "Id": UUID().uuidString,
             "Version": "1.0.0",
             "Fingerprint": trackFingerprint,
+            "SwiftTags": [
+                "Author": "SwiftTag"
+            ],
             "Tracks": [
                 [
                     "Fingerprint": trackFingerprint,
@@ -2335,10 +2322,10 @@ final class SwiftTagUITests: XCTestCase {
     private func clickPictureDescriptionSave(in app: XCUIApplication, descriptionSheet: XCUIElement) {
         let saveButtonCandidates = [
             app.descendants(matching: .button)
-                .matching(identifier: UIID.albumArtSheetPictureDescriptionSaveButton)
+                .matching(identifier: UIID.albumArtSheetPictureDescriptionDoneButton)
                 .firstMatch,
             app.descendants(matching: .any)
-                .matching(identifier: UIID.albumArtSheetPictureDescriptionSaveButton)
+                .matching(identifier: UIID.albumArtSheetPictureDescriptionDoneButton)
                 .firstMatch,
             app.sheets.buttons["Save"].firstMatch,
             app.dialogs.buttons["Save"].firstMatch

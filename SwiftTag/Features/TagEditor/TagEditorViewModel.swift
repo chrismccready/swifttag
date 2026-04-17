@@ -1819,13 +1819,25 @@ final class TagEditorViewModel {
                     pictureRecords: pictureRecords,
                     fingerprint: metadata.fingerprint
                 )
+                let preservesEditorStateDuringFileRefresh = self.trackItems[index].preservesEditorStateDuringFileRefresh
+                let shouldAdoptLivePictureState = !preservesEditorStateDuringFileRefresh &&
+                    self.pictureRecordsSemanticallyMatch(
+                        currentPictures: self.picturesForTrack(at: index, fallback: albumArtPictures),
+                        snapshot: fileSnapshot
+                    )
                 let previousFileSnapshot = self.trackItems[index].latestFileSnapshot
 
                 self.applyResolvedTrackFileReference(resolvedReference, at: index)
+                if shouldAdoptLivePictureState {
+                    self.trackItems[index].flacPictureRecords = pictureRecords
+                    self.trackItems[index].flacPicturesByType = livePicturesByType
+                }
                 self.cancelPendingMissingRefresh(for: self.trackItems[index].id)
                 self.trackItems[index].fingerprint = metadata.fingerprint
                 self.trackItems[index].duration = metadata.duration
-                self.trackItems[index].latestFileSnapshot = fileSnapshot
+                if !preservesEditorStateDuringFileRefresh {
+                    self.trackItems[index].latestFileSnapshot = fileSnapshot
+                }
                 self.trackItems[index].externalDifferences = self.externalDifferences(
                     for: index,
                     fileSnapshot: fileSnapshot,
@@ -2119,6 +2131,17 @@ final class TagEditorViewModel {
             snapshot: snapshot,
             pictureType: nil
         )
+    }
+
+    private func pictureRecordsSemanticallyMatch(
+        currentPictures: [FlacWritablePictureRecord],
+        snapshot: TrackFileSnapshot
+    ) -> Bool {
+        if !snapshot.pictureRecords.isEmpty || !currentPictures.isEmpty {
+            return canonicalPictureRecords(currentPictures) == canonicalPictureRecords(snapshot.pictureRecords)
+        }
+
+        return writablePicturesByType(from: currentPictures) == snapshot.picturesByType
     }
 
     private func pictureRecordsDiffer(

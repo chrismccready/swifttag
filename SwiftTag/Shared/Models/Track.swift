@@ -52,14 +52,7 @@ struct Track: Identifiable {
             if flacPictureRecords.isEmpty {
                 flacPictureRecords = newValue
                     .sorted { $0.key < $1.key }
-                    .map { type, data in
-                        FlacWritablePictureRecord(
-                            type: type,
-                            mimeType: "image/png",
-                            description: "",
-                            data: data
-                        )
-                    }
+                    .map(Self.pictureRecord(type:data:))
             }
         }
     }
@@ -102,14 +95,7 @@ struct Track: Identifiable {
         self.flacPictureRecords = flacPictureRecords.isEmpty
             ? flacPicturesByType
                 .sorted { $0.key < $1.key }
-                .map { type, data in
-                    FlacWritablePictureRecord(
-                        type: type,
-                        mimeType: "image/png",
-                        description: "",
-                        data: data
-                    )
-                }
+                .map(Self.pictureRecord(type:data:))
             : flacPictureRecords
         self.sourceFileURL = sourceFileURL
         self.securityScopedBookmarkData = securityScopedBookmarkData
@@ -147,5 +133,21 @@ struct Track: Identifiable {
         }
 
         return value
+    }
+
+    private static func pictureRecord(type: Int, data: Data) -> FlacWritablePictureRecord {
+        let assetDetails = PictureDataUtilities.supportedAssetDetails(mimeType: "", data: data)
+        let specifications = assetDetails?.specifications ?? .zero
+
+        return FlacWritablePictureRecord(
+            type: type,
+            mimeType: assetDetails?.mimeType ?? "application/octet-stream",
+            description: "",
+            data: data,
+            width: specifications.width,
+            height: specifications.height,
+            depth: specifications.depth,
+            colors: specifications.colors
+        )
     }
 }
