@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+
+<dictionary title="SwiftTag Terminology">
+
+    <suite name="Standard Suite" code="core" description="Common classes and commands for all applications.">
+
+        <command name="count" code="corecnte" description="Return number of elements of specific class within object.">
+            <cocoa class="NSCountCommand"/>
+            <access-group identifier="*"/>
+            <direct-parameter type="specifier" requires-access="r" description="Objects to be counted."/>
+            <parameter name="each" code="kocl" type="type" optional="yes" description="Class of objects to be counted." hidden="yes">
+                <cocoa key="ObjectClass"/>
+            </parameter>
+            <result type="integer" description="Count."/>
+        </command>
+
+        <command name="exists" code="coredoex" description="Verify object exists.">
+            <cocoa class="NSExistsCommand"/>
+            <access-group identifier="*"/>
+            <direct-parameter type="any" requires-access="r" description="Object to check."/>
+            <result type="boolean" description="Whether object exists."/>
+        </command>
+
+        <command name="make" code="corecrel" description="Create new object.">
+            <cocoa class="NSCreateCommand"/>
+            <access-group identifier="*"/>
+            <parameter name="new" code="kocl" type="type" description="Class of new object.">
+                <cocoa key="ObjectClass"/>
+            </parameter>
+            <parameter name="at" code="insh" type="location specifier" optional="yes" description="Location at which to insert object.">
+                <cocoa key="Location"/>
+            </parameter>
+            <parameter name="with data" code="data" type="any" optional="yes" description="Initial contents of object.">
+                <cocoa key="ObjectData"/>
+            </parameter>
+            <parameter name="with properties" code="prdt" type="record" optional="yes" description="Initial property values.">
+                <cocoa key="KeyDictionary"/>
+            </parameter>
+            <result type="specifier" description="New object."/>
+        </command>
+
+        <command name="quit" code="aevtquit" description="Quit application.">
+            <cocoa class="NSQuitCommand"/>
+        </command>
+
+    </suite>
+
+    <suite name="SwiftTag Suite" code="SwTG" description="SwiftTag-specific classes and commands.">
+
+        <class name="application" plural="applications" code="capp" description="Application program.">
+            <cocoa class="NSApplication"/>
+            <element type="editor window">
+                <cocoa key="scriptEditorWindows"/>
+            </element>
+            <responds-to command="quit">
+                <cocoa method="handleQuitScriptCommand:"/>
+            </responds-to>
+        </class>
+
+        <class name="editor window" plural="editor windows" code="edtw" description="A SwiftTag editor window.">
+            <cocoa class="SwiftTagScriptEditorWindow"/>
+            <property name="name" code="pnam" type="text" access="r" description="Window title.">
+                <cocoa key="name"/>
+            </property>
+            <property name="window id" code="ewid" type="text" access="r" description="Window UUID.">
+                <cocoa key="windowID"/>
+            </property>
+        </class>
+
+    </suite>
+
+</dictionary>
