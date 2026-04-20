@@ -192,24 +192,31 @@ final class EditorWindowCoordinator {
         openEditorWindowAction(sessionValue)
     }
 
-    func routeOpenedSwiftTagDocuments(_ urls: [URL]) -> Bool {
+    func openSessionsForSwiftTagDocuments(_ urls: [URL]) -> [EditorSessionValue] {
         let documentURLs = normalizedSwiftTagDocuments(from: urls)
         guard !documentURLs.isEmpty else {
-            return false
+            return []
         }
 
+        var openedSessions: [EditorSessionValue] = []
         for documentURL in documentURLs {
             if let existingSession = existingSession(forSwiftTagDocumentURL: documentURL) {
                 openEditorWindow(for: existingSession)
+                openedSessions.append(existingSession)
                 continue
             }
 
             let newSessionValue = EditorSessionValue()
             enqueuePendingSwiftTagDocument(documentURL, for: newSessionValue.sessionID)
             openEditorWindow(for: newSessionValue)
+            openedSessions.append(newSessionValue)
         }
 
-        return true
+        return openedSessions
+    }
+
+    func routeOpenedSwiftTagDocuments(_ urls: [URL]) -> Bool {
+        !openSessionsForSwiftTagDocuments(urls).isEmpty
     }
 
     func routeFinderOpenedFiles(_ urls: [URL], appIsActive: Bool) -> Bool {

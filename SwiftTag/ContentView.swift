@@ -21,6 +21,7 @@ struct ContentView: View {
         case rememberedOrPrompt
         case rememberedOnly
         case promptForNewDocument
+        case explicit(URL)
     }
 
     private enum DeletedSwiftTagDocumentRecoveryChoice {
@@ -1412,13 +1413,26 @@ struct ContentView: View {
     private func performSwiftTagDocumentSave(using destinationMode: SwiftTagDocumentSaveDestinationMode) throws -> Bool {
         let currentState = viewModel.swiftTagDocumentSaveState()
         let destinationURL: URL?
-        if currentState.isDeleted, destinationMode != .promptForNewDocument {
-            destinationURL = resolveDeletedSwiftTagDocumentRecoveryDestination(currentState: currentState)
-        } else {
+        switch destinationMode {
+        case .explicit:
             destinationURL = resolveSwiftTagDocumentDestination(
                 using: destinationMode,
                 currentState: currentState
             )
+        case .promptForNewDocument:
+            destinationURL = resolveSwiftTagDocumentDestination(
+                using: destinationMode,
+                currentState: currentState
+            )
+        case .rememberedOrPrompt, .rememberedOnly:
+            if currentState.isDeleted {
+                destinationURL = resolveDeletedSwiftTagDocumentRecoveryDestination(currentState: currentState)
+            } else {
+                destinationURL = resolveSwiftTagDocumentDestination(
+                    using: destinationMode,
+                    currentState: currentState
+                )
+            }
         }
         guard let destinationURL else {
             return false
@@ -1482,7 +1496,12 @@ struct ContentView: View {
         destinationURL: URL
     ) throws -> URL? {
         guard !currentState.isDeleted,
-              destinationMode != .promptForNewDocument,
+              {
+                  if case .promptForNewDocument = destinationMode {
+                      return false
+                  }
+                  return true
+              }(),
               let bookmarkData = currentState.securityScopedBookmarkData,
               currentState.liveDestinationURL?.standardizedFileURL == destinationURL else {
             return nil
@@ -1517,7 +1536,37 @@ struct ContentView: View {
             return currentState.liveDestinationURL
         case .promptForNewDocument:
             return promptForSwiftTagDocumentDestination()
+        case .explicit(let destinationURL):
+            return destinationURL.standardizedFileURL
         }
+    }
+
+    private func performAppleScriptSwiftTagDocumentSave(
+        to explicitDestinationURL: URL?
+    ) throws -> SwiftTagDocumentSaveState {
+        guard !isSaveOperationRunning else {
+            throw SwiftTagAppleScriptCommandError.saveAlreadyInProgress
+        }
+
+        syncTrackPictureRecordsFromAlbumArt()
+        isSaveOperationRunning = true
+        defer {
+            isSaveOperationRunning = false
+        }
+
+        let destinationMode: SwiftTagDocumentSaveDestinationMode
+        if let explicitDestinationURL {
+            destinationMode = .explicit(explicitDestinationURL)
+        } else {
+            destinationMode = .rememberedOnly
+        }
+
+        let didSave = try performSwiftTagDocumentSave(using: destinationMode)
+        guard didSave else {
+            throw SwiftTagAppleScriptCommandError.saveLocationRequired
+        }
+
+        return viewModel.swiftTagDocumentSaveState()
     }
 
     private func resolveDeletedSwiftTagDocumentRecoveryDestination(
@@ -1829,6 +1878,21 @@ struct ContentView: View {
         EditorWindowCoordinator.shared.registerSwiftTagDocumentOpenHandler(sessionID: sessionValue.sessionID) { url in
             handleOpenedSwiftTagDocument(url)
         }
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionValue.sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: appleScriptDocumentName(),
+                        modified: appleScriptDocumentIsModified(),
+                        saveState: viewModel.swiftTagDocumentSaveState()
+                    )
+                },
+                saveDocument: { destinationURL in
+                    try performAppleScriptSwiftTagDocumentSave(to: destinationURL)
+                }
+            )
+        )
         registerEditorSession()
         EditorWindowCoordinator.shared.markSessionFocused(sessionValue.sessionID)
     }
@@ -1892,6 +1956,7 @@ struct ContentView: View {
     }
 
     private func teardownEditorSession() {
+        SwiftTagAppleScriptController.shared.unregister(sessionID: sessionValue.sessionID)
         EditorWindowCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
         UnsavedChangesCoordinator.shared.unregister(sessionID: sessionValue.sessionID)
         trackFileMonitor.stopAll()
@@ -1920,6 +1985,23 @@ struct ContentView: View {
         uiTestFileActionTask?.cancel()
         uiTestFileActionTask = nil
         focusedMiscTagKeyRowID = nil
+    }
+
+    private func appleScriptDocumentName() -> String {
+        let saveState = viewModel.swiftTagDocumentSaveState()
+        if let documentDisplayName = saveState.documentDisplayName,
+           !documentDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return documentDisplayName
+        }
+
+        return "Untitled"
+    }
+
+    private func appleScriptDocumentIsModified() -> Bool {
+        let editCounts = currentUnsavedEditCountsForLoadedTracks()
+        return editCounts.tagEdits > 0
+            || editCounts.pictureEdits > 0
+            || viewModel.hasReferencedSwiftTagDocumentTrackListDifference()
     }
 
     private func registerEditorSession() {

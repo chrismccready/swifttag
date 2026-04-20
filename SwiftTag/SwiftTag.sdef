@@ -5,6 +5,25 @@
 
     <suite name="Standard Suite" code="core" description="Common classes and commands for all applications.">
 
+        <command name="open" code="aevtodoc" description="Open a document.">
+            <direct-parameter description="The file(s) to open.">
+                <type type="file"/>
+                <type type="file" list="yes"/>
+            </direct-parameter>
+            <result description="The opened document(s).">
+                <type type="document"/>
+                <type type="document" list="yes"/>
+            </result>
+        </command>
+
+        <command name="save" code="coresave" description="Save a document or editor window.">
+            <access-group identifier="*"/>
+            <direct-parameter type="specifier" requires-access="r" description="The document(s) or window(s) to save."/>
+            <parameter name="in" code="kfil" type="file" optional="yes" description="The file in which to save the document.">
+                <cocoa key="File"/>
+            </parameter>
+        </command>
+
         <command name="count" code="corecnte" description="Return number of elements of specific class within object.">
             <cocoa class="NSCountCommand"/>
             <access-group identifier="*"/>
@@ -44,6 +63,22 @@
             <cocoa class="NSQuitCommand"/>
         </command>
 
+        <class name="document" plural="documents" code="docu" description="A SwiftTag document.">
+            <cocoa class="SwiftTagScriptDocument"/>
+            <property name="name" code="pnam" type="text" access="r" description="Its name.">
+                <cocoa key="name"/>
+            </property>
+            <property name="modified" code="imod" type="boolean" access="r" description="Has it been modified since the last save?">
+                <cocoa key="modified"/>
+            </property>
+            <property name="file" code="file" type="file" access="r" description="Its location on disk, if it has one.">
+                <cocoa key="fileURL"/>
+            </property>
+            <responds-to command="save">
+                <cocoa method="handleSaveScriptCommand:"/>
+            </responds-to>
+        </class>
+
     </suite>
 
     <suite name="SwiftTag Suite" code="SwTG" description="SwiftTag-specific classes and commands.">
@@ -53,6 +88,12 @@
             <element type="editor window">
                 <cocoa key="scriptEditorWindows"/>
             </element>
+            <element type="document">
+                <cocoa key="scriptDocuments"/>
+            </element>
+            <responds-to command="open">
+                <cocoa method="handleOpenScriptCommand:"/>
+            </responds-to>
             <responds-to command="quit">
                 <cocoa method="handleQuitScriptCommand:"/>
             </responds-to>
@@ -66,6 +107,12 @@
             <property name="window id" code="ewid" type="text" access="r" description="Window UUID.">
                 <cocoa key="windowID"/>
             </property>
+            <property name="document" code="docu" type="document" access="r" description="Editor window document.">
+                <cocoa key="document"/>
+            </property>
+            <responds-to command="save">
+                <cocoa method="handleSaveScriptCommand:"/>
+            </responds-to>
         </class>
 
     </suite>
