@@ -1181,11 +1181,38 @@ struct ContentView: View {
     }
 
     private func importFlacFiles(_ flacFiles: [URL], locked: Bool = false, append: Bool = false) async throws {
+        _ = try await MainActor.run {
+            try importFlacFilesSynchronously(flacFiles, locked: locked, append: append)
+        }
+    }
+
+    @discardableResult
+    private func importFlacFilesSynchronously(
+        _ flacFiles: [URL],
+        locked: Bool = false,
+        append: Bool = false
+    ) throws -> [UUID] {
+        guard !flacFiles.isEmpty else {
+            return []
+        }
+
         let existingTrackIDs = Set(viewModel.trackItems.map(\.id))
-        try await viewModel.importFlacFiles(flacFiles, locked: locked, append: append)
+        try viewModel.importFlacFilesSynchronously(flacFiles, locked: locked, append: append)
+        let importedTrackIDs = finalizeImportedFlacFiles(
+            existingTrackIDs: existingTrackIDs,
+            append: append
+        )
+        return viewModel.trackItems
+            .filter { importedTrackIDs.contains($0.id) }
+            .map(\.id)
+    }
+
+    private func finalizeImportedFlacFiles(
+        existingTrackIDs: Set<UUID>,
+        append: Bool
+    ) -> Set<UUID> {
         let importedTrackIDs = Set(viewModel.trackItems.map(\.id)).subtracting(existingTrackIDs)
         syncAlbumArtContext()
-        syncTrackPictureRecordsFromAlbumArt()
         viewModel.syncCurrentStateAsSaved(
             for: append ? importedTrackIDs : nil,
             tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
@@ -1193,6 +1220,7 @@ struct ContentView: View {
         )
         applyAutoTrackTotalIfNeeded()
         refreshTrackMonitoring()
+        return importedTrackIDs
     }
 
     private func importSelectedURLs(
@@ -1569,6 +1597,38 @@ struct ContentView: View {
         return viewModel.swiftTagDocumentSaveState()
     }
 
+    private func performAppleScriptAddTracks(_ urls: [URL]) throws -> [UUID] {
+        let startedScopedURLs = urls.filter { $0.startAccessingSecurityScopedResource() }
+        defer {
+            for scopedURL in startedScopedURLs {
+                scopedURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let flacFiles = collectDirectFlacFiles(from: urls)
+        guard !flacFiles.isEmpty else {
+            throw SwiftTagAppleScriptCommandError.noFlacFilesProvided
+        }
+
+        let filteredFiles = viewModel.removeDuplicateImportURLsByBookmarkIdentity(flacFiles)
+        guard !filteredFiles.isEmpty else {
+            return []
+        }
+
+        return try importFlacFilesSynchronously(filteredFiles, locked: false, append: true)
+    }
+
+    private func performAppleScriptSelectTrack(_ trackID: UUID?) throws {
+        if let trackID,
+           !viewModel.trackItems.contains(where: { $0.id == trackID }) {
+            throw SwiftTagAppleScriptCommandError.invalidSelectedTrack
+        }
+
+        viewModel.selectedTrackIDs = trackID.map { [$0] } ?? []
+        viewModel.reloadMiscTagRowsFromSelection()
+        syncAlbumArtContext()
+    }
+
     private func resolveDeletedSwiftTagDocumentRecoveryDestination(
         currentState: SwiftTagDocumentSaveState
     ) -> URL? {
@@ -1887,6 +1947,20 @@ struct ContentView: View {
                         modified: appleScriptDocumentIsModified(),
                         saveState: viewModel.swiftTagDocumentSaveState()
                     )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: viewModel.trackItems,
+                        selectedTrackID: viewModel.trackItems
+                            .first(where: { viewModel.selectedTrackIDs.contains($0.id) })?
+                            .id
+                    )
+                },
+                addTracks: { urls in
+                    try performAppleScriptAddTracks(urls)
+                },
+                selectTrack: { trackID in
+                    try performAppleScriptSelectTrack(trackID)
                 },
                 saveDocument: { destinationURL in
                     try performAppleScriptSwiftTagDocumentSave(to: destinationURL)

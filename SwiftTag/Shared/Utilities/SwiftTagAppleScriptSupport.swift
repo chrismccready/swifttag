@@ -2,9 +2,14 @@ import AppKit
 import Foundation
 
 enum SwiftTagAppleScriptCommandError: LocalizedError {
+    case invalidEditorWindowTarget
     case missingOpenTarget
+    case missingAddTracksInput
+    case noEditorWindowAvailable
+    case noFlacFilesProvided
     case noSwiftTagDocumentsProvided
     case invalidFileValue
+    case invalidSelectedTrack
     case invalidSaveDestination
     case saveLocationRequired
     case sessionUnavailable
@@ -12,12 +17,22 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
+        case .invalidEditorWindowTarget:
+            return "Add command target must resolve to a single editor window."
         case .missingOpenTarget:
             return "Open command requires one or more SwiftTag document files."
+        case .missingAddTracksInput:
+            return "Add command requires one or more FLAC files."
+        case .noEditorWindowAvailable:
+            return "Add command needs an available editor window target."
+        case .noFlacFilesProvided:
+            return "Add command only accepts local FLAC files."
         case .noSwiftTagDocumentsProvided:
             return "No .swifttag documents were provided."
         case .invalidFileValue:
             return "AppleScript file argument must resolve to a local file URL."
+        case .invalidSelectedTrack:
+            return "Selected track must belong to target editor window."
         case .invalidSaveDestination:
             return "Save destination must be a single local file URL."
         case .saveLocationRequired:
@@ -31,11 +46,17 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
 
     var scriptErrorNumber: Int {
         switch self {
-        case .missingOpenTarget:
+        case .missingOpenTarget, .missingAddTracksInput:
             Int(NSRequiredArgumentsMissingScriptError)
-        case .noSwiftTagDocumentsProvided, .invalidFileValue, .invalidSaveDestination, .saveLocationRequired:
+        case .invalidEditorWindowTarget,
+             .noFlacFilesProvided,
+             .noSwiftTagDocumentsProvided,
+             .invalidFileValue,
+             .invalidSelectedTrack,
+             .invalidSaveDestination,
+             .saveLocationRequired:
             Int(NSArgumentsWrongScriptError)
-        case .sessionUnavailable:
+        case .noEditorWindowAvailable, .sessionUnavailable:
             Int(NSReceiversCantHandleCommandScriptError)
         case .saveAlreadyInProgress:
             Int(NSInternalScriptError)
@@ -44,9 +65,12 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
 }
 
 private enum SwiftTagAppleScriptFileURLResolver {
-    nonisolated static func fileURLs(from value: Any?) throws -> [URL] {
+    nonisolated static func fileURLs(
+        from value: Any?,
+        missingValueError: SwiftTagAppleScriptCommandError = .missingOpenTarget
+    ) throws -> [URL] {
         guard let value else {
-            throw SwiftTagAppleScriptCommandError.missingOpenTarget
+            throw missingValueError
         }
 
         if let values = value as? [Any] {
@@ -140,9 +164,384 @@ struct SwiftTagAppleScriptDocumentSnapshot {
     let saveState: SwiftTagDocumentSaveState
 }
 
+struct SwiftTagAppleScriptSessionSnapshot {
+    let tracks: [Track]
+    let selectedTrackID: UUID?
+}
+
 struct SwiftTagAppleScriptSessionBridge {
     let documentSnapshot: () -> SwiftTagAppleScriptDocumentSnapshot
+    let sessionSnapshot: () -> SwiftTagAppleScriptSessionSnapshot
+    let addTracks: ([URL]) throws -> [UUID]
+    let selectTrack: (UUID?) throws -> Void
     let saveDocument: (URL?) throws -> SwiftTagDocumentSaveState
+}
+
+private extension String {
+    var appleScriptNonEmptyValue: String? {
+        let trimmedValue = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedValue.isEmpty ? nil : trimmedValue
+    }
+}
+
+private extension Track {
+    func appleScriptText(for keys: [String]) -> String? {
+        firstTagValue(for: keys)
+    }
+
+    func appleScriptInteger(for keys: [String], fallback: String? = nil) -> NSNumber? {
+        let rawValue = fallback?.appleScriptNonEmptyValue ?? firstTagValue(for: keys)
+        guard let rawValue, let integerValue = Int(rawValue) else {
+            return nil
+        }
+
+        return NSNumber(value: integerValue)
+    }
+
+    func appleScriptBoolean(for keys: [String]) -> NSNumber? {
+        guard let rawValue = firstTagValue(for: keys)?.lowercased() else {
+            return nil
+        }
+
+        switch rawValue {
+        case "1", "t", "true", "on", "y", "yes":
+            return NSNumber(value: true)
+        case "0", "f", "false", "off", "n", "no":
+            return NSNumber(value: false)
+        default:
+            return nil
+        }
+    }
+
+    func appleScriptDate(for keys: [String]) -> Date? {
+        DateTagFormatter.parse(firstTagValue(for: keys))
+    }
+
+    func appleScriptReal(for keys: [String], fallback: TimeInterval? = nil) -> NSNumber? {
+        if let fallback, fallback.isFinite, fallback >= 0 {
+            return NSNumber(value: fallback)
+        }
+
+        guard let rawValue = firstTagValue(for: keys), let realValue = Double(rawValue) else {
+            return nil
+        }
+
+        return NSNumber(value: realValue)
+    }
+
+    private func firstTagValue(for keys: [String]) -> String? {
+        for key in keys {
+            if let value = tags[key]?.appleScriptNonEmptyValue {
+                return value
+            }
+        }
+
+        return nil
+    }
+}
+
+@MainActor
+@objc(SwiftTagScriptTrack)
+final class SwiftTagScriptTrack: NSObject {
+    private let sessionIDValue: UUID
+    private let trackIDValue: UUID
+
+    init(sessionID: UUID, trackID: UUID) {
+        sessionIDValue = sessionID
+        trackIDValue = trackID
+        super.init()
+    }
+
+    @objc(album)
+    var album: String? {
+        currentTextValue(for: [TagKey.album], fallback: \.album)
+    }
+
+    @objc(albumArtist)
+    var albumArtist: String? {
+        currentTextValue(for: [TagKey.albumArtist, "ALBUM ARTIST"], fallback: \.albumArtist)
+    }
+
+    @objc(artist)
+    var artist: String? {
+        currentTextValue(for: [TagKey.artist])
+    }
+
+    @objc(comment)
+    var comment: String? {
+        currentTextValue(for: ["COMMENT"])
+    }
+
+    @objc(compilation)
+    var compilation: NSNumber? {
+        currentBooleanValue(for: [TagKey.compilation])
+    }
+
+    @objc(composer)
+    var composer: String? {
+        currentTextValue(for: [TagKey.composer])
+    }
+
+    @objc(copyright)
+    var copyright: String? {
+        currentTextValue(for: ["COPYRIGHT"])
+    }
+
+    @objc(releaseDate)
+    var releaseDate: Date? {
+        currentDateValue(for: [TagKey.date])
+    }
+
+    @objc(trackDescription)
+    var trackDescription: String? {
+        currentTextValue(for: [TagKey.description])
+    }
+
+    @objc(director)
+    var director: String? {
+        currentTextValue(for: ["DIRECTOR"])
+    }
+
+    @objc(discCount)
+    var discCount: NSNumber? {
+        currentIntegerValue(for: ["DISCTOTAL", "TOTALDISCS"])
+    }
+
+    @objc(discNumber)
+    var discNumber: NSNumber? {
+        currentIntegerValue(for: [TagKey.discNumber, "DISC"])
+    }
+
+    @objc(duration)
+    var duration: NSNumber? {
+        currentRealValue(for: ["DURATION", "LENGTH"], fallback: \.duration)
+    }
+
+    @objc(encodedBy)
+    var encodedBy: String? {
+        currentTextValue(for: ["ENCODED_BY"])
+    }
+
+    @objc(encodedUsing)
+    var encodedUsing: String? {
+        currentTextValue(for: ["ENCODED_USING"])
+    }
+
+    @objc(encoder)
+    var encoder: String? {
+        currentTextValue(for: ["ENCODER"])
+    }
+
+    @objc(encoderOptions)
+    var encoderOptions: String? {
+        currentTextValue(for: ["ENCODER_OPTIONS"])
+    }
+
+    @objc(fileURL)
+    var fileURL: URL? {
+        trackSnapshot?.sourceFileURL?.standardizedFileURL
+    }
+
+    @objc(genre)
+    var genre: String? {
+        currentTextValue(for: [TagKey.genre])
+    }
+
+    @objc(isrc)
+    var isrc: String? {
+        currentTextValue(for: ["ISRC"])
+    }
+
+    @objc(license)
+    var license: String? {
+        currentTextValue(for: ["LICENSE"])
+    }
+
+    @objc(lineage)
+    var lineage: String? {
+        currentTextValue(for: ["LINEAGE"])
+    }
+
+    @objc(location)
+    var location: String? {
+        currentTextValue(for: [TagKey.location])
+    }
+
+    @objc(narrator)
+    var narrator: String? {
+        currentTextValue(for: ["NARRATOR"])
+    }
+
+    @objc(performer)
+    var performer: String? {
+        currentTextValue(for: ["PERFORMER"])
+    }
+
+    @objc(producer)
+    var producer: String? {
+        currentTextValue(for: ["PRODUCER"])
+    }
+
+    @objc(rating)
+    var rating: NSNumber? {
+        currentIntegerValue(for: ["RATING", "RATE"])
+    }
+
+    @objc(replayAlbumGain)
+    var replayAlbumGain: String? {
+        currentTextValue(for: ["REPLAYGAIN_ALBUM_GAIN"])
+    }
+
+    @objc(replayAlbumPeak)
+    var replayAlbumPeak: String? {
+        currentTextValue(for: ["REPLAYGAIN_ALBUM_PEAK"])
+    }
+
+    @objc(replayTrackGain)
+    var replayTrackGain: String? {
+        currentTextValue(for: ["REPLAYGAIN_TRACK_GAIN"])
+    }
+
+    @objc(replayTrackPeak)
+    var replayTrackPeak: String? {
+        currentTextValue(for: ["REPLAYGAIN_TRACK_PEAK"])
+    }
+
+    @objc(sortAlbum)
+    var sortAlbum: String? {
+        currentTextValue(for: ["ALBUMSORT"])
+    }
+
+    @objc(sortAlbumArtist)
+    var sortAlbumArtist: String? {
+        currentTextValue(for: ["ALBUMARTISTSORT"])
+    }
+
+    @objc(sortArtist)
+    var sortArtist: String? {
+        currentTextValue(for: ["ARTISTSORT"])
+    }
+
+    @objc(sortComposer)
+    var sortComposer: String? {
+        currentTextValue(for: ["COMPOSERSORT"])
+    }
+
+    @objc(sortTitle)
+    var sortTitle: String? {
+        currentTextValue(for: ["TITLESORT"])
+    }
+
+    @objc(source)
+    var source: String? {
+        currentTextValue(for: ["SOURCE"])
+    }
+
+    @objc(title)
+    var title: String? {
+        currentTextValue(for: [TagKey.title])
+    }
+
+    @objc(trackCount)
+    var trackCount: NSNumber? {
+        currentIntegerValue(for: ["TOTALTRACKS", "TRACKTOTAL"], fallback: \.totalTracks)
+    }
+
+    @objc(trackNumber)
+    var trackNumber: NSNumber? {
+        currentIntegerValue(for: [TagKey.trackNumber, "TRACK"])
+    }
+
+    @objc(vendor)
+    var vendor: String? {
+        currentTextValue(for: ["VENDOR"])
+    }
+
+    @objc(trackVersion)
+    var trackVersion: String? {
+        currentTextValue(for: ["VERSION"])
+    }
+
+    override var objectSpecifier: NSScriptObjectSpecifier? {
+        guard let editorWindow = SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionIDValue),
+              let editorWindowClassDescription = NSScriptClassDescription(for: SwiftTagScriptEditorWindow.self),
+              let containerSpecifier = editorWindow.objectSpecifier,
+              let index = SwiftTagAppleScriptController.shared.indexOfTrack(
+                trackID: trackIDValue,
+                forSessionID: sessionIDValue
+              ) else {
+            return nil
+        }
+
+        return NSIndexSpecifier(
+            containerClassDescription: editorWindowClassDescription,
+            containerSpecifier: containerSpecifier,
+            key: "tracks",
+            index: index
+        )
+    }
+
+    fileprivate var sessionID: UUID {
+        sessionIDValue
+    }
+
+    fileprivate var trackID: UUID {
+        trackIDValue
+    }
+
+    private var trackSnapshot: Track? {
+        SwiftTagAppleScriptController.shared.trackSnapshot(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue
+        )
+    }
+
+    private func currentTextValue(
+        for keys: [String],
+        fallback: KeyPath<Track, String>? = nil
+    ) -> String? {
+        guard let trackSnapshot else {
+            return nil
+        }
+
+        if let fallback, let fallbackValue = trackSnapshot[keyPath: fallback].appleScriptNonEmptyValue {
+            return fallbackValue
+        }
+
+        return trackSnapshot.appleScriptText(for: keys)
+    }
+
+    private func currentIntegerValue(
+        for keys: [String],
+        fallback: KeyPath<Track, String>? = nil
+    ) -> NSNumber? {
+        guard let trackSnapshot else {
+            return nil
+        }
+
+        let fallbackValue = fallback.map { trackSnapshot[keyPath: $0] }
+        return trackSnapshot.appleScriptInteger(for: keys, fallback: fallbackValue)
+    }
+
+    private func currentBooleanValue(for keys: [String]) -> NSNumber? {
+        trackSnapshot?.appleScriptBoolean(for: keys)
+    }
+
+    private func currentDateValue(for keys: [String]) -> Date? {
+        trackSnapshot?.appleScriptDate(for: keys)
+    }
+
+    private func currentRealValue(
+        for keys: [String],
+        fallback: KeyPath<Track, TimeInterval?>? = nil
+    ) -> NSNumber? {
+        guard let trackSnapshot else {
+            return nil
+        }
+
+        let fallbackValue = fallback.map { trackSnapshot[keyPath: $0] } ?? nil
+        return trackSnapshot.appleScriptReal(for: keys, fallback: fallbackValue)
+    }
 }
 
 @MainActor
@@ -199,6 +598,38 @@ final class SwiftTagScriptEditorWindow: NSObject {
         SwiftTagAppleScriptController.shared.document(forSessionID: sessionIDValue)
     }
 
+    @objc(selectedTrack)
+    var selectedTrack: SwiftTagScriptTrack? {
+        get {
+            SwiftTagAppleScriptController.shared.selectedTrack(forSessionID: sessionIDValue)
+        }
+        set {
+            do {
+                try SwiftTagAppleScriptController.shared.selectTrack(
+                    newValue,
+                    forSessionID: sessionIDValue
+                )
+            } catch {
+                _ = NSScriptCommand.current()?.fail(error)
+            }
+        }
+    }
+
+    @objc(tracks)
+    var tracks: [SwiftTagScriptTrack] {
+        SwiftTagAppleScriptController.shared.tracks(forSessionID: sessionIDValue)
+    }
+
+    @objc(countOfTracks)
+    var countOfTracks: Int {
+        tracks.count
+    }
+
+    @objc(objectInTracksAtIndex:)
+    func objectInTracks(at index: Int) -> SwiftTagScriptTrack {
+        tracks[index]
+    }
+
     override var objectSpecifier: NSScriptObjectSpecifier? {
         guard let classDescription = NSScriptClassDescription(for: NSApplication.self) else {
             return nil
@@ -226,6 +657,24 @@ final class SwiftTagScriptEditorWindow: NSObject {
             forSessionID: sessionIDValue,
             destinationURL: destinationURL
         )
+    }
+
+    func addTracks(at urls: [URL]) throws -> [SwiftTagScriptTrack] {
+        try SwiftTagAppleScriptController.shared.addTracks(urls, toSessionID: sessionIDValue)
+    }
+
+    @objc(handleAddTracksScriptCommand:)
+    func handleAddTracksScriptCommand(_ command: NSScriptCommand) -> Any? {
+        do {
+            let urls = try SwiftTagAppleScriptFileURLResolver.fileURLs(
+                from: command.directParameter,
+                missingValueError: .missingAddTracksInput
+            )
+            let tracks = try addTracks(at: urls)
+            return tracks.count == 1 ? tracks[0] : tracks
+        } catch {
+            return command.fail(error)
+        }
     }
 
     @objc(handleSaveScriptCommand:)
@@ -369,8 +818,14 @@ final class SwiftTagScriptDocument: NSObject {
 final class SwiftTagAppleScriptController {
     static let shared = SwiftTagAppleScriptController()
 
+    private struct TrackCacheKey: Hashable {
+        let sessionID: UUID
+        let trackID: UUID
+    }
+
     private var editorWindowsBySessionID: [UUID: SwiftTagScriptEditorWindow] = [:]
     private var documentsBySessionID: [UUID: SwiftTagScriptDocument] = [:]
+    private var trackWrappersByKey: [TrackCacheKey: SwiftTagScriptTrack] = [:]
     private var sessionBridgesBySessionID: [UUID: SwiftTagAppleScriptSessionBridge] = [:]
     private var pendingDocumentURLBySessionID: [UUID: URL] = [:]
 
@@ -432,6 +887,10 @@ final class SwiftTagAppleScriptController {
         return orderedDocuments
     }
 
+    func frontmostEditorWindow() -> SwiftTagScriptEditorWindow? {
+        orderedEditorWindows().first
+    }
+
     func insertEditorWindow(_ scriptWindow: SwiftTagScriptEditorWindow) {
         editorWindowsBySessionID[scriptWindow.sessionID] = scriptWindow
         scriptWindow.markAwaitingMaterialization()
@@ -448,6 +907,7 @@ final class SwiftTagAppleScriptController {
     func unregister(sessionID: UUID) {
         editorWindowsBySessionID.removeValue(forKey: sessionID)
         documentsBySessionID.removeValue(forKey: sessionID)
+        trackWrappersByKey = trackWrappersByKey.filter { $0.key.sessionID != sessionID }
         sessionBridgesBySessionID.removeValue(forKey: sessionID)
         pendingDocumentURLBySessionID.removeValue(forKey: sessionID)
     }
@@ -481,6 +941,64 @@ final class SwiftTagAppleScriptController {
         let wrapper = SwiftTagScriptDocument(sessionID: sessionID, fallbackFileURL: fallbackFileURL)
         documentsBySessionID[sessionID] = wrapper
         return wrapper
+    }
+
+    func editorWindow(forSessionID sessionID: UUID) -> SwiftTagScriptEditorWindow? {
+        if let wrapper = editorWindowsBySessionID[sessionID] {
+            return wrapper
+        }
+
+        let liveWindow = orderedLiveEditorWindows().first(where: { $0.sessionID == sessionID })?.window
+        if liveWindow != nil
+            || sessionBridgesBySessionID[sessionID] != nil
+            || pendingDocumentURLBySessionID[sessionID] != nil {
+            return editorWindow(forSessionID: sessionID, liveWindow: liveWindow, markPending: liveWindow == nil)
+        }
+
+        return nil
+    }
+
+    func tracks(forSessionID sessionID: UUID) -> [SwiftTagScriptTrack] {
+        guard let snapshot = sessionSnapshot(forSessionID: sessionID) else {
+            return []
+        }
+
+        let validTrackIDs = Set(snapshot.tracks.map(\.id))
+        pruneTrackWrappers(forSessionID: sessionID, validTrackIDs: validTrackIDs)
+        return snapshot.tracks.compactMap { track(forSessionID: sessionID, trackID: $0.id) }
+    }
+
+    func selectedTrack(forSessionID sessionID: UUID) -> SwiftTagScriptTrack? {
+        guard let selectedTrackID = sessionSnapshot(forSessionID: sessionID)?.selectedTrackID else {
+            return nil
+        }
+
+        return track(forSessionID: sessionID, trackID: selectedTrackID)
+    }
+
+    func selectTrack(_ scriptTrack: SwiftTagScriptTrack?, forSessionID sessionID: UUID) throws {
+        if let scriptTrack, scriptTrack.sessionID != sessionID {
+            throw SwiftTagAppleScriptCommandError.invalidSelectedTrack
+        }
+
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        try bridge.selectTrack(scriptTrack?.trackID)
+    }
+
+    func trackSnapshot(forSessionID sessionID: UUID, trackID: UUID) -> Track? {
+        sessionSnapshot(forSessionID: sessionID)?.tracks.first(where: { $0.id == trackID })
+    }
+
+    func addTracks(_ urls: [URL], toSessionID sessionID: UUID) throws -> [SwiftTagScriptTrack] {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        let trackIDs = try bridge.addTracks(urls)
+        return trackIDs.compactMap { track(forSessionID: sessionID, trackID: $0) }
     }
 
     func documentSnapshot(
@@ -550,10 +1068,15 @@ final class SwiftTagAppleScriptController {
         orderedDocuments().firstIndex { $0.sessionID == sessionID }
     }
 
+    func indexOfTrack(trackID: UUID, forSessionID sessionID: UUID) -> Int? {
+        sessionSnapshot(forSessionID: sessionID)?.tracks.firstIndex(where: { $0.id == trackID })
+    }
+
     #if DEBUG
     func resetForTesting() {
         editorWindowsBySessionID.removeAll()
         documentsBySessionID.removeAll()
+        trackWrappersByKey.removeAll()
         sessionBridgesBySessionID.removeAll()
         pendingDocumentURLBySessionID.removeAll()
     }
@@ -611,6 +1134,31 @@ final class SwiftTagAppleScriptController {
         return wrapper
     }
 
+    private func sessionSnapshot(forSessionID sessionID: UUID) -> SwiftTagAppleScriptSessionSnapshot? {
+        sessionBridgesBySessionID[sessionID]?.sessionSnapshot()
+    }
+
+    private func track(forSessionID sessionID: UUID, trackID: UUID) -> SwiftTagScriptTrack? {
+        guard trackSnapshot(forSessionID: sessionID, trackID: trackID) != nil else {
+            return nil
+        }
+
+        let key = TrackCacheKey(sessionID: sessionID, trackID: trackID)
+        if let wrapper = trackWrappersByKey[key] {
+            return wrapper
+        }
+
+        let wrapper = SwiftTagScriptTrack(sessionID: sessionID, trackID: trackID)
+        trackWrappersByKey[key] = wrapper
+        return wrapper
+    }
+
+    private func pruneTrackWrappers(forSessionID sessionID: UUID, validTrackIDs: Set<UUID>) {
+        trackWrappersByKey = trackWrappersByKey.filter { key, _ in
+            key.sessionID != sessionID || validTrackIDs.contains(key.trackID)
+        }
+    }
+
     private func normalizedSessionID(from uniqueID: Any) -> UUID? {
         if let uuid = uniqueID as? UUID {
             return uuid
@@ -659,6 +1207,21 @@ extension NSApplication {
         try SwiftTagAppleScriptController.shared.openDocumentWrappers(at: urls)
     }
 
+    @objc(handleAddTracksScriptCommand:)
+    func handleAddTracksScriptCommand(_ command: NSScriptCommand) -> Any? {
+        do {
+            let urls = try SwiftTagAppleScriptFileURLResolver.fileURLs(
+                from: command.directParameter,
+                missingValueError: .missingAddTracksInput
+            )
+            let targetWindow = try scriptEditorWindowTarget(from: command)
+            let tracks = try targetWindow.addTracks(at: urls)
+            return tracks.count == 1 ? tracks[0] : tracks
+        } catch {
+            return command.fail(error)
+        }
+    }
+
     @objc(handleOpenScriptCommand:)
     func handleOpenScriptCommand(_ command: NSScriptCommand) -> Any? {
         do {
@@ -674,5 +1237,34 @@ extension NSApplication {
     func handleQuitScriptCommand(_ command: NSScriptCommand) -> Any? {
         terminate(nil)
         return nil
+    }
+
+    private func scriptEditorWindowTarget(from command: NSScriptCommand) throws -> SwiftTagScriptEditorWindow {
+        let targetValue = command.evaluatedArguments?["Target"] ?? command.evaluatedArguments?["to"]
+        if let targetValue {
+            if let targetWindow = targetValue as? SwiftTagScriptEditorWindow {
+                return targetWindow
+            }
+
+            if let targetWindows = targetValue as? [Any],
+               targetWindows.count == 1,
+               let targetWindow = targetWindows.first as? SwiftTagScriptEditorWindow {
+                return targetWindow
+            }
+
+            if let targetWindows = targetValue as? NSArray,
+               targetWindows.count == 1,
+               let targetWindow = targetWindows.firstObject as? SwiftTagScriptEditorWindow {
+                return targetWindow
+            }
+
+            throw SwiftTagAppleScriptCommandError.invalidEditorWindowTarget
+        }
+
+        guard let targetWindow = SwiftTagAppleScriptController.shared.frontmostEditorWindow() else {
+            throw SwiftTagAppleScriptCommandError.noEditorWindowAvailable
+        }
+
+        return targetWindow
     }
 }

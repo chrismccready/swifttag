@@ -1116,6 +1116,14 @@ final class TagEditorViewModel {
     }
 
     func importFlacFiles(_ flacFiles: [URL], locked: Bool = false, append: Bool = false) async throws {
+        try importFlacFilesSynchronously(flacFiles, locked: locked, append: append)
+    }
+
+    func importFlacFilesSynchronously(
+        _ flacFiles: [URL],
+        locked: Bool = false,
+        append: Bool = false
+    ) throws {
         guard !flacFiles.isEmpty else {
             return
         }

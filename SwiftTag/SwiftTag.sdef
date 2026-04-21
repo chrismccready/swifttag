@@ -65,14 +65,14 @@
 
         <class name="document" plural="documents" code="docu" description="A SwiftTag document.">
             <cocoa class="SwiftTagScriptDocument"/>
-            <property name="name" code="pnam" type="text" access="r" description="Its name.">
-                <cocoa key="name"/>
+            <property name="file" code="file" type="file" access="r" description="Its location on disk, if it has one.">
+                <cocoa key="fileURL"/>
             </property>
             <property name="modified" code="imod" type="boolean" access="r" description="Has it been modified since the last save?">
                 <cocoa key="modified"/>
             </property>
-            <property name="file" code="file" type="file" access="r" description="Its location on disk, if it has one.">
-                <cocoa key="fileURL"/>
+            <property name="name" code="pnam" type="text" access="r" description="Its name.">
+                <cocoa key="name"/>
             </property>
             <responds-to command="save">
                 <cocoa method="handleSaveScriptCommand:"/>
@@ -83,6 +83,21 @@
 
     <suite name="SwiftTag Suite" code="SwTG" description="SwiftTag-specific classes and commands.">
 
+        <command name="add" code="SwTGaddt" description="Add one or more FLAC files to an editor window.">
+            <direct-parameter description="The FLAC file(s) to add.">
+                <type type="file"/>
+                <type type="file" list="yes"/>
+            </direct-parameter>
+            <parameter name="to" code="insh" optional="yes" description="The editor window that should receive the added file(s).">
+                <cocoa key="Target"/>
+                <type type="editor window"/>
+            </parameter>
+            <result description="Reference to the added track(s).">
+                <type type="track"/>
+                <type type="track" list="yes"/>
+            </result>
+        </command>
+
         <class name="application" plural="applications" code="capp" description="Application program.">
             <cocoa class="NSApplication"/>
             <element type="editor window">
@@ -91,6 +106,9 @@
             <element type="document">
                 <cocoa key="scriptDocuments"/>
             </element>
+            <responds-to command="add">
+                <cocoa method="handleAddTracksScriptCommand:"/>
+            </responds-to>
             <responds-to command="open">
                 <cocoa method="handleOpenScriptCommand:"/>
             </responds-to>
@@ -101,18 +119,157 @@
 
         <class name="editor window" plural="editor windows" code="edtw" description="A SwiftTag editor window.">
             <cocoa class="SwiftTagScriptEditorWindow"/>
+            <element type="track">
+                <cocoa key="tracks"/>
+            </element>
+            <property name="document" code="docu" type="document" access="r" description="Editor window document.">
+                <cocoa key="document"/>
+            </property>
             <property name="name" code="pnam" type="text" access="r" description="Window title.">
                 <cocoa key="name"/>
+            </property>
+            <property name="selected track" code="selt" type="track" description="Currently selected track in editor window.">
+                <cocoa key="selectedTrack"/>
             </property>
             <property name="window id" code="ewid" type="text" access="r" description="Window UUID.">
                 <cocoa key="windowID"/>
             </property>
-            <property name="document" code="docu" type="document" access="r" description="Editor window document.">
-                <cocoa key="document"/>
-            </property>
+            <responds-to command="add">
+                <cocoa method="handleAddTracksScriptCommand:"/>
+            </responds-to>
             <responds-to command="save">
                 <cocoa method="handleSaveScriptCommand:"/>
             </responds-to>
+        </class>
+
+        <class name="track" plural="tracks" code="trck" description="A FLAC track file.">
+            <cocoa class="SwiftTagScriptTrack"/>
+            <property name="album" code="albm" type="text" description="The album name of the track.">
+                <cocoa key="album"/>
+            </property>
+            <property name="album artist" code="aart" type="text" description="The album artist of the track.">
+                <cocoa key="albumArtist"/>
+            </property>
+            <property name="artist" code="arts" type="text" description="The artist/source of the track.">
+                <cocoa key="artist"/>
+            </property>
+            <property name="comment" code="cmnt" type="text" description="Notes about the track.">
+                <cocoa key="comment"/>
+            </property>
+            <property name="compilation" code="cpil" type="boolean" description="Is this track from a compilation album?">
+                <cocoa key="compilation"/>
+            </property>
+            <property name="composer" code="cmps" type="text" description="The composer of the track.">
+                <cocoa key="composer"/>
+            </property>
+            <property name="copyright" code="cprt" type="text" description="The copyright of the track.">
+                <cocoa key="copyright"/>
+            </property>
+            <property name="date" code="rdat" type="date" description="The release date of track.">
+                <cocoa key="releaseDate"/>
+            </property>
+            <property name="description" code="tdsc" type="text" description="The description of the track.">
+                <cocoa key="trackDescription"/>
+            </property>
+            <property name="director" code="drct" type="text" description="The director(s) of the track.">
+                <cocoa key="director"/>
+            </property>
+            <property name="disc count" code="dcnt" type="integer" description="The total number of discs in the source album.">
+                <cocoa key="discCount"/>
+            </property>
+            <property name="disc number" code="dnbr" type="integer" description="The index of the disc containing this track on the source album.">
+                <cocoa key="discNumber"/>
+            </property>
+            <property name="duration" code="dura" type="real" access="r" description="The length of the track in seconds.">
+                <cocoa key="duration"/>
+            </property>
+            <property name="encoded by" code="encb" type="text" description="Track audio encoded by.">
+                <cocoa key="encodedBy"/>
+            </property>
+            <property name="encoded using" code="encu" type="text" description="Track audio encoded using.">
+                <cocoa key="encodedUsing"/>
+            </property>
+            <property name="encoder" code="encr" type="text" description="Track audio encoder.">
+                <cocoa key="encoder"/>
+            </property>
+            <property name="encoder options" code="enco" type="text" description="Track audio encoder options used.">
+                <cocoa key="encoderOptions"/>
+            </property>
+            <property name="file" code="file" type="file" access="r" description="FLAC file location on disk.">
+                <cocoa key="fileURL"/>
+            </property>
+            <property name="genre" code="genr" type="text" description="The music/audio genre (category) of the track.">
+                <cocoa key="genre"/>
+            </property>
+            <property name="ISRC" code="isrc" type="text" description="The ISRC number of the track.">
+                <cocoa key="isrc"/>
+            </property>
+            <property name="license" code="lice" type="text" description="License information for track.">
+                <cocoa key="license"/>
+            </property>
+            <property name="lineage" code="ling" type="text" description="The lineage of the track.">
+                <cocoa key="lineage"/>
+            </property>
+            <property name="location" code="locn" type="text" description="Recording/performance location/venue of the track.">
+                <cocoa key="location"/>
+            </property>
+            <property name="narrator" code="narr" type="text" description="The narrator(s) of the track.">
+                <cocoa key="narrator"/>
+            </property>
+            <property name="performer" code="perf" type="text" description="The performer(s) of the track.">
+                <cocoa key="performer"/>
+            </property>
+            <property name="producer" code="prod" type="text" description="The producer(s) of the track.">
+                <cocoa key="producer"/>
+            </property>
+            <property name="rating" code="rate" type="integer" description="The rating of the track.">
+                <cocoa key="rating"/>
+            </property>
+            <property name="replay album gain" code="ragn" type="text" description="Adjusts gain of all tracks on entire album.">
+                <cocoa key="replayAlbumGain"/>
+            </property>
+            <property name="replay album peak" code="rapk" type="text" description="Adjusts maximum peak of all tracks on entire album.">
+                <cocoa key="replayAlbumPeak"/>
+            </property>
+            <property name="replay track gain" code="rtgn" type="text" description="Adjusts individual track volume.">
+                <cocoa key="replayTrackGain"/>
+            </property>
+            <property name="replay track peak" code="rtpk" type="text" description="Adjusts individual track volume to prevent clipping.">
+                <cocoa key="replayTrackPeak"/>
+            </property>
+            <property name="sort album" code="salb" type="text" description="Override string to use for the track when sorting by album.">
+                <cocoa key="sortAlbum"/>
+            </property>
+            <property name="sort album artist" code="saar" type="text" description="Override string to use for the track when sorting by album artist.">
+                <cocoa key="sortAlbumArtist"/>
+            </property>
+            <property name="sort artist" code="sart" type="text" description="Override string to use for the track when sorting by artist.">
+                <cocoa key="sortArtist"/>
+            </property>
+            <property name="sort composer" code="scmp" type="text" description="Override string to use for the track when sorting by composer.">
+                <cocoa key="sortComposer"/>
+            </property>
+            <property name="sort title" code="sttl" type="text" description="Override string to use for the track when sorting by title/name.">
+                <cocoa key="sortTitle"/>
+            </property>
+            <property name="source" code="srce" type="text" description="The source of the track (CD, SBD, etc.).">
+                <cocoa key="source"/>
+            </property>
+            <property name="title" code="titl" type="text" description="The title/name of the track.">
+                <cocoa key="title"/>
+            </property>
+            <property name="track count" code="tcnt" type="integer" description="The total number of tracks on the source album.">
+                <cocoa key="trackCount"/>
+            </property>
+            <property name="track number" code="tnbr" type="integer" description="The index of the track on the source album.">
+                <cocoa key="trackNumber"/>
+            </property>
+            <property name="vendor" code="vend" type="text" description="The vendor of the track.">
+                <cocoa key="vendor"/>
+            </property>
+            <property name="version" code="tver" type="text" description="The version of the track.">
+                <cocoa key="trackVersion"/>
+            </property>
         </class>
 
     </suite>
