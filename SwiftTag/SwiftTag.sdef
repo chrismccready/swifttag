@@ -153,6 +153,12 @@
             <property name="artist" code="arts" type="text" description="The artist/source of the track.">
                 <cocoa key="artist"/>
             </property>
+            <property name="bits per sample" code="btps" type="integer" access="r" description="The bits per sample of the track.">
+                <cocoa key="bitsPerSample"/>
+            </property>
+            <property name="channels" code="chnl" type="integer" access="r" description="The number of sound channels of the track.">
+                <cocoa key="channels"/>
+            </property>
             <property name="comment" code="cmnt" type="text" description="Notes about the track.">
                 <cocoa key="comment"/>
             </property>
@@ -198,6 +204,12 @@
             <property name="file" code="file" type="file" access="r" description="FLAC file location on disk.">
                 <cocoa key="fileURL"/>
             </property>
+            <property name="fingerprint" code="fgpr" type="text" access="r" description="The track tags and pictures SHA256 hash.">
+                <cocoa key="fingerprint"/>
+            </property>
+            <property name="FLAC fingerprint" code="ffpr" type="text" access="r" description="The track audio MD5 hash.">
+                <cocoa key="flacFingerprint"/>
+            </property>
             <property name="genre" code="genr" type="text" description="The music/audio genre (category) of the track.">
                 <cocoa key="genre"/>
             </property>
@@ -237,6 +249,9 @@
             <property name="replay track peak" code="rtpk" type="text" description="Adjusts individual track volume to prevent clipping.">
                 <cocoa key="replayTrackPeak"/>
             </property>
+            <property name="sample rate" code="srat" type="text" access="r" description="The sample rate of the track.">
+                <cocoa key="sampleRate"/>
+            </property>
             <property name="sort album" code="salb" type="text" description="Override string to use for the track when sorting by album.">
                 <cocoa key="sortAlbum"/>
             </property>
@@ -257,6 +272,9 @@
             </property>
             <property name="title" code="titl" type="text" description="The title/name of the track.">
                 <cocoa key="title"/>
+            </property>
+            <property name="total samples" code="tsmp" type="real" access="r" description="The total number of samples for a single channel of the track.">
+                <cocoa key="totalSamples"/>
             </property>
             <property name="track count" code="tcnt" type="integer" description="The total number of tracks on the source album.">
                 <cocoa key="trackCount"/>

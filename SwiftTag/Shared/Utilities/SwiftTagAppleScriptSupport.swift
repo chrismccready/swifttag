@@ -267,6 +267,24 @@ final class SwiftTagScriptTrack: NSObject {
         currentTextValue(for: [TagKey.artist])
     }
 
+    @objc(bitsPerSample)
+    var bitsPerSample: NSNumber? {
+        guard let bitsPerSample = trackSnapshot?.bitsPerSample else {
+            return nil
+        }
+
+        return NSNumber(value: Int(bitsPerSample))
+    }
+
+    @objc(channels)
+    var channels: NSNumber? {
+        guard let channels = trackSnapshot?.channels else {
+            return nil
+        }
+
+        return NSNumber(value: Int(channels))
+    }
+
     @objc(comment)
     var comment: String? {
         currentTextValue(for: ["COMMENT"])
@@ -342,6 +360,23 @@ final class SwiftTagScriptTrack: NSObject {
         trackSnapshot?.sourceFileURL?.standardizedFileURL
     }
 
+    @objc(fingerprint)
+    var fingerprint: String? {
+        guard let trackSnapshot else {
+            return nil
+        }
+
+        return try? SwiftTagDocumentPackageWriter.trackTagsAndPicturesFingerprint(
+            tags: trackSnapshot.tags,
+            pictures: trackSnapshot.flacPictureRecords
+        )
+    }
+
+    @objc(flacFingerprint)
+    var flacFingerprint: String? {
+        trackSnapshot?.fingerprint?.appleScriptNonEmptyValue
+    }
+
     @objc(genre)
     var genre: String? {
         currentTextValue(for: [TagKey.genre])
@@ -407,6 +442,15 @@ final class SwiftTagScriptTrack: NSObject {
         currentTextValue(for: ["REPLAYGAIN_TRACK_PEAK"])
     }
 
+    @objc(sampleRate)
+    var sampleRate: String? {
+        guard let sampleRate = trackSnapshot?.sampleRate else {
+            return nil
+        }
+
+        return TrackSampleRateFormatter.string(from: sampleRate)
+    }
+
     @objc(sortAlbum)
     var sortAlbum: String? {
         currentTextValue(for: ["ALBUMSORT"])
@@ -440,6 +484,20 @@ final class SwiftTagScriptTrack: NSObject {
     @objc(title)
     var title: String? {
         currentTextValue(for: [TagKey.title])
+    }
+
+    @objc(totalSamples)
+    var totalSamples: NSNumber? {
+        guard let totalSamples = trackSnapshot?.totalSamples else {
+            return nil
+        }
+
+        let realValue = Double(totalSamples)
+        guard realValue.isFinite else {
+            return nil
+        }
+
+        return NSNumber(value: realValue)
     }
 
     @objc(trackCount)

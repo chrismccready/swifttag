@@ -141,6 +141,14 @@ struct SwiftTagAppleScriptTests {
 
         let sessionID = UUID()
         let trackURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-track.flac")
+        let pictureData = try #require(Self.singlePixelPNGData())
+        let picture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Cover (front)",
+            data: pictureData
+        ).withComputedPictureMetadata()
+        let totalSamples: UInt64 = 14_175_315
         let track = Track(
             album: "The Planets",
             albumArtist: "London Symphony Orchestra",
@@ -158,8 +166,18 @@ struct SwiftTagAppleScriptTests {
                 TagKey.title: "Mars, the Bringer of War",
                 "TRACK": "3"
             ],
+            flacPictureRecords: [picture],
             sourceFileURL: trackURL,
-            duration: 321.5
+            fingerprint: "3b2f1b8459d0f6c1860c07f03b6f0db4",
+            duration: 321.5,
+            sampleRate: 44_100,
+            totalSamples: totalSamples,
+            bitsPerSample: 24,
+            channels: 2
+        )
+        let expectedFingerprint = try SwiftTagDocumentPackageWriter.trackTagsAndPicturesFingerprint(
+            tags: track.tags,
+            pictures: track.flacPictureRecords
         )
 
         var sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
@@ -201,14 +219,20 @@ struct SwiftTagAppleScriptTests {
         #expect(scriptTrack.album == "The Planets")
         #expect(scriptTrack.albumArtist == "London Symphony Orchestra")
         #expect(scriptTrack.artist == "Gustav Holst")
+        #expect(scriptTrack.bitsPerSample?.intValue == 24)
+        #expect(scriptTrack.channels?.intValue == 2)
         #expect(scriptTrack.comment == "Live broadcast")
         #expect(scriptTrack.compilation?.boolValue == true)
         #expect(scriptTrack.discCount?.intValue == 2)
         #expect(scriptTrack.discNumber?.intValue == 1)
         #expect(scriptTrack.duration?.doubleValue == 321.5)
         #expect(scriptTrack.fileURL == trackURL.standardizedFileURL)
+        #expect(scriptTrack.fingerprint == expectedFingerprint)
+        #expect(scriptTrack.flacFingerprint == "3b2f1b8459d0f6c1860c07f03b6f0db4")
         #expect(scriptTrack.rating?.intValue == 5)
+        #expect(scriptTrack.sampleRate == "44.1 kHz")
         #expect(scriptTrack.title == "Mars, the Bringer of War")
+        #expect(scriptTrack.totalSamples?.doubleValue == Double(totalSamples))
         #expect(scriptTrack.trackCount?.intValue == 7)
         #expect(scriptTrack.trackNumber?.intValue == 3)
 
@@ -285,6 +309,13 @@ struct SwiftTagAppleScriptTests {
 }
 
 private extension SwiftTagAppleScriptTests {
+    static func singlePixelPNGData() -> Data? {
+        Data(
+            base64Encoded:
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO3ZbZ0AAAAASUVORK5CYII="
+        )
+    }
+
     static func tempPackageURL(name: String) throws -> URL {
         let directoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("SwiftTagAppleScriptTests", isDirectory: true)

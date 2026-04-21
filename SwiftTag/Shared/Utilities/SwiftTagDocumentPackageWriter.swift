@@ -41,6 +41,36 @@ enum SwiftTagDocumentPackageWriter {
         )
     }
 
+    static func trackTagsAndPicturesFingerprint(
+        tags: [String: String],
+        pictures: [FlacWritablePictureRecord]
+    ) throws -> String {
+        let normalizedTags = canonicalTags(tags)
+        let normalizedPictures = try canonicalPictures(for: pictures)
+        let manifestPictures = try normalizedPictures.map { picture in
+            let candidate = try assetCandidate(for: picture)
+            let fileName = "\(candidate.flacType)-\(candidate.hash).\(candidate.fileExtension)"
+
+            return SwiftTagDocumentManifestPicture(
+                file: fileName,
+                flacType: picture.type,
+                mimeType: candidate.mimeType,
+                description: picture.description,
+                width: picture.width,
+                height: picture.height,
+                depth: picture.depth,
+                colors: picture.colors
+            )
+        }
+
+        return fingerprint(
+            lines: trackFingerprintLines(
+                normalizedTags: normalizedTags,
+                manifestPictures: manifestPictures
+            )
+        )
+    }
+
     private static func buildPackage(
         tracks: [SwiftTagDocumentExportTrack],
         documentID: UUID
@@ -79,7 +109,6 @@ enum SwiftTagDocumentPackageWriter {
         )
 
         for track in sortedTracks {
-            let normalizedTags = canonicalTags(track.tags)
             let normalizedPictures = try canonicalPictures(for: track.pictures)
             let manifestPictures = try normalizedPictures.map { picture in
                 let candidate = try assetCandidate(for: picture)
@@ -101,24 +130,12 @@ enum SwiftTagDocumentPackageWriter {
                 )
             }
 
+            let normalizedTags = canonicalTags(track.tags)
             let trackFingerprint = fingerprint(
-                lines:
-                    normalizedTags.keys.sorted().map { key in
-                        "TAG\t\(trimmedHashValue(key))\t\(trimmedHashValue(normalizedTags[key] ?? ""))"
-                    }
-                    + manifestPictures.map { picture in
-                        [
-                            "PIC",
-                            picture.file,
-                            String(picture.flacType),
-                            trimmedHashValue(picture.mimeType),
-                            trimmedHashValue(picture.description),
-                            String(picture.width),
-                            String(picture.height),
-                            String(picture.depth),
-                            String(picture.colors)
-                        ].joined(separator: "\t")
-                    }
+                lines: trackFingerprintLines(
+                    normalizedTags: normalizedTags,
+                    manifestPictures: manifestPictures
+                )
             )
 
             manifestTracks.append(
@@ -328,6 +345,28 @@ enum SwiftTagDocumentPackageWriter {
 
         let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmedValue.isEmpty ? nil : value
+    }
+
+    private static func trackFingerprintLines(
+        normalizedTags: [String: String],
+        manifestPictures: [SwiftTagDocumentManifestPicture]
+    ) -> [String] {
+        normalizedTags.keys.sorted().map { key in
+            "TAG\t\(trimmedHashValue(key))\t\(trimmedHashValue(normalizedTags[key] ?? ""))"
+        }
+        + manifestPictures.map { picture in
+            [
+                "PIC",
+                picture.file,
+                String(picture.flacType),
+                trimmedHashValue(picture.mimeType),
+                trimmedHashValue(picture.description),
+                String(picture.width),
+                String(picture.height),
+                String(picture.depth),
+                String(picture.colors)
+            ].joined(separator: "\t")
+        }
     }
 
     private static func fingerprint(lines: [String]) -> String {
