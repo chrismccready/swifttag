@@ -22,6 +22,11 @@ struct SwiftTagDocumentTests {
         )
     }
 
+    private static let fixtureSampleRate: UInt32 = 44_100
+    private static let fixtureTotalSamples: UInt64 = 6_754
+    private static let fixtureBitsPerSample: UInt32 = 16
+    private static let fixtureChannels: UInt32 = 1
+
     private static func tempFixtureCopyURL(name: String) throws -> URL {
         let directoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -348,6 +353,10 @@ struct SwiftTagDocumentTests {
             description: "Cover (front)",
             data: sharedPNG
         ).withComputedPictureMetadata()
+        let sampleRate = Self.fixtureSampleRate
+        let totalSamples = Self.fixtureTotalSamples
+        let bitsPerSample = Self.fixtureBitsPerSample
+        let channels = Self.fixtureChannels
         let duration = 3_661.75
         let destinationURL = try Self.tempPackageURL(name: "reader-roundtrip")
         let saveResult = try SwiftTagDocumentPackageWriter.save(
@@ -359,6 +368,10 @@ struct SwiftTagDocumentTests {
                     sourceFileURL: URL(fileURLWithPath: "/tmp/reader.flac"),
                     securityScopedBookmarkData: Data([0x0A, 0x0B]),
                     flacFingerprint: "reader-fingerprint",
+                    sampleRate: sampleRate,
+                    totalSamples: totalSamples,
+                    bitsPerSample: bitsPerSample,
+                    channels: channels,
                     duration: duration
                 )
             ],
@@ -376,6 +389,10 @@ struct SwiftTagDocumentTests {
         #expect(loadedTrack.sourceFileURL?.path == "/tmp/reader.flac")
         #expect(loadedTrack.securityScopedBookmarkData == Data([0x0A, 0x0B]))
         #expect(loadedTrack.flacFingerprint == "reader-fingerprint")
+        #expect(loadedTrack.sampleRate == sampleRate)
+        #expect(loadedTrack.totalSamples == totalSamples)
+        #expect(loadedTrack.bitsPerSample == bitsPerSample)
+        #expect(loadedTrack.channels == channels)
         #expect(loadedTrack.duration == duration)
         #expect(loadedTrack.tags[TagKey.title] == "Reader Track")
         #expect(loadedTrack.pictures.count == 1)
@@ -420,6 +437,45 @@ struct SwiftTagDocumentTests {
     }
 
     @Test
+    func swiftTagDocumentWriterPersistsTrackStreamInfo() throws {
+        let destinationURL = try Self.tempPackageURL(name: "streaminfo-roundtrip")
+
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/streaminfo.flac",
+                    tags: [TagKey.title: "Stream Info Track"],
+                    pictures: [],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/streaminfo.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: "streaminfo-fingerprint",
+                    sampleRate: Self.fixtureSampleRate,
+                    totalSamples: Self.fixtureTotalSamples,
+                    bitsPerSample: Self.fixtureBitsPerSample,
+                    channels: Self.fixtureChannels
+                )
+            ],
+            state: .init(),
+            to: destinationURL
+        )
+
+        let manifest = try Self.plistDictionary(at: destinationURL.appendingPathComponent("Info.plist"))
+        let manifestTracks = try #require(manifest["Tracks"] as? [[String: Any]])
+        let manifestTrack = try #require(manifestTracks.first)
+        #expect(manifestTrack["Sample Rate"] as? String == "44.1 kHz")
+        #expect((manifestTrack["Total Samples"] as? NSNumber)?.uint64Value == Self.fixtureTotalSamples)
+        #expect((manifestTrack["Bits Per Sample"] as? NSNumber)?.uint32Value == Self.fixtureBitsPerSample)
+        #expect((manifestTrack["Channels"] as? NSNumber)?.uint32Value == Self.fixtureChannels)
+
+        let loadedDocument = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let loadedTrack = try #require(loadedDocument.tracks.first)
+        #expect(loadedTrack.sampleRate == Self.fixtureSampleRate)
+        #expect(loadedTrack.totalSamples == Self.fixtureTotalSamples)
+        #expect(loadedTrack.bitsPerSample == Self.fixtureBitsPerSample)
+        #expect(loadedTrack.channels == Self.fixtureChannels)
+    }
+
+    @Test
     func swiftTagDocumentReaderLeavesDurationNilWhenManifestOmitsDuration() throws {
         let destinationURL = try Self.tempPackageURL(name: "duration-omitted")
 
@@ -444,6 +500,41 @@ struct SwiftTagDocumentTests {
 
         let loadedDocument = try SwiftTagDocumentPackageReader.read(from: destinationURL)
         #expect(loadedDocument.tracks.first?.duration == nil)
+    }
+
+    @Test
+    func swiftTagDocumentReaderLeavesStreamInfoNilWhenManifestOmitsFields() throws {
+        let destinationURL = try Self.tempPackageURL(name: "streaminfo-omitted")
+
+        _ = try SwiftTagDocumentPackageWriter.save(
+            tracks: [
+                SwiftTagDocumentExportTrack(
+                    sortKey: "/tmp/no-streaminfo.flac",
+                    tags: [TagKey.title: "No Stream Info"],
+                    pictures: [],
+                    sourceFileURL: URL(fileURLWithPath: "/tmp/no-streaminfo.flac"),
+                    securityScopedBookmarkData: nil,
+                    flacFingerprint: nil
+                )
+            ],
+            state: .init(),
+            to: destinationURL
+        )
+
+        let manifest = try Self.plistDictionary(at: destinationURL.appendingPathComponent("Info.plist"))
+        let manifestTracks = try #require(manifest["Tracks"] as? [[String: Any]])
+        let manifestTrack = try #require(manifestTracks.first)
+        #expect(manifestTrack["Sample Rate"] == nil)
+        #expect(manifestTrack["Total Samples"] == nil)
+        #expect(manifestTrack["Bits Per Sample"] == nil)
+        #expect(manifestTrack["Channels"] == nil)
+
+        let loadedDocument = try SwiftTagDocumentPackageReader.read(from: destinationURL)
+        let loadedTrack = try #require(loadedDocument.tracks.first)
+        #expect(loadedTrack.sampleRate == nil)
+        #expect(loadedTrack.totalSamples == nil)
+        #expect(loadedTrack.bitsPerSample == nil)
+        #expect(loadedTrack.channels == nil)
     }
 
     @Test
@@ -618,7 +709,11 @@ struct SwiftTagDocumentTests {
                 TagKey.filename: "ignored.flac",
                 TagKey.title: "Song"
             ],
-            sourceFileURL: URL(fileURLWithPath: "/tmp/edited.flac")
+            sourceFileURL: URL(fileURLWithPath: "/tmp/edited.flac"),
+            sampleRate: Self.fixtureSampleRate,
+            totalSamples: Self.fixtureTotalSamples,
+            bitsPerSample: Self.fixtureBitsPerSample,
+            channels: Self.fixtureChannels
         )
         let viewModel = TagEditorViewModel()
         viewModel.trackItems = [track]
@@ -630,6 +725,10 @@ struct SwiftTagDocumentTests {
         #expect(exportTrack.tags["TOTALDISCS"] == "3")
         #expect(exportTrack.tags["TRACKTOTAL"] == nil)
         #expect(exportTrack.tags[TagKey.filename] == nil)
+        #expect(exportTrack.sampleRate == Self.fixtureSampleRate)
+        #expect(exportTrack.totalSamples == Self.fixtureTotalSamples)
+        #expect(exportTrack.bitsPerSample == Self.fixtureBitsPerSample)
+        #expect(exportTrack.channels == Self.fixtureChannels)
     }
 
     @MainActor
@@ -641,6 +740,10 @@ struct SwiftTagDocumentTests {
             description: "Cover (front)",
             data: try Self.pngData(color: .systemPink)
         ).withComputedPictureMetadata()
+        let sampleRate = Self.fixtureSampleRate
+        let totalSamples = Self.fixtureTotalSamples
+        let bitsPerSample = Self.fixtureBitsPerSample
+        let channels = Self.fixtureChannels
         let duration = 125.25
         let destinationURL = try Self.tempPackageURL(name: "view-model-load")
         let saveResult = try SwiftTagDocumentPackageWriter.save(
@@ -657,6 +760,10 @@ struct SwiftTagDocumentTests {
                     sourceFileURL: URL(fileURLWithPath: "/tmp/view-model-load.flac"),
                     securityScopedBookmarkData: nil,
                     flacFingerprint: "loaded-fingerprint",
+                    sampleRate: sampleRate,
+                    totalSamples: totalSamples,
+                    bitsPerSample: bitsPerSample,
+                    channels: channels,
                     duration: duration
                 )
             ],
@@ -673,6 +780,10 @@ struct SwiftTagDocumentTests {
         #expect(viewModel.swiftTagDocumentSaveState().documentID == saveResult.documentID)
         #expect(loadedTrack.tags[TagKey.title] == "Loaded Track")
         #expect(loadedTrack.album == "Loaded Album")
+        #expect(loadedTrack.sampleRate == sampleRate)
+        #expect(loadedTrack.totalSamples == totalSamples)
+        #expect(loadedTrack.bitsPerSample == bitsPerSample)
+        #expect(loadedTrack.channels == channels)
         #expect(loadedTrack.duration == duration)
         #expect(loadedTrack.latestFileSnapshot != nil)
         #expect(loadedTrack.preservesEditorStateDuringFileRefresh)

@@ -560,6 +560,8 @@ int flac_read_streaminfo(const char *file_path, FlacStreamInfoResult *out_result
 
     out_result->sample_rate = 0;
     out_result->total_samples = 0;
+    out_result->bits_per_sample = 0;
+    out_result->channels = 0;
     out_result->fingerprint = NULL;
 
     FLAC__StreamMetadata streaminfo;
@@ -577,6 +579,8 @@ int flac_read_streaminfo(const char *file_path, FlacStreamInfoResult *out_result
 
     out_result->sample_rate = streaminfo.data.stream_info.sample_rate;
     out_result->total_samples = (uint64_t)streaminfo.data.stream_info.total_samples;
+    out_result->bits_per_sample = streaminfo.data.stream_info.bits_per_sample;
+    out_result->channels = streaminfo.data.stream_info.channels;
 
     if (copy_streaminfo_md5_hex(streaminfo.data.stream_info.md5sum, &out_result->fingerprint) != 0) {
         set_error(error_message, "Out of memory while collecting FLAC fingerprint.");
@@ -783,6 +787,8 @@ void flac_free_streaminfo_result(FlacStreamInfoResult *result) {
     result->fingerprint = NULL;
     result->sample_rate = 0;
     result->total_samples = 0;
+    result->bits_per_sample = 0;
+    result->channels = 0;
 }
 
 void flac_free_c_string(char *value) {

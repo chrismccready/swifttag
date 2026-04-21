@@ -33,6 +33,80 @@ enum TrackDurationFormatter {
     }
 }
 
+enum TrackSampleRateFormatter {
+    static func string(from sampleRate: UInt32?) -> String? {
+        guard let sampleRate, sampleRate > 0 else {
+            return nil
+        }
+
+        let wholeKilohertz = sampleRate / 1_000
+        let fractionalHertz = sampleRate % 1_000
+        guard fractionalHertz > 0 else {
+            return "\(wholeKilohertz) kHz"
+        }
+
+        var fractionalComponent = String(format: "%03u", fractionalHertz)
+        while fractionalComponent.last == "0" {
+            fractionalComponent.removeLast()
+        }
+
+        return "\(wholeKilohertz).\(fractionalComponent) kHz"
+    }
+
+    static func hertz(from displayString: String?) -> UInt32? {
+        guard let displayString else {
+            return nil
+        }
+
+        let trimmedDisplayString = displayString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedDisplayString.isEmpty else {
+            return nil
+        }
+
+        let normalizedDisplayString = trimmedDisplayString.lowercased()
+        guard normalizedDisplayString.hasSuffix("khz") else {
+            return nil
+        }
+
+        let numberPortion = normalizedDisplayString
+            .dropLast(3)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !numberPortion.isEmpty else {
+            return nil
+        }
+
+        let components = numberPortion.split(separator: ".", omittingEmptySubsequences: false)
+        guard components.count <= 2,
+              let wholeKilohertz = UInt64(components[0]) else {
+            return nil
+        }
+
+        var fractionalHertz: UInt64 = 0
+        if components.count == 2 {
+            let fractionalComponent = String(components[1])
+            guard !fractionalComponent.isEmpty,
+                  fractionalComponent.allSatisfy(\.isNumber),
+                  fractionalComponent.count <= 3 else {
+                return nil
+            }
+
+            let paddedFractionalComponent = fractionalComponent.padding(toLength: 3, withPad: "0", startingAt: 0)
+            guard let parsedFractionalHertz = UInt64(paddedFractionalComponent) else {
+                return nil
+            }
+
+            fractionalHertz = parsedFractionalHertz
+        }
+
+        let sampleRate = wholeKilohertz * 1_000 + fractionalHertz
+        guard sampleRate > 0, sampleRate <= UInt64(UInt32.max) else {
+            return nil
+        }
+
+        return UInt32(sampleRate)
+    }
+}
+
 struct SwiftTagDocumentSaveState: Equatable {
     var destinationURL: URL?
     var documentID: UUID?
@@ -113,6 +187,10 @@ struct SwiftTagDocumentImportTrack: Equatable {
     let sourceFileURL: URL?
     let securityScopedBookmarkData: Data?
     let flacFingerprint: String?
+    let sampleRate: UInt32?
+    let totalSamples: UInt64?
+    let bitsPerSample: UInt32?
+    let channels: UInt32?
     let duration: TimeInterval?
     let tags: [String: String]
     let pictures: [FlacWritablePictureRecord]
@@ -122,6 +200,10 @@ struct SwiftTagDocumentImportTrack: Equatable {
         sourceFileURL: URL?,
         securityScopedBookmarkData: Data?,
         flacFingerprint: String?,
+        sampleRate: UInt32? = nil,
+        totalSamples: UInt64? = nil,
+        bitsPerSample: UInt32? = nil,
+        channels: UInt32? = nil,
         duration: TimeInterval? = nil,
         tags: [String: String],
         pictures: [FlacWritablePictureRecord]
@@ -130,6 +212,10 @@ struct SwiftTagDocumentImportTrack: Equatable {
         self.sourceFileURL = sourceFileURL
         self.securityScopedBookmarkData = securityScopedBookmarkData
         self.flacFingerprint = flacFingerprint
+        self.sampleRate = sampleRate
+        self.totalSamples = totalSamples
+        self.bitsPerSample = bitsPerSample
+        self.channels = channels
         self.duration = duration
         self.tags = tags
         self.pictures = pictures
@@ -187,6 +273,10 @@ struct SwiftTagDocumentExportTrack: Equatable {
     let sourceFileURL: URL?
     let securityScopedBookmarkData: Data?
     let flacFingerprint: String?
+    let sampleRate: UInt32?
+    let totalSamples: UInt64?
+    let bitsPerSample: UInt32?
+    let channels: UInt32?
     let duration: TimeInterval?
 
     init(
@@ -196,6 +286,10 @@ struct SwiftTagDocumentExportTrack: Equatable {
         sourceFileURL: URL?,
         securityScopedBookmarkData: Data?,
         flacFingerprint: String?,
+        sampleRate: UInt32? = nil,
+        totalSamples: UInt64? = nil,
+        bitsPerSample: UInt32? = nil,
+        channels: UInt32? = nil,
         duration: TimeInterval? = nil
     ) {
         self.sortKey = sortKey
@@ -204,6 +298,10 @@ struct SwiftTagDocumentExportTrack: Equatable {
         self.sourceFileURL = sourceFileURL
         self.securityScopedBookmarkData = securityScopedBookmarkData
         self.flacFingerprint = flacFingerprint
+        self.sampleRate = sampleRate
+        self.totalSamples = totalSamples
+        self.bitsPerSample = bitsPerSample
+        self.channels = channels
         self.duration = duration
     }
 }

@@ -38,6 +38,8 @@ typedef struct {
 typedef struct {
     uint32_t sample_rate;
     uint64_t total_samples;
+    uint32_t bits_per_sample;
+    uint32_t channels;
     char *fingerprint;
 } FlacStreamInfoResult;
 

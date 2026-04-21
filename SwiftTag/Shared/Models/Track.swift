@@ -14,6 +14,10 @@ struct Track: Identifiable {
     var externalDifferences: TrackExternalDifferences?
     var fingerprint: String?
     var duration: TimeInterval?
+    var sampleRate: UInt32?
+    var totalSamples: UInt64?
+    var bitsPerSample: UInt32?
+    var channels: UInt32?
     var isLocked: Bool
     var preservesEditorStateDuringFileRefresh: Bool
 
@@ -61,6 +65,10 @@ struct Track: Identifiable {
         return fingerprint ?? "NA"
     }
 
+    var sampleRateDisplayValue: String {
+        TrackSampleRateFormatter.string(from: sampleRate) ?? ""
+    }
+
     var displayFileName: String {
         if let sourceFileURL {
             return sourceFileURL.lastPathComponent
@@ -83,6 +91,10 @@ struct Track: Identifiable {
         externalDifferences: TrackExternalDifferences? = nil,
         fingerprint: String? = nil,
         duration: TimeInterval? = nil,
+        sampleRate: UInt32? = nil,
+        totalSamples: UInt64? = nil,
+        bitsPerSample: UInt32? = nil,
+        channels: UInt32? = nil,
         isLocked: Bool = false,
         preservesEditorStateDuringFileRefresh: Bool = false
     ) {
@@ -103,6 +115,10 @@ struct Track: Identifiable {
         self.externalDifferences = externalDifferences
         self.fingerprint = Track.normalizedOptionalValue(fingerprint)
         self.duration = Track.normalizedDuration(duration)
+        self.sampleRate = Track.normalizedPositiveValue(sampleRate)
+        self.totalSamples = Track.normalizedPositiveValue(totalSamples)
+        self.bitsPerSample = Track.normalizedPositiveValue(bitsPerSample)
+        self.channels = Track.normalizedPositiveValue(channels)
         self.isLocked = isLocked
         self.preservesEditorStateDuringFileRefresh = preservesEditorStateDuringFileRefresh
     }
@@ -129,6 +145,22 @@ struct Track: Identifiable {
         guard let value,
               value.isFinite,
               value >= 0 else {
+            return nil
+        }
+
+        return value
+    }
+
+    private static func normalizedPositiveValue(_ value: UInt32?) -> UInt32? {
+        guard let value, value > 0 else {
+            return nil
+        }
+
+        return value
+    }
+
+    private static func normalizedPositiveValue(_ value: UInt64?) -> UInt64? {
+        guard let value, value > 0 else {
             return nil
         }
 

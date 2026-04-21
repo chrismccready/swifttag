@@ -15,6 +15,10 @@ enum SwiftTagDocumentPackageReader {
                     sourceFileURL: normalizedFileURL(from: manifestTrack.flacFileURL),
                     securityScopedBookmarkData: manifestTrack.flacFileBookmark,
                     flacFingerprint: normalizedOptionalString(manifestTrack.flacFingerprint),
+                    sampleRate: TrackSampleRateFormatter.hertz(from: manifestTrack.sampleRate),
+                    totalSamples: manifestTrack.totalSamples,
+                    bitsPerSample: manifestTrack.bitsPerSample,
+                    channels: manifestTrack.channels,
                     duration: manifestTrack.duration,
                     tags: manifestTrack.tags,
                     pictures: try manifestTrack.pictures.map { manifestPicture in

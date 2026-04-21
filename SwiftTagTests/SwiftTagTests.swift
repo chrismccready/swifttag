@@ -733,6 +733,10 @@ struct SwiftTagTests {
         #expect(record.tags["COMPOSER"] == "Test Composer")
         #expect(record.tags["DESCRIPTION"] == "Test Description")
         #expect(record.tags["ENCODED_BY"] == "Test Encoded_By")
+        #expect(record.sampleRate == 44_100)
+        #expect(record.totalSamples == 6_754)
+        #expect(record.bitsPerSample == 16)
+        #expect(record.channels == 1)
         #expect(record.fingerprint == Self.fixtureFingerprint)
         #expect(record.pictures.count >= 0)
     }
@@ -745,6 +749,10 @@ struct SwiftTagTests {
         let record = try FlacMetadataService.readTags(for: fileURL)
         #expect(record.tags["ALBUM"] == "Test Album")
         #expect(record.tags["ALBUMARTIST"] == "Test AlbumArtist")
+        #expect(record.sampleRate == 44_100)
+        #expect(record.totalSamples == 6_754)
+        #expect(record.bitsPerSample == 16)
+        #expect(record.channels == 1)
         #expect(record.fingerprint == Self.fixtureFingerprint)
     }
 

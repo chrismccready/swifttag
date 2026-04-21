@@ -19,6 +19,10 @@ struct FlacMetadataRecord {
     let pictures: [FlacPictureRecord]
     let fingerprint: String?
     let duration: TimeInterval?
+    let sampleRate: UInt32?
+    let totalSamples: UInt64?
+    let bitsPerSample: UInt32?
+    let channels: UInt32?
 }
 
 enum UITestFlacOverrideWriter {
@@ -136,7 +140,13 @@ enum FlacMetadataService {
     static func readTags(for fileURL: URL) throws -> FlacMetadataRecord {
         var result = FlacTagResult(pairs: nil, count: 0)
         var pictureResult = FlacPictureResult(pictures: nil, count: 0)
-        var streamInfoResult = FlacStreamInfoResult(sample_rate: 0, total_samples: 0, fingerprint: nil)
+        var streamInfoResult = FlacStreamInfoResult(
+            sample_rate: 0,
+            total_samples: 0,
+            bits_per_sample: 0,
+            channels: 0,
+            fingerprint: nil
+        )
         var errorMessage: UnsafeMutablePointer<CChar>? = nil
 
         let status: Int32 = fileURL.path.withCString { filePath in
@@ -221,12 +231,25 @@ enum FlacMetadataService {
         let fingerprint = streamInfoResult.fingerprint
             .map { String(cString: $0).trimmingCharacters(in: .whitespacesAndNewlines) }
             .flatMap { $0.isEmpty ? nil : $0 }
+        let sampleRate = positiveValue(streamInfoResult.sample_rate)
+        let totalSamples = positiveValue(streamInfoResult.total_samples)
+        let bitsPerSample = positiveValue(streamInfoResult.bits_per_sample)
+        let channels = positiveValue(streamInfoResult.channels)
         let duration = duration(
             sampleRate: streamInfoResult.sample_rate,
             totalSamples: streamInfoResult.total_samples
         )
 
-        return FlacMetadataRecord(tags: tags, pictures: pictures, fingerprint: fingerprint, duration: duration)
+        return FlacMetadataRecord(
+            tags: tags,
+            pictures: pictures,
+            fingerprint: fingerprint,
+            duration: duration,
+            sampleRate: sampleRate,
+            totalSamples: totalSamples,
+            bitsPerSample: bitsPerSample,
+            channels: channels
+        )
     }
 
     @discardableResult
@@ -409,5 +432,13 @@ enum FlacMetadataService {
         }
 
         return Double(totalSamples) / Double(sampleRate)
+    }
+
+    private static func positiveValue(_ value: UInt32) -> UInt32? {
+        value > 0 ? value : nil
+    }
+
+    private static func positiveValue(_ value: UInt64) -> UInt64? {
+        value > 0 ? value : nil
     }
 }

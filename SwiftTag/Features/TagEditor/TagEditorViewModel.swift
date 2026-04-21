@@ -349,6 +349,10 @@ final class TagEditorViewModel {
                 sourceFileURL: track.sourceFileURL,
                 securityScopedBookmarkData: track.securityScopedBookmarkData,
                 flacFingerprint: track.fingerprint,
+                sampleRate: track.sampleRate,
+                totalSamples: track.totalSamples,
+                bitsPerSample: track.bitsPerSample,
+                channels: track.channels,
                 duration: track.duration
             )
         }
@@ -419,6 +423,10 @@ final class TagEditorViewModel {
                 securityScopedBookmarkData: documentTrack.securityScopedBookmarkData,
                 fingerprint: documentTrack.flacFingerprint,
                 duration: documentTrack.duration,
+                sampleRate: documentTrack.sampleRate,
+                totalSamples: documentTrack.totalSamples,
+                bitsPerSample: documentTrack.bitsPerSample,
+                channels: documentTrack.channels,
                 preservesEditorStateDuringFileRefresh: true
             )
         }
@@ -1169,6 +1177,10 @@ final class TagEditorViewModel {
                     ),
                     fingerprint: metadata.fingerprint,
                     duration: metadata.duration,
+                    sampleRate: metadata.sampleRate,
+                    totalSamples: metadata.totalSamples,
+                    bitsPerSample: metadata.bitsPerSample,
+                    channels: metadata.channels,
                     isLocked: locked
                 )
             )
@@ -1674,6 +1686,10 @@ final class TagEditorViewModel {
                 updatedTrackItems[index].sourceFileURL = fileURL
                 updatedTrackItems[index].securityScopedBookmarkData = refreshedBookmarkData
                 updatedTrackItems[index].fingerprint = metadata.fingerprint
+                updatedTrackItems[index].sampleRate = metadata.sampleRate
+                updatedTrackItems[index].totalSamples = metadata.totalSamples
+                updatedTrackItems[index].bitsPerSample = metadata.bitsPerSample
+                updatedTrackItems[index].channels = metadata.channels
                 updatedTrackItems[index].duration = metadata.duration
                 updatedTrackItems[index].preservesEditorStateDuringFileRefresh = false
                 updatedTrackItems[index].latestFileSnapshot = TrackFileSnapshot(
@@ -1766,6 +1782,10 @@ final class TagEditorViewModel {
         )
 
         trackItems[index].fingerprint = metadata.fingerprint
+        trackItems[index].sampleRate = metadata.sampleRate
+        trackItems[index].totalSamples = metadata.totalSamples
+        trackItems[index].bitsPerSample = metadata.bitsPerSample
+        trackItems[index].channels = metadata.channels
         trackItems[index].duration = metadata.duration
         trackItems[index].preservesEditorStateDuringFileRefresh = false
         trackItems[index].latestFileSnapshot = fileSnapshot
@@ -1831,6 +1851,10 @@ final class TagEditorViewModel {
                 }
                 self.cancelPendingMissingRefresh(for: self.trackItems[index].id)
                 self.trackItems[index].fingerprint = metadata.fingerprint
+                self.trackItems[index].sampleRate = metadata.sampleRate
+                self.trackItems[index].totalSamples = metadata.totalSamples
+                self.trackItems[index].bitsPerSample = metadata.bitsPerSample
+                self.trackItems[index].channels = metadata.channels
                 self.trackItems[index].duration = metadata.duration
                 if !preservesEditorStateDuringFileRefresh {
                     self.trackItems[index].latestFileSnapshot = fileSnapshot
