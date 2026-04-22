@@ -11,9 +11,13 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
     case invalidFileValue
     case invalidSelectedTrack
     case invalidSaveDestination
+    case invalidTagKey
+    case invalidTagObject
+    case invalidTagTrackTarget
     case saveLocationRequired
     case sessionUnavailable
     case saveAlreadyInProgress
+    case trackLocked
 
     var errorDescription: String? {
         switch self {
@@ -35,12 +39,20 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
             return "Selected track must belong to target editor window."
         case .invalidSaveDestination:
             return "Save destination must be a single local file URL."
+        case .invalidTagKey:
+            return "Tag key must resolve to a non-empty text value."
+        case .invalidTagObject:
+            return "Tag mutations require a tag object or record with key and value."
+        case .invalidTagTrackTarget:
+            return "Tag command target must resolve to a track in the current editor window."
         case .saveLocationRequired:
             return "Save command needs an existing SwiftTag document or an explicit destination file."
         case .sessionUnavailable:
             return "Target editor window is not available for AppleScript save."
         case .saveAlreadyInProgress:
             return "Save command cannot run while another save operation is already running."
+        case .trackLocked:
+            return "Target track is locked for editing."
         }
     }
 
@@ -54,9 +66,12 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
              .invalidFileValue,
              .invalidSelectedTrack,
              .invalidSaveDestination,
+             .invalidTagKey,
+             .invalidTagObject,
+             .invalidTagTrackTarget,
              .saveLocationRequired:
             Int(NSArgumentsWrongScriptError)
-        case .noEditorWindowAvailable, .sessionUnavailable:
+        case .noEditorWindowAvailable, .sessionUnavailable, .trackLocked:
             Int(NSReceiversCantHandleCommandScriptError)
         case .saveAlreadyInProgress:
             Int(NSInternalScriptError)
@@ -175,6 +190,26 @@ struct SwiftTagAppleScriptSessionBridge {
     let addTracks: ([URL]) throws -> [UUID]
     let selectTrack: (UUID?) throws -> Void
     let saveDocument: (URL?) throws -> SwiftTagDocumentSaveState
+    let upsertTag: (UUID, String, String) throws -> Void
+    let deleteTag: (UUID, String) throws -> Void
+
+    init(
+        documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
+        sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
+        addTracks: @escaping ([URL]) throws -> [UUID],
+        selectTrack: @escaping (UUID?) throws -> Void,
+        saveDocument: @escaping (URL?) throws -> SwiftTagDocumentSaveState,
+        upsertTag: @escaping (UUID, String, String) throws -> Void = { _, _, _ in },
+        deleteTag: @escaping (UUID, String) throws -> Void = { _, _ in }
+    ) {
+        self.documentSnapshot = documentSnapshot
+        self.sessionSnapshot = sessionSnapshot
+        self.addTracks = addTracks
+        self.selectTrack = selectTrack
+        self.saveDocument = saveDocument
+        self.upsertTag = upsertTag
+        self.deleteTag = deleteTag
+    }
 }
 
 private extension String {
@@ -237,6 +272,350 @@ private extension Track {
         }
 
         return nil
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        guard indices.contains(index) else {
+            return nil
+        }
+
+        return self[index]
+    }
+}
+
+struct SwiftTagAppleScriptTagSnapshot: Equatable {
+    let key: String
+    let value: String
+}
+
+@MainActor
+enum SwiftTagAppleScriptTagKey {
+    static let totalDiscs = "TOTALDISCS"
+    static let totalTracks = "TOTALTRACKS"
+
+    static func normalizedKey(_ rawKey: String) -> String {
+        switch TagNormalization.normalizeTagKey(rawKey) {
+        case "ALBUM ARTIST":
+            TagKey.albumArtist
+        case "DISC":
+            TagKey.discNumber
+        case "DISCTOTAL":
+            totalDiscs
+        case "TRACK":
+            TagKey.trackNumber
+        case "TRACKTOTAL":
+            totalTracks
+        default:
+            TagNormalization.normalizeTagKey(rawKey)
+        }
+    }
+
+    static func relatedKeys(for rawKey: String) -> [String] {
+        switch normalizedKey(rawKey) {
+        case TagKey.albumArtist:
+            [TagKey.albumArtist, "ALBUM ARTIST"]
+        case TagKey.discNumber:
+            [TagKey.discNumber, "DISC"]
+        case totalDiscs:
+            [totalDiscs, "DISCTOTAL"]
+        case TagKey.trackNumber:
+            [TagKey.trackNumber, "TRACK"]
+        case totalTracks:
+            [totalTracks, "TRACKTOTAL"]
+        default:
+            [normalizedKey(rawKey)]
+        }
+    }
+
+    static func normalizedValue(_ rawValue: String) -> String {
+        let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        return Int(trimmedValue).map(String.init) ?? trimmedValue
+    }
+
+    static func snapshots(for track: Track) -> [SwiftTagAppleScriptTagSnapshot] {
+        var tagsByKey: [String: String] = [:]
+
+        for (rawKey, rawValue) in track.tags {
+            let key = normalizedKey(rawKey)
+            guard !key.isEmpty, key != TagKey.filename else {
+                continue
+            }
+
+            let value = normalizedValue(rawValue)
+            guard !value.isEmpty else {
+                continue
+            }
+
+            if key == TagKey.compilation {
+                guard let normalizedCompilation = CompilationTag.normalizedValue(value) else {
+                    continue
+                }
+                tagsByKey[key] = normalizedCompilation
+                continue
+            }
+
+            tagsByKey[key] = value
+        }
+
+        if let album = track.album.appleScriptNonEmptyValue {
+            tagsByKey[TagKey.album] = album
+        } else {
+            tagsByKey.removeValue(forKey: TagKey.album)
+        }
+
+        if let albumArtist = track.albumArtist.appleScriptNonEmptyValue {
+            tagsByKey[TagKey.albumArtist] = albumArtist
+        } else {
+            tagsByKey.removeValue(forKey: TagKey.albumArtist)
+        }
+
+        if let totalTracks = track.totalTracks.appleScriptNonEmptyValue.map(normalizedValue(_:)) {
+            tagsByKey[Self.totalTracks] = totalTracks
+        } else {
+            tagsByKey.removeValue(forKey: Self.totalTracks)
+        }
+
+        let totalDiscValue = relatedKeys(for: totalDiscs)
+            .compactMap { track.tags[$0]?.appleScriptNonEmptyValue }
+            .map(normalizedValue(_:))
+            .first
+        if let totalDiscValue {
+            tagsByKey[totalDiscs] = totalDiscValue
+        } else {
+            tagsByKey.removeValue(forKey: totalDiscs)
+        }
+
+        return tagsByKey.keys
+            .sorted()
+            .compactMap { key in
+                guard let value = tagsByKey[key], !value.isEmpty else {
+                    return nil
+                }
+
+                return SwiftTagAppleScriptTagSnapshot(key: key, value: value)
+            }
+    }
+}
+
+private struct SwiftTagAppleScriptTagPayload {
+    let key: String
+    let value: String
+
+    static func from(value rawValue: Any) throws -> Self {
+        if let tag = rawValue as? SwiftTagScriptTag {
+            return try make(key: tag.key, value: tag.value)
+        }
+
+        if let dictionary = rawValue as? [AnyHashable: Any] {
+            return try from(dictionary: dictionary)
+        }
+
+        if let dictionary = rawValue as? NSDictionary {
+            var bridgedDictionary: [AnyHashable: Any] = [:]
+            for case let (key as AnyHashable, value) in dictionary {
+                bridgedDictionary[key] = value
+            }
+            return try from(dictionary: bridgedDictionary)
+        }
+
+        throw SwiftTagAppleScriptCommandError.invalidTagObject
+    }
+
+    static func make(key: String?, value: String?) throws -> Self {
+        let normalizedKey = SwiftTagAppleScriptTagKey.normalizedKey(key ?? "")
+        guard !normalizedKey.isEmpty else {
+            throw SwiftTagAppleScriptCommandError.invalidTagKey
+        }
+
+        return Self(
+            key: normalizedKey,
+            value: SwiftTagAppleScriptTagKey.normalizedValue(value ?? "")
+        )
+    }
+
+    private static func from(dictionary: [AnyHashable: Any]) throws -> Self {
+        let keyValue = dictionary.first { normalizedPropertyName($0.key) == "key" }?.value
+        let tagValue = dictionary.first { normalizedPropertyName($0.key) == "value" }?.value
+        return try make(
+            key: stringValue(from: keyValue),
+            value: stringValue(from: tagValue)
+        )
+    }
+
+    private static func normalizedPropertyName(_ rawKey: AnyHashable) -> String {
+        String(describing: rawKey)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+    }
+
+    private static func stringValue(from rawValue: Any?) -> String? {
+        switch rawValue {
+        case let value as String:
+            value
+        case let value as NSString:
+            value as String
+        case let value as NSNumber:
+            value.stringValue
+        case let value as URL:
+            value.absoluteString
+        case nil:
+            nil
+        default:
+            String(describing: rawValue!)
+        }
+    }
+}
+
+@MainActor
+@objc(SwiftTagScriptTag)
+final class SwiftTagScriptTag: NSObject {
+    private enum Storage {
+        case attached(sessionID: UUID, trackID: UUID, key: String)
+        case detached(SwiftTagAppleScriptTagSnapshot)
+    }
+
+    private var storage: Storage
+
+    @objc
+    override init() {
+        storage = .detached(.init(key: "", value: ""))
+        super.init()
+    }
+
+    init(key: String, value: String) {
+        storage = .detached(.init(key: key, value: value))
+        super.init()
+    }
+
+    init(sessionID: UUID, trackID: UUID, key: String) {
+        storage = .attached(
+            sessionID: sessionID,
+            trackID: trackID,
+            key: SwiftTagAppleScriptTagKey.normalizedKey(key)
+        )
+        super.init()
+    }
+
+    @objc(key)
+    var key: String? {
+        get {
+            snapshot?.key.appleScriptNonEmptyValue
+        }
+        set {
+            do {
+                try updateKey(newValue)
+            } catch {
+                _ = NSScriptCommand.current()?.fail(error)
+            }
+        }
+    }
+
+    @objc(value)
+    var value: String? {
+        get {
+            snapshot?.value
+        }
+        set {
+            do {
+                try updateValue(newValue)
+            } catch {
+                _ = NSScriptCommand.current()?.fail(error)
+            }
+        }
+    }
+
+    override var objectSpecifier: NSScriptObjectSpecifier? {
+        guard case let .attached(sessionID, trackID, key) = storage,
+              let track = SwiftTagAppleScriptController.shared.track(
+                forSessionID: sessionID,
+                trackID: trackID
+              ),
+              let trackClassDescription = NSScriptClassDescription(for: SwiftTagScriptTrack.self),
+              let containerSpecifier = track.objectSpecifier,
+              let uniqueID = snapshot(forAttachedKey: key)?.key else {
+            return nil
+        }
+
+        return NSUniqueIDSpecifier(
+            containerClassDescription: trackClassDescription,
+            containerSpecifier: containerSpecifier,
+            key: "tags",
+            uniqueID: uniqueID
+        )
+    }
+
+    private var snapshot: SwiftTagAppleScriptTagSnapshot? {
+        switch storage {
+        case .attached(_, _, let key):
+            snapshot(forAttachedKey: key)
+        case .detached(let snapshot):
+            snapshot
+        }
+    }
+
+    private func snapshot(forAttachedKey key: String) -> SwiftTagAppleScriptTagSnapshot? {
+        guard case let .attached(sessionID, trackID, _) = storage else {
+            return nil
+        }
+
+        return SwiftTagAppleScriptController.shared.tagSnapshot(
+            forSessionID: sessionID,
+            trackID: trackID,
+            key: key
+        )
+    }
+
+    private func updateKey(_ newValue: String?) throws {
+        switch storage {
+        case .attached(let sessionID, let trackID, let currentKey):
+            let payload = try SwiftTagAppleScriptTagPayload.make(
+                key: newValue,
+                value: snapshot?.value
+            )
+            if payload.key == currentKey {
+                return
+            }
+
+            try SwiftTagAppleScriptController.shared.upsertTag(
+                key: payload.key,
+                value: payload.value,
+                forSessionID: sessionID,
+                trackID: trackID
+            )
+            try SwiftTagAppleScriptController.shared.deleteTag(
+                key: currentKey,
+                forSessionID: sessionID,
+                trackID: trackID
+            )
+            storage = .attached(sessionID: sessionID, trackID: trackID, key: payload.key)
+        case .detached(let snapshot):
+            let payload = try SwiftTagAppleScriptTagPayload.make(
+                key: newValue,
+                value: snapshot.value
+            )
+            storage = .detached(.init(key: payload.key, value: payload.value))
+        }
+    }
+
+    private func updateValue(_ newValue: String?) throws {
+        switch storage {
+        case .attached(let sessionID, let trackID, let currentKey):
+            try SwiftTagAppleScriptController.shared.upsertTag(
+                key: currentKey,
+                value: SwiftTagAppleScriptTagKey.normalizedValue(newValue ?? ""),
+                forSessionID: sessionID,
+                trackID: trackID
+            )
+        case .detached(let snapshot):
+            storage = .detached(
+                .init(
+                    key: snapshot.key,
+                    value: SwiftTagAppleScriptTagKey.normalizedValue(newValue ?? "")
+                )
+            )
+        }
     }
 }
 
@@ -358,6 +737,91 @@ final class SwiftTagScriptTrack: NSObject {
     @objc(fileURL)
     var fileURL: URL? {
         trackSnapshot?.sourceFileURL?.standardizedFileURL
+    }
+
+    @objc(tags)
+    var tags: [SwiftTagScriptTag] {
+        SwiftTagAppleScriptController.shared.tags(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue
+        )
+    }
+
+    @objc(countOfTags)
+    var countOfTags: Int {
+        tags.count
+    }
+
+    @objc(objectInTagsAtIndex:)
+    func objectInTags(at index: Int) -> SwiftTagScriptTag {
+        tags[index]
+    }
+
+    @objc(valueInTagsWithUniqueID:)
+    func valueInTags(withUniqueID uniqueID: Any) -> Any? {
+        SwiftTagAppleScriptController.shared.tag(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue,
+            uniqueID: uniqueID
+        )
+    }
+
+    @objc(insertObject:inTagsAtIndex:)
+    func insertObject(_ value: Any, inTagsAt index: Int) {
+        do {
+            let payload = try SwiftTagAppleScriptTagPayload.from(value: value)
+            try SwiftTagAppleScriptController.shared.upsertTag(
+                key: payload.key,
+                value: payload.value,
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue
+            )
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    @objc(removeObjectFromTagsAtIndex:)
+    func removeObjectFromTags(at index: Int) {
+        guard let tag = tags[safe: index],
+              let key = tag.key else {
+            return
+        }
+
+        do {
+            try SwiftTagAppleScriptController.shared.deleteTag(
+                key: key,
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue
+            )
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    @objc(replaceObjectInTagsAtIndex:withObject:)
+    func replaceObjectInTags(at index: Int, with value: Any) {
+        do {
+            let replacement = try SwiftTagAppleScriptTagPayload.from(value: value)
+            let existingKey = tags[safe: index]?.key
+            if let existingKey,
+               existingKey != replacement.key {
+                try SwiftTagAppleScriptController.shared.deleteTag(
+                    key: existingKey,
+                    forSessionID: sessionIDValue,
+                    trackID: trackIDValue
+                )
+            }
+
+            try SwiftTagAppleScriptController.shared.upsertTag(
+                key: replacement.key,
+                value: replacement.value,
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue
+            )
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
     }
 
     @objc(fingerprint)
@@ -1059,6 +1523,68 @@ final class SwiftTagAppleScriptController {
         return trackIDs.compactMap { track(forSessionID: sessionID, trackID: $0) }
     }
 
+    func tags(forSessionID sessionID: UUID, trackID: UUID) -> [SwiftTagScriptTag] {
+        tagSnapshots(forSessionID: sessionID, trackID: trackID).map { snapshot in
+            SwiftTagScriptTag(
+                sessionID: sessionID,
+                trackID: trackID,
+                key: snapshot.key
+            )
+        }
+    }
+
+    func tagSnapshot(
+        forSessionID sessionID: UUID,
+        trackID: UUID,
+        key: String
+    ) -> SwiftTagAppleScriptTagSnapshot? {
+        let normalizedKey = SwiftTagAppleScriptTagKey.normalizedKey(key)
+        return tagSnapshots(forSessionID: sessionID, trackID: trackID)
+            .first { $0.key == normalizedKey }
+    }
+
+    func tag(
+        forSessionID sessionID: UUID,
+        trackID: UUID,
+        uniqueID: Any
+    ) -> SwiftTagScriptTag? {
+        guard let key = normalizedTagUniqueID(uniqueID),
+              tagSnapshot(forSessionID: sessionID, trackID: trackID, key: key) != nil else {
+            return nil
+        }
+
+        return SwiftTagScriptTag(
+            sessionID: sessionID,
+            trackID: trackID,
+            key: key
+        )
+    }
+
+    func upsertTag(
+        key: String,
+        value: String,
+        forSessionID sessionID: UUID,
+        trackID: UUID
+    ) throws {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        try bridge.upsertTag(trackID, key, value)
+    }
+
+    func deleteTag(
+        key: String,
+        forSessionID sessionID: UUID,
+        trackID: UUID
+    ) throws {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        try bridge.deleteTag(trackID, key)
+    }
+
     func documentSnapshot(
         forSessionID sessionID: UUID,
         fallbackFileURL: URL?
@@ -1196,7 +1722,7 @@ final class SwiftTagAppleScriptController {
         sessionBridgesBySessionID[sessionID]?.sessionSnapshot()
     }
 
-    private func track(forSessionID sessionID: UUID, trackID: UUID) -> SwiftTagScriptTrack? {
+    fileprivate func track(forSessionID sessionID: UUID, trackID: UUID) -> SwiftTagScriptTrack? {
         guard trackSnapshot(forSessionID: sessionID, trackID: trackID) != nil else {
             return nil
         }
@@ -1217,6 +1743,14 @@ final class SwiftTagAppleScriptController {
         }
     }
 
+    private func tagSnapshots(forSessionID sessionID: UUID, trackID: UUID) -> [SwiftTagAppleScriptTagSnapshot] {
+        guard let track = trackSnapshot(forSessionID: sessionID, trackID: trackID) else {
+            return []
+        }
+
+        return SwiftTagAppleScriptTagKey.snapshots(for: track)
+    }
+
     private func normalizedSessionID(from uniqueID: Any) -> UUID? {
         if let uuid = uniqueID as? UUID {
             return uuid
@@ -1228,6 +1762,20 @@ final class SwiftTagAppleScriptController {
 
         if let string = uniqueID as? NSString {
             return UUID(uuidString: string as String)
+        }
+
+        return nil
+    }
+
+    private func normalizedTagUniqueID(_ uniqueID: Any) -> String? {
+        if let string = uniqueID as? String {
+            let normalizedKey = SwiftTagAppleScriptTagKey.normalizedKey(string)
+            return normalizedKey.isEmpty ? nil : normalizedKey
+        }
+
+        if let string = uniqueID as? NSString {
+            let normalizedKey = SwiftTagAppleScriptTagKey.normalizedKey(string as String)
+            return normalizedKey.isEmpty ? nil : normalizedKey
         }
 
         return nil

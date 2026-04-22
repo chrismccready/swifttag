@@ -1227,6 +1227,107 @@ final class TagEditorViewModel {
         reloadMiscTagRowsFromSelection()
     }
 
+    func appleScriptUpsertTag(key rawKey: String, value rawValue: String, forTrackID trackID: UUID) throws {
+        guard let index = trackItems.firstIndex(where: { $0.id == trackID }) else {
+            throw SwiftTagAppleScriptCommandError.invalidTagTrackTarget
+        }
+        guard !trackItems[index].isLocked else {
+            throw SwiftTagAppleScriptCommandError.trackLocked
+        }
+
+        let normalizedKey = SwiftTagAppleScriptTagKey.normalizedKey(rawKey)
+        guard !normalizedKey.isEmpty else {
+            throw SwiftTagAppleScriptCommandError.invalidTagKey
+        }
+
+        let normalizedValue = SwiftTagAppleScriptTagKey.normalizedValue(rawValue)
+        switch normalizedKey {
+        case TagKey.album:
+            trackItems[index].album = normalizedValue
+            trackItems[index].tags.removeValue(forKey: TagKey.album)
+            if !normalizedValue.isEmpty {
+                trackItems[index].tags[TagKey.album] = normalizedValue
+            }
+        case TagKey.albumArtist:
+            trackItems[index].albumArtist = normalizedValue
+            trackItems[index].tags.removeValue(forKey: TagKey.albumArtist)
+            trackItems[index].tags.removeValue(forKey: "ALBUM ARTIST")
+            if !normalizedValue.isEmpty {
+                trackItems[index].tags[TagKey.albumArtist] = normalizedValue
+            }
+        case SwiftTagAppleScriptTagKey.totalTracks:
+            trackItems[index].totalTracks = normalizedValue
+            trackItems[index].tags.removeValue(forKey: "TOTALTRACKS")
+            trackItems[index].tags.removeValue(forKey: "TRACKTOTAL")
+            if !normalizedValue.isEmpty {
+                trackItems[index].tags["TOTALTRACKS"] = normalizedValue
+            }
+        case SwiftTagAppleScriptTagKey.totalDiscs:
+            setCurrentTotalDiscsValue(normalizedValue, forTrackAt: index)
+        case TagKey.compilation:
+            if let normalizedCompilation = CompilationTag.normalizedValue(normalizedValue) {
+                trackItems[index].tags[TagKey.compilation] = normalizedCompilation
+            } else {
+                trackItems[index].tags.removeValue(forKey: TagKey.compilation)
+            }
+        default:
+            for key in SwiftTagAppleScriptTagKey.relatedKeys(for: normalizedKey) where key != normalizedKey {
+                trackItems[index].tags.removeValue(forKey: key)
+            }
+            if normalizedValue.isEmpty {
+                trackItems[index].tags.removeValue(forKey: normalizedKey)
+            } else {
+                trackItems[index].tags[normalizedKey] = normalizedValue
+            }
+        }
+
+        clearExternallyModifiedDifference(
+            forTrackAt: index,
+            keys: SwiftTagAppleScriptTagKey.relatedKeys(for: normalizedKey)
+        )
+        reloadMiscTagRowsFromSelection()
+    }
+
+    func appleScriptDeleteTag(key rawKey: String, forTrackID trackID: UUID) throws {
+        guard let index = trackItems.firstIndex(where: { $0.id == trackID }) else {
+            throw SwiftTagAppleScriptCommandError.invalidTagTrackTarget
+        }
+        guard !trackItems[index].isLocked else {
+            throw SwiftTagAppleScriptCommandError.trackLocked
+        }
+
+        let normalizedKey = SwiftTagAppleScriptTagKey.normalizedKey(rawKey)
+        guard !normalizedKey.isEmpty else {
+            throw SwiftTagAppleScriptCommandError.invalidTagKey
+        }
+
+        switch normalizedKey {
+        case TagKey.album:
+            trackItems[index].album = ""
+            trackItems[index].tags.removeValue(forKey: TagKey.album)
+        case TagKey.albumArtist:
+            trackItems[index].albumArtist = ""
+            trackItems[index].tags.removeValue(forKey: TagKey.albumArtist)
+            trackItems[index].tags.removeValue(forKey: "ALBUM ARTIST")
+        case SwiftTagAppleScriptTagKey.totalTracks:
+            trackItems[index].totalTracks = ""
+            trackItems[index].tags.removeValue(forKey: "TOTALTRACKS")
+            trackItems[index].tags.removeValue(forKey: "TRACKTOTAL")
+        case SwiftTagAppleScriptTagKey.totalDiscs:
+            setCurrentTotalDiscsValue("", forTrackAt: index)
+        default:
+            for key in SwiftTagAppleScriptTagKey.relatedKeys(for: normalizedKey) {
+                trackItems[index].tags.removeValue(forKey: key)
+            }
+        }
+
+        clearExternallyModifiedDifference(
+            forTrackAt: index,
+            keys: SwiftTagAppleScriptTagKey.relatedKeys(for: normalizedKey)
+        )
+        reloadMiscTagRowsFromSelection()
+    }
+
     func setPictureRecordsByTrackID(
         _ recordsByTrackID: [UUID: [FlacWritablePictureRecord]],
         tagWriteOptions: TagWriteOptions,

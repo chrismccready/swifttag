@@ -1629,6 +1629,14 @@ struct ContentView: View {
         syncAlbumArtContext()
     }
 
+    private func performAppleScriptUpsertTag(_ key: String, value: String, for trackID: UUID) throws {
+        try viewModel.appleScriptUpsertTag(key: key, value: value, forTrackID: trackID)
+    }
+
+    private func performAppleScriptDeleteTag(_ key: String, for trackID: UUID) throws {
+        try viewModel.appleScriptDeleteTag(key: key, forTrackID: trackID)
+    }
+
     private func resolveDeletedSwiftTagDocumentRecoveryDestination(
         currentState: SwiftTagDocumentSaveState
     ) -> URL? {
@@ -1964,6 +1972,12 @@ struct ContentView: View {
                 },
                 saveDocument: { destinationURL in
                     try performAppleScriptSwiftTagDocumentSave(to: destinationURL)
+                },
+                upsertTag: { trackID, key, value in
+                    try performAppleScriptUpsertTag(key, value: value, for: trackID)
+                },
+                deleteTag: { trackID, key in
+                    try performAppleScriptDeleteTag(key, for: trackID)
                 }
             )
         )

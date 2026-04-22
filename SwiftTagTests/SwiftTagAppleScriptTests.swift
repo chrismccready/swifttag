@@ -249,6 +249,126 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func trackTagsSupportCanonicalLookupUpsertRenamingAndDeletion() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let trackURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-tag-track.flac")
+        var viewModel = TagEditorViewModel()
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: viewModel.trackItems,
+                        selectedTrackID: viewModel.selectedTrackIDs.first
+                    )
+                },
+                addTracks: { urls in
+                    #expect(urls == [trackURL.standardizedFileURL])
+
+                    let addedTrack = Track(
+                        album: "The Planets",
+                        albumArtist: "London Symphony Orchestra",
+                        totalTracks: "7",
+                        tags: [
+                            TagKey.title: "Mars, the Bringer of War",
+                            TagKey.artist: "Gustav Holst",
+                            "COMMENT": "Live broadcast",
+                            "DISCTOTAL": "2"
+                        ],
+                        sourceFileURL: trackURL
+                    )
+                    viewModel.trackItems = [addedTrack]
+                    viewModel.selectedTrackIDs = [addedTrack.id]
+                    viewModel.reloadMiscTagRowsFromSelection()
+                    return [addedTrack.id]
+                },
+                selectTrack: { trackID in
+                    viewModel.selectedTrackIDs = trackID.map { [$0] } ?? []
+                    viewModel.reloadMiscTagRowsFromSelection()
+                },
+                saveDocument: { _ in
+                    .init()
+                },
+                upsertTag: { trackID, key, value in
+                    try viewModel.appleScriptUpsertTag(key: key, value: value, forTrackID: trackID)
+                },
+                deleteTag: { trackID, key in
+                    try viewModel.appleScriptDeleteTag(key: key, forTrackID: trackID)
+                }
+            )
+        )
+
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
+        let addedTracks = try scriptWindow.addTracks(at: [trackURL])
+        #expect(addedTracks.count == 1)
+
+        let scriptTrack = try #require(addedTracks.first)
+        let initialKeys = scriptTrack.tags.compactMap(\.key)
+
+        #expect(initialKeys == initialKeys.sorted())
+        #expect(initialKeys.contains(TagKey.album))
+        #expect(initialKeys.contains(TagKey.albumArtist))
+        #expect(initialKeys.contains(TagKey.artist))
+        #expect(initialKeys.contains("COMMENT"))
+        #expect(initialKeys.contains(TagKey.title))
+        #expect(initialKeys.contains(SwiftTagAppleScriptTagKey.totalDiscs))
+        #expect(initialKeys.contains(SwiftTagAppleScriptTagKey.totalTracks))
+        #expect(!initialKeys.contains("DISCTOTAL"))
+
+        let titleTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.title) as? SwiftTagScriptTag)
+        #expect(titleTag.value == "Mars, the Bringer of War")
+        titleTag.value = "Mars"
+        #expect(viewModel.trackItems.first?.tags[TagKey.title] == "Mars")
+
+        let tagCountBeforeArtistUpsert = scriptTrack.countOfTags
+        let artistTagUpdate = SwiftTagScriptTag()
+        artistTagUpdate.key = TagKey.artist
+        artistTagUpdate.value = "London Symphony Orchestra"
+        scriptTrack.insertObject(artistTagUpdate, inTagsAt: 0)
+        #expect(scriptTrack.countOfTags == tagCountBeforeArtistUpsert)
+        #expect(viewModel.trackItems.first?.tags[TagKey.artist] == "London Symphony Orchestra")
+
+        let detachedTag = SwiftTagScriptTag()
+        detachedTag.key = "SOMEKEY"
+        detachedTag.value = "SOMEVALUE"
+        #expect(detachedTag.objectSpecifier == nil)
+
+        scriptTrack.insertObject(detachedTag, inTagsAt: scriptTrack.countOfTags)
+        #expect(viewModel.trackItems.first?.tags["SOMEKEY"] == "SOMEVALUE")
+        let insertedTag = try #require(scriptTrack.valueInTags(withUniqueID: "SOMEKEY") as? SwiftTagScriptTag)
+        insertedTag.key = "RENAMEDKEY"
+        #expect(scriptTrack.valueInTags(withUniqueID: "SOMEKEY") == nil)
+        #expect(viewModel.trackItems.first?.tags["RENAMEDKEY"] == "SOMEVALUE")
+
+        let replacementTag = SwiftTagScriptTag()
+        replacementTag.key = "RENAMEDKEY"
+        replacementTag.value = "UPDATED"
+        scriptTrack.replaceObjectInTags(at: scriptTrack.countOfTags, with: replacementTag)
+        #expect(viewModel.trackItems.first?.tags["RENAMEDKEY"] == "UPDATED")
+
+        let renamedIndex = try #require(scriptTrack.tags.firstIndex(where: { $0.key == "RENAMEDKEY" }))
+        scriptTrack.removeObjectFromTags(at: renamedIndex)
+        #expect(viewModel.trackItems.first?.tags["RENAMEDKEY"] == nil)
+        #expect(scriptTrack.valueInTags(withUniqueID: "RENAMEDKEY") == nil)
+    }
+
+    @MainActor
+    @Test
     func addingTracksThroughScriptEditorWindowReturnsAddedTrackWrappers() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()

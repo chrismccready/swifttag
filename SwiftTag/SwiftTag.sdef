@@ -34,6 +34,12 @@
             <result type="integer" description="Count."/>
         </command>
 
+        <command name="delete" code="coredelo" description="Delete object.">
+            <cocoa class="NSDeleteCommand"/>
+            <access-group identifier="*"/>
+            <direct-parameter type="specifier" description="Object(s) to delete."/>
+        </command>
+
         <command name="exists" code="coredoex" description="Verify object exists.">
             <cocoa class="NSExistsCommand"/>
             <access-group identifier="*"/>
@@ -57,6 +63,15 @@
                 <cocoa key="KeyDictionary"/>
             </parameter>
             <result type="specifier" description="New object."/>
+        </command>
+
+        <command name="move" code="coremove" description="Move object to new location.">
+            <cocoa class="NSMoveCommand"/>
+            <access-group identifier="*"/>
+            <direct-parameter type="specifier" requires-access="r" description="Object(s) to move."/>
+            <parameter name="to" code="insh" type="location specifier" description="New location for the object(s).">
+                <cocoa key="ToLocation"/>
+            </parameter>
         </command>
 
         <command name="quit" code="aevtquit" description="Quit application.">
@@ -144,6 +159,9 @@
 
         <class name="track" plural="tracks" code="trck" description="A FLAC track file.">
             <cocoa class="SwiftTagScriptTrack"/>
+            <element type="tag">
+                <cocoa key="tags"/>
+            </element>
             <property name="album" code="albm" type="text" description="The album name of the track.">
                 <cocoa key="album"/>
             </property>
@@ -287,6 +305,16 @@
             </property>
             <property name="version" code="tver" type="text" description="The version of the track.">
                 <cocoa key="trackVersion"/>
+            </property>
+        </class>
+
+        <class name="tag" plural="tags" code="ftag" description="A FLAC track metadata tag.">
+            <cocoa class="SwiftTagScriptTag"/>
+            <property name="key" code="pkey" type="text" description="A FLAC track metadata tag name.">
+                <cocoa key="key"/>
+            </property>
+            <property name="value" code="pval" type="text" description="The value associated with a FLAC track metadata key.">
+                <cocoa key="value"/>
             </property>
         </class>
 

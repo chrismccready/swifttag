@@ -19,11 +19,14 @@ In scope:
 - Support AppleScript commands for:
   - standard `open`
   - standard `close`
+  - standard `delete`
+  - standard `exists`
+  - standard `make`
+  - standard `move`
   - standard `save`
+  - standard `set`
   - standard `quit`
   - custom `add`
-  - custom `add tag`
-  - custom `delete tag`
   - custom `add picture`
   - custom `delete picture`
 - Define how script getters/setters map onto the existing SwiftUI session, `TagEditorViewModel`, FLAC import/save flows, and `.swifttag` package metadata.
@@ -62,7 +65,7 @@ Out of scope:
   - `SwiftTagTestFiles/test.flac`
   - `SwiftTagTestFiles/test-with_padding.flac`
 - Prototype artifact created:
-  - `Docs/Plans/SwiftTag.sdef`
+  - `Docs/Plans/_SwiftTag.sdef`
 - Constraints accounted for:
   - SwiftTag is a SwiftUI `WindowGroup` app with no `NSDocument`-based editor object model in the app target.
   - `AppDelegate` and `EditorWindowCoordinator` already route Finder/menu/open events into the active or newly created editor session.
@@ -109,9 +112,10 @@ Out of scope:
 - SwiftTag should define its own top-level `application` class instead of inheriting Cocoa's stock `application` definition untouched.
 - `editor window id` should be based on the existing editor session UUID rather than `NSWindow.uniqueID`.
 - `application`, `editor window`, `document`, `track`, `tag`, `picture`, `swift tag`, and `settings` are the intended script-facing nouns.
-- The prototype SDEF should live in `Docs/Plans/SwiftTag.sdef` until bundle integration work begins.
-- The prototype SDEF may use provisional command payload shapes for unresolved commands as long as those unresolved areas are called out explicitly in the plan.
+- The prototype SDEF should live in `Docs/Plans/_SwiftTag.sdef` until bundle integration work begins.
+- The prototype SDEF may use provisional payload shapes for unresolved custom commands as long as those unresolved areas are called out explicitly in the plan.
 - AppleScript support should reuse existing import/save core logic where practical instead of forking separate scripting-only mutation paths.
+- Track `tag` manipulation should prefer Standard Suite collection/class commands (`make`, `set`, `delete`, `exists`, `move`) over custom `add tag` / `delete tag` verbs.
 
 ## Dependencies And Constraints
 - Bundle integration:
@@ -168,7 +172,7 @@ Out of scope:
   - or it should be read-only despite the current prototype text
 - `swift tag` currently implies a generic document metadata collection, but the current manifest only has `Author`.
 - Many requested typed track properties are currently free-form text tags, so naive coercion could lose original formatting or make empty values impossible.
-- Custom `add tag` / `delete tag` / `add picture` / `delete picture` verbs overlap with Standard Suite `make` / `delete`, so terminology may become redundant or confusing without clearer rules.
+- Custom picture verbs still need clear boundaries against Standard Suite collection semantics.
 - Picture-slot list properties are unresolved beyond `front cover`, and write behavior for those lists is not yet specified.
 - `add` without an explicit target window needs deterministic routing behavior when no editor window is frontmost.
 
@@ -185,7 +189,7 @@ Out of scope:
 - Decide whether `track URL` is writable.
 - Decide whether `swift tag` remains `Author`-only in v1 or expands the `.swifttag` manifest schema.
 - Decide which settings belong in the initial scripting surface.
-- Decide exact payload syntax for `add tag`, `delete tag`, `add picture`, and `delete picture`.
+- Decide exact payload syntax for `add picture` and `delete picture`.
 - Decide which picture-slot list properties ship in v1 beyond `front cover`.
 
 2. Build scriptable wrapper layer
@@ -256,7 +260,6 @@ Out of scope:
 - Should `track URL` be writable, and if so, what exact behavior should setting it trigger?
 - Should `document` mean only a saved `.swifttag` package, or also the current unsaved editor-session document abstraction?
 - Should `swift tag` v1 expose only current manifest `Author`, or should SwiftTag document metadata become an arbitrary key/value collection?
-- Should custom `add tag` / `delete tag` / `add picture` / `delete picture` remain separate verbs, or should the final design lean harder on Standard Suite `make` / `delete`?
 - Which picture slot list properties beyond `front cover` should ship in v1?
 - Should picture-slot list properties be read-only filtered collections or writable replacement properties?
 - Which application settings belong in the first scriptable `settings` surface?
