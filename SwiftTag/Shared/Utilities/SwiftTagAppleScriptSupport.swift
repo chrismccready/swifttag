@@ -40,7 +40,7 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
         case .invalidSaveDestination:
             return "Save destination must be a single local file URL."
         case .invalidTagKey:
-            return "Tag key must resolve to a non-empty text value."
+            return "Tag key must resolve to non-empty text without internal whitespace."
         case .invalidTagObject:
             return "Tag mutations require a tag object or record with key and value."
         case .invalidTagTrackTarget:
@@ -297,8 +297,6 @@ enum SwiftTagAppleScriptTagKey {
 
     static func normalizedKey(_ rawKey: String) -> String {
         switch TagNormalization.normalizeTagKey(rawKey) {
-        case "ALBUM ARTIST":
-            TagKey.albumArtist
         case "DISC":
             TagKey.discNumber
         case "DISCTOTAL":
@@ -314,8 +312,6 @@ enum SwiftTagAppleScriptTagKey {
 
     static func relatedKeys(for rawKey: String) -> [String] {
         switch normalizedKey(rawKey) {
-        case TagKey.albumArtist:
-            [TagKey.albumArtist, "ALBUM ARTIST"]
         case TagKey.discNumber:
             [TagKey.discNumber, "DISC"]
         case totalDiscs:
@@ -638,7 +634,7 @@ final class SwiftTagScriptTrack: NSObject {
 
     @objc(albumArtist)
     var albumArtist: String? {
-        currentTextValue(for: [TagKey.albumArtist, "ALBUM ARTIST"], fallback: \.albumArtist)
+        currentTextValue(for: [TagKey.albumArtist], fallback: \.albumArtist)
     }
 
     @objc(artist)

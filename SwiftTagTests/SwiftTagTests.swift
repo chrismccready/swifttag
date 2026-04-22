@@ -199,8 +199,12 @@ struct SwiftTagTests {
     @Test
     func tagNormalizationHandlesExpectedKeys() {
         #expect(TagNormalization.normalizeTagKey("  encoded_by  ") == "ENCODED_BY")
+        #expect(TagNormalization.normalizeTagKey("  album artist  ").isEmpty)
+        #expect(TagNormalization.normalizeTagKey("  track total  ").isEmpty)
         #expect(TagNormalization.isExplicitTagKey("title"))
         #expect(TagNormalization.isExplicitTagKey("ALBUMARTIST"))
+        #expect(TagNormalization.hasInvalidWhitespace("album artist"))
+        #expect(!TagNormalization.isExplicitTagKey("album artist"))
         #expect(TagNormalization.isExplicitTagKey("compilation"))
         #expect(!TagNormalization.isExplicitTagKey("ENCODED_BY"))
     }
@@ -2760,6 +2764,61 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func tagEditorViewModelMiscTagsRejectsWhitespaceKeyForNewRow() throws {
+        let track = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+        let initialCount = viewModel.miscTagRows.count
+
+        let rowID = viewModel.addMiscTagRow()
+        let keyBinding = try #require(viewModel.miscTagKeyBinding(for: rowID))
+        keyBinding.wrappedValue = "BAD KEY"
+
+        #expect(viewModel.isInvalidMiscTagKeyInput("BAD KEY", for: rowID))
+
+        viewModel.finalizeMiscTagKeyEditing(for: rowID)
+
+        #expect(viewModel.miscTagRows.count == initialCount)
+        #expect(viewModel.trackItems[0].tags["BAD KEY"] == nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelAppleScriptRejectsWhitespaceTagKey() {
+        let track = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+
+        do {
+            try viewModel.appleScriptUpsertTag(key: "ALBUM ARTIST", value: "Artist", forTrackID: track.id)
+            Issue.record("Expected AppleScript tag upsert to reject whitespace tag key.")
+        } catch let error as SwiftTagAppleScriptCommandError {
+            switch error {
+            case .invalidTagKey:
+                break
+            default:
+                Issue.record("Unexpected AppleScript error: \(error)")
+            }
+        } catch {
+            Issue.record("Unexpected error type: \(error)")
+        }
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelMiscTagsRevertsDuplicateEditToOriginalKey() throws {
         let track = Track(
             tags: [
@@ -3617,7 +3676,7 @@ struct SwiftTagTests {
 
         let viewModel = TagEditorViewModel()
         viewModel.album = metadata.tags[TagKey.album] ?? ""
-        viewModel.albumArtist = metadata.tags[TagKey.albumArtist] ?? metadata.tags["ALBUM ARTIST"] ?? ""
+        viewModel.albumArtist = metadata.tags[TagKey.albumArtist] ?? ""
         viewModel.importedFlacPicturesByType = importedPicturesByType
         viewModel.trackItems = [
             Track(

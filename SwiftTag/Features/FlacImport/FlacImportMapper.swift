@@ -10,7 +10,7 @@ struct FlacImportInitialization {
 enum FlacImportMapper {
     static func initialValues(from tags: [String: String]) -> FlacImportInitialization {
         let albumValue = tags["ALBUM"]?.isEmpty == false ? tags["ALBUM"] : nil
-        let albumArtistValue = (tags["ALBUMARTIST"] ?? tags["ALBUM ARTIST"])
+        let albumArtistValue = tags[TagKey.albumArtist]
             .flatMap { $0.isEmpty ? nil : $0 }
 
         let rawTotalDiscs = tags["TOTALDISCS"] ?? ""

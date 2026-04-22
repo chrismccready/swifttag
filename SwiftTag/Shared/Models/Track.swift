@@ -100,7 +100,7 @@ struct Track: Identifiable {
     ) {
         self.id = id
         self.album = Track.normalizedSharedValue(album ?? tags[TagKey.album] ?? "")
-        self.albumArtist = Track.normalizedSharedValue(albumArtist ?? tags[TagKey.albumArtist] ?? tags["ALBUM ARTIST"] ?? "")
+        self.albumArtist = Track.normalizedSharedValue(albumArtist ?? tags[TagKey.albumArtist] ?? "")
         self.totalTracks = Track.normalizedNumericValue(totalTracks ?? tags["TOTALTRACKS"] ?? tags["TRACKTOTAL"] ?? "")
         self.tags = tags
         self.storedFlacPicturesByType = flacPicturesByType

@@ -987,6 +987,10 @@ final class TagEditorViewModel {
     }
 
     func isInvalidMiscTagKeyInput(_ rawKey: String, for rowID: MiscTagRow.ID) -> Bool {
+        if TagNormalization.hasInvalidWhitespace(rawKey) {
+            return true
+        }
+
         let normalizedKey = normalizedTagKey(rawKey)
         guard !normalizedKey.isEmpty else {
             return false
@@ -1251,7 +1255,6 @@ final class TagEditorViewModel {
         case TagKey.albumArtist:
             trackItems[index].albumArtist = normalizedValue
             trackItems[index].tags.removeValue(forKey: TagKey.albumArtist)
-            trackItems[index].tags.removeValue(forKey: "ALBUM ARTIST")
             if !normalizedValue.isEmpty {
                 trackItems[index].tags[TagKey.albumArtist] = normalizedValue
             }
@@ -1308,7 +1311,6 @@ final class TagEditorViewModel {
         case TagKey.albumArtist:
             trackItems[index].albumArtist = ""
             trackItems[index].tags.removeValue(forKey: TagKey.albumArtist)
-            trackItems[index].tags.removeValue(forKey: "ALBUM ARTIST")
         case SwiftTagAppleScriptTagKey.totalTracks:
             trackItems[index].totalTracks = ""
             trackItems[index].tags.removeValue(forKey: "TOTALTRACKS")
@@ -2128,7 +2130,6 @@ final class TagEditorViewModel {
         let trimmedAlbumArtist = trackItems[index].albumArtist.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedAlbumArtist.isEmpty {
             tags.removeValue(forKey: TagKey.albumArtist)
-            tags.removeValue(forKey: "ALBUM ARTIST")
         } else {
             tags[TagKey.albumArtist] = trackItems[index].albumArtist
         }

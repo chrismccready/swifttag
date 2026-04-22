@@ -2,6 +2,8 @@ import Foundation
 
 enum TagNormalization {
     static let explicitTagKeys: Set<String> = [
+        TagKey.album,
+        TagKey.albumArtist,
         TagKey.compilation,
         TagKey.trackNumber,
         TagKey.discNumber,
@@ -13,8 +15,6 @@ enum TagNormalization {
         TagKey.location,
         TagKey.date,
         TagKey.description,
-        "ALBUM",
-        "ALBUMARTIST",
         "TRACK",
         "TRACKNUMBER",
         "TOTALTRACKS",
@@ -24,7 +24,21 @@ enum TagNormalization {
     ]
 
     static func normalizeTagKey(_ value: String) -> String {
-        value.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !hasInvalidWhitespace(trimmedValue) else {
+            return ""
+        }
+
+        return trimmedValue.uppercased()
+    }
+
+    static func hasInvalidWhitespace(_ value: String) -> Bool {
+        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty else {
+            return false
+        }
+
+        return trimmedValue.rangeOfCharacter(from: .whitespacesAndNewlines) != nil
     }
 
     static func isExplicitTagKey(_ value: String) -> Bool {

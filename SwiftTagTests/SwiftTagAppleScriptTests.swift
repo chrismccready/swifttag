@@ -329,6 +329,17 @@ struct SwiftTagAppleScriptTests {
         #expect(initialKeys.contains(SwiftTagAppleScriptTagKey.totalDiscs))
         #expect(initialKeys.contains(SwiftTagAppleScriptTagKey.totalTracks))
         #expect(!initialKeys.contains("DISCTOTAL"))
+        #expect(!initialKeys.contains("ALBUM ARTIST"))
+
+        #expect(scriptTrack.valueInTags(withUniqueID: "ALBUM ARTIST") == nil)
+
+        let albumArtistTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.albumArtist) as? SwiftTagScriptTag)
+        #expect(albumArtistTag.key == TagKey.albumArtist)
+        #expect(albumArtistTag.value == "London Symphony Orchestra")
+        albumArtistTag.value = "London Philharmonic Orchestra"
+        #expect(viewModel.trackItems.first?.tags[TagKey.albumArtist] == "London Philharmonic Orchestra")
+        #expect(viewModel.trackItems.first?.tags["ALBUM ARTIST"] == nil)
+        #expect(scriptTrack.albumArtist == "London Philharmonic Orchestra")
 
         let titleTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.title) as? SwiftTagScriptTag)
         #expect(titleTag.value == "Mars, the Bringer of War")
