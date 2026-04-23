@@ -116,6 +116,9 @@ Out of scope:
 - The prototype SDEF may use provisional payload shapes for unresolved custom commands as long as those unresolved areas are called out explicitly in the plan.
 - AppleScript support should reuse existing import/save core logic where practical instead of forking separate scripting-only mutation paths.
 - Track `tag` manipulation should prefer Standard Suite collection/class commands (`make`, `set`, `delete`, `exists`, `move`) over custom `add tag` / `delete tag` verbs.
+- `save` on `editor window` should write FLAC files only; `save` on `document` should write the `.swifttag` package only.
+- `editor window` save should accept optional `selected tracks` / `all tracks` scope overrides and `tags` / `pictures` payload overrides.
+- When `editor window` save omits those overrides, it should use `settings.defaultSaveScope` and `settings.defaultSavePayload`.
 
 ## Dependencies And Constraints
 - Bundle integration:
@@ -155,10 +158,10 @@ Out of scope:
   - `delete tag` removes only the targeted FLAC metadata tag(s).
   - `delete picture` removes only the targeted picture object(s).
   - No other tag or picture data should be removed as collateral.
-- Partial-save behavior to define explicitly during implementation:
-  - `save` on `editor window`
-  - `save` on `document`
-  - how FLAC-only saves interact with referenced `.swifttag` saves
+- Partial-save behavior confirmed:
+  - `save` on `editor window` writes FLAC metadata only, using AppleScript-provided payload/scope overrides or default save settings.
+  - `save` on `document` writes only the `.swifttag` package.
+  - `editor window` save does not implicitly save a referenced `.swifttag` document; scripts can save the `document` object separately.
 - Selection/source-of-truth semantics:
   - AppleScript object collections should be driven by the current editor-session state, not by UI table selection.
   - `editor window.tracks` and `document.tracks` should reflect the full current session/document track set.
@@ -256,7 +259,6 @@ Out of scope:
 - Targeted automated tests cover wrapper mapping, command routing, and at least one end-to-end AppleScript scenario.
 
 ## Open Questions
-- What should `save` mean on `editor window`: current default FLAC save, `.swifttag` save, or both?
 - Should `track URL` be writable, and if so, what exact behavior should setting it trigger?
 - Should `document` mean only a saved `.swifttag` package, or also the current unsaved editor-session document abstraction?
 - Should `swift tag` v1 expose only current manifest `Author`, or should SwiftTag document metadata become an arbitrary key/value collection?

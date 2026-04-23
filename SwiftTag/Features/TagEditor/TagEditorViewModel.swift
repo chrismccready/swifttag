@@ -1387,18 +1387,12 @@ final class TagEditorViewModel {
         editorSessionID: UUID,
         progress: ((Int, Int, String) -> Void)? = nil
     ) async throws -> SaveOperationResult {
-        let trackIndices = saveTrackIndices(for: scope).filter { index in
-            hasDifferencesForSavePayload(
-                at: index,
-                payload: payload,
-                tagWriteOptions: tagWriteOptions,
-                albumArtPictures: albumArtPictures
-            )
-        }
-        guard !trackIndices.isEmpty else {
-            throw TagEditorSaveError.noTracksToSave
-        }
-
+        let trackIndices = try preparedSaveTrackIndices(
+            payload: payload,
+            scope: scope,
+            tagWriteOptions: tagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
         var failures: [String] = []
         var savedTrackReferences: [ImportedTrackReference] = []
         let totalTrackCount = trackIndices.count
@@ -1409,53 +1403,66 @@ final class TagEditorViewModel {
             await Task.yield()
 
             do {
-                try withAccessingSecurityScopedTrackURL(for: index) { fileURL in
-                    let tags = payload.writesTags
-                        ? FlacWriteMapper.makeTags(
-                            for: track,
-                            totalDiscs: currentTotalDiscsValue(for: track),
-                            options: tagWriteOptions
-                        )
-                        : [:]
-                    let picturesForTrack = picturesForTrack(at: index, fallback: albumArtPictures)
-
-                    try FlacMetadataService.writeMetadata(
-                        tags: tags,
-                        pictures: payload.writesPictures ? picturesForTrack : [],
-                        to: fileURL,
-                        writeTags: payload.writesTags,
-                        writePictures: payload.writesPictures
-                    )
-
-                    let refreshedTrackReference = try refreshedImportedTrackReference(
-                        for: fileURL,
-                        trackIndex: index
-                    )
-                    try refreshSnapshotAfterWrite(
-                        for: index,
-                        fileURL: fileURL,
-                        tagWriteOptions: tagWriteOptions,
-                        albumArtPictures: picturesForTrack,
-                        wroteTags: payload.writesTags,
-                        wrotePictures: payload.writesPictures
-                    )
-                    savedTrackReferences.append(refreshedTrackReference)
-                }
+                let refreshedTrackReference = try saveTrack(
+                    at: index,
+                    payload: payload,
+                    tagWriteOptions: tagWriteOptions,
+                    albumArtPictures: albumArtPictures
+                )
+                savedTrackReferences.append(refreshedTrackReference)
             } catch {
-                let path = track.sourceFileURL?.path ?? track.tags[TagKey.filename] ?? "Unknown file"
-                failures.append("\(path): \((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)")
+                failures.append(saveFailureMessage(for: track, error: error))
             }
         }
 
-        guard failures.isEmpty else {
-            throw TagEditorSaveError.partialFailure(messages: failures)
+        return try finalizeSaveResult(
+            failures: failures,
+            savedTrackReferences: savedTrackReferences,
+            payload: payload,
+            editorSessionID: editorSessionID
+        )
+    }
+
+    func saveSynchronously(
+        payload: SavePayloadOption,
+        scope: SaveScopeOption,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord],
+        editorSessionID: UUID,
+        progress: ((Int, Int, String) -> Void)? = nil
+    ) throws -> SaveOperationResult {
+        let trackIndices = try preparedSaveTrackIndices(
+            payload: payload,
+            scope: scope,
+            tagWriteOptions: tagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+        var failures: [String] = []
+        var savedTrackReferences: [ImportedTrackReference] = []
+        let totalTrackCount = trackIndices.count
+
+        for (offset, index) in trackIndices.enumerated() {
+            let track = trackItems[index]
+            progress?(offset + 1, totalTrackCount, saveStatusDisplayName(for: track))
+
+            do {
+                let refreshedTrackReference = try saveTrack(
+                    at: index,
+                    payload: payload,
+                    tagWriteOptions: tagWriteOptions,
+                    albumArtPictures: albumArtPictures
+                )
+                savedTrackReferences.append(refreshedTrackReference)
+            } catch {
+                failures.append(saveFailureMessage(for: track, error: error))
+            }
         }
 
-        return SaveOperationResult(
-            sourceSessionID: editorSessionID,
+        return try finalizeSaveResult(
+            failures: failures,
+            savedTrackReferences: savedTrackReferences,
             payload: payload,
-            trackReferences: savedTrackReferences,
-            fingerprint: TrackSetFingerprint.make(from: savedTrackReferences)
+            editorSessionID: editorSessionID
         )
     }
 
@@ -1478,6 +1485,91 @@ final class TagEditorViewModel {
                 albumArtPictures: albumArtPictures
             )
         }
+    }
+
+    private func preparedSaveTrackIndices(
+        payload: SavePayloadOption,
+        scope: SaveScopeOption,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) throws -> [Int] {
+        let trackIndices = saveTrackIndices(for: scope).filter { index in
+            hasDifferencesForSavePayload(
+                at: index,
+                payload: payload,
+                tagWriteOptions: tagWriteOptions,
+                albumArtPictures: albumArtPictures
+            )
+        }
+        guard !trackIndices.isEmpty else {
+            throw TagEditorSaveError.noTracksToSave
+        }
+
+        return trackIndices
+    }
+
+    private func saveTrack(
+        at index: Int,
+        payload: SavePayloadOption,
+        tagWriteOptions: TagWriteOptions,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) throws -> ImportedTrackReference {
+        let track = trackItems[index]
+        return try withAccessingSecurityScopedTrackURL(for: index) { fileURL in
+            let tags = payload.writesTags
+                ? FlacWriteMapper.makeTags(
+                    for: track,
+                    totalDiscs: currentTotalDiscsValue(for: track),
+                    options: tagWriteOptions
+                )
+                : [:]
+            let picturesForTrack = picturesForTrack(at: index, fallback: albumArtPictures)
+
+            try FlacMetadataService.writeMetadata(
+                tags: tags,
+                pictures: payload.writesPictures ? picturesForTrack : [],
+                to: fileURL,
+                writeTags: payload.writesTags,
+                writePictures: payload.writesPictures
+            )
+
+            let refreshedTrackReference = try refreshedImportedTrackReference(
+                for: fileURL,
+                trackIndex: index
+            )
+            try refreshSnapshotAfterWrite(
+                for: index,
+                fileURL: fileURL,
+                tagWriteOptions: tagWriteOptions,
+                albumArtPictures: picturesForTrack,
+                wroteTags: payload.writesTags,
+                wrotePictures: payload.writesPictures
+            )
+            return refreshedTrackReference
+        }
+    }
+
+    private func finalizeSaveResult(
+        failures: [String],
+        savedTrackReferences: [ImportedTrackReference],
+        payload: SavePayloadOption,
+        editorSessionID: UUID
+    ) throws -> SaveOperationResult {
+        guard failures.isEmpty else {
+            throw TagEditorSaveError.partialFailure(messages: failures)
+        }
+
+        return SaveOperationResult(
+            sourceSessionID: editorSessionID,
+            payload: payload,
+            trackReferences: savedTrackReferences,
+            fingerprint: TrackSetFingerprint.make(from: savedTrackReferences)
+        )
+    }
+
+    private func saveFailureMessage(for track: Track, error: Error) -> String {
+        let path = track.sourceFileURL?.path ?? track.tags[TagKey.filename] ?? "Unknown file"
+        return "\(path): \((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)"
     }
 
     func trackStatusPresentation(

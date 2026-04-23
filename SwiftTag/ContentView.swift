@@ -1370,16 +1370,20 @@ struct ContentView: View {
                 editorSessionID: sessionValue.sessionID,
                 progress: updateSaveStatus(currentTrackIndex:totalTrackCount:currentTrackName:)
             )
-            refreshTrackMonitoring()
-            registerEditorSession()
-            let notificationPayload = SaveNotificationCoordinator.shared.prepareSuccessNotification(for: saveResult)
-            Task {
-                await SaveNotificationCoordinator.shared.schedulePreparedSuccessNotification(notificationPayload)
-            }
+            finalizeSuccessfulFlacSave(saveResult)
             await dismissSaveStatusAfterSuccessIfNeeded()
         } catch {
             await dismissSaveStatusImmediately()
             throw error
+        }
+    }
+
+    private func finalizeSuccessfulFlacSave(_ saveResult: SaveOperationResult) {
+        refreshTrackMonitoring()
+        registerEditorSession()
+        let notificationPayload = SaveNotificationCoordinator.shared.prepareSuccessNotification(for: saveResult)
+        Task {
+            await SaveNotificationCoordinator.shared.schedulePreparedSuccessNotification(notificationPayload)
         }
     }
 
@@ -1595,6 +1599,33 @@ struct ContentView: View {
         }
 
         return viewModel.swiftTagDocumentSaveState()
+    }
+
+    private func performAppleScriptFlacSave(
+        using request: SwiftTagAppleScriptFlacSaveRequest
+    ) throws -> SaveOperationResult {
+        guard !isSaveOperationRunning else {
+            throw SwiftTagAppleScriptCommandError.saveAlreadyInProgress
+        }
+
+        syncTrackPictureRecordsFromAlbumArt()
+        isSaveOperationRunning = true
+        defer {
+            isSaveOperationRunning = false
+        }
+
+        let settings = saveSettingsSnapshot
+        let effectivePayload = request.payload ?? settings.payload
+        let effectiveScope = request.scope ?? settings.scope
+        let saveResult = try viewModel.saveSynchronously(
+            payload: effectivePayload,
+            scope: effectiveScope,
+            tagWriteOptions: settings.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures,
+            editorSessionID: sessionValue.sessionID
+        )
+        finalizeSuccessfulFlacSave(saveResult)
+        return saveResult
     }
 
     private func performAppleScriptAddTracks(_ urls: [URL]) throws -> [UUID] {
@@ -1972,6 +2003,9 @@ struct ContentView: View {
                 },
                 saveDocument: { destinationURL in
                     try performAppleScriptSwiftTagDocumentSave(to: destinationURL)
+                },
+                saveTracks: { request in
+                    try performAppleScriptFlacSave(using: request)
                 },
                 upsertTag: { trackID, key, value in
                     try performAppleScriptUpsertTag(key, value: value, for: trackID)

@@ -4773,6 +4773,57 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func tagEditorViewModelSaveSynchronouslyWritesTagsToSelectedImportedTrackOnly() throws {
+        let selectedFileURL = try Self.tempFixtureCopyURL(name: "selected-sync-save.flac")
+        let unselectedFileURL = try Self.tempFixtureCopyURL(name: "unselected-sync-save.flac")
+        let selectedTrack = Self.importedTrack(
+            fileURL: selectedFileURL,
+            tags: [
+                TagKey.title: "Selected Title",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1"
+            ]
+        )
+        let unselectedTrack = Self.importedTrack(
+            fileURL: unselectedFileURL,
+            tags: [
+                TagKey.title: "Unselected Title",
+                TagKey.trackNumber: "2",
+                TagKey.discNumber: "1"
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.album = "Saved Sync Album"
+        viewModel.albumArtist = "Saved Sync Album Artist"
+        viewModel.trackItems = [selectedTrack, unselectedTrack]
+        viewModel.selectedTrackIDs = [selectedTrack.id]
+
+        _ = try viewModel.saveSynchronously(
+            payload: .writeTags,
+            scope: .selectedTracks,
+            tagWriteOptions: TagWriteOptions(
+                zeroPadTrackNumber: true,
+                trackCountKeyStrategy: .both,
+                zeroPadDiscNumber: true,
+                discCountKeyStrategy: .totalDiscs
+            ),
+            albumArtPictures: [],
+            editorSessionID: UUID()
+        )
+
+        let selectedRecord = try FlacMetadataService.readTags(for: selectedFileURL)
+        #expect(selectedRecord.tags["ALBUM"] == "Saved Sync Album")
+        #expect(selectedRecord.tags["ALBUMARTIST"] == "Saved Sync Album Artist")
+        #expect(selectedRecord.tags[TagKey.title] == "Selected Title")
+
+        let unselectedRecord = try FlacMetadataService.readTags(for: unselectedFileURL)
+        #expect(unselectedRecord.tags["ALBUM"] == "Test Album")
+        #expect(unselectedRecord.tags[TagKey.title] == "Test Title")
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelSaveWritesPicturesWithoutChangingTags() async throws {
         let fileURL = try Self.tempFixtureCopyURL(name: "viewmodel-write-pictures.flac")
         let originalRecord = try FlacMetadataService.readTags(for: fileURL)

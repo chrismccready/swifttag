@@ -22,6 +22,18 @@
             <parameter name="in" code="kfil" type="file" optional="yes" description="The file in which to save the document.">
                 <cocoa key="File"/>
             </parameter>
+            <parameter name="all tracks" code="altr" type="boolean" optional="yes" description="When true, save all editable imported FLAC tracks in an editor window.">
+                <cocoa key="AllTracks"/>
+            </parameter>
+            <parameter name="pictures" code="pics" type="boolean" optional="yes" description="When true, save FLAC pictures in an editor window.">
+                <cocoa key="Pictures"/>
+            </parameter>
+            <parameter name="selected tracks" code="sltr" type="boolean" optional="yes" description="When true, save selected editable imported FLAC tracks in an editor window.">
+                <cocoa key="SelectedTracks"/>
+            </parameter>
+            <parameter name="tags" code="tags" type="boolean" optional="yes" description="When true, save FLAC tags in an editor window.">
+                <cocoa key="Tags"/>
+            </parameter>
         </command>
 
         <command name="count" code="corecnte" description="Return number of elements of specific class within object.">

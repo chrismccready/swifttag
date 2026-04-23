@@ -129,6 +129,101 @@ struct SwiftTagAppleScriptTests {
         #expect(loadedDocument.tracks.isEmpty)
     }
 
+    @Test
+    func appleScriptFlacSaveRequestUsesDefaultsWhenOptionsOmitted() throws {
+        let request = try SwiftTagAppleScriptFlacSaveRequest.from(arguments: nil)
+
+        #expect(request == .defaults)
+    }
+
+    @Test
+    func appleScriptFlacSaveRequestMapsExplicitScopeAndPayloadOptions() throws {
+        let request = try SwiftTagAppleScriptFlacSaveRequest.from(
+            arguments: [
+                "selected tracks": true,
+                "tags": true,
+                "pictures": true
+            ]
+        )
+
+        #expect(request.scope == .selectedTracks)
+        #expect(request.payload == .writeTagsAndPictures)
+    }
+
+    @Test
+    func appleScriptFlacSaveRequestRejectsConflictingScopeOptions() {
+        #expect(throws: SwiftTagAppleScriptCommandError.conflictingSaveScopeOptions) {
+            _ = try SwiftTagAppleScriptFlacSaveRequest.from(
+                arguments: [
+                    "SelectedTracks": true,
+                    "AllTracks": true
+                ]
+            )
+        }
+    }
+
+    @MainActor
+    @Test
+    func savingScriptEditorWindowRoutesFlacSaveRequestThroughBridge() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let savedReference = ImportedTrackReference(
+            filePath: "/tmp/SwiftTagAppleScriptTests-save.flac",
+            securityScopedBookmarkData: nil
+        )
+        let expectedResult = SaveOperationResult(
+            sourceSessionID: sessionID,
+            payload: .writePictures,
+            trackReferences: [savedReference],
+            fingerprint: TrackSetFingerprint.make(from: [savedReference])
+        )
+        let expectedRequest = SwiftTagAppleScriptFlacSaveRequest(
+            payload: .writePictures,
+            scope: .selectedTracks
+        )
+        var capturedRequest: SwiftTagAppleScriptFlacSaveRequest?
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackID: nil)
+                },
+                addTracks: { _ in
+                    []
+                },
+                selectTrack: { _ in
+                },
+                saveDocument: { _ in
+                    .init()
+                },
+                saveTracks: { request in
+                    capturedRequest = request
+                    return expectedResult
+                }
+            )
+        )
+
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
+        let saveResult = try scriptWindow.saveFlacFiles(using: expectedRequest)
+
+        #expect(capturedRequest == expectedRequest)
+        #expect(saveResult == expectedResult)
+    }
+
     @MainActor
     @Test
     func editorWindowTracksSupportSelectionAndTypedTrackProperties() throws {

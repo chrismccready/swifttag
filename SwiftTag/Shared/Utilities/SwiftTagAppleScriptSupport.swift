@@ -1,7 +1,9 @@
 import AppKit
 import Foundation
 
-enum SwiftTagAppleScriptCommandError: LocalizedError {
+enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
+    case conflictingSaveScopeOptions
+    case editorWindowSaveDestinationUnsupported
     case invalidEditorWindowTarget
     case missingOpenTarget
     case missingAddTracksInput
@@ -9,6 +11,7 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
     case noFlacFilesProvided
     case noSwiftTagDocumentsProvided
     case invalidFileValue
+    case invalidSaveOptionValue(String)
     case invalidSelectedTrack
     case invalidSaveDestination
     case invalidTagKey
@@ -21,6 +24,10 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
+        case .conflictingSaveScopeOptions:
+            return "Save command cannot specify both selected tracks and all tracks."
+        case .editorWindowSaveDestinationUnsupported:
+            return "Editor window save does not support an explicit destination. Save document instead."
         case .invalidEditorWindowTarget:
             return "Add command target must resolve to a single editor window."
         case .missingOpenTarget:
@@ -35,6 +42,8 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
             return "No .swifttag documents were provided."
         case .invalidFileValue:
             return "AppleScript file argument must resolve to a local file URL."
+        case let .invalidSaveOptionValue(optionName):
+            return "Save option \(optionName) must be true or false."
         case .invalidSelectedTrack:
             return "Selected track must belong to target editor window."
         case .invalidSaveDestination:
@@ -60,10 +69,13 @@ enum SwiftTagAppleScriptCommandError: LocalizedError {
         switch self {
         case .missingOpenTarget, .missingAddTracksInput:
             Int(NSRequiredArgumentsMissingScriptError)
-        case .invalidEditorWindowTarget,
+        case .conflictingSaveScopeOptions,
+             .editorWindowSaveDestinationUnsupported,
+             .invalidEditorWindowTarget,
              .noFlacFilesProvided,
              .noSwiftTagDocumentsProvided,
              .invalidFileValue,
+             .invalidSaveOptionValue,
              .invalidSelectedTrack,
              .invalidSaveDestination,
              .invalidTagKey,
@@ -159,6 +171,120 @@ private enum SwiftTagAppleScriptFileURLResolver {
     }
 }
 
+struct SwiftTagAppleScriptFlacSaveRequest: Equatable {
+    let payload: SavePayloadOption?
+    let scope: SaveScopeOption?
+
+    static let defaults = Self(payload: nil, scope: nil)
+
+    static func from(arguments: [String: Any]?) throws -> Self {
+        let selectedTracks = try boolValue(
+            optionName: "selected tracks",
+            keys: ["SelectedTracks", "selected tracks", "selectedTracks"],
+            in: arguments
+        )
+        let allTracks = try boolValue(
+            optionName: "all tracks",
+            keys: ["AllTracks", "all tracks", "allTracks"],
+            in: arguments
+        )
+        let tags = try boolValue(
+            optionName: "tags",
+            keys: ["Tags", "tags"],
+            in: arguments
+        )
+        let pictures = try boolValue(
+            optionName: "pictures",
+            keys: ["Pictures", "pictures"],
+            in: arguments
+        )
+
+        guard !(selectedTracks && allTracks) else {
+            throw SwiftTagAppleScriptCommandError.conflictingSaveScopeOptions
+        }
+
+        let scope: SaveScopeOption?
+        if selectedTracks {
+            scope = .selectedTracks
+        } else if allTracks {
+            scope = .allTracks
+        } else {
+            scope = nil
+        }
+
+        let payload: SavePayloadOption?
+        switch (tags, pictures) {
+        case (true, true):
+            payload = .writeTagsAndPictures
+        case (true, false):
+            payload = .writeTags
+        case (false, true):
+            payload = .writePictures
+        case (false, false):
+            payload = nil
+        }
+
+        return Self(payload: payload, scope: scope)
+    }
+
+    private static func boolValue(
+        optionName: String,
+        keys: [String],
+        in arguments: [String: Any]?
+    ) throws -> Bool {
+        guard let rawValue = argumentValue(keys: keys, in: arguments) else {
+            return false
+        }
+
+        switch rawValue {
+        case let value as Bool:
+            return value
+        case let value as NSNumber:
+            return value.boolValue
+        case let value as String:
+            return try parseBoolString(value, optionName: optionName)
+        case let value as NSString:
+            return try parseBoolString(value as String, optionName: optionName)
+        default:
+            throw SwiftTagAppleScriptCommandError.invalidSaveOptionValue(optionName)
+        }
+    }
+
+    private static func parseBoolString(
+        _ rawValue: String,
+        optionName: String
+    ) throws -> Bool {
+        switch rawValue
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased() {
+        case "1", "true", "yes", "on":
+            return true
+        case "0", "false", "no", "off":
+            return false
+        default:
+            throw SwiftTagAppleScriptCommandError.invalidSaveOptionValue(optionName)
+        }
+    }
+
+    private static func argumentValue(
+        keys: [String],
+        in arguments: [String: Any]?
+    ) -> Any? {
+        guard let arguments else {
+            return nil
+        }
+
+        for key in keys {
+            if let value = arguments[key] {
+                return value
+            }
+        }
+
+        let normalizedKeys = Set(keys.map { $0.lowercased() })
+        return arguments.first { normalizedKeys.contains($0.key.lowercased()) }?.value
+    }
+}
+
 private extension NSScriptCommand {
     func fail(_ error: Error) -> Any? {
         if let appleScriptError = error as? SwiftTagAppleScriptCommandError {
@@ -190,6 +316,7 @@ struct SwiftTagAppleScriptSessionBridge {
     let addTracks: ([URL]) throws -> [UUID]
     let selectTrack: (UUID?) throws -> Void
     let saveDocument: (URL?) throws -> SwiftTagDocumentSaveState
+    let saveTracks: (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult
     let upsertTag: (UUID, String, String) throws -> Void
     let deleteTag: (UUID, String) throws -> Void
 
@@ -199,6 +326,9 @@ struct SwiftTagAppleScriptSessionBridge {
         addTracks: @escaping ([URL]) throws -> [UUID],
         selectTrack: @escaping (UUID?) throws -> Void,
         saveDocument: @escaping (URL?) throws -> SwiftTagDocumentSaveState,
+        saveTracks: @escaping (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult = { _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
         upsertTag: @escaping (UUID, String, String) throws -> Void = { _, _, _ in },
         deleteTag: @escaping (UUID, String) throws -> Void = { _, _ in }
     ) {
@@ -207,6 +337,7 @@ struct SwiftTagAppleScriptSessionBridge {
         self.addTracks = addTracks
         self.selectTrack = selectTrack
         self.saveDocument = saveDocument
+        self.saveTracks = saveTracks
         self.upsertTag = upsertTag
         self.deleteTag = deleteTag
     }
@@ -1177,6 +1308,15 @@ final class SwiftTagScriptEditorWindow: NSObject {
         )
     }
 
+    func saveFlacFiles(
+        using request: SwiftTagAppleScriptFlacSaveRequest = .init(payload: nil, scope: nil)
+    ) throws -> SaveOperationResult {
+        try SwiftTagAppleScriptController.shared.saveTracks(
+            forSessionID: sessionIDValue,
+            request: request
+        )
+    }
+
     func addTracks(at urls: [URL]) throws -> [SwiftTagScriptTrack] {
         try SwiftTagAppleScriptController.shared.addTracks(urls, toSessionID: sessionIDValue)
     }
@@ -1198,12 +1338,16 @@ final class SwiftTagScriptEditorWindow: NSObject {
     @objc(handleSaveScriptCommand:)
     func handleSaveScriptCommand(_ command: NSScriptCommand) -> Any? {
         do {
-            let destinationURL = try SwiftTagAppleScriptFileURLResolver.singleFileURL(
-                from: command.evaluatedArguments?["File"]
-                    ?? command.evaluatedArguments?["file"]
-                    ?? command.evaluatedArguments?["in"]
-            )
-            return try saveSwiftTagDocument(to: destinationURL)
+            let arguments = command.evaluatedArguments
+            if arguments?["File"] != nil ||
+                arguments?["file"] != nil ||
+                arguments?["in"] != nil {
+                throw SwiftTagAppleScriptCommandError.editorWindowSaveDestinationUnsupported
+            }
+
+            let request = try SwiftTagAppleScriptFlacSaveRequest.from(arguments: arguments)
+            _ = try saveFlacFiles(using: request)
+            return self
         } catch {
             return command.fail(error)
         }
@@ -1613,6 +1757,17 @@ final class SwiftTagAppleScriptController {
         let saveState = try bridge.saveDocument(destinationURL)
         pendingDocumentURLBySessionID[sessionID] = saveState.navigationDocumentURL
         return document(forSessionID: sessionID, fallbackFileURL: saveState.navigationDocumentURL)
+    }
+
+    func saveTracks(
+        forSessionID sessionID: UUID,
+        request: SwiftTagAppleScriptFlacSaveRequest
+    ) throws -> SaveOperationResult {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        return try bridge.saveTracks(request)
     }
 
     func openDocumentWrappers(at urls: [URL]) throws -> [SwiftTagScriptDocument] {
