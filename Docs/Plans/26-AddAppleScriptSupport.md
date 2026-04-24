@@ -119,6 +119,9 @@ Out of scope:
 - `save` on `editor window` should write FLAC files only; `save` on `document` should write the `.swifttag` package only.
 - `editor window` save should accept optional `selected tracks` / `all tracks` scope overrides and `tags` / `pictures` payload overrides.
 - When `editor window` save omits those overrides, it should use `settings.defaultSaveScope` and `settings.defaultSavePayload`.
+- Track queries should use standard AppleScript object specifiers and `whose` filters such as `every track whose title is "..."`.
+- AppleScript track collection order should match the visible SwiftUI track table order: numeric track number ascending, tracks without a numeric track number after numbered tracks, then localized filename sort.
+- `editor window.selected tracks` is the script-facing UI selection state and should be mutated via `set`, not by a custom `select` verb.
 
 ## Dependencies And Constraints
 - Bundle integration:
@@ -165,6 +168,8 @@ Out of scope:
 - Selection/source-of-truth semantics:
   - AppleScript object collections should be driven by the current editor-session state, not by UI table selection.
   - `editor window.tracks` and `document.tracks` should reflect the full current session/document track set.
+  - `editor window.selected tracks` should reflect the current track-table UI selection and `set selected tracks ...` should update that UI selection.
+  - Querying tracks should continue to use standard AppleScript object specifiers (`every track`, `tracks of ...`, `whose`) rather than repurposing selection state.
 
 ## High-Risk Concerns
 ### Product / Behavioral Risks

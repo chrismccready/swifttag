@@ -1649,13 +1649,13 @@ struct ContentView: View {
         return try importFlacFilesSynchronously(filteredFiles, locked: false, append: true)
     }
 
-    private func performAppleScriptSelectTrack(_ trackID: UUID?) throws {
-        if let trackID,
-           !viewModel.trackItems.contains(where: { $0.id == trackID }) {
+    private func performAppleScriptSelectTracks(_ trackIDs: Set<UUID>) throws {
+        let availableTrackIDs = Set(viewModel.trackItems.map(\.id))
+        guard trackIDs.isSubset(of: availableTrackIDs) else {
             throw SwiftTagAppleScriptCommandError.invalidSelectedTrack
         }
 
-        viewModel.selectedTrackIDs = trackID.map { [$0] } ?? []
+        viewModel.selectedTrackIDs = trackIDs
         viewModel.reloadMiscTagRowsFromSelection()
         syncAlbumArtContext()
     }
@@ -1990,16 +1990,14 @@ struct ContentView: View {
                 sessionSnapshot: {
                     SwiftTagAppleScriptSessionSnapshot(
                         tracks: viewModel.trackItems,
-                        selectedTrackID: viewModel.trackItems
-                            .first(where: { viewModel.selectedTrackIDs.contains($0.id) })?
-                            .id
+                        selectedTrackIDs: viewModel.selectedTrackIDs
                     )
                 },
                 addTracks: { urls in
                     try performAppleScriptAddTracks(urls)
                 },
-                selectTrack: { trackID in
-                    try performAppleScriptSelectTrack(trackID)
+                selectTracks: { trackIDs in
+                    try performAppleScriptSelectTracks(trackIDs)
                 },
                 saveDocument: { destinationURL in
                     try performAppleScriptSwiftTagDocumentSave(to: destinationURL)

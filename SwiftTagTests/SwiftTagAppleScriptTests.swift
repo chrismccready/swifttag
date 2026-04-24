@@ -90,12 +90,12 @@ struct SwiftTagAppleScriptTests {
                     )
                 },
                 sessionSnapshot: {
-                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackID: nil)
+                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackIDs: [])
                 },
                 addTracks: { _ in
                     []
                 },
-                selectTrack: { _ in
+                selectTracks: { _ in
                 },
                 saveDocument: { destinationURL in
                     guard let destinationURL else {
@@ -127,6 +127,79 @@ struct SwiftTagAppleScriptTests {
         #expect(savedDocument.name == destinationURL.lastPathComponent)
         #expect(!savedDocument.modified)
         #expect(loadedDocument.tracks.isEmpty)
+    }
+
+    @MainActor
+    @Test
+    func applicationTracksExposeRegisteredSessionTracks() throws {
+        let application = NSApplication.shared
+
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let firstSessionID = UUID()
+        let secondSessionID = UUID()
+        let firstTrackURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-first.flac")
+        let secondTrackURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-second.flac")
+        let firstTrack = Track(
+            tags: [TagKey.title: "First Track"],
+            sourceFileURL: firstTrackURL
+        )
+        let secondTrack = Track(
+            tags: [TagKey.title: "Second Track"],
+            sourceFileURL: secondTrackURL
+        )
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: firstSessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "First",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [firstTrack],
+                        selectedTrackIDs: []
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() }
+            )
+        )
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: secondSessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Second",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [secondTrack],
+                        selectedTrackIDs: []
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() }
+            )
+        )
+
+        let trackURLs = Set(application.scriptTracks.compactMap(\.fileURL))
+        #expect(trackURLs == [firstTrackURL.standardizedFileURL, secondTrackURL.standardizedFileURL])
     }
 
     @Test
@@ -200,12 +273,12 @@ struct SwiftTagAppleScriptTests {
                     )
                 },
                 sessionSnapshot: {
-                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackID: nil)
+                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackIDs: [])
                 },
                 addTracks: { _ in
                     []
                 },
-                selectTrack: { _ in
+                selectTracks: { _ in
                 },
                 saveDocument: { _ in
                     .init()
@@ -235,7 +308,8 @@ struct SwiftTagAppleScriptTests {
         }
 
         let sessionID = UUID()
-        let trackURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-track.flac")
+        let trackURL = URL(fileURLWithPath: "/tmp/01-SwiftTagAppleScriptTests-track.flac")
+        let secondTrackURL = URL(fileURLWithPath: "/tmp/02-SwiftTagAppleScriptTests-track.flac")
         let pictureData = try #require(Self.singlePixelPNGData())
         let picture = FlacWritablePictureRecord(
             type: 3,
@@ -270,14 +344,18 @@ struct SwiftTagAppleScriptTests {
             bitsPerSample: 24,
             channels: 2
         )
+        let secondTrack = Track(
+            tags: [TagKey.title: "Venus, the Bringer of Peace"],
+            sourceFileURL: secondTrackURL
+        )
         let expectedFingerprint = try SwiftTagDocumentPackageWriter.trackTagsAndPicturesFingerprint(
             tags: track.tags,
             pictures: track.flacPictureRecords
         )
 
         var sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
-            tracks: [track],
-            selectedTrackID: nil
+            tracks: [track, secondTrack],
+            selectedTrackIDs: []
         )
         SwiftTagAppleScriptController.shared.registerSessionBridge(
             sessionID: sessionID,
@@ -295,10 +373,10 @@ struct SwiftTagAppleScriptTests {
                 addTracks: { _ in
                     []
                 },
-                selectTrack: { trackID in
+                selectTracks: { trackIDs in
                     sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
                         tracks: sessionSnapshot.tracks,
-                        selectedTrackID: trackID
+                        selectedTrackIDs: trackIDs
                     )
                 },
                 saveDocument: { _ in
@@ -308,7 +386,7 @@ struct SwiftTagAppleScriptTests {
         )
 
         let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
-        #expect(scriptWindow.countOfTracks == 1)
+        #expect(scriptWindow.countOfTracks == 2)
         let scriptTrack = try #require(scriptWindow.tracks.first)
 
         #expect(scriptTrack.album == "The Planets")
@@ -337,9 +415,178 @@ struct SwiftTagAppleScriptTests {
         #expect(calendar.component(.month, from: releaseDate) == 3)
         #expect(calendar.component(.day, from: releaseDate) == 14)
 
-        scriptWindow.selectedTrack = scriptTrack
-        #expect(sessionSnapshot.selectedTrackID == track.id)
-        #expect(scriptWindow.selectedTrack?.fileURL == trackURL.standardizedFileURL)
+        scriptWindow.setValue(scriptTrack, forKey: "selectedTracks")
+        #expect(sessionSnapshot.selectedTrackIDs == Set([track.id]))
+        #expect(scriptWindow.selectedTracks.map(\.fileURL) == [trackURL.standardizedFileURL])
+
+        let matchingTracks = NSApplication.shared.scriptTracks.filter { $0.title == "Mars, the Bringer of War" }
+        scriptWindow.setValue(matchingTracks, forKey: "selectedTracks")
+        #expect(sessionSnapshot.selectedTrackIDs == Set([track.id]))
+
+        scriptWindow.setValue(scriptWindow.tracks, forKey: "selectedTracks")
+        #expect(sessionSnapshot.selectedTrackIDs == Set([track.id, secondTrack.id]))
+        #expect(scriptWindow.selectedTracks.map(\.fileURL) == [
+            trackURL.standardizedFileURL,
+            secondTrackURL.standardizedFileURL
+        ])
+        #expect(scriptWindow.selectedTracks.compactMap(\.title) == [
+            "Mars, the Bringer of War",
+            "Venus, the Bringer of Peace"
+        ])
+    }
+
+    @MainActor
+    @Test
+    func selectedTracksSetterKeepsEveryWhoseMatchWithDuplicateTitles() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let firstTrack = Track(
+            tags: [TagKey.title: "Test Title"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-duplicate-1.flac")
+        )
+        let secondTrack = Track(
+            tags: [TagKey.title: "Test Title"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-duplicate-2.flac")
+        )
+        let otherTrack = Track(
+            tags: [TagKey.title: "Other Title"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-other.flac")
+        )
+
+        var sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
+            tracks: [firstTrack, secondTrack, otherTrack],
+            selectedTrackIDs: []
+        )
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    sessionSnapshot
+                },
+                addTracks: { _ in
+                    []
+                },
+                selectTracks: { trackIDs in
+                    sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
+                        tracks: sessionSnapshot.tracks,
+                        selectedTrackIDs: trackIDs
+                    )
+                },
+                saveDocument: { _ in
+                    .init()
+                }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let matchingTracksSpecifier = try Self.whoseTrackSpecifier(
+            in: scriptWindow,
+            propertyKey: "title",
+            value: "Test Title"
+        )
+
+        let matchingTracks = Self.evaluatedTrackWrappers(from: matchingTracksSpecifier)
+        #expect(matchingTracks.count == 2)
+
+        scriptWindow.setValue(matchingTracksSpecifier, forKey: "selectedTracks")
+
+        #expect(sessionSnapshot.selectedTrackIDs == Set([firstTrack.id, secondTrack.id]))
+        #expect(scriptWindow.countOfSelectedTracks == 2)
+        #expect(scriptWindow.selectedTracks.compactMap(\.title) == ["Test Title", "Test Title"])
+    }
+
+    @MainActor
+    @Test
+    func editorWindowTracksFollowVisibleTableOrderForIndexSpecifiers() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let numberedTrack = Track(
+            tags: [
+                TagKey.title: "Numbered First",
+                TagKey.trackNumber: "1"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/03-numbered-first.flac")
+        )
+        let filenameFirstTrack = Track(
+            tags: [TagKey.title: "Filename First"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/01-filename-first.flac")
+        )
+        let filenameSecondTrack = Track(
+            tags: [TagKey.title: "Filename Second"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/02-filename-second.flac")
+        )
+
+        var sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
+            tracks: [filenameSecondTrack, filenameFirstTrack, numberedTrack],
+            selectedTrackIDs: []
+        )
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    sessionSnapshot
+                },
+                addTracks: { _ in
+                    []
+                },
+                selectTracks: { trackIDs in
+                    sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
+                        tracks: sessionSnapshot.tracks,
+                        selectedTrackIDs: trackIDs
+                    )
+                },
+                saveDocument: { _ in
+                    .init()
+                }
+            )
+        )
+
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
+
+        #expect(scriptWindow.tracks.compactMap(\.title) == [
+            "Numbered First",
+            "Filename First",
+            "Filename Second"
+        ])
+        #expect(
+            SwiftTagAppleScriptController.shared.indexOfTrack(
+                trackID: numberedTrack.id,
+                forSessionID: sessionID
+            ) == 0
+        )
+
+        scriptWindow.setValue(scriptWindow.objectInTracks(at: 0), forKey: "selectedTracks")
+
+        #expect(sessionSnapshot.selectedTrackIDs == Set([numberedTrack.id]))
+        #expect(scriptWindow.selectedTracks.compactMap(\.title) == ["Numbered First"])
     }
 
     @MainActor
@@ -354,7 +601,7 @@ struct SwiftTagAppleScriptTests {
 
         let sessionID = UUID()
         let trackURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-tag-track.flac")
-        var viewModel = TagEditorViewModel()
+        let viewModel = TagEditorViewModel()
 
         SwiftTagAppleScriptController.shared.registerSessionBridge(
             sessionID: sessionID,
@@ -369,7 +616,7 @@ struct SwiftTagAppleScriptTests {
                 sessionSnapshot: {
                     SwiftTagAppleScriptSessionSnapshot(
                         tracks: viewModel.trackItems,
-                        selectedTrackID: viewModel.selectedTrackIDs.first
+                        selectedTrackIDs: viewModel.selectedTrackIDs
                     )
                 },
                 addTracks: { urls in
@@ -392,8 +639,8 @@ struct SwiftTagAppleScriptTests {
                     viewModel.reloadMiscTagRowsFromSelection()
                     return [addedTrack.id]
                 },
-                selectTrack: { trackID in
-                    viewModel.selectedTrackIDs = trackID.map { [$0] } ?? []
+                selectTracks: { trackIDs in
+                    viewModel.selectedTrackIDs = trackIDs
                     viewModel.reloadMiscTagRowsFromSelection()
                 },
                 saveDocument: { _ in
@@ -485,7 +732,7 @@ struct SwiftTagAppleScriptTests {
 
         let sessionID = UUID()
         let addedURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-added.flac")
-        var sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackID: nil)
+        var sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackIDs: [])
         SwiftTagAppleScriptController.shared.registerSessionBridge(
             sessionID: sessionID,
             bridge: SwiftTagAppleScriptSessionBridge(
@@ -508,14 +755,14 @@ struct SwiftTagAppleScriptTests {
                     )
                     sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
                         tracks: [addedTrack],
-                        selectedTrackID: nil
+                        selectedTrackIDs: []
                     )
                     return [addedTrack.id]
                 },
-                selectTrack: { trackID in
+                selectTracks: { trackIDs in
                     sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
                         tracks: sessionSnapshot.tracks,
-                        selectedTrackID: trackID
+                        selectedTrackIDs: trackIDs
                     )
                 },
                 saveDocument: { _ in
@@ -535,6 +782,62 @@ struct SwiftTagAppleScriptTests {
 }
 
 private extension SwiftTagAppleScriptTests {
+    static func evaluatedTrackWrappers(from value: Any?) -> [SwiftTagScriptTrack] {
+        let evaluatedValue: Any?
+        if let specifier = value as? NSScriptObjectSpecifier {
+            evaluatedValue = specifier.objectsByEvaluatingSpecifier
+        } else {
+            evaluatedValue = value
+        }
+
+        if let track = evaluatedValue as? SwiftTagScriptTrack {
+            return [track]
+        }
+
+        if let tracks = evaluatedValue as? [SwiftTagScriptTrack] {
+            return tracks
+        }
+
+        if let tracks = evaluatedValue as? NSArray {
+            return tracks.compactMap { $0 as? SwiftTagScriptTrack }
+        }
+
+        return []
+    }
+
+    @MainActor
+    static func whoseTrackSpecifier(
+        in scriptWindow: SwiftTagScriptEditorWindow,
+        propertyKey: String,
+        value: Any
+    ) throws -> NSWhoseSpecifier {
+        let editorWindowClassDescription = try #require(
+            NSScriptClassDescription(for: SwiftTagScriptEditorWindow.self)
+        )
+        let trackClassDescription = try #require(
+            NSScriptClassDescription(for: SwiftTagScriptTrack.self)
+        )
+        let containerSpecifier = try #require(scriptWindow.objectSpecifier)
+        let propertySpecifier = NSPropertySpecifier(
+            containerClassDescription: trackClassDescription,
+            containerSpecifier: nil,
+            key: propertyKey
+        )
+        propertySpecifier.containerIsObjectBeingTested = true
+        let test = NSSpecifierTest(
+            objectSpecifier: propertySpecifier,
+            comparisonOperator: .equal,
+            test: value
+        )
+
+        return NSWhoseSpecifier(
+            containerClassDescription: editorWindowClassDescription,
+            containerSpecifier: containerSpecifier,
+            key: "tracks",
+            test: test
+        )
+    }
+
     static func singlePixelPNGData() -> Data? {
         Data(
             base64Encoded:

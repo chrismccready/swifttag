@@ -45,7 +45,7 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
         case let .invalidSaveOptionValue(optionName):
             return "Save option \(optionName) must be true or false."
         case .invalidSelectedTrack:
-            return "Selected track must belong to target editor window."
+            return "Selected tracks must belong to target editor window."
         case .invalidSaveDestination:
             return "Save destination must be a single local file URL."
         case .invalidTagKey:
@@ -307,14 +307,14 @@ struct SwiftTagAppleScriptDocumentSnapshot {
 
 struct SwiftTagAppleScriptSessionSnapshot {
     let tracks: [Track]
-    let selectedTrackID: UUID?
+    let selectedTrackIDs: Set<UUID>
 }
 
 struct SwiftTagAppleScriptSessionBridge {
     let documentSnapshot: () -> SwiftTagAppleScriptDocumentSnapshot
     let sessionSnapshot: () -> SwiftTagAppleScriptSessionSnapshot
     let addTracks: ([URL]) throws -> [UUID]
-    let selectTrack: (UUID?) throws -> Void
+    let selectTracks: (Set<UUID>) throws -> Void
     let saveDocument: (URL?) throws -> SwiftTagDocumentSaveState
     let saveTracks: (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult
     let upsertTag: (UUID, String, String) throws -> Void
@@ -324,7 +324,7 @@ struct SwiftTagAppleScriptSessionBridge {
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
         sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
         addTracks: @escaping ([URL]) throws -> [UUID],
-        selectTrack: @escaping (UUID?) throws -> Void,
+        selectTracks: @escaping (Set<UUID>) throws -> Void,
         saveDocument: @escaping (URL?) throws -> SwiftTagDocumentSaveState,
         saveTracks: @escaping (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult = { _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
@@ -335,7 +335,7 @@ struct SwiftTagAppleScriptSessionBridge {
         self.documentSnapshot = documentSnapshot
         self.sessionSnapshot = sessionSnapshot
         self.addTracks = addTracks
-        self.selectTrack = selectTrack
+        self.selectTracks = selectTracks
         self.saveDocument = saveDocument
         self.saveTracks = saveTracks
         self.upsertTag = upsertTag
@@ -1247,20 +1247,46 @@ final class SwiftTagScriptEditorWindow: NSObject {
         SwiftTagAppleScriptController.shared.document(forSessionID: sessionIDValue)
     }
 
-    @objc(selectedTrack)
-    var selectedTrack: SwiftTagScriptTrack? {
+    @objc(selectedTracks)
+    var selectedTracks: [SwiftTagScriptTrack] {
         get {
-            SwiftTagAppleScriptController.shared.selectedTrack(forSessionID: sessionIDValue)
+            SwiftTagAppleScriptController.shared.selectedTrackObjects(forSessionID: sessionIDValue)
         }
         set {
             do {
-                try SwiftTagAppleScriptController.shared.selectTrack(
+                try SwiftTagAppleScriptController.shared.setSelectedTracks(
                     newValue,
                     forSessionID: sessionIDValue
                 )
             } catch {
                 _ = NSScriptCommand.current()?.fail(error)
             }
+        }
+    }
+
+    @objc(countOfSelectedTracks)
+    var countOfSelectedTracks: Int {
+        SwiftTagAppleScriptController.shared.selectedTrackObjects(forSessionID: sessionIDValue).count
+    }
+
+    @objc(objectInSelectedTracksAtIndex:)
+    func objectInSelectedTracks(at index: Int) -> SwiftTagScriptTrack {
+        SwiftTagAppleScriptController.shared.selectedTrackObjects(forSessionID: sessionIDValue)[index]
+    }
+
+    override func setValue(_ value: Any?, forKey key: String) {
+        guard key == "selectedTracks" else {
+            super.setValue(value, forKey: key)
+            return
+        }
+
+        do {
+            try SwiftTagAppleScriptController.shared.setSelectedTracks(
+                normalizedScriptTracks(from: value),
+                forSessionID: sessionIDValue
+            )
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
         }
     }
 
@@ -1386,6 +1412,29 @@ final class SwiftTagScriptEditorWindow: NSObject {
         liveWindow = window
         if window != nil {
             pendingCreationExpiration = nil
+        }
+    }
+
+    private func normalizedScriptTracks(from rawValue: Any?) throws -> [SwiftTagScriptTrack] {
+        switch rawValue {
+        case nil:
+            return []
+        case let track as SwiftTagScriptTrack:
+            return [track]
+        case let tracks as [SwiftTagScriptTrack]:
+            return tracks
+        case let tracks as [Any]:
+            return try tracks.flatMap { value in
+                try normalizedScriptTracks(from: value)
+            }
+        case let tracks as NSArray:
+            return try tracks.flatMap { value in
+                try normalizedScriptTracks(from: value)
+            }
+        case let specifier as NSScriptObjectSpecifier:
+            return try normalizedScriptTracks(from: specifier.objectsByEvaluatingSpecifier)
+        default:
+            throw SwiftTagAppleScriptCommandError.invalidSelectedTrack
         }
     }
 }
@@ -1549,6 +1598,12 @@ final class SwiftTagAppleScriptController {
         return orderedDocuments
     }
 
+    func orderedTracks() -> [SwiftTagScriptTrack] {
+        orderedDocuments().flatMap { document in
+            tracks(forSessionID: document.sessionID)
+        }
+    }
+
     func frontmostEditorWindow() -> SwiftTagScriptEditorWindow? {
         orderedEditorWindows().first
     }
@@ -1625,29 +1680,51 @@ final class SwiftTagAppleScriptController {
             return []
         }
 
+        let orderedTracks = snapshot.tracks.sortedForTrackTableDisplay()
         let validTrackIDs = Set(snapshot.tracks.map(\.id))
         pruneTrackWrappers(forSessionID: sessionID, validTrackIDs: validTrackIDs)
-        return snapshot.tracks.compactMap { track(forSessionID: sessionID, trackID: $0.id) }
+        return orderedTracks.compactMap { track(forSessionID: sessionID, trackID: $0.id) }
     }
 
-    func selectedTrack(forSessionID sessionID: UUID) -> SwiftTagScriptTrack? {
-        guard let selectedTrackID = sessionSnapshot(forSessionID: sessionID)?.selectedTrackID else {
-            return nil
+    func selectedTrackObjects(forSessionID sessionID: UUID) -> [SwiftTagScriptTrack] {
+        guard let snapshot = sessionSnapshot(forSessionID: sessionID) else {
+            return []
         }
 
-        return track(forSessionID: sessionID, trackID: selectedTrackID)
+        let orderedTracks = snapshot.tracks.sortedForTrackTableDisplay()
+        let validTrackIDs = Set(snapshot.tracks.map(\.id))
+        pruneTrackWrappers(forSessionID: sessionID, validTrackIDs: validTrackIDs)
+        return orderedTracks
+            .filter { snapshot.selectedTrackIDs.contains($0.id) }
+            .compactMap { track(forSessionID: sessionID, trackID: $0.id) }
     }
 
-    func selectTrack(_ scriptTrack: SwiftTagScriptTrack?, forSessionID sessionID: UUID) throws {
-        if let scriptTrack, scriptTrack.sessionID != sessionID {
+    func setSelectedTracks(
+        _ scriptTracks: [SwiftTagScriptTrack],
+        forSessionID sessionID: UUID
+    ) throws {
+        if scriptTracks.contains(where: { $0.sessionID != sessionID }) {
             throw SwiftTagAppleScriptCommandError.invalidSelectedTrack
         }
 
+        let requestedTrackIDs = Set(scriptTracks.map(\.trackID))
+        try selectTrackIDs(requestedTrackIDs, forSessionID: sessionID)
+    }
+
+    func selectTrackIDs(
+        _ trackIDs: Set<UUID>,
+        forSessionID sessionID: UUID
+    ) throws {
         guard let bridge = sessionBridgesBySessionID[sessionID] else {
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
         }
 
-        try bridge.selectTrack(scriptTrack?.trackID)
+        let availableTrackIDs = Set(sessionSnapshot(forSessionID: sessionID)?.tracks.map(\.id) ?? [])
+        guard trackIDs.isSubset(of: availableTrackIDs) else {
+            throw SwiftTagAppleScriptCommandError.invalidSelectedTrack
+        }
+
+        try bridge.selectTracks(trackIDs)
     }
 
     func trackSnapshot(forSessionID sessionID: UUID, trackID: UUID) -> Track? {
@@ -1804,7 +1881,10 @@ final class SwiftTagAppleScriptController {
     }
 
     func indexOfTrack(trackID: UUID, forSessionID sessionID: UUID) -> Int? {
-        sessionSnapshot(forSessionID: sessionID)?.tracks.firstIndex(where: { $0.id == trackID })
+        sessionSnapshot(forSessionID: sessionID)?
+            .tracks
+            .sortedForTrackTableDisplay()
+            .firstIndex(where: { $0.id == trackID })
     }
 
     #if DEBUG
@@ -1943,6 +2023,21 @@ extension NSApplication {
     @objc(scriptDocuments)
     var scriptDocuments: [SwiftTagScriptDocument] {
         SwiftTagAppleScriptController.shared.orderedDocuments()
+    }
+
+    @objc(scriptTracks)
+    var scriptTracks: [SwiftTagScriptTrack] {
+        SwiftTagAppleScriptController.shared.orderedTracks()
+    }
+
+    @objc(countOfScriptTracks)
+    var countOfScriptTracks: Int {
+        scriptTracks.count
+    }
+
+    @objc(objectInScriptTracksAtIndex:)
+    func objectInScriptTracks(at index: Int) -> SwiftTagScriptTrack {
+        scriptTracks[index]
     }
 
     @objc(insertInScriptEditorWindows:)

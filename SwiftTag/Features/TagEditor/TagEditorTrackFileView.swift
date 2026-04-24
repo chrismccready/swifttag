@@ -33,26 +33,7 @@ struct TagEditorTrackFileView: View {
     let onDropFlacFiles: ([NSItemProvider]) -> Bool
 
     private var sortedTrackItems: [Track] {
-        trackItems.sorted {
-            let lhsNumber = Int($0.tags[TagKey.trackNumber] ?? "")
-            let rhsNumber = Int($1.tags[TagKey.trackNumber] ?? "")
-            switch (lhsNumber, rhsNumber) {
-            case let (lhs?, rhs?):
-                if lhs != rhs {
-                    return lhs < rhs
-                }
-            case (_?, nil):
-                return true
-            case (nil, _?):
-                return false
-            case (nil, nil):
-                break
-            }
-
-            let lhsFilename = $0.displayFileName
-            let rhsFilename = $1.displayFileName
-            return lhsFilename.localizedStandardCompare(rhsFilename) == .orderedAscending
-        }
+        trackItems.sortedForTrackTableDisplay()
     }
 
     private var fingerprintColumnMenuTitle: String {

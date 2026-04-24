@@ -235,6 +235,49 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessSelectsMatchingTracksInTableOrder() throws {
+        guard ProcessInfo.processInfo.environment["SWIFTTAG_RUN_OSASCRIPT_TESTS"] == "1" else {
+            throw XCTSkip("Set SWIFTTAG_RUN_OSASCRIPT_TESTS=1 to run external osascript automation.")
+        }
+
+        let firstFixtureURL = try prepareExternalOpenPanelFlacFixture(
+            fileName: Self.fixtureFileName,
+            destinationFileName: "01-swifttag-applescript-\(UUID().uuidString).flac"
+        )
+        let secondFixtureURL = try prepareExternalOpenPanelFlacFixture(
+            fileName: Self.fixtureFileName,
+            destinationFileName: "02-swifttag-applescript-\(UUID().uuidString).flac"
+        )
+        let app = try launchApp()
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    add {POSIX file "\(secondFixtureURL.path)", POSIX file "\(firstFixtureURL.path)"}
+                    delay 1
+                    set selected tracks to first track
+                    set firstSelectedFile to get file of item 1 of (get selected tracks)
+                    set firstSelectedPath to POSIX path of firstSelectedFile
+                    set selected tracks to (every track whose title is "Test Title")
+                    set trackCount to count of selected tracks
+                    return firstSelectedPath & linefeed & (trackCount as text)
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, [firstFixtureURL.path, "2"])
+        app.terminate()
+    }
+
+    @MainActor
     func testFinderLaunchOpenShowsVisibleImportedFlacWindow() throws {
         let flacURL = try prepareReadableFlacFixture(fileName: Self.fixtureFileName)
         let app = try launchAppByOpeningFileWithSwiftTag(url: flacURL)
@@ -2045,6 +2088,76 @@ final class SwiftTagUITests: XCTestCase {
         return app
     }
 
+    private func runAppleScript(
+        _ source: String,
+        arguments: [String] = [],
+        terminologyBundleIdentifier: String? = nil,
+        timeout: TimeInterval = 15.0
+    ) throws -> String {
+        let compiledSource: String
+        if let terminologyBundleIdentifier {
+            compiledSource = """
+                using terms from application id "\(terminologyBundleIdentifier)"
+                \(source)
+                end using terms from
+                """
+        } else {
+            compiledSource = source
+        }
+
+        let scriptURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftTagUITest-\(UUID().uuidString)")
+            .appendingPathExtension("applescript")
+        try compiledSource.write(to: scriptURL, atomically: true, encoding: .utf8)
+        defer {
+            try? FileManager.default.removeItem(at: scriptURL)
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+        process.arguments = ["-l", "AppleScript", "-sso", scriptURL.path] + arguments
+
+        let outputPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = outputPipe
+
+        try process.run()
+
+        let deadline = Date().addingTimeInterval(timeout)
+        while process.isRunning, Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+
+        if process.isRunning {
+            process.terminate()
+            XCTFail("Timed out waiting for osascript to finish.")
+        }
+
+        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(decoding: outputData, as: UTF8.self)
+
+        if process.terminationStatus != 0 {
+            XCTFail(
+                """
+                osascript failed with status \(process.terminationStatus).
+                Script:
+                \(compiledSource)
+
+                Output:
+                \(output)
+                """
+            )
+        }
+
+        return output
+    }
+
+    private func normalizedAppleScriptTextOutput(_ output: String) -> String {
+        output
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+    }
+
     private func prepareSwiftTagDocumentFixture(
         sourceFlacURL: URL,
         savedAlbum: String,
@@ -2107,7 +2220,10 @@ final class SwiftTagUITests: XCTestCase {
         return destinationURL
     }
 
-    private func prepareExternalOpenPanelFlacFixture(fileName: String) throws -> URL {
+    private func prepareExternalOpenPanelFlacFixture(
+        fileName: String,
+        destinationFileName: String? = nil
+    ) throws -> URL {
         let sourceURL = URL(fileURLWithPath: fixtureFlacPath(fileName: fileName))
         let destinationDirectoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("SwiftTagUITestExternal", isDirectory: true)
@@ -2117,7 +2233,7 @@ final class SwiftTagUITests: XCTestCase {
         )
 
         let destinationURL = destinationDirectoryURL
-            .appendingPathComponent("\(UUID().uuidString)-\(fileName)")
+            .appendingPathComponent(destinationFileName ?? "\(UUID().uuidString)-\(fileName)")
         try? FileManager.default.removeItem(at: destinationURL)
         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
         return destinationURL
@@ -3100,6 +3216,35 @@ final class SwiftTagUITests: XCTestCase {
         }
 
         return NSWorkspace.shared.urlForApplication(withBundleIdentifier: Self.appBundleIdentifier)
+    }
+
+    private func runningSwiftTagApplicationURL(timeout: TimeInterval = 10.0) -> URL? {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            if let runningApplicationURL = NSRunningApplication
+                .runningApplications(withBundleIdentifier: Self.appBundleIdentifier)
+                .first(where: { $0.isFinishedLaunching })?
+                .bundleURL {
+                return runningApplicationURL
+            }
+
+            if let namedApplicationURL = NSWorkspace.shared.runningApplications
+                .filter({
+                    $0.localizedName == "SwiftTag"
+                        && $0.isFinishedLaunching
+                        && $0.bundleURL?.lastPathComponent == "SwiftTag.app"
+                })
+                .sorted(by: { ($0.launchDate ?? .distantPast) > ($1.launchDate ?? .distantPast) })
+                .first?
+                .bundleURL {
+                return namedApplicationURL
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return resolvedSwiftTagApplicationURL()
     }
 
     private func terminateRunningSwiftTagIfNeeded(timeout: TimeInterval = 5.0) {

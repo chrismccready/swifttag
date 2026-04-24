@@ -127,11 +127,14 @@
 
         <class name="application" plural="applications" code="capp" description="Application program.">
             <cocoa class="NSApplication"/>
+            <element type="document">
+                <cocoa key="scriptDocuments"/>
+            </element>
             <element type="editor window">
                 <cocoa key="scriptEditorWindows"/>
             </element>
-            <element type="document">
-                <cocoa key="scriptDocuments"/>
+            <element type="track">
+                <cocoa key="scriptTracks"/>
             </element>
             <responds-to command="add">
                 <cocoa method="handleAddTracksScriptCommand:"/>
@@ -155,8 +158,10 @@
             <property name="name" code="pnam" type="text" access="r" description="Window title.">
                 <cocoa key="name"/>
             </property>
-            <property name="selected track" code="selt" type="track" description="Currently selected track in editor window.">
-                <cocoa key="selectedTrack"/>
+            <property name="selected tracks" code="selt" access="rw" description="Currently selected tracks in editor window.">
+                <cocoa key="selectedTracks"/>
+                <type type="specifier"/>
+                <type type="track" list="yes"/>
             </property>
             <property name="window id" code="ewid" type="text" access="r" description="Window UUID.">
                 <cocoa key="windowID"/>

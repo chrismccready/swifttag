@@ -183,3 +183,28 @@ struct Track: Identifiable {
         )
     }
 }
+
+extension Array where Element == Track {
+    func sortedForTrackTableDisplay() -> [Track] {
+        sorted {
+            let lhsNumber = Int($0.tags[TagKey.trackNumber] ?? "")
+            let rhsNumber = Int($1.tags[TagKey.trackNumber] ?? "")
+            switch (lhsNumber, rhsNumber) {
+            case let (lhs?, rhs?):
+                if lhs != rhs {
+                    return lhs < rhs
+                }
+            case (_?, nil):
+                return true
+            case (nil, _?):
+                return false
+            case (nil, nil):
+                break
+            }
+
+            let lhsFilename = $0.displayFileName
+            let rhsFilename = $1.displayFileName
+            return lhsFilename.localizedStandardCompare(rhsFilename) == .orderedAscending
+        }
+    }
+}
