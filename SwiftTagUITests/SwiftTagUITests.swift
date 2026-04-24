@@ -278,6 +278,35 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessSetsTitleOfFirstTrack() throws {
+        guard ProcessInfo.processInfo.environment["SWIFTTAG_RUN_OSASCRIPT_TESTS"] == "1" else {
+            throw XCTSkip("Set SWIFTTAG_RUN_OSASCRIPT_TESTS=1 to run external osascript automation.")
+        }
+
+        let app = try launchApp(importFixture: true)
+        defer {
+            app.terminate()
+        }
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    set title of first track to "New Title"
+                    return title of first track
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertEqual(normalizedAppleScriptTextOutput(output), "New Title")
+        XCTAssertTrue(waitForTextFieldValueAnywhere(in: app, expectedValue: "New Title", timeout: 5.0))
+    }
+
+    @MainActor
     func testFinderLaunchOpenShowsVisibleImportedFlacWindow() throws {
         let flacURL = try prepareReadableFlacFixture(fileName: Self.fixtureFileName)
         let app = try launchAppByOpeningFileWithSwiftTag(url: flacURL)

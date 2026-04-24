@@ -760,17 +760,32 @@ final class SwiftTagScriptTrack: NSObject {
 
     @objc(album)
     var album: String? {
-        currentTextValue(for: [TagKey.album], fallback: \.album)
+        get {
+            currentTextValue(for: [TagKey.album], fallback: \.album)
+        }
+        set {
+            updateTagValue(TagKey.album, to: newValue)
+        }
     }
 
     @objc(albumArtist)
     var albumArtist: String? {
-        currentTextValue(for: [TagKey.albumArtist], fallback: \.albumArtist)
+        get {
+            currentTextValue(for: [TagKey.albumArtist], fallback: \.albumArtist)
+        }
+        set {
+            updateTagValue(TagKey.albumArtist, to: newValue)
+        }
     }
 
     @objc(artist)
     var artist: String? {
-        currentTextValue(for: [TagKey.artist])
+        get {
+            currentTextValue(for: [TagKey.artist])
+        }
+        set {
+            updateTagValue(TagKey.artist, to: newValue)
+        }
     }
 
     @objc(bitsPerSample)
@@ -793,47 +808,92 @@ final class SwiftTagScriptTrack: NSObject {
 
     @objc(comment)
     var comment: String? {
-        currentTextValue(for: ["COMMENT"])
+        get {
+            currentTextValue(for: ["COMMENT"])
+        }
+        set {
+            updateTagValue("COMMENT", to: newValue)
+        }
     }
 
     @objc(compilation)
     var compilation: NSNumber? {
-        currentBooleanValue(for: [TagKey.compilation])
+        get {
+            currentBooleanValue(for: [TagKey.compilation])
+        }
+        set {
+            updateTagValue(TagKey.compilation, to: newValue)
+        }
     }
 
     @objc(composer)
     var composer: String? {
-        currentTextValue(for: [TagKey.composer])
+        get {
+            currentTextValue(for: [TagKey.composer])
+        }
+        set {
+            updateTagValue(TagKey.composer, to: newValue)
+        }
     }
 
     @objc(copyright)
     var copyright: String? {
-        currentTextValue(for: ["COPYRIGHT"])
+        get {
+            currentTextValue(for: ["COPYRIGHT"])
+        }
+        set {
+            updateTagValue("COPYRIGHT", to: newValue)
+        }
     }
 
     @objc(releaseDate)
     var releaseDate: Date? {
-        currentDateValue(for: [TagKey.date])
+        get {
+            currentDateValue(for: [TagKey.date])
+        }
+        set {
+            updateTagValue(TagKey.date, to: newValue)
+        }
     }
 
     @objc(trackDescription)
     var trackDescription: String? {
-        currentTextValue(for: [TagKey.description])
+        get {
+            currentTextValue(for: [TagKey.description])
+        }
+        set {
+            updateTagValue(TagKey.description, to: newValue)
+        }
     }
 
     @objc(director)
     var director: String? {
-        currentTextValue(for: ["DIRECTOR"])
+        get {
+            currentTextValue(for: ["DIRECTOR"])
+        }
+        set {
+            updateTagValue("DIRECTOR", to: newValue)
+        }
     }
 
     @objc(discCount)
     var discCount: NSNumber? {
-        currentIntegerValue(for: ["DISCTOTAL", "TOTALDISCS"])
+        get {
+            currentIntegerValue(for: ["DISCTOTAL", "TOTALDISCS"])
+        }
+        set {
+            updateTagValue(SwiftTagAppleScriptTagKey.totalDiscs, to: newValue)
+        }
     }
 
     @objc(discNumber)
     var discNumber: NSNumber? {
-        currentIntegerValue(for: [TagKey.discNumber, "DISC"])
+        get {
+            currentIntegerValue(for: [TagKey.discNumber, "DISC"])
+        }
+        set {
+            updateTagValue(TagKey.discNumber, to: newValue)
+        }
     }
 
     @objc(duration)
@@ -843,22 +903,42 @@ final class SwiftTagScriptTrack: NSObject {
 
     @objc(encodedBy)
     var encodedBy: String? {
-        currentTextValue(for: ["ENCODED_BY"])
+        get {
+            currentTextValue(for: ["ENCODED_BY"])
+        }
+        set {
+            updateTagValue("ENCODED_BY", to: newValue)
+        }
     }
 
     @objc(encodedUsing)
     var encodedUsing: String? {
-        currentTextValue(for: ["ENCODED_USING"])
+        get {
+            currentTextValue(for: ["ENCODED_USING"])
+        }
+        set {
+            updateTagValue("ENCODED_USING", to: newValue)
+        }
     }
 
     @objc(encoder)
     var encoder: String? {
-        currentTextValue(for: ["ENCODER"])
+        get {
+            currentTextValue(for: ["ENCODER"])
+        }
+        set {
+            updateTagValue("ENCODER", to: newValue)
+        }
     }
 
     @objc(encoderOptions)
     var encoderOptions: String? {
-        currentTextValue(for: ["ENCODER_OPTIONS"])
+        get {
+            currentTextValue(for: ["ENCODER_OPTIONS"])
+        }
+        set {
+            updateTagValue("ENCODER_OPTIONS", to: newValue)
+        }
     }
 
     @objc(fileURL)
@@ -970,67 +1050,132 @@ final class SwiftTagScriptTrack: NSObject {
 
     @objc(genre)
     var genre: String? {
-        currentTextValue(for: [TagKey.genre])
+        get {
+            currentTextValue(for: [TagKey.genre])
+        }
+        set {
+            updateTagValue(TagKey.genre, to: newValue)
+        }
     }
 
     @objc(isrc)
     var isrc: String? {
-        currentTextValue(for: ["ISRC"])
+        get {
+            currentTextValue(for: ["ISRC"])
+        }
+        set {
+            updateTagValue("ISRC", to: newValue)
+        }
     }
 
     @objc(license)
     var license: String? {
-        currentTextValue(for: ["LICENSE"])
+        get {
+            currentTextValue(for: ["LICENSE"])
+        }
+        set {
+            updateTagValue("LICENSE", to: newValue)
+        }
     }
 
     @objc(lineage)
     var lineage: String? {
-        currentTextValue(for: ["LINEAGE"])
+        get {
+            currentTextValue(for: ["LINEAGE"])
+        }
+        set {
+            updateTagValue("LINEAGE", to: newValue)
+        }
     }
 
     @objc(location)
     var location: String? {
-        currentTextValue(for: [TagKey.location])
+        get {
+            currentTextValue(for: [TagKey.location])
+        }
+        set {
+            updateTagValue(TagKey.location, to: newValue)
+        }
     }
 
     @objc(narrator)
     var narrator: String? {
-        currentTextValue(for: ["NARRATOR"])
+        get {
+            currentTextValue(for: ["NARRATOR"])
+        }
+        set {
+            updateTagValue("NARRATOR", to: newValue)
+        }
     }
 
     @objc(performer)
     var performer: String? {
-        currentTextValue(for: ["PERFORMER"])
+        get {
+            currentTextValue(for: ["PERFORMER"])
+        }
+        set {
+            updateTagValue("PERFORMER", to: newValue)
+        }
     }
 
     @objc(producer)
     var producer: String? {
-        currentTextValue(for: ["PRODUCER"])
+        get {
+            currentTextValue(for: ["PRODUCER"])
+        }
+        set {
+            updateTagValue("PRODUCER", to: newValue)
+        }
     }
 
     @objc(rating)
     var rating: NSNumber? {
-        currentIntegerValue(for: ["RATING", "RATE"])
+        get {
+            currentIntegerValue(for: ["RATING", "RATE"])
+        }
+        set {
+            updateTagValue("RATING", to: newValue)
+        }
     }
 
     @objc(replayAlbumGain)
     var replayAlbumGain: String? {
-        currentTextValue(for: ["REPLAYGAIN_ALBUM_GAIN"])
+        get {
+            currentTextValue(for: ["REPLAYGAIN_ALBUM_GAIN"])
+        }
+        set {
+            updateTagValue("REPLAYGAIN_ALBUM_GAIN", to: newValue)
+        }
     }
 
     @objc(replayAlbumPeak)
     var replayAlbumPeak: String? {
-        currentTextValue(for: ["REPLAYGAIN_ALBUM_PEAK"])
+        get {
+            currentTextValue(for: ["REPLAYGAIN_ALBUM_PEAK"])
+        }
+        set {
+            updateTagValue("REPLAYGAIN_ALBUM_PEAK", to: newValue)
+        }
     }
 
     @objc(replayTrackGain)
     var replayTrackGain: String? {
-        currentTextValue(for: ["REPLAYGAIN_TRACK_GAIN"])
+        get {
+            currentTextValue(for: ["REPLAYGAIN_TRACK_GAIN"])
+        }
+        set {
+            updateTagValue("REPLAYGAIN_TRACK_GAIN", to: newValue)
+        }
     }
 
     @objc(replayTrackPeak)
     var replayTrackPeak: String? {
-        currentTextValue(for: ["REPLAYGAIN_TRACK_PEAK"])
+        get {
+            currentTextValue(for: ["REPLAYGAIN_TRACK_PEAK"])
+        }
+        set {
+            updateTagValue("REPLAYGAIN_TRACK_PEAK", to: newValue)
+        }
     }
 
     @objc(sampleRate)
@@ -1044,37 +1189,72 @@ final class SwiftTagScriptTrack: NSObject {
 
     @objc(sortAlbum)
     var sortAlbum: String? {
-        currentTextValue(for: ["ALBUMSORT"])
+        get {
+            currentTextValue(for: ["ALBUMSORT"])
+        }
+        set {
+            updateTagValue("ALBUMSORT", to: newValue)
+        }
     }
 
     @objc(sortAlbumArtist)
     var sortAlbumArtist: String? {
-        currentTextValue(for: ["ALBUMARTISTSORT"])
+        get {
+            currentTextValue(for: ["ALBUMARTISTSORT"])
+        }
+        set {
+            updateTagValue("ALBUMARTISTSORT", to: newValue)
+        }
     }
 
     @objc(sortArtist)
     var sortArtist: String? {
-        currentTextValue(for: ["ARTISTSORT"])
+        get {
+            currentTextValue(for: ["ARTISTSORT"])
+        }
+        set {
+            updateTagValue("ARTISTSORT", to: newValue)
+        }
     }
 
     @objc(sortComposer)
     var sortComposer: String? {
-        currentTextValue(for: ["COMPOSERSORT"])
+        get {
+            currentTextValue(for: ["COMPOSERSORT"])
+        }
+        set {
+            updateTagValue("COMPOSERSORT", to: newValue)
+        }
     }
 
     @objc(sortTitle)
     var sortTitle: String? {
-        currentTextValue(for: ["TITLESORT"])
+        get {
+            currentTextValue(for: ["TITLESORT"])
+        }
+        set {
+            updateTagValue("TITLESORT", to: newValue)
+        }
     }
 
     @objc(source)
     var source: String? {
-        currentTextValue(for: ["SOURCE"])
+        get {
+            currentTextValue(for: ["SOURCE"])
+        }
+        set {
+            updateTagValue("SOURCE", to: newValue)
+        }
     }
 
     @objc(title)
     var title: String? {
-        currentTextValue(for: [TagKey.title])
+        get {
+            currentTextValue(for: [TagKey.title])
+        }
+        set {
+            updateTagValue(TagKey.title, to: newValue)
+        }
     }
 
     @objc(totalSamples)
@@ -1093,22 +1273,42 @@ final class SwiftTagScriptTrack: NSObject {
 
     @objc(trackCount)
     var trackCount: NSNumber? {
-        currentIntegerValue(for: ["TOTALTRACKS", "TRACKTOTAL"], fallback: \.totalTracks)
+        get {
+            currentIntegerValue(for: ["TOTALTRACKS", "TRACKTOTAL"], fallback: \.totalTracks)
+        }
+        set {
+            updateTagValue(SwiftTagAppleScriptTagKey.totalTracks, to: newValue)
+        }
     }
 
     @objc(trackNumber)
     var trackNumber: NSNumber? {
-        currentIntegerValue(for: [TagKey.trackNumber, "TRACK"])
+        get {
+            currentIntegerValue(for: [TagKey.trackNumber, "TRACK"])
+        }
+        set {
+            updateTagValue(TagKey.trackNumber, to: newValue)
+        }
     }
 
     @objc(vendor)
     var vendor: String? {
-        currentTextValue(for: ["VENDOR"])
+        get {
+            currentTextValue(for: ["VENDOR"])
+        }
+        set {
+            updateTagValue("VENDOR", to: newValue)
+        }
     }
 
     @objc(trackVersion)
     var trackVersion: String? {
-        currentTextValue(for: ["VERSION"])
+        get {
+            currentTextValue(for: ["VERSION"])
+        }
+        set {
+            updateTagValue("VERSION", to: newValue)
+        }
     }
 
     override var objectSpecifier: NSScriptObjectSpecifier? {
@@ -1190,6 +1390,38 @@ final class SwiftTagScriptTrack: NSObject {
 
         let fallbackValue = fallback.map { trackSnapshot[keyPath: $0] } ?? nil
         return trackSnapshot.appleScriptReal(for: keys, fallback: fallbackValue)
+    }
+
+    private func updateTagValue(_ key: String, to rawValue: Any?) {
+        do {
+            try SwiftTagAppleScriptController.shared.upsertTag(
+                key: key,
+                value: scriptTagString(from: rawValue),
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue
+            )
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    private func scriptTagString(from rawValue: Any?) -> String {
+        switch rawValue {
+        case let value as String:
+            value
+        case let value as NSString:
+            value as String
+        case let value as NSNumber:
+            value.stringValue
+        case let value as Date:
+            DateTagFormatter.format(value)
+        case let value as NSDate:
+            DateTagFormatter.format(value as Date)
+        case nil:
+            ""
+        default:
+            String(describing: rawValue!)
+        }
     }
 }
 

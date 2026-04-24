@@ -437,6 +437,65 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func trackPropertySettersRouteThroughTagBridge() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let track = Track(
+            tags: [TagKey.title: "Original Title"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-title.flac")
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: viewModel.trackItems,
+                        selectedTrackIDs: viewModel.selectedTrackIDs
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { trackIDs in
+                    viewModel.selectedTrackIDs = trackIDs
+                },
+                saveDocument: { _ in .init() },
+                upsertTag: { trackID, key, value in
+                    try viewModel.appleScriptUpsertTag(key: key, value: value, forTrackID: trackID)
+                },
+                deleteTag: { trackID, key in
+                    try viewModel.appleScriptDeleteTag(key: key, forTrackID: trackID)
+                }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptTrack = try #require(scriptWindow.tracks.first)
+
+        scriptTrack.setValue("New Title", forKey: "title")
+
+        #expect(viewModel.trackItems.first?.tags[TagKey.title] == "New Title")
+        #expect(scriptTrack.title == "New Title")
+    }
+
+    @MainActor
+    @Test
     func selectedTracksSetterKeepsEveryWhoseMatchWithDuplicateTitles() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()
