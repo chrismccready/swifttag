@@ -40,6 +40,10 @@ final class UnsavedChangesCoordinator {
         inFlightSessionIDs.remove(sessionID)
     }
 
+    func allowNextClose(for sessionID: UUID) {
+        allowNextCloseSessionIDs.insert(sessionID)
+    }
+
     func totalUnsavedEdits() -> UnsavedChangesEditCounts {
         registrationsBySessionID.values.reduce(
             into: UnsavedChangesEditCounts(tagEdits: 0, pictureEdits: 0)

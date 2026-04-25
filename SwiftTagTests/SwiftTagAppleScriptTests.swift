@@ -202,6 +202,7 @@ struct SwiftTagAppleScriptTests {
         #expect(trackURLs == [firstTrackURL.standardizedFileURL, secondTrackURL.standardizedFileURL])
     }
 
+    @MainActor
     @Test
     func appleScriptFlacSaveRequestUsesDefaultsWhenOptionsOmitted() throws {
         let request = try SwiftTagAppleScriptFlacSaveRequest.from(arguments: nil)
@@ -213,26 +214,64 @@ struct SwiftTagAppleScriptTests {
     func appleScriptFlacSaveRequestMapsExplicitScopeAndPayloadOptions() throws {
         let request = try SwiftTagAppleScriptFlacSaveRequest.from(
             arguments: [
-                "selected tracks": true,
-                "tags": true,
-                "pictures": true
+                "SaveScopeOptions": Self.fourCharCode("sltr"),
+                "SavePayloadOptions": Self.fourCharCode("pcos")
             ]
         )
 
         #expect(request.scope == .selectedTracks)
-        #expect(request.payload == .writeTagsAndPictures)
+        #expect(request.payload == .writePictures)
     }
 
     @Test
-    func appleScriptFlacSaveRequestRejectsConflictingScopeOptions() {
-        #expect(throws: SwiftTagAppleScriptCommandError.conflictingSaveScopeOptions) {
+    func appleScriptFlacSaveRequestMapsFourCharacterEnumerationCodes() throws {
+        let request = try SwiftTagAppleScriptFlacSaveRequest.from(
+            arguments: [
+                "SaveScopeOptions": Self.fourCharCode("altr"),
+                "SavePayloadOptions": Self.fourCharCode("tgos")
+            ]
+        )
+
+        #expect(request.scope == .allTracks)
+        #expect(request.payload == .writeTags)
+    }
+
+    @Test
+    func appleScriptFlacSaveRequestRejectsInvalidEnumerationOptions() {
+        #expect(throws: SwiftTagAppleScriptCommandError.invalidSaveScopeOptionValue("scope")) {
             _ = try SwiftTagAppleScriptFlacSaveRequest.from(
                 arguments: [
-                    "SelectedTracks": true,
-                    "AllTracks": true
+                    "SaveScopeOptions": Self.fourCharCode("frnt")
                 ]
             )
         }
+
+        #expect(throws: SwiftTagAppleScriptCommandError.invalidSavePayloadOptionValue("payload")) {
+            _ = try SwiftTagAppleScriptFlacSaveRequest.from(
+                arguments: [
+                    "SavePayloadOptions": Self.fourCharCode("lyrc")
+                ]
+            )
+        }
+    }
+
+    @MainActor
+    @Test
+    func appleScriptCloseRequestMapsSavingDestinationScopeAndPayloadOptions() throws {
+        let destinationURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-close.swifttag")
+        let request = try SwiftTagAppleScriptCloseRequest.from(
+            arguments: [
+                "SaveOptions": Self.fourCharCode("yes "),
+                "File": destinationURL,
+                "SaveScopeOptions": Self.fourCharCode("sltr"),
+                "SavePayloadOptions": Self.fourCharCode("tgos")
+            ]
+        )
+
+        #expect(request.saveOption == .yes)
+        #expect(request.destinationURL == destinationURL.standardizedFileURL)
+        #expect(request.flacSaveRequest.scope == .selectedTracks)
+        #expect(request.flacSaveRequest.payload == .writeTags)
     }
 
     @MainActor
@@ -295,6 +334,118 @@ struct SwiftTagAppleScriptTests {
 
         #expect(capturedRequest == expectedRequest)
         #expect(saveResult == expectedResult)
+    }
+
+    @MainActor
+    @Test
+    func closingScriptEditorWindowSavingYesRoutesFlacSaveAndCloses() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let expectedRequest = SwiftTagAppleScriptFlacSaveRequest(
+            payload: .writeTags,
+            scope: .selectedTracks
+        )
+        var capturedRequest: SwiftTagAppleScriptFlacSaveRequest?
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Unsaved",
+                        modified: true,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackIDs: [])
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() },
+                saveTracks: { request in
+                    capturedRequest = request
+                    return SaveOperationResult(
+                        sourceSessionID: sessionID,
+                        payload: request.payload ?? .writeTagsAndPictures,
+                        trackReferences: [],
+                        fingerprint: ""
+                    )
+                }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+
+        try scriptWindow.close(
+            using: SwiftTagAppleScriptCloseRequest(
+                saveOption: .yes,
+                destinationURL: nil,
+                flacSaveRequest: expectedRequest
+            )
+        )
+
+        #expect(capturedRequest == expectedRequest)
+        #expect(SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID) == nil)
+    }
+
+    @MainActor
+    @Test
+    func closingScriptDocumentSavingYesRoutesDocumentSaveAndCloses() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let destinationURL = try Self.tempPackageURL(name: "applescript-close-save")
+        var capturedDestinationURL: URL?
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Unsaved",
+                        modified: true,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackIDs: [])
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { destinationURL in
+                    capturedDestinationURL = destinationURL
+                    return SwiftTagDocumentSaveState(
+                        destinationURL: destinationURL,
+                        lastKnownDisplayName: destinationURL?.lastPathComponent
+                    )
+                }
+            )
+        )
+
+        let scriptDocument = SwiftTagAppleScriptController.shared.document(forSessionID: sessionID)
+
+        try scriptDocument.close(
+            using: SwiftTagAppleScriptCloseRequest(
+                saveOption: .yes,
+                destinationURL: destinationURL,
+                flacSaveRequest: .defaults
+            )
+        )
+
+        #expect(capturedDestinationURL == destinationURL.standardizedFileURL)
+        #expect(SwiftTagAppleScriptController.shared.document(withUniqueID: sessionID.uuidString) == nil)
     }
 
     @MainActor
@@ -913,5 +1064,14 @@ private extension SwiftTagAppleScriptTests {
             .appendingPathExtension("swifttag")
         try? FileManager.default.removeItem(at: packageURL)
         return packageURL
+    }
+
+    static func fourCharCode(_ value: String) -> NSNumber {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(ascii: " "), count: max(0, 4 - bytes.count))
+        let code = paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
+        return NSNumber(value: code)
     }
 }

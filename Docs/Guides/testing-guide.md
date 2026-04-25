@@ -152,31 +152,59 @@ When available in this environment, prefer Xcode MCP tools:
 3. `RunSomeTests` for targeted tests.
 4. `RunAllTests` only when needed.
 
-### `osascript` Integration Harness
+### AppleScript And `osascript` Integration Harness
 
-- Use a UI test harness for real AppleScript end-to-end verification.
-- Launch SwiftTag with `XCUIApplication` first so the exact Xcode-built app is the running target.
-- Reuse existing UI-test fixture env vars and readiness checks before invoking AppleScript.
-- Run `/usr/bin/osascript` from the UI test target as a separate `Process`.
-- Prefer a temporary script file over chained `-e` fragments to avoid shell-escaping bugs.
-- Pass dynamic values through the script `run` handler arguments instead of string interpolation when practical.
-- If runtime target app is dynamic, compile app-specific terminology with `using terms from application id "..."` around script body.
-- Keep runtime target and compile-time terminology source separate when script uses custom classes like `editor window` or `track`.
-- In UI tests, prefer runtime targeting by exact app bundle path (`tell application (POSIX file ...)`) so `osascript` talks to Xcode-launched build, not whichever installed copy Launch Services picks for bundle id lookup.
+- Use unit tests for command argument mapping before adding XCUI AppleScript coverage.
+- AppleScript compiles class, property, command-parameter, and enumeration names from `SwiftTag/SwiftTag.sdef`.
+- Do not test scripting terms by passing arbitrary strings for classes, enumerations, or command parameters.
+- For unit tests, pass FourChar values that match `SwiftTag/SwiftTag.sdef` codes when testing enum parsing.
+- In app code, expect command enum arguments to arrive as Apple event descriptors or FourChar values, not display strings.
+- Use `NSScriptCommand.evaluatedArguments` for command handlers and parse by Cocoa keys from `SwiftTag/SwiftTag.sdef`.
+- Keep parameter-key fallbacks for renamed terminology only when they map to same Apple event code and Cocoa key.
+- In UI AppleScript tests, write scripts with published terminology:
+  - use command parameter labels exactly as compiled, for example `save with scope selected with payload tags only`
+  - use enum terms exactly as compiled, for example `selected`, `tags only`, `pictures only`, `tags and pictures`
+  - wrap scripts that use SwiftTag-specific terms in `using terms from application id "com.toowalks.swifttag"`
+- Launch SwiftTag with `XCUIApplication` first so the Xcode-built app is the running target.
+- Reuse existing UI-test fixture helpers and alert checks before invoking AppleScript.
+- Dismiss or fail fast on `FLAC Import Error` alerts before treating AppleScript results as command failures.
+- Prefer the current in-process `NSAppleScript` UI harness for targeted end-to-end tests.
+- `NSAppleScript` keeps compilation and execution inside `SwiftTagUITests-Runner`, so it avoids a child helper identity mismatch.
+- `NSAppleScript` does not support argv-style `osascript` arguments; interpolate only test-controlled paths/values.
+- Keep in-process AppleScript tests small and deterministic because Apple event timing and automation prompts remain brittle.
+
+#### Sandbox And Entitlements
+
 - Do not assume `Process`-launched `/usr/bin/osascript` from `SwiftTagUITests-Runner` is outside sandbox.
-- Apple App Sandbox rules apply to the UI test runner, and helper tools launched with `Process` inherit that sandbox.
-- Without Apple-event sender entitlement/exception on the UI test runner sandbox, inherited `osascript` receives `appleevent-send` denial when targeting SwiftTag.
-- Prefer one of these harnesses for real AppleScript end-to-end checks:
-  - external host-side `osascript` run from Xcode scheme/script outside `SwiftTagUITests-Runner`
-  - dedicated helper target with explicit Apple-event entitlements
-  - UI-test-runner Apple-event path only after adding required entitlements and privacy strings
-- Use `osascript -l AppleScript -sso`:
+- Helper tools launched with `Process` inherit the UI test runner sandbox and code-signing identity constraints.
+- External `/usr/bin/osascript` can fail even when app scripting works manually because sender identity differs.
+- Error `-600` can mean target app is unavailable, but it can also hide AppleEvent sandbox/TCC denial.
+- Check unified logs before blaming app scripting code:
+
+```sh
+/usr/bin/log show --last 5m --style compact \
+  --predicate '(process == "osascript" OR process == "SwiftTagUITests-Runner" OR eventMessage CONTAINS[c] "-600") AND (eventMessage CONTAINS[c] "appleevent" OR eventMessage CONTAINS[c] "deny" OR eventMessage CONTAINS[c] "-600")'
+```
+
+- A sandbox denial commonly appears as `Sandbox: osascript(...) deny(1) appleevent-send ...`.
+- A TCC denial can mention missing `com.apple.security.automation.apple-events`.
+- If UI-test-runner Apple events are required, sign the UI test target or helper with test-only entitlements:
+  - `com.apple.security.automation.apple-events`
+  - `com.apple.security.scripting-targets` for `com.toowalks.swifttag`
+  - temporary Apple-event exceptions only for local/test harnesses when needed
+- Keep Apple-event entitlements on test/helper targets, not production app targets unless product behavior requires them.
+- Prefer one of these approaches for real AppleScript end-to-end checks:
+  - current `NSAppleScript` harness inside `SwiftTagUITests-Runner` with explicit entitlements
+  - external host-side `/usr/bin/osascript` run outside the UI test runner sandbox
+  - dedicated helper target signed with explicit Apple-event entitlements
+- Use external `osascript` only when testing command-line script behavior itself.
+- For external `osascript`, prefer a temporary script file over chained `-e` fragments to avoid shell escaping bugs.
+- For external `osascript`, use `osascript -l AppleScript -sso`:
   - `-l AppleScript` forces AppleScript parsing.
   - `-s s` returns results in recompilable source form for deterministic assertions.
   - `-s o` routes script errors to stdout so captured output includes failure text.
-- Target the running app by bundle identifier once `XCUIApplication` has launched it.
-- Keep `osascript` tests targeted and small because Apple event timing and automation prompts can be brittle.
-- If an AppleScript bug is under investigation, first add or reuse a smoke test that proves the harness can talk to the running app before asserting more complex behavior.
+- If an AppleScript bug is under investigation, first prove the harness can count or name the running app/window.
+- Only then assert higher-risk behavior such as FLAC import, save payload/scope, or close semantics.
 
 Fallback command examples:
 
@@ -209,3 +237,9 @@ xcodebuild -scheme SwiftTag -destination 'platform=macOS' test \
 - Swift Testing framework docs: https://developer.apple.com/documentation/testing
 - XCTest docs: https://developer.apple.com/documentation/xctest
 - SwiftUI docs: https://developer.apple.com/documentation/swiftui
+- NSScriptCommand docs: https://developer.apple.com/documentation/foundation/nsscriptcommand
+- NSScriptCommandDescription docs: https://developer.apple.com/documentation/foundation/nsscriptcommanddescription
+- NSAppleScript docs: https://developer.apple.com/documentation/foundation/nsapplescript
+- NSAppleScript `executeAndReturnError(_:)`: https://developer.apple.com/documentation/foundation/nsapplescript/executeandreturnerror(_:)
+- Apple Events entitlement: https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.automation.apple-events
+- Cocoa Scripting Guide archive: https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ScriptableCocoaApplications/

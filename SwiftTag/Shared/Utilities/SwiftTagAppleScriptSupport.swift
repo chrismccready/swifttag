@@ -2,7 +2,6 @@ import AppKit
 import Foundation
 
 enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
-    case conflictingSaveScopeOptions
     case editorWindowSaveDestinationUnsupported
     case invalidEditorWindowTarget
     case missingOpenTarget
@@ -12,6 +11,9 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
     case noSwiftTagDocumentsProvided
     case invalidFileValue
     case invalidSaveOptionValue(String)
+    case invalidSaveScopeOptionValue(String)
+    case invalidSavePayloadOptionValue(String)
+    case invalidCloseSaveOptionValue(String)
     case invalidSelectedTrack
     case invalidSaveDestination
     case invalidTagKey
@@ -24,8 +26,6 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .conflictingSaveScopeOptions:
-            return "Save command cannot specify both selected tracks and all tracks."
         case .editorWindowSaveDestinationUnsupported:
             return "Editor window save does not support an explicit destination. Save document instead."
         case .invalidEditorWindowTarget:
@@ -44,6 +44,12 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
             return "AppleScript file argument must resolve to a local file URL."
         case let .invalidSaveOptionValue(optionName):
             return "Save option \(optionName) must be true or false."
+        case let .invalidSaveScopeOptionValue(optionName):
+            return "Save scope option \(optionName) must be all or selected."
+        case let .invalidSavePayloadOptionValue(optionName):
+            return "Save payload option \(optionName) must be tags only or pictures only or tags and pictures."
+        case let .invalidCloseSaveOptionValue(optionName):
+            return "Close save option \(optionName) must be yes, no, or ask."
         case .invalidSelectedTrack:
             return "Selected tracks must belong to target editor window."
         case .invalidSaveDestination:
@@ -69,13 +75,15 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
         switch self {
         case .missingOpenTarget, .missingAddTracksInput:
             Int(NSRequiredArgumentsMissingScriptError)
-        case .conflictingSaveScopeOptions,
-             .editorWindowSaveDestinationUnsupported,
+        case .editorWindowSaveDestinationUnsupported,
              .invalidEditorWindowTarget,
              .noFlacFilesProvided,
              .noSwiftTagDocumentsProvided,
              .invalidFileValue,
              .invalidSaveOptionValue,
+             .invalidSaveScopeOptionValue,
+             .invalidSavePayloadOptionValue,
+             .invalidCloseSaveOptionValue,
              .invalidSelectedTrack,
              .invalidSaveDestination,
              .invalidTagKey,
@@ -178,95 +186,84 @@ struct SwiftTagAppleScriptFlacSaveRequest: Equatable {
     static let defaults = Self(payload: nil, scope: nil)
 
     static func from(arguments: [String: Any]?) throws -> Self {
-        let selectedTracks = try boolValue(
-            optionName: "selected tracks",
-            keys: ["SelectedTracks", "selected tracks", "selectedTracks"],
-            in: arguments
+        let scope = try SaveScopeOption.appleScriptValue(
+            from: SwiftTagAppleScriptArgumentValue.value(
+                keys: ["SaveScopeOptions", "scope", "with scope", "saving scope"],
+                in: arguments
+            ),
+            optionName: "scope"
         )
-        let allTracks = try boolValue(
-            optionName: "all tracks",
-            keys: ["AllTracks", "all tracks", "allTracks"],
-            in: arguments
+        let payload = try SavePayloadOption.appleScriptValue(
+            from: SwiftTagAppleScriptArgumentValue.value(
+                keys: ["SavePayloadOptions", "payload", "with payload", "saving payload"],
+                in: arguments
+            ),
+            optionName: "payload"
         )
-        let tags = try boolValue(
-            optionName: "tags",
-            keys: ["Tags", "tags"],
-            in: arguments
-        )
-        let pictures = try boolValue(
-            optionName: "pictures",
-            keys: ["Pictures", "pictures"],
-            in: arguments
-        )
-
-        guard !(selectedTracks && allTracks) else {
-            throw SwiftTagAppleScriptCommandError.conflictingSaveScopeOptions
-        }
-
-        let scope: SaveScopeOption?
-        if selectedTracks {
-            scope = .selectedTracks
-        } else if allTracks {
-            scope = .allTracks
-        } else {
-            scope = nil
-        }
-
-        let payload: SavePayloadOption?
-        switch (tags, pictures) {
-        case (true, true):
-            payload = .writeTagsAndPictures
-        case (true, false):
-            payload = .writeTags
-        case (false, true):
-            payload = .writePictures
-        case (false, false):
-            payload = nil
-        }
 
         return Self(payload: payload, scope: scope)
     }
+}
 
-    private static func boolValue(
-        optionName: String,
-        keys: [String],
-        in arguments: [String: Any]?
-    ) throws -> Bool {
-        guard let rawValue = argumentValue(keys: keys, in: arguments) else {
-            return false
+enum SwiftTagAppleScriptCloseSaveOption: Equatable {
+    case yes
+    case no
+    case ask
+
+    static func from(_ rawValue: Any?, optionName: String = "saving") throws -> Self? {
+        guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
+            return nil
         }
 
-        switch rawValue {
-        case let value as Bool:
-            return value
-        case let value as NSNumber:
-            return value.boolValue
-        case let value as String:
-            return try parseBoolString(value, optionName: optionName)
-        case let value as NSString:
-            return try parseBoolString(value as String, optionName: optionName)
+        switch token {
+        case "yes":
+            return .yes
+        case "no":
+            return .no
+        case "ask":
+            return .ask
         default:
-            throw SwiftTagAppleScriptCommandError.invalidSaveOptionValue(optionName)
+            throw SwiftTagAppleScriptCommandError.invalidCloseSaveOptionValue(optionName)
         }
     }
+}
 
-    private static func parseBoolString(
-        _ rawValue: String,
-        optionName: String
-    ) throws -> Bool {
-        switch rawValue
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased() {
-        case "1", "true", "yes", "on":
-            return true
-        case "0", "false", "no", "off":
-            return false
-        default:
-            throw SwiftTagAppleScriptCommandError.invalidSaveOptionValue(optionName)
-        }
+struct SwiftTagAppleScriptCloseRequest: Equatable {
+    let saveOption: SwiftTagAppleScriptCloseSaveOption?
+    let destinationURL: URL?
+    let flacSaveRequest: SwiftTagAppleScriptFlacSaveRequest
+
+    static let defaults = Self(
+        saveOption: nil,
+        destinationURL: nil,
+        flacSaveRequest: .defaults
+    )
+
+    static func from(arguments: [String: Any]?) throws -> Self {
+        let saveOption = try SwiftTagAppleScriptCloseSaveOption.from(
+            SwiftTagAppleScriptArgumentValue.value(
+                keys: ["SaveOptions", "saving"],
+                in: arguments
+            )
+        )
+        let destinationURL = try SwiftTagAppleScriptFileURLResolver.singleFileURL(
+            from: SwiftTagAppleScriptArgumentValue.value(
+                keys: ["File", "file", "saving in", "in"],
+                in: arguments
+            )
+        )
+        let flacSaveRequest = try SwiftTagAppleScriptFlacSaveRequest.from(arguments: arguments)
+
+        return Self(
+            saveOption: saveOption,
+            destinationURL: destinationURL,
+            flacSaveRequest: flacSaveRequest
+        )
     }
+}
 
-    private static func argumentValue(
+private enum SwiftTagAppleScriptArgumentValue {
+    static func value(
         keys: [String],
         in arguments: [String: Any]?
     ) -> Any? {
@@ -282,6 +279,91 @@ struct SwiftTagAppleScriptFlacSaveRequest: Equatable {
 
         let normalizedKeys = Set(keys.map { $0.lowercased() })
         return arguments.first { normalizedKeys.contains($0.key.lowercased()) }?.value
+    }
+}
+
+private enum SwiftTagAppleScriptEnumerationToken {
+    static func normalized(from rawValue: Any?) -> String? {
+        guard let rawValue else {
+            return nil
+        }
+
+        if let descriptor = rawValue as? NSAppleEventDescriptor {
+            if descriptor.descriptorType == typeEnumerated {
+                return normalized(fourCharCodeString(descriptor.enumCodeValue))
+            }
+            if let stringValue = descriptor.stringValue {
+                return normalized(stringValue)
+            }
+        }
+
+        if let string = rawValue as? String {
+            return normalized(string)
+        }
+
+        if let string = rawValue as? NSString {
+            return normalized(string as String)
+        }
+
+        if let number = rawValue as? NSNumber {
+            return normalized(fourCharCodeString(number.uint32Value))
+        }
+
+        return normalized(String(describing: rawValue))
+    }
+
+    private static func normalized(_ rawValue: String) -> String {
+        rawValue
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+    }
+
+    private static func fourCharCodeString(_ code: FourCharCode) -> String {
+        let bytes = [
+            UInt8((code >> 24) & 0xff),
+            UInt8((code >> 16) & 0xff),
+            UInt8((code >> 8) & 0xff),
+            UInt8(code & 0xff)
+        ]
+        return String(bytes: bytes, encoding: .macOSRoman) ?? ""
+    }
+}
+
+private extension SaveScopeOption {
+    static func appleScriptValue(from rawValue: Any?, optionName: String) throws -> Self? {
+        guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
+            return nil
+        }
+
+        switch token {
+        case "altr":
+            return .allTracks
+        case "sltr":
+            return .selectedTracks
+        default:
+            throw SwiftTagAppleScriptCommandError.invalidSaveScopeOptionValue(optionName)
+        }
+    }
+}
+
+private extension SavePayloadOption {
+    static func appleScriptValue(from rawValue: Any?, optionName: String) throws -> Self? {
+        guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
+            return nil
+        }
+
+        switch token {
+        case "tgos":
+            return .writeTags
+        case "pcos":
+            return .writePictures
+        case "tpos":
+            return .writeTagsAndPictures
+        default:
+            throw SwiftTagAppleScriptCommandError.invalidSavePayloadOptionValue(optionName)
+        }
     }
 }
 
@@ -1575,6 +1657,40 @@ final class SwiftTagScriptEditorWindow: NSObject {
         )
     }
 
+    func close(
+        using request: SwiftTagAppleScriptCloseRequest = .init(
+            saveOption: nil,
+            destinationURL: nil,
+            flacSaveRequest: .init(payload: nil, scope: nil)
+        )
+    ) throws {
+        let saveOption = request.saveOption ?? .ask
+        if request.destinationURL != nil, saveOption != .no {
+            throw SwiftTagAppleScriptCommandError.editorWindowSaveDestinationUnsupported
+        }
+
+        switch saveOption {
+        case .yes:
+            if document.modified {
+                _ = try saveFlacFiles(using: request.flacSaveRequest)
+            }
+            try SwiftTagAppleScriptController.shared.closeEditorWindow(
+                forSessionID: sessionIDValue,
+                bypassUnsavedConfirmation: true
+            )
+        case .no:
+            try SwiftTagAppleScriptController.shared.closeEditorWindow(
+                forSessionID: sessionIDValue,
+                bypassUnsavedConfirmation: true
+            )
+        case .ask:
+            try SwiftTagAppleScriptController.shared.closeEditorWindow(
+                forSessionID: sessionIDValue,
+                bypassUnsavedConfirmation: false
+            )
+        }
+    }
+
     func addTracks(at urls: [URL]) throws -> [SwiftTagScriptTrack] {
         try SwiftTagAppleScriptController.shared.addTracks(urls, toSessionID: sessionIDValue)
     }
@@ -1606,6 +1722,17 @@ final class SwiftTagScriptEditorWindow: NSObject {
             let request = try SwiftTagAppleScriptFlacSaveRequest.from(arguments: arguments)
             _ = try saveFlacFiles(using: request)
             return self
+        } catch {
+            return command.fail(error)
+        }
+    }
+
+    @objc(handleCloseScriptCommand:)
+    func handleCloseScriptCommand(_ command: NSScriptCommand) -> Any? {
+        do {
+            let request = try SwiftTagAppleScriptCloseRequest.from(arguments: command.evaluatedArguments)
+            try close(using: request)
+            return nil
         } catch {
             return command.fail(error)
         }
@@ -1727,6 +1854,35 @@ final class SwiftTagScriptDocument: NSObject {
         )
     }
 
+    func close(
+        using request: SwiftTagAppleScriptCloseRequest = .init(
+            saveOption: nil,
+            destinationURL: nil,
+            flacSaveRequest: .init(payload: nil, scope: nil)
+        )
+    ) throws {
+        switch request.saveOption ?? .ask {
+        case .yes:
+            if modified {
+                _ = try saveSwiftTagDocument(to: request.destinationURL)
+            }
+            try SwiftTagAppleScriptController.shared.closeEditorWindow(
+                forSessionID: sessionIDValue,
+                bypassUnsavedConfirmation: true
+            )
+        case .no:
+            try SwiftTagAppleScriptController.shared.closeEditorWindow(
+                forSessionID: sessionIDValue,
+                bypassUnsavedConfirmation: true
+            )
+        case .ask:
+            try SwiftTagAppleScriptController.shared.closeEditorWindow(
+                forSessionID: sessionIDValue,
+                bypassUnsavedConfirmation: false
+            )
+        }
+    }
+
     @objc(handleSaveScriptCommand:)
     func handleSaveScriptCommand(_ command: NSScriptCommand) -> Any? {
         do {
@@ -1736,6 +1892,17 @@ final class SwiftTagScriptDocument: NSObject {
                     ?? command.evaluatedArguments?["in"]
             )
             return try saveSwiftTagDocument(to: destinationURL)
+        } catch {
+            return command.fail(error)
+        }
+    }
+
+    @objc(handleCloseScriptCommand:)
+    func handleCloseScriptCommand(_ command: NSScriptCommand) -> Any? {
+        do {
+            let request = try SwiftTagAppleScriptCloseRequest.from(arguments: command.evaluatedArguments)
+            try close(using: request)
+            return nil
         } catch {
             return command.fail(error)
         }
@@ -2079,6 +2246,31 @@ final class SwiftTagAppleScriptController {
         return try bridge.saveTracks(request)
     }
 
+    func closeEditorWindow(
+        forSessionID sessionID: UUID,
+        bypassUnsavedConfirmation: Bool
+    ) throws {
+        if let window = orderedLiveEditorWindows().first(where: { $0.sessionID == sessionID })?.window {
+            if bypassUnsavedConfirmation {
+                UnsavedChangesCoordinator.shared.allowNextClose(for: sessionID)
+                window.close()
+                unregisterClosedEditorSession(sessionID)
+                return
+            }
+            window.performClose(nil)
+            return
+        }
+
+        guard editorWindowsBySessionID[sessionID] != nil
+            || documentsBySessionID[sessionID] != nil
+            || sessionBridgesBySessionID[sessionID] != nil
+            || pendingDocumentURLBySessionID[sessionID] != nil else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        unregisterClosedEditorSession(sessionID)
+    }
+
     func openDocumentWrappers(at urls: [URL]) throws -> [SwiftTagScriptDocument] {
         let documentURLs = normalizedSwiftTagDocumentURLs(from: urls)
         guard !documentURLs.isEmpty else {
@@ -2139,12 +2331,21 @@ final class SwiftTagAppleScriptController {
 
     private func orderedLiveEditorWindows() -> [(sessionID: UUID, window: NSWindow)] {
         NSApplication.shared.orderedWindows.compactMap { window in
+            guard window.isVisible || window.isMiniaturized else {
+                return nil
+            }
             guard let delegate = window.delegate as? EditorWindowSessionIdentifying else {
                 return nil
             }
 
             return (delegate.editorSessionID, window)
         }
+    }
+
+    private func unregisterClosedEditorSession(_ sessionID: UUID) {
+        unregister(sessionID: sessionID)
+        EditorWindowCoordinator.shared.unregister(sessionID: sessionID)
+        UnsavedChangesCoordinator.shared.unregister(sessionID: sessionID)
     }
 
     private func normalizedSwiftTagDocumentURLs(from urls: [URL]) -> [URL] {

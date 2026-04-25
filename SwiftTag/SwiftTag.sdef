@@ -5,6 +5,23 @@
 
     <suite name="Standard Suite" code="core" description="Common classes and commands for all applications.">
 
+        <enumeration name="save options" code="savo">
+            <enumerator name="yes" code="yes " description="Save the file."/>
+            <enumerator name="no" code="no  " description="Do not save the file."/>
+            <enumerator name="ask" code="ask " description="Ask the user whether or not to save the file."/>
+        </enumeration>
+
+        <enumeration name="save scope options" code="svso">
+            <enumerator name="all" code="altr" description="Save all editable tracks in an editor window."/>
+            <enumerator name="selected" code="sltr" description="Save selected editable tracks in an editor window."/>
+        </enumeration>
+
+        <enumeration name="save payload options" code="svpo">
+            <enumerator name="tags only" code="tgos" description="Save editable track tags in an editor window."/>
+            <enumerator name="pictures only" code="pcos" description="Save editable track pictures in an editor window."/>
+            <enumerator name="tags and pictures" code="tpos" description="Save editable track tags and pictures in an editor window."/>
+        </enumeration>
+
         <command name="open" code="aevtodoc" description="Open a document.">
             <direct-parameter description="The file(s) to open.">
                 <type type="file"/>
@@ -16,23 +33,35 @@
             </result>
         </command>
 
+        <command name="close" code="coreclos" description="Close a document or editor window.">
+            <cocoa class="NSCloseCommand"/>
+            <access-group identifier="*"/>
+            <direct-parameter type="specifier" requires-access="r" description="The document(s) or window(s) to close."/>
+            <parameter name="saving" code="savo" type="save options" optional="yes" description="Should changes be saved before closing?">
+                <cocoa key="SaveOptions"/>
+            </parameter>
+            <parameter name="saving in" code="kfil" type="file" optional="yes" description="The file in which to save the document, if so.">
+                <cocoa key="File"/>
+            </parameter>
+            <parameter name="saving scope" code="svso" type="save scope options" optional="yes" description="The track selection scope of the save operation.">
+                <cocoa key="SaveScopeOptions"/>
+            </parameter>
+            <parameter name="saving payload" code="svpo" type="save payload options" optional="yes" description="The track payload of the save operation.">
+                <cocoa key="SavePayloadOptions"/>
+            </parameter>
+        </command>
+
         <command name="save" code="coresave" description="Save a document or editor window.">
             <access-group identifier="*"/>
             <direct-parameter type="specifier" requires-access="r" description="The document(s) or window(s) to save."/>
             <parameter name="in" code="kfil" type="file" optional="yes" description="The file in which to save the document.">
                 <cocoa key="File"/>
             </parameter>
-            <parameter name="all tracks" code="altr" type="boolean" optional="yes" description="When true, save all editable imported FLAC tracks in an editor window.">
-                <cocoa key="AllTracks"/>
+            <parameter name="with scope" code="svso" type="save scope options" optional="yes" description="The track selection scope of the save operation.">
+                <cocoa key="SaveScopeOptions"/>
             </parameter>
-            <parameter name="pictures" code="pics" type="boolean" optional="yes" description="When true, save FLAC pictures in an editor window.">
-                <cocoa key="Pictures"/>
-            </parameter>
-            <parameter name="selected tracks" code="sltr" type="boolean" optional="yes" description="When true, save selected editable imported FLAC tracks in an editor window.">
-                <cocoa key="SelectedTracks"/>
-            </parameter>
-            <parameter name="tags" code="tags" type="boolean" optional="yes" description="When true, save FLAC tags in an editor window.">
-                <cocoa key="Tags"/>
+            <parameter name="with payload" code="svpo" type="save payload options" optional="yes" description="The track payload of the save operation.">
+                <cocoa key="SavePayloadOptions"/>
             </parameter>
         </command>
 
@@ -104,6 +133,9 @@
             <responds-to command="save">
                 <cocoa method="handleSaveScriptCommand:"/>
             </responds-to>
+            <responds-to command="close">
+                <cocoa method="handleCloseScriptCommand:"/>
+            </responds-to>
         </class>
 
     </suite>
@@ -171,6 +203,9 @@
             </responds-to>
             <responds-to command="save">
                 <cocoa method="handleSaveScriptCommand:"/>
+            </responds-to>
+            <responds-to command="close">
+                <cocoa method="handleCloseScriptCommand:"/>
             </responds-to>
         </class>
 

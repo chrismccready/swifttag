@@ -12,6 +12,7 @@ final class SwiftTagUITests: XCTestCase {
     private static let appBundleIdentifier = "com.toowalks.swifttag"
     private static let fixtureDirectoryName = "SwiftTagTestFiles"
     private static let fixtureFileName = "test.flac"
+    private static let appleScriptHarnessSentinelPath = "/tmp/SwiftTagRunOsascriptTests"
 
     private enum UIID {
         static let addMiscTagButton = "miscTags.addButton"
@@ -236,9 +237,7 @@ final class SwiftTagUITests: XCTestCase {
 
     @MainActor
     func testAppleScriptHarnessSelectsMatchingTracksInTableOrder() throws {
-        guard ProcessInfo.processInfo.environment["SWIFTTAG_RUN_OSASCRIPT_TESTS"] == "1" else {
-            throw XCTSkip("Set SWIFTTAG_RUN_OSASCRIPT_TESTS=1 to run external osascript automation.")
-        }
+        try requireAppleScriptHarnessEnabled()
 
         let firstFixtureURL = try prepareExternalOpenPanelFlacFixture(
             fileName: Self.fixtureFileName,
@@ -279,9 +278,7 @@ final class SwiftTagUITests: XCTestCase {
 
     @MainActor
     func testAppleScriptHarnessSetsTitleOfFirstTrack() throws {
-        guard ProcessInfo.processInfo.environment["SWIFTTAG_RUN_OSASCRIPT_TESTS"] == "1" else {
-            throw XCTSkip("Set SWIFTTAG_RUN_OSASCRIPT_TESTS=1 to run external osascript automation.")
-        }
+        try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(importFixture: true)
         defer {
@@ -304,6 +301,85 @@ final class SwiftTagUITests: XCTestCase {
 
         XCTAssertEqual(normalizedAppleScriptTextOutput(output), "New Title")
         XCTAssertTrue(waitForTextFieldValueAnywhere(in: app, expectedValue: "New Title", timeout: 5.0))
+    }
+
+    @MainActor
+    func testAppleScriptHarnessSavesWithScopeAndPayloadEnumerations() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let fixtureURL = try prepareExternalOpenPanelFlacFixture(
+            fileName: Self.fixtureFileName,
+            destinationFileName: "swifttag-applescript-save-\(UUID().uuidString).flac"
+        )
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let title = "Saved Enumeration Title \(UUID().uuidString)"
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    add POSIX file "\(fixtureURL.path)"
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    if (count of tracks) is 0 then error "SwiftTag add did not load track."
+                    set title of first track to "\(title)"
+                    set selected tracks to first track
+                    save with scope selected with payload tags only
+                    return title of first track
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        XCTAssertEqual(normalizedAppleScriptTextOutput(output), title)
+    }
+
+    @MainActor
+    func testAppleScriptHarnessClosesEditorWindowSavingNo() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                set originalCount to count of editor windows
+                make new editor window
+                delay 1
+                set openedCount to count of editor windows
+                close front editor window saving no
+                repeat 50 times
+                    if (count of editor windows) is originalCount then exit repeat
+                    delay 0.1
+                end repeat
+                set closedCount to count of editor windows
+                return (originalCount as text) & linefeed & (openedCount as text) & linefeed & (closedCount as text)
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, ["1", "2", "1"])
     }
 
     @MainActor
@@ -2123,6 +2199,9 @@ final class SwiftTagUITests: XCTestCase {
         terminologyBundleIdentifier: String? = nil,
         timeout: TimeInterval = 15.0
     ) throws -> String {
+        XCTAssertTrue(arguments.isEmpty, "NSAppleScript harness does not support argv-style arguments.")
+        _ = timeout
+
         let compiledSource: String
         if let terminologyBundleIdentifier {
             compiledSource = """
@@ -2134,51 +2213,62 @@ final class SwiftTagUITests: XCTestCase {
             compiledSource = source
         }
 
-        let scriptURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("SwiftTagUITest-\(UUID().uuidString)")
-            .appendingPathExtension("applescript")
-        try compiledSource.write(to: scriptURL, atomically: true, encoding: .utf8)
-        defer {
-            try? FileManager.default.removeItem(at: scriptURL)
-        }
-
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-l", "AppleScript", "-sso", scriptURL.path] + arguments
-
-        let outputPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = outputPipe
-
-        try process.run()
-
-        let deadline = Date().addingTimeInterval(timeout)
-        while process.isRunning, Date() < deadline {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
-        }
-
-        if process.isRunning {
-            process.terminate()
-            XCTFail("Timed out waiting for osascript to finish.")
-        }
-
-        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(decoding: outputData, as: UTF8.self)
-
-        if process.terminationStatus != 0 {
+        guard let script = NSAppleScript(source: compiledSource) else {
             XCTFail(
                 """
-                osascript failed with status \(process.terminationStatus).
+                AppleScript failed to compile.
+                Script:
+                \(compiledSource)
+                """
+            )
+            return ""
+        }
+
+        var errorInfo: NSDictionary?
+        let descriptor = script.executeAndReturnError(&errorInfo)
+        if let errorInfo {
+            XCTFail(
+                """
+                AppleScript failed.
                 Script:
                 \(compiledSource)
 
-                Output:
-                \(output)
+                Error:
+                \(errorInfo)
                 """
             )
         }
 
-        return output
+        return descriptor.stringValue ?? descriptor.description
+    }
+
+    private func requireAppleScriptHarnessEnabled() throws {
+        guard ProcessInfo.processInfo.environment["SWIFTTAG_RUN_OSASCRIPT_TESTS"] == "1"
+            || FileManager.default.fileExists(atPath: Self.appleScriptHarnessSentinelPath) else {
+            throw XCTSkip(
+                "Set SWIFTTAG_RUN_OSASCRIPT_TESTS=1 or create \(Self.appleScriptHarnessSentinelPath) to run external osascript automation."
+            )
+        }
+    }
+
+    private func dismissImportErrorAlertIfPresent(
+        in app: XCUIApplication,
+        timeout: TimeInterval = 0.5
+    ) -> String? {
+        let alert = app.alerts["FLAC Import Error"].firstMatch
+        guard alert.waitForExistence(timeout: timeout) else {
+            return nil
+        }
+
+        let message = alert.staticTexts.allElementsBoundByIndex
+            .map(\.label)
+            .filter { !$0.isEmpty && $0 != "FLAC Import Error" }
+            .joined(separator: "\n")
+        let okButton = alert.buttons["OK"].firstMatch
+        if okButton.exists {
+            okButton.tap()
+        }
+        return message.isEmpty ? "FLAC Import Error" : message
     }
 
     private func normalizedAppleScriptTextOutput(_ output: String) -> String {
