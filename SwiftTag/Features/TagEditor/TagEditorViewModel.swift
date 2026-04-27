@@ -163,7 +163,7 @@ enum TagEditorSaveError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noTracksToSave:
-            return "There are no imported FLAC tracks available for the requested save operation."
+            return "There are no imported/selected FLAC tracks available for the requested save operation."
         case let .failedToResolveAccess(path):
             return "Failed to resolve security-scoped access for \(path). Re-import the file and try again."
         case let .failedToAccessFile(path):

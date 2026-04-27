@@ -16,6 +16,7 @@
 - Use git commit message formatting rules from Docs/Guides/git-commit-message-guide.md.
 - When asked to create a git commit message use formatting rules from Docs/Guides/git-commit-message-guide.md.
 - For SwiftUI test design and harness selection, use Docs/Guides/testing-guide.md as the primary guide.
+- For Apple documentation lookup, use the `Apple Docs Scout` profile at Docs/AppleDocsIndex/apple-docs-scout-agent.md and the local index in Docs/AppleDocsIndex/Generated.
 
 ## Plans
 

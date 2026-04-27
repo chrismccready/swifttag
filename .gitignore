@@ -13,6 +13,7 @@ ThirdParty/
 # Ignore local build results and cache
 DerivedData/
 build/
+Docs/AppleDocsIndex/Generated/
 
 ## Other Xcode Metadata
 # Ignore temporary and state files

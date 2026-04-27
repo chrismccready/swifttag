@@ -188,14 +188,14 @@ struct SwiftTagAppleScriptFlacSaveRequest: Equatable {
     static func from(arguments: [String: Any]?) throws -> Self {
         let scope = try SaveScopeOption.appleScriptValue(
             from: SwiftTagAppleScriptArgumentValue.value(
-                keys: ["SaveScopeOptions", "scope", "with scope", "saving scope"],
+                key: "SaveScopeOptions",
                 in: arguments
             ),
             optionName: "scope"
         )
         let payload = try SavePayloadOption.appleScriptValue(
             from: SwiftTagAppleScriptArgumentValue.value(
-                keys: ["SavePayloadOptions", "payload", "with payload", "saving payload"],
+                key: "SavePayloadOptions",
                 in: arguments
             ),
             optionName: "payload"
@@ -242,13 +242,13 @@ struct SwiftTagAppleScriptCloseRequest: Equatable {
     static func from(arguments: [String: Any]?) throws -> Self {
         let saveOption = try SwiftTagAppleScriptCloseSaveOption.from(
             SwiftTagAppleScriptArgumentValue.value(
-                keys: ["SaveOptions", "saving"],
+                key: "SaveOptions",
                 in: arguments
             )
         )
         let destinationURL = try SwiftTagAppleScriptFileURLResolver.singleFileURL(
             from: SwiftTagAppleScriptArgumentValue.value(
-                keys: ["File", "file", "saving in", "in"],
+                key: "File",
                 in: arguments
             )
         )
@@ -264,21 +264,18 @@ struct SwiftTagAppleScriptCloseRequest: Equatable {
 
 private enum SwiftTagAppleScriptArgumentValue {
     static func value(
-        keys: [String],
+        key: String,
         in arguments: [String: Any]?
     ) -> Any? {
         guard let arguments else {
             return nil
         }
 
-        for key in keys {
-            if let value = arguments[key] {
-                return value
-            }
+        if let value = arguments[key] {
+            return value
         }
-
-        let normalizedKeys = Set(keys.map { $0.lowercased() })
-        return arguments.first { normalizedKeys.contains($0.key.lowercased()) }?.value
+        
+        return nil
     }
 }
 
@@ -296,17 +293,17 @@ private enum SwiftTagAppleScriptEnumerationToken {
                 return normalized(stringValue)
             }
         }
-
-        if let string = rawValue as? String {
-            return normalized(string)
+        
+        if let number = rawValue as? NSNumber {
+            return normalized(fourCharCodeString(number.uint32Value))
         }
-
+        
         if let string = rawValue as? NSString {
             return normalized(string as String)
         }
-
-        if let number = rawValue as? NSNumber {
-            return normalized(fourCharCodeString(number.uint32Value))
+        
+        if let string = rawValue as? String {
+            return normalized(string)
         }
 
         return normalized(String(describing: rawValue))
@@ -1023,96 +1020,6 @@ final class SwiftTagScriptTrack: NSObject {
         }
     }
 
-    @objc(fileURL)
-    var fileURL: URL? {
-        trackSnapshot?.sourceFileURL?.standardizedFileURL
-    }
-
-    @objc(tags)
-    var tags: [SwiftTagScriptTag] {
-        SwiftTagAppleScriptController.shared.tags(
-            forSessionID: sessionIDValue,
-            trackID: trackIDValue
-        )
-    }
-
-    @objc(countOfTags)
-    var countOfTags: Int {
-        tags.count
-    }
-
-    @objc(objectInTagsAtIndex:)
-    func objectInTags(at index: Int) -> SwiftTagScriptTag {
-        tags[index]
-    }
-
-    @objc(valueInTagsWithUniqueID:)
-    func valueInTags(withUniqueID uniqueID: Any) -> Any? {
-        SwiftTagAppleScriptController.shared.tag(
-            forSessionID: sessionIDValue,
-            trackID: trackIDValue,
-            uniqueID: uniqueID
-        )
-    }
-
-    @objc(insertObject:inTagsAtIndex:)
-    func insertObject(_ value: Any, inTagsAt index: Int) {
-        do {
-            let payload = try SwiftTagAppleScriptTagPayload.from(value: value)
-            try SwiftTagAppleScriptController.shared.upsertTag(
-                key: payload.key,
-                value: payload.value,
-                forSessionID: sessionIDValue,
-                trackID: trackIDValue
-            )
-        } catch {
-            _ = NSScriptCommand.current()?.fail(error)
-        }
-    }
-
-    @objc(removeObjectFromTagsAtIndex:)
-    func removeObjectFromTags(at index: Int) {
-        guard let tag = tags[safe: index],
-              let key = tag.key else {
-            return
-        }
-
-        do {
-            try SwiftTagAppleScriptController.shared.deleteTag(
-                key: key,
-                forSessionID: sessionIDValue,
-                trackID: trackIDValue
-            )
-        } catch {
-            _ = NSScriptCommand.current()?.fail(error)
-        }
-    }
-
-    @objc(replaceObjectInTagsAtIndex:withObject:)
-    func replaceObjectInTags(at index: Int, with value: Any) {
-        do {
-            let replacement = try SwiftTagAppleScriptTagPayload.from(value: value)
-            let existingKey = tags[safe: index]?.key
-            if let existingKey,
-               existingKey != replacement.key {
-                try SwiftTagAppleScriptController.shared.deleteTag(
-                    key: existingKey,
-                    forSessionID: sessionIDValue,
-                    trackID: trackIDValue
-                )
-            }
-
-            try SwiftTagAppleScriptController.shared.upsertTag(
-                key: replacement.key,
-                value: replacement.value,
-                forSessionID: sessionIDValue,
-                trackID: trackIDValue
-            )
-        } catch {
-            _ = NSScriptCommand.current()?.fail(error)
-        }
-    }
-
     @objc(fingerprint)
     var fingerprint: String? {
         guard let trackSnapshot else {
@@ -1393,6 +1300,96 @@ final class SwiftTagScriptTrack: NSObject {
         }
     }
 
+    @objc(fileURL)
+    var fileURL: URL? {
+        trackSnapshot?.sourceFileURL?.standardizedFileURL
+    }
+
+    @objc(tags)
+    var tags: [SwiftTagScriptTag] {
+        SwiftTagAppleScriptController.shared.tags(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue
+        )
+    }
+
+    @objc(countOfTags)
+    var countOfTags: Int {
+        tags.count
+    }
+
+    @objc(objectInTagsAtIndex:)
+    func objectInTags(at index: Int) -> SwiftTagScriptTag {
+        tags[index]
+    }
+
+    @objc(valueInTagsWithUniqueID:)
+    func valueInTags(withUniqueID uniqueID: Any) -> Any? {
+        SwiftTagAppleScriptController.shared.tag(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue,
+            uniqueID: uniqueID
+        )
+    }
+
+    @objc(insertObject:inTagsAtIndex:)
+    func insertObject(_ value: Any, inTagsAt index: Int) {
+        do {
+            let payload = try SwiftTagAppleScriptTagPayload.from(value: value)
+            try SwiftTagAppleScriptController.shared.upsertTag(
+                key: payload.key,
+                value: payload.value,
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue
+            )
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    @objc(removeObjectFromTagsAtIndex:)
+    func removeObjectFromTags(at index: Int) {
+        guard let tag = tags[safe: index],
+              let key = tag.key else {
+            return
+        }
+
+        do {
+            try SwiftTagAppleScriptController.shared.deleteTag(
+                key: key,
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue
+            )
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    @objc(replaceObjectInTagsAtIndex:withObject:)
+    func replaceObjectInTags(at index: Int, with value: Any) {
+        do {
+            let replacement = try SwiftTagAppleScriptTagPayload.from(value: value)
+            let existingKey = tags[safe: index]?.key
+            if let existingKey,
+               existingKey != replacement.key {
+                try SwiftTagAppleScriptController.shared.deleteTag(
+                    key: existingKey,
+                    forSessionID: sessionIDValue,
+                    trackID: trackIDValue
+                )
+            }
+
+            try SwiftTagAppleScriptController.shared.upsertTag(
+                key: replacement.key,
+                value: replacement.value,
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue
+            )
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+    
     override var objectSpecifier: NSScriptObjectSpecifier? {
         guard let editorWindow = SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionIDValue),
               let editorWindowClassDescription = NSScriptClassDescription(for: SwiftTagScriptEditorWindow.self),
