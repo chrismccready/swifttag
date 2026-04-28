@@ -5596,6 +5596,10 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
         coordinator.setOpenEditorWindowAction { sessionValue in
             openedSession = sessionValue
         }
+        var activationRequests = 0
+        coordinator.setAppActivationHandlerForTesting {
+            activationRequests += 1
+        }
 
         let didRouteFiles = coordinator.routeFinderOpenedFiles(
             [URL(fileURLWithPath: "/tmp/inactive.flac")],
@@ -5605,6 +5609,7 @@ final class SaveNotificationCoordinatorTests: XCTestCase {
         XCTAssertTrue(didRouteFiles)
         XCTAssertNotNil(openedSession)
         XCTAssertNotEqual(openedSession?.sessionID, existingSession.sessionID)
+        XCTAssertEqual(activationRequests, 1)
     }
 
     @MainActor

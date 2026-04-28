@@ -20,6 +20,10 @@ struct SwiftTagAppleScriptTests {
         EditorWindowCoordinator.shared.setOpenEditorWindowAction { sessionValue in
             openedSessions.append(sessionValue)
         }
+        var activationRequests = 0
+        EditorWindowCoordinator.shared.setAppActivationHandlerForTesting {
+            activationRequests += 1
+        }
 
         let scriptWindow = SwiftTagScriptEditorWindow()
         application.insertInScriptEditorWindows(scriptWindow)
@@ -27,6 +31,7 @@ struct SwiftTagAppleScriptTests {
         let openedSession = try #require(openedSessions.first)
         #expect(openedSessions.count == 1)
         #expect(openedSession.sessionID.uuidString == scriptWindow.windowID)
+        #expect(activationRequests == 0)
 
         let resolvedWindow = try #require(
             application.valueInScriptEditorWindows(withUniqueID: scriptWindow.windowID as NSString)

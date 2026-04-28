@@ -2008,7 +2008,8 @@ final class SwiftTagAppleScriptController {
         editorWindowsBySessionID[scriptWindow.sessionID] = scriptWindow
         scriptWindow.markAwaitingMaterialization()
         EditorWindowCoordinator.shared.openEditorWindow(
-            for: EditorSessionValue(sessionID: scriptWindow.sessionID)
+            for: EditorSessionValue(sessionID: scriptWindow.sessionID),
+            activateApp: false
         )
         synchronizeWindow(for: scriptWindow.sessionID)
     }

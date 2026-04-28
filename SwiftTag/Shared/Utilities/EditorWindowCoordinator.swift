@@ -23,6 +23,9 @@ final class EditorWindowCoordinator {
     private var pendingSessionsToOpen: [EditorSessionValue] = []
     private var activeSessionID: UUID?
     private var closingSessionIDs: Set<UUID> = []
+    private var appActivationHandler: () -> Void = {
+        NSApp.activate(ignoringOtherApps: true)
+    }
 
     private init() {}
 
@@ -181,8 +184,10 @@ final class EditorWindowCoordinator {
         return bestMatch?.sessionValue
     }
 
-    func openEditorWindow(for sessionValue: EditorSessionValue) {
-        NSApp.activate(ignoringOtherApps: true)
+    func openEditorWindow(for sessionValue: EditorSessionValue, activateApp: Bool = true) {
+        if activateApp {
+            appActivationHandler()
+        }
 
         guard let openEditorWindowAction = currentOpenEditorWindowAction() else {
             pendingSessionsToOpen.append(sessionValue)
@@ -436,6 +441,10 @@ final class EditorWindowCoordinator {
         return sessionValue
     }
 
+    func setAppActivationHandlerForTesting(_ handler: @escaping () -> Void) {
+        appActivationHandler = handler
+    }
+
     func resetForTesting() {
         fallbackOpenEditorWindowAction = nil
         openEditorWindowActionBySessionID.removeAll()
@@ -451,5 +460,8 @@ final class EditorWindowCoordinator {
         pendingSessionsToOpen.removeAll()
         activeSessionID = nil
         closingSessionIDs.removeAll()
+        appActivationHandler = {
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 }
