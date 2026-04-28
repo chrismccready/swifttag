@@ -805,12 +805,37 @@ final class AlbumArtViewModel {
             }
 
             var mergedRefs = existingRefs
+            var matchedExistingIndices: Set<Int> = []
             for reference in incomingRefs {
-                if let existingIndex = mergedRefs.firstIndex(where: { referencesMatch($0, reference) }) {
+                if let existingIndex = firstReferenceIndex(
+                    in: mergedRefs,
+                    excluding: matchedExistingIndices,
+                    where: { referencesMatch($0, reference) }
+                ) {
                     clearReferencePinState(mergedRefs[existingIndex], for: track.id)
+                    matchedExistingIndices.insert(existingIndex)
+                    continue
+                }
+
+                if let existingIndex = firstReferenceIndex(
+                    in: mergedRefs,
+                    excluding: matchedExistingIndices,
+                    where: { referencesSharePictureIdentity($0, reference) }
+                ) {
+                    let existingReference = mergedRefs[existingIndex]
+                    let wasPinned = isReferencePinned(existingReference, for: track.id)
+                    clearReferencePinState(existingReference, for: track.id)
+                    let updatedReference = referenceWithStableID(
+                        existingReference: existingReference,
+                        incomingReference: reference
+                    )
+                    mergedRefs[existingIndex] = updatedReference
+                    setReferencePinned(updatedReference, for: track.id, isPinned: wasPinned)
+                    matchedExistingIndices.insert(existingIndex)
                     continue
                 }
                 mergedRefs.append(reference)
+                matchedExistingIndices.insert(mergedRefs.index(before: mergedRefs.endIndex))
             }
             trackReferencesByTrackID[track.id] = mergedRefs
         }
@@ -1157,6 +1182,35 @@ final class AlbumArtViewModel {
             lhs.description == rhs.description
     }
 
+    private func referencesSharePictureIdentity(_ lhs: AlbumArtTrackReference, _ rhs: AlbumArtTrackReference) -> Bool {
+        lhs.poolItemID == rhs.poolItemID &&
+            lhs.slot == rhs.slot &&
+            lhs.mimeType == rhs.mimeType
+    }
+
+    private func firstReferenceIndex(
+        in references: [AlbumArtTrackReference],
+        excluding excludedIndices: Set<Int>,
+        where predicate: (AlbumArtTrackReference) -> Bool
+    ) -> Int? {
+        references.indices.first { index in
+            !excludedIndices.contains(index) && predicate(references[index])
+        }
+    }
+
+    private func referenceWithStableID(
+        existingReference: AlbumArtTrackReference,
+        incomingReference: AlbumArtTrackReference
+    ) -> AlbumArtTrackReference {
+        AlbumArtTrackReference(
+            id: existingReference.id,
+            poolItemID: incomingReference.poolItemID,
+            slot: incomingReference.slot,
+            mimeType: incomingReference.mimeType,
+            description: incomingReference.description
+        )
+    }
+
     private func isReferencePinned(_ reference: AlbumArtTrackReference, for trackID: UUID) -> Bool {
         let key = referenceKey(for: reference)
         return !(unpinnedReferenceKeysByTrackID[trackID] ?? []).contains(key)
@@ -1374,6 +1428,17 @@ final class AlbumArtViewModel {
                 for sourceReference in sourceReferences {
                     if let existingIndex = refs.firstIndex(where: { referencesMatch($0, sourceReference) }) {
                         setReferencePinned(refs[existingIndex], for: trackID, isPinned: true)
+                        continue
+                    }
+
+                    if let existingIndex = refs.firstIndex(where: { referencesSharePictureIdentity($0, sourceReference) }) {
+                        let updatedReference = referenceWithStableID(
+                            existingReference: refs[existingIndex],
+                            incomingReference: sourceReference
+                        )
+                        clearReferencePinState(refs[existingIndex], for: trackID)
+                        refs[existingIndex] = updatedReference
+                        setReferencePinned(updatedReference, for: trackID, isPinned: true)
                         continue
                     }
 

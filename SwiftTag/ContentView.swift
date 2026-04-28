@@ -1668,6 +1668,19 @@ struct ContentView: View {
         try viewModel.appleScriptDeleteTag(key: key, forTrackID: trackID)
     }
 
+    private func performAppleScriptUpdatePictureDescription(
+        _ description: String,
+        for trackID: UUID,
+        pictureIndex: Int
+    ) throws {
+        try viewModel.appleScriptUpdatePictureDescription(
+            description,
+            forTrackID: trackID,
+            pictureIndex: pictureIndex
+        )
+        syncAlbumArtContext()
+    }
+
     private func resolveDeletedSwiftTagDocumentRecoveryDestination(
         currentState: SwiftTagDocumentSaveState
     ) -> URL? {
@@ -2010,6 +2023,13 @@ struct ContentView: View {
                 },
                 deleteTag: { trackID, key in
                     try performAppleScriptDeleteTag(key, for: trackID)
+                },
+                updatePictureDescription: { trackID, pictureIndex, description in
+                    try performAppleScriptUpdatePictureDescription(
+                        description,
+                        for: trackID,
+                        pictureIndex: pictureIndex
+                    )
                 }
             )
         )

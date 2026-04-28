@@ -19,6 +19,7 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
     case invalidTagKey
     case invalidTagObject
     case invalidTagTrackTarget
+    case invalidPictureObject
     case saveLocationRequired
     case sessionUnavailable
     case saveAlreadyInProgress
@@ -60,6 +61,8 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
             return "Tag mutations require a tag object or record with key and value."
         case .invalidTagTrackTarget:
             return "Tag command target must resolve to a track in the current editor window."
+        case .invalidPictureObject:
+            return "Picture command target must resolve to a picture in the current editor window."
         case .saveLocationRequired:
             return "Save command needs an existing SwiftTag document or an explicit destination file."
         case .sessionUnavailable:
@@ -89,6 +92,7 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
              .invalidTagKey,
              .invalidTagObject,
              .invalidTagTrackTarget,
+             .invalidPictureObject,
              .saveLocationRequired:
             Int(NSArgumentsWrongScriptError)
         case .noEditorWindowAvailable, .sessionUnavailable, .trackLocked:
@@ -398,6 +402,7 @@ struct SwiftTagAppleScriptSessionBridge {
     let saveTracks: (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult
     let upsertTag: (UUID, String, String) throws -> Void
     let deleteTag: (UUID, String) throws -> Void
+    let updatePictureDescription: (UUID, Int, String) throws -> Void
 
     init(
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
@@ -409,7 +414,8 @@ struct SwiftTagAppleScriptSessionBridge {
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
         },
         upsertTag: @escaping (UUID, String, String) throws -> Void = { _, _, _ in },
-        deleteTag: @escaping (UUID, String) throws -> Void = { _, _ in }
+        deleteTag: @escaping (UUID, String) throws -> Void = { _, _ in },
+        updatePictureDescription: @escaping (UUID, Int, String) throws -> Void = { _, _, _ in }
     ) {
         self.documentSnapshot = documentSnapshot
         self.sessionSnapshot = sessionSnapshot
@@ -419,6 +425,7 @@ struct SwiftTagAppleScriptSessionBridge {
         self.saveTracks = saveTracks
         self.upsertTag = upsertTag
         self.deleteTag = deleteTag
+        self.updatePictureDescription = updatePictureDescription
     }
 }
 
@@ -671,6 +678,204 @@ private struct SwiftTagAppleScriptTagPayload {
         default:
             String(describing: rawValue!)
         }
+    }
+}
+
+private enum SwiftTagAppleScriptPictureType {
+    static func appleEventCode(for flacType: Int) -> FourCharCode {
+        switch flacType {
+        case 0:
+            fourCharCode("othe")
+        case 1:
+            fourCharCode("pngi")
+        case 2:
+            fourCharCode("othi")
+        case 3:
+            fourCharCode("frcv")
+        case 4:
+            fourCharCode("bckc")
+        case 5:
+            fourCharCode("leaf")
+        case 6:
+            fourCharCode("medi")
+        case 7:
+            fourCharCode("lead")
+        case 8:
+            fourCharCode("arti")
+        case 9:
+            fourCharCode("cond")
+        case 10:
+            fourCharCode("band")
+        case 11:
+            fourCharCode("comp")
+        case 12:
+            fourCharCode("lyri")
+        case 13:
+            fourCharCode("locn")
+        case 14:
+            fourCharCode("sess")
+        case 15:
+            fourCharCode("perf")
+        case 16:
+            fourCharCode("capt")
+        case 17:
+            fourCharCode("fish")
+        case 18:
+            fourCharCode("illu")
+        case 19:
+            fourCharCode("logo")
+        case 20:
+            fourCharCode("pubo")
+        default:
+            fourCharCode("othe")
+        }
+    }
+
+    private static func fourCharCode(_ value: String) -> FourCharCode {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(ascii: " "), count: max(0, 4 - bytes.count))
+        return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
+    }
+}
+
+private enum SwiftTagAppleScriptDescriptorType {
+    static let data = fourCharCode("tdta")
+
+    private static func fourCharCode(_ value: String) -> DescType {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(ascii: " "), count: max(0, 4 - bytes.count))
+        return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
+    }
+}
+
+extension NSData {
+    @objc(scriptingDataDescriptor)
+    var swiftTagScriptingDataDescriptor: NSAppleEventDescriptor? {
+        NSAppleEventDescriptor(
+            descriptorType: SwiftTagAppleScriptDescriptorType.data,
+            data: self as Data
+        )
+    }
+}
+
+@MainActor
+@objc(SwiftTagScriptPicture)
+final class SwiftTagScriptPicture: NSObject {
+    private let sessionIDValue: UUID
+    private let trackIDValue: UUID
+    private let pictureIndexValue: Int
+
+    init(sessionID: UUID, trackID: UUID, pictureIndex: Int) {
+        sessionIDValue = sessionID
+        trackIDValue = trackID
+        pictureIndexValue = pictureIndex
+        super.init()
+    }
+
+    @objc(pictureType)
+    var pictureType: NSNumber? {
+        guard let pictureSnapshot else {
+            return nil
+        }
+
+        return NSNumber(value: SwiftTagAppleScriptPictureType.appleEventCode(for: pictureSnapshot.type))
+    }
+
+    @objc(mimeType)
+    var mimeType: String? {
+        pictureSnapshot?.mimeType.appleScriptNonEmptyValue
+    }
+
+    @objc(pictureDescription)
+    var pictureDescription: String? {
+        get {
+            pictureSnapshot?.description
+        }
+        set {
+            do {
+                try SwiftTagAppleScriptController.shared.updatePictureDescription(
+                    newValue ?? "",
+                    forSessionID: sessionIDValue,
+                    trackID: trackIDValue,
+                    pictureIndex: pictureIndexValue
+                )
+            } catch {
+                _ = NSScriptCommand.current()?.fail(error)
+            }
+        }
+    }
+
+    @objc(width)
+    var width: NSNumber? {
+        integerValue(\.width)
+    }
+
+    @objc(height)
+    var height: NSNumber? {
+        integerValue(\.height)
+    }
+
+    @objc(colorDepth)
+    var colorDepth: NSNumber? {
+        integerValue(\.depth)
+    }
+
+    @objc(colors)
+    var colors: NSNumber? {
+        integerValue(\.colors)
+    }
+
+    @objc(data)
+    var data: NSData? {
+        guard let data = pictureSnapshot?.data else {
+            return nil
+        }
+
+        guard !data.isEmpty else {
+            return NSData()
+        }
+
+        return data.withUnsafeBytes { bytes in
+            NSData(bytes: bytes.baseAddress, length: data.count)
+        }
+    }
+
+    override var objectSpecifier: NSScriptObjectSpecifier? {
+        guard let track = SwiftTagAppleScriptController.shared.track(
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue
+              ),
+              let trackClassDescription = NSScriptClassDescription(for: SwiftTagScriptTrack.self),
+              let containerSpecifier = track.objectSpecifier else {
+            return nil
+        }
+
+        return NSIndexSpecifier(
+            containerClassDescription: trackClassDescription,
+            containerSpecifier: containerSpecifier,
+            key: "pictures",
+            index: pictureIndexValue
+        )
+    }
+
+    private var pictureSnapshot: FlacWritablePictureRecord? {
+        SwiftTagAppleScriptController.shared.pictureSnapshot(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue,
+            pictureIndex: pictureIndexValue
+        )
+    }
+
+    private func integerValue(_ keyPath: KeyPath<FlacWritablePictureRecord, Int>) -> NSNumber? {
+        guard let value = pictureSnapshot?[keyPath: keyPath] else {
+            return nil
+        }
+
+        return NSNumber(value: value)
     }
 }
 
@@ -1313,14 +1518,32 @@ final class SwiftTagScriptTrack: NSObject {
         )
     }
 
+    @objc(pictures)
+    var pictures: [SwiftTagScriptPicture] {
+        SwiftTagAppleScriptController.shared.pictures(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue
+        )
+    }
+
     @objc(countOfTags)
     var countOfTags: Int {
         tags.count
     }
 
+    @objc(countOfPictures)
+    var countOfPictures: Int {
+        pictures.count
+    }
+
     @objc(objectInTagsAtIndex:)
     func objectInTags(at index: Int) -> SwiftTagScriptTag {
         tags[index]
+    }
+
+    @objc(objectInPicturesAtIndex:)
+    func objectInPictures(at index: Int) -> SwiftTagScriptPicture {
+        pictures[index]
     }
 
     @objc(valueInTagsWithUniqueID:)
@@ -2147,6 +2370,29 @@ final class SwiftTagAppleScriptController {
         }
     }
 
+    func pictures(forSessionID sessionID: UUID, trackID: UUID) -> [SwiftTagScriptPicture] {
+        guard let track = trackSnapshot(forSessionID: sessionID, trackID: trackID) else {
+            return []
+        }
+
+        return track.flacPictureRecords.indices.map { index in
+            SwiftTagScriptPicture(
+                sessionID: sessionID,
+                trackID: trackID,
+                pictureIndex: index
+            )
+        }
+    }
+
+    func pictureSnapshot(
+        forSessionID sessionID: UUID,
+        trackID: UUID,
+        pictureIndex: Int
+    ) -> FlacWritablePictureRecord? {
+        trackSnapshot(forSessionID: sessionID, trackID: trackID)?
+            .flacPictureRecords[safe: pictureIndex]
+    }
+
     func tagSnapshot(
         forSessionID sessionID: UUID,
         trackID: UUID,
@@ -2197,6 +2443,19 @@ final class SwiftTagAppleScriptController {
         }
 
         try bridge.deleteTag(trackID, key)
+    }
+
+    func updatePictureDescription(
+        _ description: String,
+        forSessionID sessionID: UUID,
+        trackID: UUID,
+        pictureIndex: Int
+    ) throws {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        try bridge.updatePictureDescription(trackID, pictureIndex, description)
     }
 
     func documentSnapshot(

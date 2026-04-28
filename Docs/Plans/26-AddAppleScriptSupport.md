@@ -75,7 +75,7 @@ Out of scope:
   - `Track.fingerprint` currently stores the FLAC STREAMINFO MD5 audio fingerprint returned by `FlacMetadataService`, not a tags-and-pictures digest.
   - `.swifttag` manifests already contain a `SwiftTags` payload, but that payload currently contains only `Author` and is not an arbitrary key/value store.
   - Settings are split across `@AppStorage` declarations plus `SaveSettingsKey` / `FeedbackSettingsKey`; no aggregate settings model exists today.
-  - Safari's shipped bundle uses `NSAppleScriptEnabled = Yes` and `OSAScriptingDefinition = Safari.sdef`; SwiftTag currently has neither key.
+  - SwiftTag now sets `NSAppleScriptEnabled = Yes` and `OSAScriptingDefinition = SwiftTag.sdef`.
   - Cocoa scripting requires Objective-C-visible classes, selectors, and KVC/KVO-compatible keys; SwiftTag's current core editor models are mostly Swift structs and `@State` view-model state.
 
 ## Current Implementation Snapshot
@@ -101,11 +101,12 @@ Out of scope:
 - Picture slot modeling already exists in UI logic:
   - `ContentView.albumArtTypes` defines FLAC picture-slot mappings.
   - `AlbumArtViewModel` already builds picture metadata and track-reference groupings by slot.
-  - Only `front cover` is called out in the requested prototype terminology; other slot-list properties remain unresolved.
-- There is no current AppleScript infrastructure:
-  - no SDEF in the app target
-  - no `NSScriptCommand` subclasses
-  - no ObjC-visible scripting wrappers for application/window/document/track/tag/picture/settings objects
+  - Initial AppleScript picture access uses the raw per-track picture collection rather than slot-list properties.
+  - Slot-list properties remain unresolved beyond collection filtering such as `every picture whose picture type is front cover`.
+- AppleScript infrastructure now exists for the initial app/editor/document/track/tag surface:
+  - `SwiftTag/SwiftTag.sdef` is enabled through `NSAppleScriptEnabled` and `OSAScriptingDefinition`.
+  - `SwiftTagAppleScriptSupport.swift` provides ObjC-visible wrappers and command routing.
+  - `SwiftTagScriptPicture` exposes read/query access to track pictures and writable picture descriptions.
 
 ## Confirmed Decisions
 - Standard terminology should use a pruned copy of Cocoa's Standard Suite rather than relying on an in-bundle `xi:include` at runtime.
@@ -122,6 +123,23 @@ Out of scope:
 - Track queries should use standard AppleScript object specifiers and `whose` filters such as `every track whose title is "..."`.
 - AppleScript track collection order should match the visible SwiftUI track table order: numeric track number ascending, tracks without a numeric track number after numbered tracks, then localized filename sort.
 - `editor window.selected tracks` is the script-facing UI selection state and should be mutated via `set`, not by a custom `select` verb.
+- FLAC pictures are exposed as `picture` elements of `track`, backed by the existing `Track.flacPictureRecords` order.
+- Picture `picture type` is exposed as the `flac picture type` enumeration so AppleScript can filter with `whose picture type is front cover`.
+- The picture type property uses code `pcty` and Cocoa key `pictureType`; the AppleScript term is not `type` because that conflicts with AppleScript's built-in `type` term in `whose` filters.
+- Picture `description` is writable through standard `tdsc` terminology and routes through the same in-memory track picture record used by the SwiftUI editor.
+- Scripted picture `description` mutations also refresh album-art references so `AlbumArtPictureMetadata.descriptionText()` and `metadataForSlot` reflect the updated value.
+- Picture `data` is exposed as an SDEF `data` value type backed by `NSData` plus a `scriptingDataDescriptor`, avoiding Swift `Data` Apple event coercion failures.
+
+## Apple Documentation Review Update
+- Apple Docs Scout reviewed current primary Apple docs for Cocoa scripting.
+- Findings confirmed there is no native SwiftUI AppleScript object-model API in current searched docs.
+- Additional review for picture bytes confirmed SDEF custom value types can use a Cocoa `NSData` backing class; runtime verification showed returning `NSData` with a data descriptor is the compatible Cocoa scripting path.
+- Current implementation should continue using:
+  - bundled SDEF terminology
+  - `NSObject` / KVC-compatible script wrapper objects
+  - `NSScriptCommand` command routing
+  - `NSScriptObjectSpecifier` / `NSWhoseSpecifier` collection filtering
+  - SwiftUI-to-AppKit bridge seams for app/window integration
 
 ## Dependencies And Constraints
 - Bundle integration:
@@ -233,6 +251,9 @@ Out of scope:
 6. Verification and automation
 - Add terminology-shape tests for wrapper object collections and property mappings.
 - Add coercion tests for `boolean`, `integer`, `date`, and URL-backed properties.
+- Add picture collection tests for count, properties, `whose picture type is front cover`, and description mutation.
+- Add album-art refresh regression tests so scripted picture description edits update current metadata and preserve duplicate picture references.
+- Add raw picture data tests for descriptor type/bytes and real `/usr/bin/osascript` access to `data of firstCover`.
 - Add targeted command-routing tests for `add`, `save`, `close`, and `quit`.
 - Add at least one `osascript`-driven integration test that opens SwiftTag, adds a fixture FLAC, reads a few properties, mutates a tag, and saves.
 - Manually verify the dictionary in Script Editor.
@@ -246,6 +267,11 @@ Out of scope:
 - Add focused service tests for:
   - scripted add/import routing against copied FLAC fixtures
   - scripted save routing against copied FLAC fixtures and copied `.swifttag` packages
+- Add focused wrapper tests for:
+  - `pictures of track`
+  - `count pictures`
+  - `every picture whose picture type is front cover`
+  - picture `description` setter routing
 - Use targeted script integration tests instead of broad UI automation where possible:
   - invoke `osascript` with fixture paths
   - assert stdout/stderr and file-side effects
@@ -256,6 +282,8 @@ Out of scope:
 - Script Editor shows a Standard Suite plus SwiftTag Suite for SwiftTag.
 - `application` exposes `editor windows` and `settings`.
 - `editor window`, `document`, `track`, `tag`, `picture`, and `swift tag` objects can be queried from AppleScript.
+- `track` exposes `picture` elements with type, MIME type, description, dimensions, color depth, colors, and data.
+- AppleScript can count pictures and filter pictures by properties such as `picture type is front cover`.
 - `add` can append one or more FLAC files to a targeted/default editor window and returns the added track object(s).
 - Requested read-only properties work with the finalized fingerprint semantics.
 - Requested writable properties update in-memory editor state and participate in existing dirty/save flows.

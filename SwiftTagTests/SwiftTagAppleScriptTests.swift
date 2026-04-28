@@ -3,6 +3,7 @@ import Foundation
 import Testing
 @testable import SwiftTag
 
+@Suite(.serialized)
 struct SwiftTagAppleScriptTests {
     @MainActor
     @Test
@@ -564,6 +565,27 @@ struct SwiftTagAppleScriptTests {
         #expect(scriptTrack.totalSamples?.doubleValue == Double(totalSamples))
         #expect(scriptTrack.trackCount?.intValue == 7)
         #expect(scriptTrack.trackNumber?.intValue == 3)
+        #expect(scriptTrack.countOfPictures == 1)
+
+        let scriptPicture = try #require(scriptTrack.pictures.first)
+        #expect(scriptPicture.pictureType?.uint32Value == Self.fourCharCode("frcv").uint32Value)
+        #expect(scriptPicture.mimeType == "image/png")
+        #expect(scriptPicture.pictureDescription == "Cover (front)")
+        #expect(scriptPicture.width?.intValue == picture.width)
+        #expect(scriptPicture.height?.intValue == picture.height)
+        #expect(scriptPicture.colorDepth?.intValue == picture.depth)
+        #expect(scriptPicture.colors?.intValue == picture.colors)
+        let scriptPictureData = try #require(scriptPicture.data)
+        #expect(scriptPictureData as Data == pictureData)
+
+        let frontCoverSpecifier = try Self.whosePictureSpecifier(
+            in: scriptTrack,
+            propertyKey: "pictureType",
+            value: Self.fourCharCode("frcv")
+        )
+        let frontCovers = Self.evaluatedPictureWrappers(from: frontCoverSpecifier)
+        #expect(frontCovers.count == 1)
+        #expect(frontCovers.first?.pictureDescription == "Cover (front)")
 
         let calendar = Calendar(identifier: .gregorian)
         let releaseDate = try #require(scriptTrack.releaseDate)
@@ -648,6 +670,76 @@ struct SwiftTagAppleScriptTests {
 
         #expect(viewModel.trackItems.first?.tags[TagKey.title] == "New Title")
         #expect(scriptTrack.title == "New Title")
+    }
+
+    @MainActor
+    @Test
+    func pictureDescriptionSetterRoutesThroughBridge() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let pictureData = try #require(Self.singlePixelPNGData())
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: [TagKey.title: "Picture Track"],
+                flacPictureRecords: [
+                    FlacWritablePictureRecord(
+                        type: 3,
+                        mimeType: "image/png",
+                        description: "Original",
+                        data: pictureData
+                    ).withComputedPictureMetadata()
+                ],
+                sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-picture.flac")
+            )
+        ]
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: viewModel.trackItems,
+                        selectedTrackIDs: viewModel.selectedTrackIDs
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { trackIDs in
+                    viewModel.selectedTrackIDs = trackIDs
+                },
+                saveDocument: { _ in .init() },
+                updatePictureDescription: { trackID, pictureIndex, description in
+                    try viewModel.appleScriptUpdatePictureDescription(
+                        description,
+                        forTrackID: trackID,
+                        pictureIndex: pictureIndex
+                    )
+                }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptPicture = try #require(scriptWindow.tracks.first?.pictures.first)
+
+        scriptPicture.pictureDescription = "Edited"
+
+        #expect(viewModel.trackItems.first?.flacPictureRecords.first?.description == "Edited")
+        #expect(scriptPicture.pictureDescription == "Edited")
     }
 
     @MainActor
@@ -1020,6 +1112,29 @@ private extension SwiftTagAppleScriptTests {
         return []
     }
 
+    static func evaluatedPictureWrappers(from value: Any?) -> [SwiftTagScriptPicture] {
+        let evaluatedValue: Any?
+        if let specifier = value as? NSScriptObjectSpecifier {
+            evaluatedValue = specifier.objectsByEvaluatingSpecifier
+        } else {
+            evaluatedValue = value
+        }
+
+        if let picture = evaluatedValue as? SwiftTagScriptPicture {
+            return [picture]
+        }
+
+        if let pictures = evaluatedValue as? [SwiftTagScriptPicture] {
+            return pictures
+        }
+
+        if let pictures = evaluatedValue as? NSArray {
+            return pictures.compactMap { $0 as? SwiftTagScriptPicture }
+        }
+
+        return []
+    }
+
     @MainActor
     static func whoseTrackSpecifier(
         in scriptWindow: SwiftTagScriptEditorWindow,
@@ -1049,6 +1164,39 @@ private extension SwiftTagAppleScriptTests {
             containerClassDescription: editorWindowClassDescription,
             containerSpecifier: containerSpecifier,
             key: "tracks",
+            test: test
+        )
+    }
+
+    @MainActor
+    static func whosePictureSpecifier(
+        in scriptTrack: SwiftTagScriptTrack,
+        propertyKey: String,
+        value: Any
+    ) throws -> NSWhoseSpecifier {
+        let trackClassDescription = try #require(
+            NSScriptClassDescription(for: SwiftTagScriptTrack.self)
+        )
+        let pictureClassDescription = try #require(
+            NSScriptClassDescription(for: SwiftTagScriptPicture.self)
+        )
+        let containerSpecifier = try #require(scriptTrack.objectSpecifier)
+        let propertySpecifier = NSPropertySpecifier(
+            containerClassDescription: pictureClassDescription,
+            containerSpecifier: nil,
+            key: propertyKey
+        )
+        propertySpecifier.containerIsObjectBeingTested = true
+        let test = NSSpecifierTest(
+            objectSpecifier: propertySpecifier,
+            comparisonOperator: .equal,
+            test: value
+        )
+
+        return NSWhoseSpecifier(
+            containerClassDescription: trackClassDescription,
+            containerSpecifier: containerSpecifier,
+            key: "pictures",
             test: test
         )
     }

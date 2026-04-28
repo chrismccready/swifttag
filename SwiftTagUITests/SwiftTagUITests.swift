@@ -284,6 +284,7 @@ final class SwiftTagUITests: XCTestCase {
         defer {
             app.terminate()
         }
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
 
         let output = try runAppleScript(
             """
@@ -342,6 +343,54 @@ final class SwiftTagUITests: XCTestCase {
 
         XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
         XCTAssertEqual(normalizedAppleScriptTextOutput(output), title)
+    }
+
+    @MainActor
+    func testAppleScriptHarnessReadsTrackPicturesByType() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover"
+        )
+        defer {
+            app.terminate()
+        }
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    tell first track
+                        repeat 50 times
+                            if (count of pictures) > 0 then exit repeat
+                            delay 0.1
+                        end repeat
+                        set trackFrontCovers to every picture whose picture type is front cover
+                        set firstCover to item 1 of trackFrontCovers
+                        set frontCoverPictureData to data of firstCover
+                        return ((count of pictures) as text) & linefeed & ((count of trackFrontCovers) as text) & linefeed & (description of firstCover) & linefeed & (MIME type of firstCover) & linefeed & ((class of frontCoverPictureData) as text) & linefeed & ((frontCoverPictureData is missing value) as text)
+                    end tell
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines.count, 6)
+        XCTAssertEqual(Array(outputLines.prefix(4)), ["1", "1", "UI Test Single Front Cover", "image/png"])
+        XCTAssertTrue(outputLines[4] == "data" || outputLines[4].contains("tdta"))
+        XCTAssertEqual(outputLines[5], "false")
     }
 
     @MainActor

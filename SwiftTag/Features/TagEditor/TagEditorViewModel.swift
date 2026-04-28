@@ -1330,6 +1330,34 @@ final class TagEditorViewModel {
         reloadMiscTagRowsFromSelection()
     }
 
+    func appleScriptUpdatePictureDescription(
+        _ description: String,
+        forTrackID trackID: UUID,
+        pictureIndex: Int
+    ) throws {
+        guard let trackIndex = trackItems.firstIndex(where: { $0.id == trackID }) else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+        guard !trackItems[trackIndex].isLocked else {
+            throw SwiftTagAppleScriptCommandError.trackLocked
+        }
+        guard trackItems[trackIndex].flacPictureRecords.indices.contains(pictureIndex) else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+
+        let currentRecord = trackItems[trackIndex].flacPictureRecords[pictureIndex]
+        trackItems[trackIndex].flacPictureRecords[pictureIndex] = FlacWritablePictureRecord(
+            type: currentRecord.type,
+            mimeType: currentRecord.mimeType,
+            description: description,
+            data: currentRecord.data,
+            width: currentRecord.width,
+            height: currentRecord.height,
+            depth: currentRecord.depth,
+            colors: currentRecord.colors
+        )
+    }
+
     func setPictureRecordsByTrackID(
         _ recordsByTrackID: [UUID: [FlacWritablePictureRecord]],
         tagWriteOptions: TagWriteOptions,

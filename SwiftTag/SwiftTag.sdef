@@ -142,6 +142,34 @@
 
     <suite name="SwiftTag Suite" code="SwTG" description="SwiftTag-specific classes and commands.">
 
+        <enumeration name="flac picture type" code="pcty">
+            <enumerator name="other" code="othe" description="A other image of the track."/>
+            <enumerator name="PNG icon" code="pngi" description="The 32x32 PNG icon image of the track."/>
+            <enumerator name="other icon" code="othi" description="The other icon image of the track."/>
+            <enumerator name="front cover" code="frcv" description="A front cover image of the track."/>
+            <enumerator name="back cover" code="bckc" description="A back cover image of the track."/>
+            <enumerator name="leaflet" code="leaf" description="A leaflet image of the track."/>
+            <enumerator name="media" code="medi" description="A media image of the track."/>
+            <enumerator name="lead artist" code="lead" description="A lead artist image of the track."/>
+            <enumerator name="artist" code="arti" description="An artist image of the track."/>
+            <enumerator name="conductor" code="cond" description="A conductor image of the track."/>
+            <enumerator name="band" code="band" description="A band image of the track."/>
+            <enumerator name="composer" code="comp" description="A composer image of the track."/>
+            <enumerator name="lyricist" code="lyri" description="A lyricist image of the track."/>
+            <enumerator name="location" code="locn" description="A recording studio or location image of the track."/>
+            <enumerator name="session" code="sess" description="A recording session image of the track."/>
+            <enumerator name="performance" code="perf" description="A performance image of the track."/>
+            <enumerator name="capture" code="capt" description="A capture from movie or video image of the track."/>
+            <enumerator name="brightly colored fish" code="fish" description="A brightly colored fish image of the track."/>
+            <enumerator name="illustration" code="illu" description="An illustration image of the track."/>
+            <enumerator name="band logo" code="logo" description="A band logo image of the track."/>
+            <enumerator name="publisher logo" code="pubo" description="A publisher logo image of the track."/>
+        </enumeration>
+
+        <value-type name="data" code="tdta" description="Raw binary data.">
+            <cocoa class="NSData"/>
+        </value-type>
+
         <command name="add" code="SwTGaddt" description="Add one or more FLAC files to an editor window.">
             <direct-parameter description="The FLAC file(s) to add.">
                 <type type="file"/>
@@ -213,6 +241,9 @@
             <cocoa class="SwiftTagScriptTrack"/>
             <element type="tag">
                 <cocoa key="tags"/>
+            </element>
+            <element type="picture">
+                <cocoa key="pictures"/>
             </element>
             <property name="album" code="albm" type="text" description="The album name of the track.">
                 <cocoa key="album"/>
@@ -357,6 +388,34 @@
             </property>
             <property name="version" code="tver" type="text" description="The version of the track.">
                 <cocoa key="trackVersion"/>
+            </property>
+        </class>
+
+        <class name="picture" plural="pictures" code="fpic" description="A FLAC track picture.">
+            <cocoa class="SwiftTagScriptPicture"/>
+            <property name="picture type" code="pcty" type="flac picture type" access="r" description="The FLAC track file picture type.">
+                <cocoa key="pictureType"/>
+            </property>
+            <property name="MIME type" code="mime" type="text" access="r" description="The format of the image data.">
+                <cocoa key="mimeType"/>
+            </property>
+            <property name="description" code="tdsc" type="text" access="rw" description="A UTF-8 text string describing the image.">
+                <cocoa key="pictureDescription"/>
+            </property>
+            <property name="width" code="wdth" type="integer" access="r" description="The image width dimension in pixels.">
+                <cocoa key="width"/>
+            </property>
+            <property name="height" code="hght" type="integer" access="r" description="The image height dimension in pixels.">
+                <cocoa key="height"/>
+            </property>
+            <property name="color depth" code="cdpt" type="integer" access="r" description="The image color depth in bits per pixel.">
+                <cocoa key="colorDepth"/>
+            </property>
+            <property name="colors" code="cols" type="integer" access="r" description="The number of colors for indexed palettes (0 for non-indexed).">
+                <cocoa key="colors"/>
+            </property>
+            <property name="data" code="pcda" type="data" access="r" description="The raw image data in bytes.">
+                <cocoa key="data"/>
             </property>
         </class>
 

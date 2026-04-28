@@ -1010,6 +1010,92 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func albumArtViewModelRefreshUpdatesMatchingPictureDescriptionMetadata() throws {
+        let frontData = try Self.pngData(color: .purple)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Original", data: frontData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let initialMetadata = try #require(
+            viewModel.currentPictureMetadata(for: .frontCover, albumArtTypes: albumArtTypes)
+        )
+        #expect(initialMetadata.descriptionText() == "Original")
+
+        let updatedTrack = Track(
+            id: track.id,
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Edited", data: frontData)
+            ]
+        )
+        viewModel.configureTrackContext(
+            trackItems: [updatedTrack],
+            selectedTrackIDs: [updatedTrack.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        let updatedMetadata = try #require(
+            viewModel.currentPictureMetadata(for: .frontCover, albumArtTypes: albumArtTypes)
+        )
+        #expect(updatedMetadata.description == "Edited")
+        #expect(updatedMetadata.descriptionText() == "Edited")
+        #expect(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).map(\.description) == ["Edited"])
+        #expect(viewModel.trackReferencesByTrackID[track.id, default: []].map(\.description) == ["Edited"])
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelRefreshKeepsDuplicatePictureDescriptionsAligned() throws {
+        let frontData = try Self.pngData(color: .purple)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "First", data: frontData),
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Second", data: frontData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let updatedTrack = Track(
+            id: track.id,
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "First", data: frontData),
+                FlacWritablePictureRecord(type: 3, mimeType: "image/png", description: "Second Edited", data: frontData)
+            ]
+        )
+        viewModel.configureTrackContext(
+            trackItems: [updatedTrack],
+            selectedTrackIDs: [updatedTrack.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        #expect(viewModel.trackReferencesByTrackID[track.id, default: []].map(\.description) == [
+            "First",
+            "Second Edited"
+        ])
+        #expect(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).map(\.description) == [
+            "First",
+            "Second Edited"
+        ])
+    }
+
+    @Test
+    @MainActor
     func albumArtViewModelDescriptionEditUpdatesAllMatchingInScopeReferences() throws {
         let sharedData = try Self.pngData(color: .purple)
         let albumArtTypes: [AlbumArtType] = [
