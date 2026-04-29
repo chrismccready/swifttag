@@ -3,6 +3,9 @@ import Foundation
 
 @objc(SwiftTagCreateCommand)
 final class SwiftTagCreateCommand: NSCreateCommand {
+    private static let directObjectKeyword = fourCharCode("----")
+    private static let subjectAttribute = fourCharCode("subj")
+
     override var isWellFormed: Bool {
         true
     }
@@ -48,17 +51,21 @@ final class SwiftTagCreateCommand: NSCreateCommand {
         key expectedKey: String,
         error: SwiftTagAppleScriptCommandError
     ) throws -> SwiftTagScriptTrack {
-        guard let location = positionalSpecifier() else {
-            throw error
+        if let location = positionalSpecifier() {
+            location.setInsertionClassDescription(createClassDescription)
+            location.evaluate()
+            guard location.insertionKey == expectedKey,
+                  let track = location.insertionContainer as? SwiftTagScriptTrack else {
+                throw error
+            }
+            return track
         }
 
-        location.setInsertionClassDescription(createClassDescription)
-        location.evaluate()
-        guard location.insertionKey == expectedKey,
-              let track = location.insertionContainer as? SwiftTagScriptTrack else {
-            throw error
+        if let track = targetTrack() {
+            return track
         }
-        return track
+
+        throw error
     }
 
     private func positionalSpecifier() -> NSPositionalSpecifier? {
@@ -66,6 +73,59 @@ final class SwiftTagCreateCommand: NSCreateCommand {
             ?? arguments?["at"] as? NSPositionalSpecifier
             ?? evaluatedArguments?["Location"] as? NSPositionalSpecifier
             ?? evaluatedArguments?["at"] as? NSPositionalSpecifier
+    }
+
+    @MainActor
+    private func targetTrack() -> SwiftTagScriptTrack? {
+        if let track = Self.track(from: directParameter) {
+            return track
+        }
+
+        if let track = Self.track(from: evaluatedReceivers) {
+            return track
+        }
+
+        if let track = Self.track(from: receiversSpecifier?.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        if let subjectDescriptor = appleEvent?.attributeDescriptor(forKeyword: Self.subjectAttribute),
+           let subjectSpecifier = NSScriptObjectSpecifier(descriptor: subjectDescriptor),
+           let track = Self.track(from: subjectSpecifier.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        if let directObjectDescriptor = appleEvent?.paramDescriptor(forKeyword: Self.directObjectKeyword),
+           let directObjectSpecifier = NSScriptObjectSpecifier(descriptor: directObjectDescriptor),
+           let track = Self.track(from: directObjectSpecifier.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        return nil
+    }
+
+    @MainActor
+    private static func track(from value: Any?) -> SwiftTagScriptTrack? {
+        switch value {
+        case let track as SwiftTagScriptTrack:
+            return track
+        case let tracks as [SwiftTagScriptTrack] where tracks.count == 1:
+            return tracks[0]
+        case let tracks as NSArray where tracks.count == 1:
+            return tracks.firstObject as? SwiftTagScriptTrack
+        case let specifier as NSScriptObjectSpecifier:
+            return track(from: specifier.objectsByEvaluatingSpecifier)
+        default:
+            return nil
+        }
+    }
+
+    nonisolated private static func fourCharCode(_ value: String) -> AEKeyword {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
+        return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
     }
 }
 
@@ -2044,6 +2104,11 @@ final class SwiftTagScriptTag: NSObject {
         }
     }
 
+    @objc(scriptingSpecifierDescriptor)
+    var scriptingSpecifierDescriptor: NSAppleEventDescriptor? {
+        objectSpecifier?.descriptor
+    }
+
     override var objectSpecifier: NSScriptObjectSpecifier? {
         guard case let .attached(sessionID, trackID, key) = storage,
               let track = SwiftTagAppleScriptController.shared.track(
@@ -2145,6 +2210,14 @@ final class SwiftTagScriptTag: NSObject {
             key: key,
             forSessionID: sessionID,
             trackID: trackID
+        )
+    }
+
+    func attach(sessionID: UUID, trackID: UUID, key: String) {
+        storage = .attached(
+            sessionID: sessionID,
+            trackID: trackID,
+            key: SwiftTagAppleScriptTagKey.normalizedKey(key)
         )
     }
 }
@@ -2715,17 +2788,21 @@ final class SwiftTagScriptTrack: NSObject {
         withContentsValue contentsValue: Any?,
         properties: [String: Any]
     ) -> Any? {
-        guard key == "pictures",
-              objectClass == SwiftTagScriptPicture.self else {
-            return nil
-        }
-
         do {
-            let payload = try SwiftTagAppleScriptPicturePayload.from(
-                properties: properties as NSDictionary,
-                contentsValue: contentsValue
-            )
-            return SwiftTagScriptPicture(payload: payload)
+            if key == "tags", objectClass == SwiftTagScriptTag.self {
+                let payload = try SwiftTagAppleScriptTagPayload.from(value: properties as NSDictionary)
+                return SwiftTagScriptTag(key: payload.key, value: payload.value)
+            }
+
+            if key == "pictures", objectClass == SwiftTagScriptPicture.self {
+                let payload = try SwiftTagAppleScriptPicturePayload.from(
+                    properties: properties as NSDictionary,
+                    contentsValue: contentsValue
+                )
+                return SwiftTagScriptPicture(payload: payload)
+            }
+
+            return nil
         } catch {
             _ = NSScriptCommand.current()?.fail(error)
             return nil
@@ -2751,6 +2828,9 @@ final class SwiftTagScriptTrack: NSObject {
                 forSessionID: sessionIDValue,
                 trackID: trackIDValue
             )
+            if let tag = value as? SwiftTagScriptTag {
+                tag.attach(sessionID: sessionIDValue, trackID: trackIDValue, key: payload.key)
+            }
         } catch {
             _ = NSScriptCommand.current()?.fail(error)
         }
@@ -4256,6 +4336,18 @@ extension NSApplication {
             return track
         }
 
+        if let subjectDescriptor = command.appleEvent?.attributeDescriptor(forKeyword: Self.swiftTagSubjectAttribute),
+           let subjectSpecifier = NSScriptObjectSpecifier(descriptor: subjectDescriptor),
+           let track = scriptTrack(from: subjectSpecifier.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        if let directObjectDescriptor = command.appleEvent?.paramDescriptor(forKeyword: Self.swiftTagDirectObjectKeyword),
+           let directObjectSpecifier = NSScriptObjectSpecifier(descriptor: directObjectDescriptor),
+           let track = scriptTrack(from: directObjectSpecifier.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
         throw SwiftTagAppleScriptCommandError.invalidPictureTrackTarget
     }
 
@@ -4284,17 +4376,21 @@ extension NSApplication {
         key expectedKey: String,
         error: SwiftTagAppleScriptCommandError
     ) throws -> SwiftTagScriptTrack {
-        guard let location = positionalSpecifier(from: command) else {
-            throw error
+        if let location = positionalSpecifier(from: command) {
+            location.setInsertionClassDescription(command.createClassDescription)
+            location.evaluate()
+            guard location.insertionKey == expectedKey,
+                  let track = location.insertionContainer as? SwiftTagScriptTrack else {
+                throw error
+            }
+            return track
         }
 
-        location.setInsertionClassDescription(command.createClassDescription)
-        location.evaluate()
-        guard location.insertionKey == expectedKey,
-              let track = location.insertionContainer as? SwiftTagScriptTrack else {
-            throw error
+        if let track = try? scriptTrackTarget(from: command) {
+            return track
         }
-        return track
+
+        throw error
     }
 
     private func positionalSpecifier(from command: NSScriptCommand) -> NSPositionalSpecifier? {
@@ -4302,5 +4398,21 @@ extension NSApplication {
             ?? command.arguments?["at"] as? NSPositionalSpecifier
             ?? command.evaluatedArguments?["Location"] as? NSPositionalSpecifier
             ?? command.evaluatedArguments?["at"] as? NSPositionalSpecifier
+    }
+
+    private static var swiftTagDirectObjectKeyword: AEKeyword {
+        swiftTagAppleEventKeyword("----")
+    }
+
+    private static var swiftTagSubjectAttribute: AEKeyword {
+        swiftTagAppleEventKeyword("subj")
+    }
+
+    nonisolated private static func swiftTagAppleEventKeyword(_ value: String) -> AEKeyword {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
+        return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
     }
 }

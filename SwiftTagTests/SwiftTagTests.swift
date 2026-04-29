@@ -2797,6 +2797,72 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func tagEditorViewModelMiscTagsClearValuesWhenSelectionIsEmpty() throws {
+        let track = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac",
+                "ENCODED_BY": "Tester"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        let selectedRow = try #require(viewModel.miscTagRows.first { $0.key == "ENCODED_BY" })
+        #expect(selectedRow.value == "Tester")
+
+        viewModel.selectedTrackIDs = []
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        let deselectedRow = try #require(viewModel.miscTagRows.first { $0.key == "ENCODED_BY" })
+        #expect(deselectedRow.value == "")
+    }
+
+    @Test
+    @MainActor
+    func reloadTracksWithDifferencesRestoresMiscTagRowsFromSelectedFile() async throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "misc-tag-reload.flac")
+        let viewModel = TagEditorViewModel()
+
+        try await viewModel.importFlacFiles([fileURL])
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        viewModel.selectedTrackIDs = [trackID]
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        let rowID = try #require(viewModel.miscTagRows.first(where: { $0.key == "ENCODED_BY" })?.id)
+        let valueBinding = try #require(viewModel.miscTagValueBinding(for: rowID))
+        #expect(valueBinding.wrappedValue == "Test Encoded_By")
+
+        valueBinding.wrappedValue = "Edited Encoded By"
+        try viewModel.reloadTracksWithDifferences(
+            in: [trackID],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let reloadedValueRow = try #require(viewModel.miscTagRows.first { $0.key == "ENCODED_BY" })
+        #expect(viewModel.trackItems[0].tags["ENCODED_BY"] == "Test Encoded_By")
+        #expect(reloadedValueRow.value == "Test Encoded_By")
+
+        viewModel.selectedMiscTagRowIDs = [reloadedValueRow.id]
+        viewModel.deleteSelectedMiscTagRows()
+        #expect(!viewModel.miscTagRows.contains { $0.key == "ENCODED_BY" })
+
+        try viewModel.reloadTracksWithDifferences(
+            in: [trackID],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        let reloadedDeletedRow = try #require(viewModel.miscTagRows.first { $0.key == "ENCODED_BY" })
+        #expect(viewModel.trackItems[0].tags["ENCODED_BY"] == "Test Encoded_By")
+        #expect(reloadedDeletedRow.value == "Test Encoded_By")
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelMiscTagsRejectsExplicitKeyForNewRow() throws {
         let track = Track(
             tags: [

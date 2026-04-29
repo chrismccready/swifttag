@@ -912,7 +912,7 @@ final class TagEditorViewModel {
                 let value: String
 
                 if selectedTracks.isEmpty {
-                    value = existingRowsByKey[key]?.value ?? ""
+                    value = ""
                 } else {
                     let selectedValues = selectedTracks.map { $0.tags[key] ?? "" }
                     if let firstValue = selectedValues.first, selectedValues.allSatisfy({ $0 == firstValue }) {
@@ -2008,6 +2008,7 @@ final class TagEditorViewModel {
 
         if didUpdateTrackItems {
             trackItems = updatedTrackItems
+            reloadMiscTagRowsFromSelection()
         }
     }
 

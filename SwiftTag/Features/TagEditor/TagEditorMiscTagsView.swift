@@ -78,6 +78,7 @@ struct TagEditorMiscTagsView: View {
                                 hasExternallyModifiedDifference: hasExternallyModifiedDifferenceForRow(row)
                             )
                             .disabled(!isEditingEnabled)
+                            .accessibilityIdentifier("miscTags.valueField.\(row.id.uuidString)")
                     }
                 }
                 .width(min: 160)

@@ -19,6 +19,8 @@ final class SwiftTagUITests: XCTestCase {
         static let deleteMiscTagButton = "miscTags.deleteButton"
         static let miscTagTable = "miscTags.table"
         static let miscTagKeyFieldPrefix = "miscTags.keyField."
+        static let miscTagValueFieldPrefix = "miscTags.valueField."
+        static let destructiveActionConfirmButton = "destructiveAction.confirmButton"
         static let albumTextField = "albumTextField"
         static let albumArtistTextField = "albumArtistTextField"
         static let trackStatusIcon = "trackStatusIcon"
@@ -175,6 +177,48 @@ final class SwiftTagUITests: XCTestCase {
         clearAndType(in: app, element: originalTitleField, text: "Renamed Track")
 
         XCTAssertTrue(waitForTextFieldValueAnywhere(in: app, expectedValue: "Renamed Track", timeout: 5.0))
+    }
+
+    @MainActor
+    func testMiscTagValueUsesPlaceholderWhenNoTrackIsSelected() throws {
+        let app = try launchApp(importFixture: true)
+
+        XCTAssertTrue(
+            waitForMiscTagValue(in: app, key: "ENCODED_BY", expectedValue: "Value"),
+            "Current misc value: \(miscTagDisplayValue(in: app, key: "ENCODED_BY") ?? "<missing>")"
+        )
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
+        XCTAssertTrue(waitForMiscTagValue(in: app, key: "ENCODED_BY", expectedValue: "Test Encoded_By"))
+    }
+
+    @MainActor
+    func testMiscTagReloadSelectedTrackRestoresEditedAndDeletedRows() throws {
+        let app = try launchApp(importFixture: true)
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
+        XCTAssertTrue(waitForMiscTagValue(in: app, key: "ENCODED_BY", expectedValue: "Test Encoded_By"))
+
+        replaceMiscTagValue(in: app, key: "ENCODED_BY", text: "Edited Encoded By")
+        XCTAssertTrue(
+            waitForMiscTagValue(in: app, key: "ENCODED_BY", expectedValue: "Edited Encoded By"),
+            "Current misc value: \(miscTagDisplayValue(in: app, key: "ENCODED_BY") ?? "<missing>")"
+        )
+
+        reloadSelectedTrackFromContextMenu(in: app, expectedTitle: "Test Title")
+        XCTAssertTrue(waitForMiscTagValue(in: app, key: "ENCODED_BY", expectedValue: "Test Encoded_By", timeout: 10.0))
+
+        let keyField = miscTagKeyField(in: app, key: "ENCODED_BY")
+        XCTAssertTrue(keyField.waitForExistence(timeout: 5.0))
+        keyField.click()
+
+        let deleteButton = app.buttons[UIID.deleteMiscTagButton]
+        XCTAssertTrue(waitForEnabledState(of: deleteButton, expectedValue: true, timeout: 5.0))
+        deleteButton.click()
+        XCTAssertTrue(waitForMiscTagKeyAbsence(in: app, key: "ENCODED_BY", timeout: 5.0))
+
+        reloadSelectedTrackFromContextMenu(in: app, expectedTitle: "Test Title")
+        XCTAssertTrue(waitForMiscTagValue(in: app, key: "ENCODED_BY", expectedValue: "Test Encoded_By", timeout: 10.0))
     }
 
     @MainActor
@@ -339,6 +383,36 @@ final class SwiftTagUITests: XCTestCase {
         )
 
         XCTAssertEqual(normalizedAppleScriptTextOutput(output), "Track tag ARTIST: ARTIST, Test Artist")
+    }
+
+    @MainActor
+    func testAppleScriptHarnessMakesTagInTellTrackContext() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(importFixture: true)
+        defer {
+            app.terminate()
+        }
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell first track of front editor window
+                    set newTag to make new tag with properties {key:"TEST", value:"This is a test"}
+                    return (key of newTag) & linefeed & (value of newTag) & linefeed & ((count of (every tag whose key is "TEST")) as text)
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, ["TEST", "This is a test", "1"])
     }
 
     @MainActor
@@ -3029,6 +3103,19 @@ final class SwiftTagUITests: XCTestCase {
         app.typeText(text)
     }
 
+    private func replaceMiscTagValue(in app: XCUIApplication, key: String, text: String) {
+        let keyField = miscTagKeyField(in: app, key: key)
+        XCTAssertTrue(keyField.waitForExistence(timeout: 5.0))
+        keyField.click()
+        app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+        app.typeKey(XCUIKeyboardKey.tab.rawValue, modifierFlags: [])
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        app.typeKey("a", modifierFlags: .command)
+        app.typeKey("v", modifierFlags: .command)
+        app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+    }
+
     private func clearAndTypeInTextView(in app: XCUIApplication, element: XCUIElement, text: String) {
         element.click()
         app.typeKey("a", modifierFlags: .command)
@@ -3190,6 +3277,148 @@ final class SwiftTagUITests: XCTestCase {
         let titleField = app.textFields.matching(NSPredicate(format: "value == %@", expectedTitle)).firstMatch
         XCTAssertTrue(titleField.waitForExistence(timeout: 10.0))
         titleField.rightClick()
+    }
+
+    private func reloadSelectedTrackFromContextMenu(in app: XCUIApplication, expectedTitle: String) {
+        openTrackContextMenu(in: app, expectedTitle: expectedTitle)
+
+        let reloadItem = app.menuItems["Reload Selected Track"].firstMatch
+        XCTAssertTrue(reloadItem.waitForExistence(timeout: 5.0))
+        reloadItem.click()
+
+        let identifiedSheetButton = app.sheets.buttons[UIID.destructiveActionConfirmButton].firstMatch
+        let alertButton = app.alerts.buttons["Reload File(s)"].firstMatch
+        let dialogButton = app.dialogs.buttons["Reload File(s)"].firstMatch
+        let sheetButton = app.sheets.buttons["Reload File(s)"].firstMatch
+        if identifiedSheetButton.waitForExistence(timeout: 1.0) {
+            identifiedSheetButton.click()
+        } else if clickVisibleButton(in: app, identifier: UIID.destructiveActionConfirmButton, timeout: 1.0) {
+            return
+        } else if alertButton.waitForExistence(timeout: 1.0) {
+            alertButton.click()
+        } else if dialogButton.waitForExistence(timeout: 1.0) {
+            dialogButton.click()
+        } else if sheetButton.waitForExistence(timeout: 1.0) {
+            sheetButton.click()
+        } else if clickVisibleButton(in: app, title: "Reload File(s)", timeout: 1.0) {
+            return
+        } else {
+            app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+        }
+    }
+
+    private func miscTagKeyField(in scope: XCUIElement, key: String) -> XCUIElement {
+        scope.descendants(matching: .textField)
+            .matching(
+                NSPredicate(
+                    format: "identifier BEGINSWITH %@ AND value == %@",
+                    UIID.miscTagKeyFieldPrefix,
+                    key
+                )
+            )
+            .firstMatch
+    }
+
+    private func miscTagValueField(in scope: XCUIElement, key: String) -> XCUIElement? {
+        let keyField = miscTagKeyField(in: scope, key: key)
+        guard keyField.exists,
+              keyField.identifier.hasPrefix(UIID.miscTagKeyFieldPrefix) else {
+            return nil
+        }
+
+        let rowID = String(keyField.identifier.dropFirst(UIID.miscTagKeyFieldPrefix.count))
+        let valueField = scope.descendants(matching: .textField)
+            .matching(identifier: UIID.miscTagValueFieldPrefix + rowID)
+            .firstMatch
+        return valueField.exists ? valueField : nil
+    }
+
+    private func waitForMiscTagValue(
+        in scope: XCUIElement,
+        key: String,
+        expectedValue: String,
+        timeout: TimeInterval = 5.0
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if let valueField = miscTagValueField(in: scope, key: key),
+               miscTagDisplayValue(valueField) == expectedValue {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func miscTagDisplayValue(in scope: XCUIElement, key: String) -> String? {
+        guard let valueField = miscTagValueField(in: scope, key: key) else {
+            return nil
+        }
+
+        return miscTagDisplayValue(valueField)
+    }
+
+    private func miscTagDisplayValue(_ valueField: XCUIElement) -> String {
+        let rawValue = valueField.value as? String ?? ""
+        if !rawValue.isEmpty {
+            return rawValue
+        }
+
+        return valueField.placeholderValue ?? rawValue
+    }
+
+    private func waitForMiscTagKeyAbsence(
+        in scope: XCUIElement,
+        key: String,
+        timeout: TimeInterval = 5.0
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            if !miscTagKeyField(in: scope, key: key).exists {
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
+    }
+
+    private func clickVisibleButton(in app: XCUIApplication, identifier: String, timeout: TimeInterval) -> Bool {
+        clickVisibleButton(
+            in: app,
+            matching: NSPredicate(format: "identifier == %@", identifier),
+            timeout: timeout
+        )
+    }
+
+    private func clickVisibleButton(in app: XCUIApplication, title: String, timeout: TimeInterval) -> Bool {
+        clickVisibleButton(
+            in: app,
+            matching: NSPredicate(format: "label == %@", title),
+            timeout: timeout
+        )
+    }
+
+    private func clickVisibleButton(in app: XCUIApplication, matching predicate: NSPredicate, timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            let buttons = app.buttons.matching(predicate).allElementsBoundByIndex
+            for button in buttons where button.exists {
+                let frame = button.frame
+                guard frame.width > 0, frame.height > 0, frame.minY > 50 else {
+                    continue
+                }
+                button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+                return true
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return false
     }
 
     private func focusWindow(_ window: XCUIElement) {

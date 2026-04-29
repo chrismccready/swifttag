@@ -1064,9 +1064,11 @@ struct ContentView: View {
                 Button("Cancel", role: .cancel) {
                     destructiveAlertContext = nil
                 }
+                .accessibilityIdentifier("destructiveAction.cancelButton")
                 Button(destructiveAlertContext?.confirmTitle ?? "Continue", role: .destructive) {
                     performDestructiveActionFromAlert()
                 }
+                .accessibilityIdentifier("destructiveAction.confirmButton")
             } message: {
                 Text(destructiveAlertContext?.message ?? "")
             }
