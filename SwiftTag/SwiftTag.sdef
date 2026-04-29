@@ -89,7 +89,7 @@
         </command>
 
         <command name="make" code="corecrel" description="Create new object.">
-            <cocoa class="NSCreateCommand"/>
+            <cocoa class="SwiftTagCreateCommand"/>
             <access-group identifier="*"/>
             <parameter name="new" code="kocl" type="type" description="Class of new object.">
                 <cocoa key="ObjectClass"/>
@@ -185,6 +185,24 @@
             </result>
         </command>
 
+        <command name="import picture" code="SwTGimpt" description="Import image data as a track picture.">
+            <cocoa class="SwiftTagImportPictureCommand"/>
+            <direct-parameter type="any" optional="yes" description="The image data to import. SwiftTag validates that it resolves to binary image data."/>
+            <parameter name="with data" code="pdat" type="any" optional="yes" description="The image data to import. SwiftTag validates that it resolves to binary image data.">
+                <cocoa key="PictureData"/>
+            </parameter>
+            <parameter name="with picture type" code="pcty" type="flac picture type" optional="yes" description="The FLAC picture type. Defaults to front cover when omitted.">
+                <cocoa key="PictureType"/>
+            </parameter>
+            <parameter name="with description" code="tdsc" type="text" optional="yes" description="The picture description. If omitted, SwiftTag preserves an existing duplicate description or uses the default description for the picture type.">
+                <cocoa key="Description"/>
+            </parameter>
+            <parameter name="with MIME type" code="mime" type="text" optional="yes" description="An optional MIME type hint. SwiftTag prefers the MIME type derived from the image data when it can be determined.">
+                <cocoa key="MimeType"/>
+            </parameter>
+            <result type="picture" description="The imported or matched track picture."/>
+        </command>
+
         <class name="application" plural="applications" code="capp" description="Application program.">
             <cocoa class="NSApplication"/>
             <element type="document">
@@ -201,6 +219,12 @@
             </responds-to>
             <responds-to command="open">
                 <cocoa method="handleOpenScriptCommand:"/>
+            </responds-to>
+            <responds-to command="make">
+                <cocoa method="handleMakeScriptCommand:"/>
+            </responds-to>
+            <responds-to command="import picture">
+                <cocoa method="handleImportPictureScriptCommand:"/>
             </responds-to>
             <responds-to command="quit">
                 <cocoa method="handleQuitScriptCommand:"/>
@@ -242,7 +266,7 @@
             <element type="tag">
                 <cocoa key="tags"/>
             </element>
-            <element type="picture">
+            <element type="picture" access="rw">
                 <cocoa key="pictures"/>
             </element>
             <property name="album" code="albm" type="text" description="The album name of the track.">
@@ -389,32 +413,41 @@
             <property name="version" code="tver" type="text" description="The version of the track.">
                 <cocoa key="trackVersion"/>
             </property>
+            <responds-to command="make">
+                <cocoa method="handleMakeScriptCommand:"/>
+            </responds-to>
+            <responds-to command="import picture">
+                <cocoa method="handleImportPictureScriptCommand:"/>
+            </responds-to>
         </class>
 
         <class name="picture" plural="pictures" code="fpic" description="A FLAC track picture.">
             <cocoa class="SwiftTagScriptPicture"/>
-            <property name="picture type" code="pcty" type="flac picture type" access="r" description="The FLAC track file picture type.">
+            <contents type="data" description="The raw image data in bytes. Accepted as picture data when making or importing a new picture.">
+                <cocoa key="data"/>
+            </contents>
+            <property name="picture type" code="pcty" type="flac picture type" in-properties="yes" description="The FLAC track file picture type. Accepted when making or importing a new picture; defaults to front cover when omitted.">
                 <cocoa key="pictureType"/>
             </property>
-            <property name="MIME type" code="mime" type="text" access="r" description="The format of the image data.">
+            <property name="MIME type" code="mime" type="text" access="r" in-properties="yes" description="The format of the image data. Accepted when making or importing a new picture as a hint, but SwiftTag uses the value derived from image data when it can be determined.">
                 <cocoa key="mimeType"/>
             </property>
             <property name="description" code="tdsc" type="text" access="rw" description="A UTF-8 text string describing the image.">
                 <cocoa key="pictureDescription"/>
             </property>
-            <property name="width" code="wdth" type="integer" access="r" description="The image width dimension in pixels.">
+            <property name="width" code="wdth" type="integer" access="r" in-properties="yes" description="The image width dimension in pixels. SwiftTag derives this value from image data when making or importing a picture.">
                 <cocoa key="width"/>
             </property>
-            <property name="height" code="hght" type="integer" access="r" description="The image height dimension in pixels.">
+            <property name="height" code="hght" type="integer" access="r" in-properties="yes" description="The image height dimension in pixels. SwiftTag derives this value from image data when making or importing a picture.">
                 <cocoa key="height"/>
             </property>
-            <property name="color depth" code="cdpt" type="integer" access="r" description="The image color depth in bits per pixel.">
+            <property name="color depth" code="cdpt" type="integer" access="r" in-properties="yes" description="The image color depth in bits per pixel. SwiftTag derives this value from image data when making or importing a picture.">
                 <cocoa key="colorDepth"/>
             </property>
-            <property name="colors" code="cols" type="integer" access="r" description="The number of colors for indexed palettes (0 for non-indexed).">
+            <property name="colors" code="cols" type="integer" access="r" in-properties="yes" description="The number of colors for indexed palettes (0 for non-indexed). SwiftTag derives this value from image data when making or importing a picture.">
                 <cocoa key="colors"/>
             </property>
-            <property name="data" code="pcda" type="data" access="r" description="The raw image data in bytes.">
+            <property name="data" code="pcda" type="data" access="rw" in-properties="yes" description="The raw image data in bytes. Accepted when making or importing a new picture; changing it derives MIME type and dimensions from the new data.">
                 <cocoa key="data"/>
             </property>
         </class>

@@ -1358,6 +1358,77 @@ final class TagEditorViewModel {
         )
     }
 
+    func appleScriptUpsertPicture(
+        _ payload: SwiftTagAppleScriptPicturePayload,
+        forTrackID trackID: UUID
+    ) throws -> Int {
+        guard let trackIndex = trackItems.firstIndex(where: { $0.id == trackID }) else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+        guard !trackItems[trackIndex].isLocked else {
+            throw SwiftTagAppleScriptCommandError.trackLocked
+        }
+
+        var records = trackItems[trackIndex].flacPictureRecords
+        if let existingIndex = records.firstIndex(where: { $0.type == payload.type && $0.data == payload.data }) {
+            if payload.hasExplicitDescription {
+                records[existingIndex] = payload.record(defaultDescription: records[existingIndex].description)
+                updatePictureRecords(records, forTrackAt: trackIndex)
+            }
+            return existingIndex
+        }
+
+        let insertIndex = records.lastIndex(where: { $0.type == payload.type })
+            .map { records.index(after: $0) } ?? records.endIndex
+        records.insert(payload.record(), at: insertIndex)
+        updatePictureRecords(records, forTrackAt: trackIndex)
+        return insertIndex
+    }
+
+    func appleScriptReplacePicture(
+        _ payload: SwiftTagAppleScriptPicturePayload,
+        replacingPictureAt pictureIndex: Int,
+        forTrackID trackID: UUID
+    ) throws -> Int {
+        guard let trackIndex = trackItems.firstIndex(where: { $0.id == trackID }) else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+        guard !trackItems[trackIndex].isLocked else {
+            throw SwiftTagAppleScriptCommandError.trackLocked
+        }
+        guard trackItems[trackIndex].flacPictureRecords.indices.contains(pictureIndex) else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+
+        var records = trackItems[trackIndex].flacPictureRecords
+        let currentRecord = records[pictureIndex]
+        if let existingIndex = records.indices.first(where: {
+            $0 != pictureIndex && records[$0].type == payload.type && records[$0].data == payload.data
+        }) {
+            records[existingIndex] = payload.record(defaultDescription: records[existingIndex].description)
+            records.remove(at: pictureIndex)
+            updatePictureRecords(records, forTrackAt: trackIndex)
+            return existingIndex > pictureIndex ? existingIndex - 1 : existingIndex
+        }
+
+        records[pictureIndex] = payload.record(defaultDescription: currentRecord.description)
+        updatePictureRecords(records, forTrackAt: trackIndex)
+        return pictureIndex
+    }
+
+    func appleScriptPictureIndex(
+        matching payload: SwiftTagAppleScriptPicturePayload,
+        forTrackID trackID: UUID
+    ) -> Int? {
+        guard let trackIndex = trackItems.firstIndex(where: { $0.id == trackID }) else {
+            return nil
+        }
+
+        return trackItems[trackIndex].flacPictureRecords.firstIndex {
+            $0.type == payload.type && $0.data == payload.data
+        }
+    }
+
     func setPictureRecordsByTrackID(
         _ recordsByTrackID: [UUID: [FlacWritablePictureRecord]],
         tagWriteOptions: TagWriteOptions,
@@ -1386,6 +1457,11 @@ final class TagEditorViewModel {
         }
 
         trackItems = updatedTrackItems
+    }
+
+    private func updatePictureRecords(_ records: [FlacWritablePictureRecord], forTrackAt index: Int) {
+        trackItems[index].flacPictureRecords = records
+        trackItems[index].flacPicturesByType = writablePicturesByType(from: records)
     }
 
     func removeDuplicateImportURLsByBookmarkIdentity(_ urls: [URL]) -> [URL] {

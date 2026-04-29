@@ -1681,6 +1681,29 @@ struct ContentView: View {
         syncAlbumArtContext()
     }
 
+    private func performAppleScriptUpsertPicture(
+        _ payload: SwiftTagAppleScriptPicturePayload,
+        for trackID: UUID
+    ) throws -> Int {
+        let initialIndex = try viewModel.appleScriptUpsertPicture(payload, forTrackID: trackID)
+        syncAlbumArtContext()
+        return viewModel.appleScriptPictureIndex(matching: payload, forTrackID: trackID) ?? initialIndex
+    }
+
+    private func performAppleScriptReplacePicture(
+        _ payload: SwiftTagAppleScriptPicturePayload,
+        for trackID: UUID,
+        pictureIndex: Int
+    ) throws -> Int {
+        let updatedIndex = try viewModel.appleScriptReplacePicture(
+            payload,
+            replacingPictureAt: pictureIndex,
+            forTrackID: trackID
+        )
+        syncAlbumArtContext()
+        return updatedIndex
+    }
+
     private func resolveDeletedSwiftTagDocumentRecoveryDestination(
         currentState: SwiftTagDocumentSaveState
     ) -> URL? {
@@ -2023,6 +2046,16 @@ struct ContentView: View {
                 },
                 deleteTag: { trackID, key in
                     try performAppleScriptDeleteTag(key, for: trackID)
+                },
+                upsertPicture: { trackID, payload in
+                    try performAppleScriptUpsertPicture(payload, for: trackID)
+                },
+                replacePicture: { trackID, pictureIndex, payload in
+                    try performAppleScriptReplacePicture(
+                        payload,
+                        for: trackID,
+                        pictureIndex: pictureIndex
+                    )
                 },
                 updatePictureDescription: { trackID, pictureIndex, description in
                     try performAppleScriptUpdatePictureDescription(

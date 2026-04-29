@@ -394,6 +394,60 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessImportsTrackPictureFromExistingData() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover"
+        )
+        defer {
+            app.terminate()
+        }
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    tell first track
+                        repeat 50 times
+                            if (count of pictures) > 0 then exit repeat
+                            delay 0.1
+                        end repeat
+                        set firstCover to item 1 of (every picture whose picture type is front cover)
+                        set frontCoverPictureData to data of firstCover
+                        set testPicture to import picture frontCoverPictureData with picture type front cover
+                        set countAfterDuplicateImport to count of pictures
+                        set testPictureDescriptionBeforeEdit to description of testPicture
+                        set editedPicture to import picture with data frontCoverPictureData with picture type front cover with description "AppleScript Edited Front"
+                        return (countAfterDuplicateImport as text) & linefeed & ((count of pictures) as text) & linefeed & testPictureDescriptionBeforeEdit & linefeed & (description of editedPicture) & linefeed & (MIME type of editedPicture)
+                    end tell
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, [
+            "1",
+            "1",
+            "UI Test Single Front Cover",
+            "AppleScript Edited Front",
+            "image/png"
+        ])
+    }
+
+    @MainActor
     func testAppleScriptHarnessClosesEditorWindowSavingNo() throws {
         try requireAppleScriptHarnessEnabled()
 

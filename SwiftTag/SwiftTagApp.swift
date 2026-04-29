@@ -433,6 +433,7 @@ struct SwiftTagApp: App {
     }
 
     init() {
+        SwiftTagAppleScriptDataCoercions.register()
         resetUITestSaveSettingsIfNeeded()
         applyUITestSaveSettingsOverridesIfNeeded()
         seedUITestNotificationRouteIfNeeded()

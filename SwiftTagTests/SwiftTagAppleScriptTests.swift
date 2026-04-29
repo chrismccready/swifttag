@@ -744,6 +744,178 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func pictureImportPayloadDefaultsToFrontCoverDedupesAndAppends() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let firstPictureData = try #require(Self.singlePixelPNGData())
+        let secondPictureData = try Self.pngData(color: .systemGreen)
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: [TagKey.title: "Picture Track"],
+                flacPictureRecords: [
+                    FlacWritablePictureRecord(
+                        type: 3,
+                        mimeType: "image/png",
+                        description: "Original",
+                        data: firstPictureData
+                    ).withComputedPictureMetadata()
+                ],
+                sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-import-picture.flac")
+            )
+        ]
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: viewModel.trackItems,
+                        selectedTrackIDs: viewModel.selectedTrackIDs
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { trackIDs in
+                    viewModel.selectedTrackIDs = trackIDs
+                },
+                saveDocument: { _ in .init() },
+                upsertPicture: { trackID, payload in
+                    try viewModel.appleScriptUpsertPicture(payload, forTrackID: trackID)
+                },
+                replacePicture: { trackID, pictureIndex, payload in
+                    try viewModel.appleScriptReplacePicture(
+                        payload,
+                        replacingPictureAt: pictureIndex,
+                        forTrackID: trackID
+                    )
+                },
+                updatePictureDescription: { trackID, pictureIndex, description in
+                    try viewModel.appleScriptUpdatePictureDescription(
+                        description,
+                        forTrackID: trackID,
+                        pictureIndex: pictureIndex
+                    )
+                }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptTrack = try #require(scriptWindow.tracks.first)
+        let trackID = try #require(viewModel.trackItems.first?.id)
+        let firstPicture = try #require(scriptTrack.pictures.first)
+        let firstPictureDataFromScript = try #require(firstPicture.data)
+
+        let duplicateWithoutDescriptionPayload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
+            data: firstPictureDataFromScript,
+            arguments: [:]
+        )
+        let duplicateWithoutDescriptionIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
+            duplicateWithoutDescriptionPayload,
+            forSessionID: sessionID,
+            trackID: trackID
+        )
+        let duplicatePictures = scriptTrack.pictures
+        let duplicateWithoutDescription = try #require(
+            duplicatePictures.indices.contains(duplicateWithoutDescriptionIndex)
+                ? duplicatePictures[duplicateWithoutDescriptionIndex]
+                : nil
+        )
+
+        #expect(scriptTrack.countOfPictures == 1)
+        #expect(viewModel.trackItems.first?.flacPictureRecords.first?.description == "Original")
+        #expect(duplicateWithoutDescription.pictureType?.uint32Value == Self.fourCharCode("frcv").uint32Value)
+        #expect(duplicateWithoutDescription.pictureDescription == "Original")
+        #expect(duplicateWithoutDescription.objectSpecifier != nil)
+
+        let duplicateWithDescriptionPayload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
+            data: firstPictureDataFromScript,
+            arguments: ["Description": "Edited from import picture"]
+        )
+        let duplicateWithDescriptionIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
+            duplicateWithDescriptionPayload,
+            forSessionID: sessionID,
+            trackID: trackID
+        )
+        let editedDuplicatePictures = scriptTrack.pictures
+        let duplicateWithDescription = try #require(
+            editedDuplicatePictures.indices.contains(duplicateWithDescriptionIndex)
+                ? editedDuplicatePictures[duplicateWithDescriptionIndex]
+                : nil
+        )
+
+        #expect(scriptTrack.countOfPictures == 1)
+        #expect(viewModel.trackItems.first?.flacPictureRecords.first?.description == "Edited from import picture")
+        #expect(duplicateWithDescription.pictureDescription == "Edited from import picture")
+
+        let appendedPayload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
+            data: secondPictureData as NSData,
+            arguments: [
+                "MimeType": "image/jpeg",
+                "Description": "Second front"
+            ]
+        )
+        let appendedIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
+            appendedPayload,
+            forSessionID: sessionID,
+            trackID: trackID
+        )
+        let appendedPictures = scriptTrack.pictures
+        let appendedPicture = try #require(
+            appendedPictures.indices.contains(appendedIndex)
+                ? appendedPictures[appendedIndex]
+                : nil
+        )
+
+        #expect(scriptTrack.countOfPictures == 2)
+        #expect(viewModel.trackItems.first?.flacPictureRecords.map(\.description) == [
+            "Edited from import picture",
+            "Second front"
+        ])
+        #expect(viewModel.trackItems.first?.flacPictureRecords.last?.mimeType == "image/png")
+        #expect(appendedPicture.pictureType?.uint32Value == Self.fourCharCode("frcv").uint32Value)
+        #expect(appendedPicture.mimeType == "image/png")
+        #expect(appendedPicture.pictureDescription == "Second front")
+    }
+
+    @MainActor
+    @Test
+    func scriptClassDescriptionsSupportPictureMakeDataPath() throws {
+        let track = SwiftTagScriptTrack(sessionID: UUID(), trackID: UUID())
+        let makeSelector = NSSelectorFromString("handleMakeScriptCommand:")
+
+        #expect(track.responds(to: makeSelector))
+
+        let commandDescription = try #require(
+            NSScriptSuiteRegistry.shared().commandDescription(
+                withAppleEventClass: Self.fourCharCode("core").uint32Value,
+                andAppleEventCode: Self.fourCharCode("crel").uint32Value
+            )
+        )
+        let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptTrack.self))
+        let pictureClassDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptPicture.self))
+
+        #expect(classDescription.supportsCommand(commandDescription))
+        #expect(classDescription.selector(forCommand: commandDescription) == makeSelector)
+        #expect(pictureClassDescription.hasWritableProperty(forKey: "data"))
+    }
+
+    @MainActor
+    @Test
     func selectedTracksSetterKeepsEveryWhoseMatchWithDuplicateTitles() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()
@@ -1206,6 +1378,22 @@ private extension SwiftTagAppleScriptTests {
             base64Encoded:
                 "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO3ZbZ0AAAAASUVORK5CYII="
         )
+    }
+
+    static func pngData(color: NSColor) throws -> Data {
+        let image = NSImage(size: NSSize(width: 1, height: 1))
+        image.lockFocus()
+        color.setFill()
+        NSRect(x: 0, y: 0, width: 1, height: 1).fill()
+        image.unlockFocus()
+
+        guard let tiffData = image.tiffRepresentation,
+              let bitmapRepresentation = NSBitmapImageRep(data: tiffData),
+              let pngData = bitmapRepresentation.representation(using: .png, properties: [:]) else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+
+        return pngData
     }
 
     static func tempPackageURL(name: String) throws -> URL {

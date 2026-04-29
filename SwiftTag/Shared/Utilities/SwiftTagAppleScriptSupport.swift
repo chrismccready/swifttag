@@ -1,6 +1,164 @@
 import AppKit
 import Foundation
 
+@objc(SwiftTagCreateCommand)
+final class SwiftTagCreateCommand: NSCreateCommand {
+    override var isWellFormed: Bool {
+        true
+    }
+
+    override func execute() -> Any? {
+        MainActor.assumeIsolated {
+            performSwiftTagDefaultImplementation()
+        }
+    }
+
+    override func performDefaultImplementation() -> Any? {
+        MainActor.assumeIsolated {
+            performSwiftTagDefaultImplementation()
+        }
+    }
+
+    @MainActor
+    private func performSwiftTagDefaultImplementation() -> Any? {
+        do {
+            switch createClassDescription.className {
+            case "picture":
+                let track = try scriptTrackInsertionContainer(
+                    key: "pictures",
+                    error: .invalidPictureTrackTarget
+                )
+                return try track.makePicture(using: self)
+            case "tag":
+                let track = try scriptTrackInsertionContainer(
+                    key: "tags",
+                    error: .invalidTagTrackTarget
+                )
+                return try track.makeTag(using: self)
+            default:
+                return super.performDefaultImplementation()
+            }
+        } catch {
+            return fail(error)
+        }
+    }
+
+    @MainActor
+    private func scriptTrackInsertionContainer(
+        key expectedKey: String,
+        error: SwiftTagAppleScriptCommandError
+    ) throws -> SwiftTagScriptTrack {
+        guard let location = positionalSpecifier() else {
+            throw error
+        }
+
+        location.setInsertionClassDescription(createClassDescription)
+        location.evaluate()
+        guard location.insertionKey == expectedKey,
+              let track = location.insertionContainer as? SwiftTagScriptTrack else {
+            throw error
+        }
+        return track
+    }
+
+    private func positionalSpecifier() -> NSPositionalSpecifier? {
+        arguments?["Location"] as? NSPositionalSpecifier
+            ?? arguments?["at"] as? NSPositionalSpecifier
+            ?? evaluatedArguments?["Location"] as? NSPositionalSpecifier
+            ?? evaluatedArguments?["at"] as? NSPositionalSpecifier
+    }
+}
+
+@objc(SwiftTagImportPictureCommand)
+final class SwiftTagImportPictureCommand: NSScriptCommand {
+    private static let directObjectKeyword = fourCharCode("----")
+    private static let subjectAttribute = fourCharCode("subj")
+
+    override var isWellFormed: Bool {
+        true
+    }
+
+    override func execute() -> Any? {
+        MainActor.assumeIsolated {
+            performSwiftTagDefaultImplementation()
+        }
+    }
+
+    override func performDefaultImplementation() -> Any? {
+        MainActor.assumeIsolated {
+            performSwiftTagDefaultImplementation()
+        }
+    }
+
+    @MainActor
+    private func performSwiftTagDefaultImplementation() -> Any? {
+        do {
+            let track = try targetTrack()
+            return try track.importPicture(using: self)
+        } catch {
+            return fail(error)
+        }
+    }
+
+    @MainActor
+    private func targetTrack() throws -> SwiftTagScriptTrack {
+        if let track = Self.track(from: directParameter) {
+            return track
+        }
+
+        if let track = Self.track(from: evaluatedReceivers) {
+            return track
+        }
+
+        if let track = Self.track(from: receiversSpecifier?.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        if let subjectDescriptor = appleEvent?.attributeDescriptor(forKeyword: Self.subjectAttribute),
+           let subjectSpecifier = NSScriptObjectSpecifier(descriptor: subjectDescriptor),
+           let track = Self.track(from: subjectSpecifier.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        if let directObjectDescriptor = appleEvent?.paramDescriptor(forKeyword: Self.directObjectKeyword),
+           let directObjectSpecifier = NSScriptObjectSpecifier(descriptor: directObjectDescriptor),
+           let track = Self.track(from: directObjectSpecifier.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        throw SwiftTagAppleScriptCommandError.invalidPictureTrackTarget
+    }
+
+    @MainActor
+    private static func track(from value: Any?) -> SwiftTagScriptTrack? {
+        if let track = value as? SwiftTagScriptTrack {
+            return track
+        }
+
+        if let tracks = value as? [SwiftTagScriptTrack], tracks.count == 1 {
+            return tracks[0]
+        }
+
+        if let tracks = value as? NSArray, tracks.count == 1 {
+            return tracks.firstObject as? SwiftTagScriptTrack
+        }
+
+        if let specifier = value as? NSScriptObjectSpecifier {
+            return track(from: specifier.objectsByEvaluatingSpecifier)
+        }
+
+        return nil
+    }
+
+    nonisolated private static func fourCharCode(_ value: String) -> AEKeyword {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
+        return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
+    }
+}
+
 enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
     case editorWindowSaveDestinationUnsupported
     case invalidEditorWindowTarget
@@ -20,6 +178,11 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
     case invalidTagObject
     case invalidTagTrackTarget
     case invalidPictureObject
+    case invalidPictureTrackTarget
+    case invalidPictureType
+    case missingPictureData
+    case invalidPictureData
+    case pictureDataTooLarge
     case saveLocationRequired
     case sessionUnavailable
     case saveAlreadyInProgress
@@ -63,6 +226,16 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
             return "Tag command target must resolve to a track in the current editor window."
         case .invalidPictureObject:
             return "Picture command target must resolve to a picture in the current editor window."
+        case .invalidPictureTrackTarget:
+            return "Picture creation target must resolve to a track pictures collection."
+        case .invalidPictureType:
+            return "Picture type must resolve to a FLAC picture type."
+        case .missingPictureData:
+            return "Picture creation requires image data."
+        case .invalidPictureData:
+            return "Picture data must contain a readable image."
+        case .pictureDataTooLarge:
+            return "Picture data and description exceed the FLAC metadata block size limit."
         case .saveLocationRequired:
             return "Save command needs an existing SwiftTag document or an explicit destination file."
         case .sessionUnavailable:
@@ -93,8 +266,14 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
              .invalidTagObject,
              .invalidTagTrackTarget,
              .invalidPictureObject,
+             .invalidPictureTrackTarget,
+             .invalidPictureType,
+             .invalidPictureData,
+             .pictureDataTooLarge,
              .saveLocationRequired:
             Int(NSArgumentsWrongScriptError)
+        case .missingPictureData:
+            Int(NSRequiredArgumentsMissingScriptError)
         case .noEditorWindowAvailable, .sessionUnavailable, .trackLocked:
             Int(NSReceiversCantHandleCommandScriptError)
         case .saveAlreadyInProgress:
@@ -402,6 +581,8 @@ struct SwiftTagAppleScriptSessionBridge {
     let saveTracks: (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult
     let upsertTag: (UUID, String, String) throws -> Void
     let deleteTag: (UUID, String) throws -> Void
+    let upsertPicture: (UUID, SwiftTagAppleScriptPicturePayload) throws -> Int
+    let replacePicture: (UUID, Int, SwiftTagAppleScriptPicturePayload) throws -> Int
     let updatePictureDescription: (UUID, Int, String) throws -> Void
 
     init(
@@ -415,6 +596,12 @@ struct SwiftTagAppleScriptSessionBridge {
         },
         upsertTag: @escaping (UUID, String, String) throws -> Void = { _, _, _ in },
         deleteTag: @escaping (UUID, String) throws -> Void = { _, _ in },
+        upsertPicture: @escaping (UUID, SwiftTagAppleScriptPicturePayload) throws -> Int = { _, _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
+        replacePicture: @escaping (UUID, Int, SwiftTagAppleScriptPicturePayload) throws -> Int = { _, _, _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
         updatePictureDescription: @escaping (UUID, Int, String) throws -> Void = { _, _, _ in }
     ) {
         self.documentSnapshot = documentSnapshot
@@ -425,6 +612,8 @@ struct SwiftTagAppleScriptSessionBridge {
         self.saveTracks = saveTracks
         self.upsertTag = upsertTag
         self.deleteTag = deleteTag
+        self.upsertPicture = upsertPicture
+        self.replacePicture = replacePicture
         self.updatePictureDescription = updatePictureDescription
     }
 }
@@ -682,6 +871,8 @@ private struct SwiftTagAppleScriptTagPayload {
 }
 
 private enum SwiftTagAppleScriptPictureType {
+    static let frontCover = 3
+
     static func appleEventCode(for flacType: Int) -> FourCharCode {
         switch flacType {
         case 0:
@@ -731,23 +922,443 @@ private enum SwiftTagAppleScriptPictureType {
         }
     }
 
-    private static func fourCharCode(_ value: String) -> FourCharCode {
+    static func flacType(from rawValue: Any?) throws -> Int {
+        guard let rawValue else {
+            return frontCover
+        }
+
+        if let descriptor = rawValue as? NSAppleEventDescriptor {
+            let enumCode = descriptor.enumCodeValue
+            if enumCode != 0 {
+                return try flacType(fromAppleEventCode: UInt32(enumCode))
+            }
+
+            let typeCode = descriptor.typeCodeValue
+            if typeCode != 0 {
+                return try flacType(fromAppleEventCode: UInt32(typeCode))
+            }
+
+            if let stringValue = descriptor.stringValue {
+                return try flacType(from: stringValue)
+            }
+        }
+
+        if let number = rawValue as? NSNumber {
+            let integerValue = number.intValue
+            if (0...20).contains(integerValue) {
+                return integerValue
+            }
+
+            return try flacType(fromAppleEventCode: number.uint32Value)
+        }
+
+        if let string = rawValue as? String {
+            return try flacType(from: string)
+        }
+
+        if let string = rawValue as? NSString {
+            return try flacType(from: string as String)
+        }
+
+        throw SwiftTagAppleScriptCommandError.invalidPictureType
+    }
+
+    static func defaultDescription(for flacType: Int) -> String {
+        switch flacType {
+        case 1:
+            "32x32 pixels file icon (PNG only)"
+        case 2:
+            "Other file icon"
+        case 3:
+            "Cover (front)"
+        case 4:
+            "Cover (back)"
+        case 5:
+            "Leaflet page"
+        case 6:
+            "Media"
+        case 7:
+            "Lead artist/lead performer/soloist"
+        case 8:
+            "Artist/performer"
+        case 9:
+            "Conductor"
+        case 10:
+            "Band/Orchestra"
+        case 11:
+            "Composer"
+        case 12:
+            "Lyricist/text writer"
+        case 13:
+            "Recording location"
+        case 14:
+            "During recording"
+        case 15:
+            "During performance"
+        case 16:
+            "Movie/video capture"
+        case 17:
+            "Bright coloured fish"
+        case 18:
+            "Illustration"
+        case 19:
+            "Band/artist logotype"
+        case 20:
+            "Publisher/studio logotype"
+        default:
+            "Other"
+        }
+    }
+
+    nonisolated private static func fourCharCode(_ value: String) -> FourCharCode {
         let bytes = Array(value.utf8.prefix(4))
-        let paddedBytes = bytes + Array(repeating: UInt8(ascii: " "), count: max(0, 4 - bytes.count))
+        let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
         return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
             (result << 8) | UInt32(byte)
         }
+    }
+
+    private static func flacType(fromAppleEventCode code: UInt32) throws -> Int {
+        for type in 0...20 where appleEventCode(for: type) == code {
+            return type
+        }
+
+        throw SwiftTagAppleScriptCommandError.invalidPictureType
+    }
+
+    private static func flacType(from string: String) throws -> Int {
+        let trimmedValue = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let integerValue = Int(trimmedValue), (0...20).contains(integerValue) {
+            return integerValue
+        }
+
+        let normalizedValue = trimmedValue
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
+
+        let namesByType: [Int: [String]] = [
+            0: ["other", "othe"],
+            1: ["pngicon", "pngi"],
+            2: ["othericon", "othi"],
+            3: ["frontcover", "frcv"],
+            4: ["backcover", "bckc"],
+            5: ["leaflet", "leaf"],
+            6: ["media", "medi"],
+            7: ["leadartist", "leadperformer", "soloist", "lead"],
+            8: ["artist", "performer", "arti"],
+            9: ["conductor", "cond"],
+            10: ["band", "orchestra", "bandorchestra"],
+            11: ["composer", "comp"],
+            12: ["lyricist", "textwriter", "lyri"],
+            13: ["location", "recordinglocation", "recordingstudio", "locn"],
+            14: ["session", "recordingsession", "sess"],
+            15: ["performance", "perf"],
+            16: ["capture", "moviecapture", "videocapture", "capt"],
+            17: ["brightlycoloredfish", "brightcolouredfish", "fish"],
+            18: ["illustration", "illu"],
+            19: ["bandlogo", "artistlogo", "logo"],
+            20: ["publisherlogo", "studiologo", "pubo"]
+        ]
+
+        for (type, names) in namesByType where names.contains(normalizedValue) {
+            return type
+        }
+
+        throw SwiftTagAppleScriptCommandError.invalidPictureType
     }
 }
 
 private enum SwiftTagAppleScriptDescriptorType {
     static let data = fourCharCode("tdta")
 
-    private static func fourCharCode(_ value: String) -> DescType {
+    nonisolated private static func fourCharCode(_ value: String) -> DescType {
         let bytes = Array(value.utf8.prefix(4))
-        let paddedBytes = bytes + Array(repeating: UInt8(ascii: " "), count: max(0, 4 - bytes.count))
+        let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
         return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
             (result << 8) | UInt32(byte)
+        }
+    }
+}
+
+@objc(SwiftTagAppleScriptDataCoercions)
+final class SwiftTagAppleScriptDataCoercions: NSObject {
+    private static var didRegister = false
+
+    static func register() {
+        guard !didRegister else {
+            return
+        }
+        didRegister = true
+
+        NSScriptCoercionHandler.shared().registerCoercer(
+            self,
+            selector: #selector(coerceAppleEventDescriptor(_:toClass:)),
+            toConvertFrom: NSAppleEventDescriptor.self,
+            to: NSData.self
+        )
+    }
+
+    @objc(coerceAppleEventDescriptor:toClass:)
+    static func coerceAppleEventDescriptor(_ value: Any, toClass: AnyClass) -> Any? {
+        guard let descriptor = value as? NSAppleEventDescriptor else {
+            return nil
+        }
+
+        return descriptor.data as NSData
+    }
+}
+
+struct SwiftTagAppleScriptPicturePayload: Equatable {
+    let type: Int
+    let mimeType: String
+    let description: String?
+    let data: Data
+    let specifications: PictureDataSpecifications
+
+    var hasExplicitDescription: Bool {
+        description != nil
+    }
+
+    static func from(value rawValue: Any) throws -> Self {
+        if let picture = rawValue as? SwiftTagScriptPicture,
+           let payload = picture.insertionPayload {
+            return payload
+        }
+
+        if let record = rawValue as? FlacWritablePictureRecord {
+            return try make(
+                pictureType: record.type,
+                mimeType: record.mimeType,
+                description: record.description,
+                data: record.data
+            )
+        }
+
+        if let dictionary = rawValue as? [AnyHashable: Any] {
+            return try from(dictionary: dictionary, contentsValue: nil)
+        }
+
+        if let dictionary = rawValue as? NSDictionary {
+            return try from(dictionary: dictionary, contentsValue: nil)
+        }
+
+        throw SwiftTagAppleScriptCommandError.invalidPictureObject
+    }
+
+    static func from(properties: NSDictionary?, contentsValue: Any?) throws -> Self {
+        try from(dictionary: properties ?? [:], contentsValue: contentsValue)
+    }
+
+    static func fromImportPictureCommand(data rawData: Any?, arguments: [AnyHashable: Any]) throws -> Self {
+        let namedDataValue = value(
+            in: arguments,
+            matching: ["picture", "picturedata", "data", "pdat", "pcda", "tdta"]
+        )
+        let rawDataValue = firstCoercibleDataValue(in: [namedDataValue, rawData])
+            ?? firstCoercibleDataValue(in: arguments)
+        let pictureTypeValue = value(
+            in: arguments,
+            matching: ["picturetype", "withpicturetype", "pcty", "type"]
+        )
+        let mimeTypeValue = value(
+            in: arguments,
+            matching: ["mimetype", "withmimetype", "mime"]
+        )
+        let descriptionEntry = entry(
+            in: arguments,
+            matching: ["description", "withdescription", "picturedescription", "tdsc"]
+        )
+
+        return try make(
+            pictureType: SwiftTagAppleScriptPictureType.flacType(from: pictureTypeValue),
+            mimeType: stringValue(from: mimeTypeValue),
+            description: descriptionEntry.map { stringValue(from: $0.value) ?? "" },
+            data: coercedDataValue(from: rawDataValue)
+        )
+    }
+
+    func record(defaultDescription: String? = nil) -> FlacWritablePictureRecord {
+        FlacWritablePictureRecord(
+            type: type,
+            mimeType: mimeType,
+            description: description ?? defaultDescription ?? SwiftTagAppleScriptPictureType.defaultDescription(for: type),
+            data: data,
+            width: specifications.width,
+            height: specifications.height,
+            depth: specifications.depth,
+            colors: specifications.colors
+        )
+    }
+
+    private static func from(dictionary: NSDictionary, contentsValue: Any?) throws -> Self {
+        var bridgedDictionary: [AnyHashable: Any] = [:]
+        for case let (key as AnyHashable, value) in dictionary {
+            bridgedDictionary[key] = value
+        }
+        return try from(dictionary: bridgedDictionary, contentsValue: contentsValue)
+    }
+
+    private static func from(dictionary: [AnyHashable: Any], contentsValue: Any?) throws -> Self {
+        let pictureTypeValue = value(
+            in: dictionary,
+            matching: ["picturetype", "pcty", "type"]
+        )
+        let rawDataValue = value(
+            in: dictionary,
+            matching: ["data", "picturedata", "pdat", "pcda", "tdta"]
+        ) ?? contentsValue
+        let mimeTypeValue = value(
+            in: dictionary,
+            matching: ["mimetype", "mime"]
+        )
+        let descriptionEntry = entry(
+            in: dictionary,
+            matching: ["description", "picturedescription", "tdsc"]
+        )
+
+        return try make(
+            pictureType: SwiftTagAppleScriptPictureType.flacType(from: pictureTypeValue),
+            mimeType: stringValue(from: mimeTypeValue),
+            description: descriptionEntry.map { stringValue(from: $0.value) ?? "" },
+            data: coercedDataValue(from: rawDataValue)
+        )
+    }
+
+    private static func make(
+        pictureType: Int,
+        mimeType: String?,
+        description: String?,
+        data: Data?
+    ) throws -> Self {
+        guard let data, !data.isEmpty else {
+            throw SwiftTagAppleScriptCommandError.missingPictureData
+        }
+
+        let specifications = PictureDataUtilities.computedSpecifications(from: data)
+        guard specifications.width > 0, specifications.height > 0 else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureData
+        }
+
+        let dataDerivedMimeType = PictureDataUtilities.normalizedMimeType(mimeType: "", data: data)
+        let normalizedMimeType = dataDerivedMimeType == "application/octet-stream"
+            ? PictureDataUtilities.normalizedMimeType(mimeType: mimeType ?? "", data: data)
+            : dataDerivedMimeType
+        let normalizedDescription = description ?? nil
+
+        let pictureDataValidation = FlacPictureDataBudget.validation(
+            mimeType: normalizedMimeType,
+            currentDescription: normalizedDescription ?? SwiftTagAppleScriptPictureType.defaultDescription(for: pictureType),
+            proposedPictureData: data
+        )
+        let descriptionValidation = FlacPictureDescriptionBudget.validation(
+            mimeType: normalizedMimeType,
+            pictureData: data,
+            proposedDescription: normalizedDescription ?? SwiftTagAppleScriptPictureType.defaultDescription(for: pictureType)
+        )
+        guard pictureDataValidation.isValid, descriptionValidation.isValid else {
+            throw SwiftTagAppleScriptCommandError.pictureDataTooLarge
+        }
+
+        return Self(
+            type: pictureType,
+            mimeType: normalizedMimeType,
+            description: normalizedDescription,
+            data: data,
+            specifications: specifications
+        )
+    }
+
+    private static func entry(
+        in dictionary: [AnyHashable: Any],
+        matching names: Set<String>
+    ) -> (key: AnyHashable, value: Any)? {
+        dictionary.first { names.contains(normalizedPropertyName($0.key)) }
+    }
+
+    private static func value(in dictionary: [AnyHashable: Any], matching names: Set<String>) -> Any? {
+        entry(in: dictionary, matching: names)?.value
+    }
+
+    private static func firstCoercibleDataValue(in values: [Any?]) -> Any? {
+        values.first { coercedDataValue(from: $0) != nil } ?? nil
+    }
+
+    private static func firstCoercibleDataValue(in dictionary: [AnyHashable: Any]) -> Any? {
+        dictionary.values.first { coercedDataValue(from: $0) != nil }
+    }
+
+    private static func normalizedPropertyName(_ rawKey: AnyHashable) -> String {
+        if let string = rawKey as? String {
+            return normalizePropertyString(string)
+        }
+
+        if let string = rawKey as? NSString {
+            return normalizePropertyString(string as String)
+        }
+
+        if let number = rawKey as? NSNumber {
+            let code = number.uint32Value
+            if let codeString = fourCharString(from: code) {
+                return normalizePropertyString(codeString)
+            }
+        }
+
+        return normalizePropertyString(String(describing: rawKey))
+    }
+
+    private static func normalizePropertyString(_ string: String) -> String {
+        string
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
+    }
+
+    private static func fourCharString(from code: UInt32) -> String? {
+        let bytes = [
+            UInt8((code >> 24) & 0xff),
+            UInt8((code >> 16) & 0xff),
+            UInt8((code >> 8) & 0xff),
+            UInt8(code & 0xff)
+        ]
+        guard bytes.allSatisfy({ $0 == 32 || (33...126).contains($0) }) else {
+            return nil
+        }
+
+        return String(bytes: bytes, encoding: .ascii)
+    }
+
+    private static func stringValue(from rawValue: Any?) -> String? {
+        switch rawValue {
+        case let value as String:
+            return value
+        case let value as NSString:
+            return value as String
+        case let value as NSNumber:
+            return value.stringValue
+        case let descriptor as NSAppleEventDescriptor:
+            return descriptor.stringValue
+        case nil:
+            return nil
+        default:
+            return String(describing: rawValue!)
+        }
+    }
+
+    private static func coercedDataValue(from rawValue: Any?) -> Data? {
+        switch rawValue {
+        case let value as Data:
+            return value
+        case let value as NSData:
+            return value as Data
+        case let descriptor as NSAppleEventDescriptor:
+            guard descriptor.descriptorType == SwiftTagAppleScriptDescriptorType.data else {
+                return nil
+            }
+            return descriptor.data as Data
+        case nil:
+            return nil
+        default:
+            return nil
         }
     }
 }
@@ -760,26 +1371,59 @@ extension NSData {
             data: self as Data
         )
     }
+
+    @objc(scriptingPictureDataDescriptor)
+    var swiftTagScriptingPictureDataDescriptor: NSAppleEventDescriptor? {
+        swiftTagScriptingDataDescriptor
+    }
+
+    @objc(scriptingAnyDescriptor)
+    var swiftTagScriptingAnyDescriptor: NSAppleEventDescriptor? {
+        swiftTagScriptingDataDescriptor
+    }
 }
 
 @MainActor
 @objc(SwiftTagScriptPicture)
 final class SwiftTagScriptPicture: NSObject {
-    private let sessionIDValue: UUID
-    private let trackIDValue: UUID
-    private let pictureIndexValue: Int
+    private enum Storage {
+        case attached(sessionID: UUID, trackID: UUID, pictureIndex: Int)
+        case detached(SwiftTagAppleScriptPicturePayload?)
+    }
+
+    private var storage: Storage
+    private var detachedPictureType: Int?
+    private var detachedMimeType: String?
+    private var detachedDescription: String?
+    private var detachedData: Data?
+
+    @objc
+    override init() {
+        storage = .detached(nil)
+        super.init()
+    }
+
+    init(payload: SwiftTagAppleScriptPicturePayload) {
+        storage = .detached(payload)
+        detachedPictureType = payload.type
+        detachedMimeType = payload.mimeType
+        detachedDescription = payload.description
+        detachedData = payload.data
+        super.init()
+    }
 
     init(sessionID: UUID, trackID: UUID, pictureIndex: Int) {
-        sessionIDValue = sessionID
-        trackIDValue = trackID
-        pictureIndexValue = pictureIndex
+        storage = .attached(sessionID: sessionID, trackID: trackID, pictureIndex: pictureIndex)
         super.init()
     }
 
     @objc(pictureType)
     var pictureType: NSNumber? {
         guard let pictureSnapshot else {
-            return nil
+            guard let detachedPictureType else {
+                return nil
+            }
+            return NSNumber(value: SwiftTagAppleScriptPictureType.appleEventCode(for: detachedPictureType))
         }
 
         return NSNumber(value: SwiftTagAppleScriptPictureType.appleEventCode(for: pictureSnapshot.type))
@@ -787,25 +1431,132 @@ final class SwiftTagScriptPicture: NSObject {
 
     @objc(mimeType)
     var mimeType: String? {
-        pictureSnapshot?.mimeType.appleScriptNonEmptyValue
+        if let mimeType = pictureSnapshot?.mimeType.appleScriptNonEmptyValue {
+            return mimeType
+        }
+        return detachedMimeType?.appleScriptNonEmptyValue
     }
 
     @objc(pictureDescription)
     var pictureDescription: String? {
         get {
-            pictureSnapshot?.description
+            if let description = pictureSnapshot?.description {
+                return description
+            }
+            return detachedDescription
         }
         set {
             do {
-                try SwiftTagAppleScriptController.shared.updatePictureDescription(
-                    newValue ?? "",
-                    forSessionID: sessionIDValue,
-                    trackID: trackIDValue,
-                    pictureIndex: pictureIndexValue
-                )
+                try updateDescription(newValue ?? "")
             } catch {
                 _ = NSScriptCommand.current()?.fail(error)
             }
+        }
+    }
+
+    override func setValue(_ value: Any?, forKey key: String) {
+        do {
+            switch key {
+            case "pictureType":
+                try setDetachedPictureType(value)
+            case "mimeType":
+                try setDetachedMimeType(value)
+            case "pictureDescription":
+                try updateDescription(scriptString(from: value) ?? "")
+            case "data":
+                try updateData(value)
+            case "width", "height", "colorDepth", "colors":
+                return
+            default:
+                super.setValue(value, forKey: key)
+            }
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    private func setDetachedPictureType(_ value: Any?) throws {
+        guard case .detached = storage else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+
+        detachedPictureType = try SwiftTagAppleScriptPictureType.flacType(from: value)
+        try rebuildDetachedPayloadIfPossible()
+    }
+
+    private func setDetachedMimeType(_ value: Any?) throws {
+        guard case .detached = storage else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+
+        detachedMimeType = scriptString(from: value)
+        try rebuildDetachedPayloadIfPossible()
+    }
+
+    private func setDetachedData(_ value: Any?) throws {
+        guard case .detached = storage else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+
+        detachedData = scriptData(from: value)
+        try rebuildDetachedPayloadIfPossible()
+    }
+
+    private func rebuildDetachedPayloadIfPossible() throws {
+        guard let detachedData else {
+            storage = .detached(nil)
+            return
+        }
+
+        let type = detachedPictureType ?? SwiftTagAppleScriptPictureType.frontCover
+        let specifications = PictureDataUtilities.computedSpecifications(from: detachedData)
+        let record = FlacWritablePictureRecord(
+            type: type,
+            mimeType: detachedMimeType ?? "",
+            description: detachedDescription ?? SwiftTagAppleScriptPictureType.defaultDescription(for: type),
+            data: detachedData,
+            width: specifications.width,
+            height: specifications.height,
+            depth: specifications.depth,
+            colors: specifications.colors
+        )
+        let payload = try SwiftTagAppleScriptPicturePayload.from(value: record)
+        storage = .detached(payload)
+        detachedPictureType = payload.type
+        detachedMimeType = payload.mimeType
+        detachedDescription = payload.description
+        self.detachedData = payload.data
+    }
+
+    private func scriptString(from rawValue: Any?) -> String? {
+        switch rawValue {
+        case let value as String:
+            return value
+        case let value as NSString:
+            return value as String
+        case let value as NSNumber:
+            return value.stringValue
+        case let descriptor as NSAppleEventDescriptor:
+            return descriptor.stringValue
+        case nil:
+            return nil
+        default:
+            return String(describing: rawValue!)
+        }
+    }
+
+    private func scriptData(from rawValue: Any?) -> Data? {
+        switch rawValue {
+        case let value as Data:
+            return value
+        case let value as NSData:
+            return value as Data
+        case let descriptor as NSAppleEventDescriptor:
+            return descriptor.data as Data
+        case nil:
+            return nil
+        default:
+            return nil
         }
     }
 
@@ -831,23 +1582,36 @@ final class SwiftTagScriptPicture: NSObject {
 
     @objc(data)
     var data: NSData? {
-        guard let data = pictureSnapshot?.data else {
-            return nil
-        }
+        get {
+            guard let data = pictureSnapshot?.data else {
+                return nil
+            }
 
-        guard !data.isEmpty else {
-            return NSData()
-        }
+            guard !data.isEmpty else {
+                return NSData()
+            }
 
-        return data.withUnsafeBytes { bytes in
-            NSData(bytes: bytes.baseAddress, length: data.count)
+            return data.withUnsafeBytes { bytes in
+                NSData(bytes: bytes.baseAddress, length: data.count)
+            }
+        }
+        set {
+            do {
+                try updateData(newValue)
+            } catch {
+                _ = NSScriptCommand.current()?.fail(error)
+            }
         }
     }
 
     override var objectSpecifier: NSScriptObjectSpecifier? {
+        guard case let .attached(sessionID, trackID, pictureIndex) = storage else {
+            return nil
+        }
+
         guard let track = SwiftTagAppleScriptController.shared.track(
-                forSessionID: sessionIDValue,
-                trackID: trackIDValue
+                forSessionID: sessionID,
+                trackID: trackID
               ),
               let trackClassDescription = NSScriptClassDescription(for: SwiftTagScriptTrack.self),
               let containerSpecifier = track.objectSpecifier else {
@@ -858,16 +1622,38 @@ final class SwiftTagScriptPicture: NSObject {
             containerClassDescription: trackClassDescription,
             containerSpecifier: containerSpecifier,
             key: "pictures",
-            index: pictureIndexValue
+            index: pictureIndex
         )
     }
 
+    var insertionPayload: SwiftTagAppleScriptPicturePayload? {
+        switch storage {
+        case .attached:
+            guard let pictureSnapshot else {
+                return nil
+            }
+
+            return try? SwiftTagAppleScriptPicturePayload.from(value: pictureSnapshot)
+        case .detached(let payload):
+            return payload
+        }
+    }
+
+    func attach(sessionID: UUID, trackID: UUID, pictureIndex: Int) {
+        storage = .attached(sessionID: sessionID, trackID: trackID, pictureIndex: pictureIndex)
+    }
+
     private var pictureSnapshot: FlacWritablePictureRecord? {
-        SwiftTagAppleScriptController.shared.pictureSnapshot(
-            forSessionID: sessionIDValue,
-            trackID: trackIDValue,
-            pictureIndex: pictureIndexValue
-        )
+        switch storage {
+        case .attached(let sessionID, let trackID, let pictureIndex):
+            SwiftTagAppleScriptController.shared.pictureSnapshot(
+                forSessionID: sessionID,
+                trackID: trackID,
+                pictureIndex: pictureIndex
+            )
+        case .detached(let payload):
+            payload?.record()
+        }
     }
 
     private func integerValue(_ keyPath: KeyPath<FlacWritablePictureRecord, Int>) -> NSNumber? {
@@ -876,6 +1662,80 @@ final class SwiftTagScriptPicture: NSObject {
         }
 
         return NSNumber(value: value)
+    }
+
+    private func updateDescription(_ description: String) throws {
+        switch storage {
+        case .attached(let sessionID, let trackID, let pictureIndex):
+            try SwiftTagAppleScriptController.shared.updatePictureDescription(
+                description,
+                forSessionID: sessionID,
+                trackID: trackID,
+                pictureIndex: pictureIndex
+            )
+        case .detached(let payload):
+            detachedDescription = description
+            guard let payload else {
+                try rebuildDetachedPayloadIfPossible()
+                return
+            }
+
+            storage = .detached(
+                try SwiftTagAppleScriptPicturePayload.from(
+                    value: FlacWritablePictureRecord(
+                        type: payload.type,
+                        mimeType: payload.mimeType,
+                        description: description,
+                        data: payload.data,
+                        width: payload.specifications.width,
+                        height: payload.specifications.height,
+                        depth: payload.specifications.depth,
+                        colors: payload.specifications.colors
+                    )
+                )
+            )
+            if let updatedPayload = insertionPayload {
+                detachedPictureType = updatedPayload.type
+                detachedMimeType = updatedPayload.mimeType
+                detachedDescription = updatedPayload.description
+                detachedData = updatedPayload.data
+            }
+        }
+    }
+
+    private func updateData(_ rawValue: Any?) throws {
+        switch storage {
+        case .attached(let sessionID, let trackID, let pictureIndex):
+            let payload = try replacementPayload(data: scriptData(from: rawValue))
+            let updatedIndex = try SwiftTagAppleScriptController.shared.replacePicture(
+                payload,
+                forSessionID: sessionID,
+                trackID: trackID,
+                pictureIndex: pictureIndex
+            )
+            storage = .attached(sessionID: sessionID, trackID: trackID, pictureIndex: updatedIndex)
+        case .detached:
+            try setDetachedData(rawValue)
+        }
+    }
+
+    private func replacementPayload(data: Data?) throws -> SwiftTagAppleScriptPicturePayload {
+        guard let currentRecord = pictureSnapshot else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+
+        return try SwiftTagAppleScriptPicturePayload.from(
+            value: FlacWritablePictureRecord(
+                type: currentRecord.type,
+                mimeType: currentRecord.mimeType,
+                description: currentRecord.description,
+                data: data ?? Data(),
+                width: currentRecord.width,
+                height: currentRecord.height,
+                depth: currentRecord.depth,
+                colors: currentRecord.colors
+            )
+        )
     }
 }
 
@@ -1546,6 +2406,29 @@ final class SwiftTagScriptTrack: NSObject {
         pictures[index]
     }
 
+    override func newScriptingObject(
+        of objectClass: AnyClass,
+        forValueForKey key: String,
+        withContentsValue contentsValue: Any?,
+        properties: [String: Any]
+    ) -> Any? {
+        guard key == "pictures",
+              objectClass == SwiftTagScriptPicture.self else {
+            return nil
+        }
+
+        do {
+            let payload = try SwiftTagAppleScriptPicturePayload.from(
+                properties: properties as NSDictionary,
+                contentsValue: contentsValue
+            )
+            return SwiftTagScriptPicture(payload: payload)
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+            return nil
+        }
+    }
+
     @objc(valueInTagsWithUniqueID:)
     func valueInTags(withUniqueID uniqueID: Any) -> Any? {
         SwiftTagAppleScriptController.shared.tag(
@@ -1567,6 +2450,79 @@ final class SwiftTagScriptTrack: NSObject {
             )
         } catch {
             _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    @objc(insertInTags:atIndex:)
+    func insertInTags(_ value: Any, at index: Int) {
+        insertObject(value, inTagsAt: index)
+    }
+
+    @objc(insertInTags:)
+    func insertInTags(_ value: Any) {
+        insertObject(value, inTagsAt: tags.count)
+    }
+
+    @objc(insertObject:inPicturesAtIndex:)
+    func insertObject(_ value: Any, inPicturesAt index: Int) {
+        do {
+            let payload = try SwiftTagAppleScriptPicturePayload.from(value: value)
+            let pictureIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
+                payload,
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue
+            )
+
+            if let picture = value as? SwiftTagScriptPicture {
+                picture.attach(sessionID: sessionIDValue, trackID: trackIDValue, pictureIndex: pictureIndex)
+            }
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    @objc(insertInPictures:atIndex:)
+    func insertInPictures(_ value: Any, at index: Int) {
+        insertObject(value, inPicturesAt: index)
+    }
+
+    @objc(insertInPictures:)
+    func insertInPictures(_ value: Any) {
+        insertObject(value, inPicturesAt: pictures.count)
+    }
+
+    @objc(handleImportPictureScriptCommand:)
+    func handleImportPictureScriptCommand(_ command: NSScriptCommand) -> Any? {
+        handleImportScriptCommand(command)
+    }
+
+    @objc(handleImportScriptCommand:)
+    func handleImportScriptCommand(_ command: NSScriptCommand) -> Any? {
+        do {
+            return try importPicture(using: command)
+        } catch {
+            return command.fail(error)
+        }
+    }
+
+    @objc(handleMakeScriptCommand:)
+    func handleMakeScriptCommand(_ command: NSScriptCommand) -> Any? {
+        do {
+            guard let createCommand = command as? NSCreateCommand else {
+                throw SwiftTagAppleScriptCommandError.invalidPictureObject
+            }
+
+            switch createCommand.createClassDescription.className {
+            case "picture":
+                return try makePicture(using: createCommand)
+            case "tag":
+                return try makeTag(using: createCommand)
+            default:
+                throw SwiftTagAppleScriptCommandError.invalidPictureObject
+            }
+        } catch {
+            _ = command.fail(error)
+            return nil
         }
     }
 
@@ -1611,6 +2567,84 @@ final class SwiftTagScriptTrack: NSObject {
         } catch {
             _ = NSScriptCommand.current()?.fail(error)
         }
+    }
+
+    fileprivate func makePicture(using command: NSCreateCommand) throws -> SwiftTagScriptPicture? {
+        let payload = try SwiftTagAppleScriptPicturePayload.from(
+            properties: creationProperties(from: command),
+            contentsValue: command.arguments?["ObjectData"] ?? command.evaluatedArguments?["ObjectData"]
+        )
+        let pictureIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
+            payload,
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue
+        )
+        return pictures[safe: pictureIndex]
+    }
+
+    fileprivate func importPicture(using command: NSScriptCommand) throws -> SwiftTagScriptPicture? {
+        let payload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
+            data: command.directParameter,
+            arguments: importPictureArguments(from: command)
+        )
+        let pictureIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
+            payload,
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue
+        )
+        return pictures[safe: pictureIndex]
+    }
+
+    fileprivate func makeTag(using command: NSCreateCommand) throws -> SwiftTagScriptTag? {
+        let payload = try SwiftTagAppleScriptTagPayload.from(value: creationProperties(from: command))
+        try SwiftTagAppleScriptController.shared.upsertTag(
+            key: payload.key,
+            value: payload.value,
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue
+        )
+        return SwiftTagAppleScriptController.shared.tag(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue,
+            uniqueID: payload.key
+        )
+    }
+
+    private func creationProperties(from command: NSCreateCommand) -> NSDictionary {
+        if let rawDictionary = command.arguments?["KeyDictionary"] as? NSDictionary {
+            return rawDictionary
+        }
+
+        if let descriptor = command.arguments?["KeyDictionary"] as? NSAppleEventDescriptor,
+           descriptor.isRecordDescriptor {
+            var dictionary: [AnyHashable: Any] = [:]
+            for index in 1...descriptor.numberOfItems {
+                let keyword = descriptor.keywordForDescriptor(at: index)
+                guard keyword != 0,
+                      let value = descriptor.atIndex(index) else {
+                    continue
+                }
+                dictionary[NSNumber(value: keyword)] = value
+            }
+            return dictionary as NSDictionary
+        }
+
+        return command.resolvedKeyDictionary as NSDictionary
+    }
+
+    private func importPictureArguments(from command: NSScriptCommand) -> [AnyHashable: Any] {
+        var arguments: [AnyHashable: Any] = [:]
+        if let evaluatedArguments = command.evaluatedArguments {
+            for (key, value) in evaluatedArguments {
+                arguments[key] = value
+            }
+        }
+        if let rawArguments = command.arguments {
+            for (key, value) in rawArguments {
+                arguments[key] = value
+            }
+        }
+        return arguments
     }
     
     override var objectSpecifier: NSScriptObjectSpecifier? {
@@ -2445,6 +3479,31 @@ final class SwiftTagAppleScriptController {
         try bridge.deleteTag(trackID, key)
     }
 
+    func upsertPicture(
+        _ payload: SwiftTagAppleScriptPicturePayload,
+        forSessionID sessionID: UUID,
+        trackID: UUID
+    ) throws -> Int {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        return try bridge.upsertPicture(trackID, payload)
+    }
+
+    func replacePicture(
+        _ payload: SwiftTagAppleScriptPicturePayload,
+        forSessionID sessionID: UUID,
+        trackID: UUID,
+        pictureIndex: Int
+    ) throws -> Int {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        return try bridge.replacePicture(trackID, pictureIndex, payload)
+    }
+
     func updatePictureDescription(
         _ description: String,
         forSessionID sessionID: UUID,
@@ -2775,6 +3834,46 @@ extension NSApplication {
         }
     }
 
+    @objc(handleMakeScriptCommand:)
+    func handleMakeScriptCommand(_ command: NSScriptCommand) -> Any? {
+        guard let createCommand = command as? NSCreateCommand else {
+            return command.performDefaultImplementation()
+        }
+
+        do {
+            switch createCommand.createClassDescription.className {
+            case "picture":
+                let track = try scriptTrackInsertionContainer(
+                    from: createCommand,
+                    key: "pictures",
+                    error: .invalidPictureTrackTarget
+                )
+                return try track.makePicture(using: createCommand)
+            case "tag":
+                let track = try scriptTrackInsertionContainer(
+                    from: createCommand,
+                    key: "tags",
+                    error: .invalidTagTrackTarget
+                )
+                return try track.makeTag(using: createCommand)
+            default:
+                return command.performDefaultImplementation()
+            }
+        } catch {
+            return command.fail(error)
+        }
+    }
+
+    @objc(handleImportPictureScriptCommand:)
+    func handleImportPictureScriptCommand(_ command: NSScriptCommand) -> Any? {
+        do {
+            let track = try scriptTrackTarget(from: command)
+            return try track.importPicture(using: command)
+        } catch {
+            return command.fail(error)
+        }
+    }
+
     @objc(handleQuitScriptCommand:)
     func handleQuitScriptCommand(_ command: NSScriptCommand) -> Any? {
         terminate(nil)
@@ -2808,5 +3907,66 @@ extension NSApplication {
         }
 
         return targetWindow
+    }
+
+    private func scriptTrackTarget(from command: NSScriptCommand) throws -> SwiftTagScriptTrack {
+        if let track = scriptTrack(from: command.directParameter) {
+            return track
+        }
+
+        if let track = scriptTrack(from: command.evaluatedReceivers) {
+            return track
+        }
+
+        if let track = scriptTrack(from: command.receiversSpecifier?.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        throw SwiftTagAppleScriptCommandError.invalidPictureTrackTarget
+    }
+
+    private func scriptTrack(from value: Any?) -> SwiftTagScriptTrack? {
+        if let track = value as? SwiftTagScriptTrack {
+            return track
+        }
+
+        if let tracks = value as? [SwiftTagScriptTrack], tracks.count == 1 {
+            return tracks[0]
+        }
+
+        if let tracks = value as? NSArray, tracks.count == 1 {
+            return tracks.firstObject as? SwiftTagScriptTrack
+        }
+
+        if let specifier = value as? NSScriptObjectSpecifier {
+            return scriptTrack(from: specifier.objectsByEvaluatingSpecifier)
+        }
+
+        return nil
+    }
+
+    private func scriptTrackInsertionContainer(
+        from command: NSCreateCommand,
+        key expectedKey: String,
+        error: SwiftTagAppleScriptCommandError
+    ) throws -> SwiftTagScriptTrack {
+        guard let location = positionalSpecifier(from: command) else {
+            throw error
+        }
+
+        location.setInsertionClassDescription(command.createClassDescription)
+        location.evaluate()
+        guard location.insertionKey == expectedKey,
+              let track = location.insertionContainer as? SwiftTagScriptTrack else {
+            throw error
+        }
+        return track
+    }
+
+    private func positionalSpecifier(from command: NSScriptCommand) -> NSPositionalSpecifier? {
+        command.arguments?["Location"] as? NSPositionalSpecifier
+            ?? command.arguments?["at"] as? NSPositionalSpecifier
+            ?? command.evaluatedArguments?["Location"] as? NSPositionalSpecifier
+            ?? command.evaluatedArguments?["at"] as? NSPositionalSpecifier
     }
 }
