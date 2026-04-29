@@ -305,6 +305,43 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessReadsFirstTagWhoseKey() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(importFixture: true)
+        defer {
+            app.terminate()
+        }
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    tell first track
+                        repeat 50 times
+                            if (count of tags) > 0 then exit repeat
+                            delay 0.1
+                        end repeat
+                        set tagArtist to (first tag whose key is "ARTIST")
+                        return "Track tag ARTIST: " & (key of tagArtist) & ", " & (value of tagArtist)
+                    end tell
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertEqual(normalizedAppleScriptTextOutput(output), "Track tag ARTIST: ARTIST, Test Artist")
+    }
+
+    @MainActor
     func testAppleScriptHarnessSavesWithScopeAndPayloadEnumerations() throws {
         try requireAppleScriptHarnessEnabled()
 

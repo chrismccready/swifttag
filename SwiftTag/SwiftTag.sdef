@@ -454,6 +454,9 @@
 
         <class name="tag" plural="tags" code="ftag" description="A FLAC track metadata tag.">
             <cocoa class="SwiftTagScriptTag"/>
+            <property name="id" code="ID  " type="text" access="r" description="The unique identifier of the tag, equal to its normalized key.">
+                <cocoa key="id"/>
+            </property>
             <property name="key" code="pkey" type="text" description="A FLAC track metadata tag name.">
                 <cocoa key="key"/>
             </property>

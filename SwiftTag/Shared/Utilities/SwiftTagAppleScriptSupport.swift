@@ -1799,6 +1799,11 @@ final class SwiftTagScriptTag: NSObject {
         super.init()
     }
 
+    @objc(id)
+    var id: String? {
+        key
+    }
+
     @objc(key)
     var key: String? {
         get {

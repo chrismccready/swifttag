@@ -1170,6 +1170,7 @@ struct SwiftTagAppleScriptTests {
         #expect(scriptTrack.valueInTags(withUniqueID: "ALBUM ARTIST") == nil)
 
         let albumArtistTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.albumArtist) as? SwiftTagScriptTag)
+        #expect(albumArtistTag.id == TagKey.albumArtist)
         #expect(albumArtistTag.key == TagKey.albumArtist)
         #expect(albumArtistTag.value == "London Symphony Orchestra")
         albumArtistTag.value = "London Philharmonic Orchestra"
@@ -1178,9 +1179,21 @@ struct SwiftTagAppleScriptTests {
         #expect(scriptTrack.albumArtist == "London Philharmonic Orchestra")
 
         let titleTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.title) as? SwiftTagScriptTag)
+        #expect(titleTag.id == TagKey.title)
         #expect(titleTag.value == "Mars, the Bringer of War")
         titleTag.value = "Mars"
         #expect(viewModel.trackItems.first?.tags[TagKey.title] == "Mars")
+
+        let artistTagSpecifier = try Self.whoseTagSpecifier(
+            in: scriptTrack,
+            propertyKey: "key",
+            value: TagKey.artist
+        )
+        let matchingArtistTags = Self.evaluatedTagWrappers(from: artistTagSpecifier)
+        #expect(matchingArtistTags.count == 1)
+        #expect(matchingArtistTags.first?.id == TagKey.artist)
+        #expect(matchingArtistTags.first?.key == TagKey.artist)
+        #expect(matchingArtistTags.first?.value == "Gustav Holst")
 
         let tagCountBeforeArtistUpsert = scriptTrack.countOfTags
         let artistTagUpdate = SwiftTagScriptTag()
@@ -1322,6 +1335,29 @@ private extension SwiftTagAppleScriptTests {
         return []
     }
 
+    static func evaluatedTagWrappers(from value: Any?) -> [SwiftTagScriptTag] {
+        let evaluatedValue: Any?
+        if let specifier = value as? NSScriptObjectSpecifier {
+            evaluatedValue = specifier.objectsByEvaluatingSpecifier
+        } else {
+            evaluatedValue = value
+        }
+
+        if let tag = evaluatedValue as? SwiftTagScriptTag {
+            return [tag]
+        }
+
+        if let tags = evaluatedValue as? [SwiftTagScriptTag] {
+            return tags
+        }
+
+        if let tags = evaluatedValue as? NSArray {
+            return tags.compactMap { $0 as? SwiftTagScriptTag }
+        }
+
+        return []
+    }
+
     @MainActor
     static func whoseTrackSpecifier(
         in scriptWindow: SwiftTagScriptEditorWindow,
@@ -1351,6 +1387,39 @@ private extension SwiftTagAppleScriptTests {
             containerClassDescription: editorWindowClassDescription,
             containerSpecifier: containerSpecifier,
             key: "tracks",
+            test: test
+        )
+    }
+
+    @MainActor
+    static func whoseTagSpecifier(
+        in scriptTrack: SwiftTagScriptTrack,
+        propertyKey: String,
+        value: Any
+    ) throws -> NSWhoseSpecifier {
+        let trackClassDescription = try #require(
+            NSScriptClassDescription(for: SwiftTagScriptTrack.self)
+        )
+        let tagClassDescription = try #require(
+            NSScriptClassDescription(for: SwiftTagScriptTag.self)
+        )
+        let containerSpecifier = try #require(scriptTrack.objectSpecifier)
+        let propertySpecifier = NSPropertySpecifier(
+            containerClassDescription: tagClassDescription,
+            containerSpecifier: nil,
+            key: propertyKey
+        )
+        propertySpecifier.containerIsObjectBeingTested = true
+        let test = NSSpecifierTest(
+            objectSpecifier: propertySpecifier,
+            comparisonOperator: .equal,
+            test: value
+        )
+
+        return NSWhoseSpecifier(
+            containerClassDescription: trackClassDescription,
+            containerSpecifier: containerSpecifier,
+            key: "tags",
             test: test
         )
     }
