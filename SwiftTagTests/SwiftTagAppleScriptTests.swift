@@ -744,6 +744,21 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func pictureImportPayloadAcceptsBase64TextData() throws {
+        let pictureData = try #require(Self.singlePixelPNGData())
+        let payload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
+            data: pictureData.base64EncodedString(),
+            arguments: ["Description": "Base64 Picture"]
+        )
+
+        #expect(payload.data == pictureData)
+        #expect(payload.type == 3)
+        #expect(payload.description == "Base64 Picture")
+        #expect(payload.mimeType == "image/png")
+    }
+
+    @MainActor
+    @Test
     func pictureImportPayloadDefaultsToFrontCoverDedupesAndAppends() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()

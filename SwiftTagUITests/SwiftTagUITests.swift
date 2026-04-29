@@ -447,6 +447,77 @@ final class SwiftTagUITests: XCTestCase {
         ])
     }
 
+    func testAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let imageURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftTagUITests-AppleScript-import-picture.png")
+        let imageData = try XCTUnwrap(
+            Data(
+                base64Encoded:
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO3ZbZ0AAAAASUVORK5CYII="
+            )
+        )
+        try imageData.write(to: imageURL, options: .atomic)
+        defer {
+            try? FileManager.default.removeItem(at: imageURL)
+        }
+
+        let app = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover"
+        )
+        defer {
+            app.terminate()
+        }
+
+        let output = try runAppleScript(
+            """
+            use framework "Foundation"
+            use scripting additions
+
+            using terms from application id "\(Self.appBundleIdentifier)"
+                tell application id "\(Self.appBundleIdentifier)"
+                    activate
+                    tell front editor window
+                        repeat 50 times
+                            if (count of tracks) > 0 then exit repeat
+                            delay 0.1
+                        end repeat
+                        tell first track
+                            set imagePath to "\(imageURL.path)"
+                            set newPictureData to my getByteDataFrom(imagePath)
+                            set newPicture to import picture newPictureData with picture type front cover with description "New Picture"
+                            return ((count of pictures) as text) & linefeed & (picture type of newPicture as text) & linefeed & (description of newPicture) & linefeed & (MIME type of newPicture)
+                        end tell
+                    end tell
+                end tell
+            end using terms from
+
+            on getByteDataFrom(thePath)
+                set theURL to current application's |NSURL|'s fileURLWithPath:thePath
+                set theData to current application's NSData's dataWithContentsOfURL:theURL
+                if theData is missing value then
+                    error "Could not read data from file. Check the path."
+                end if
+                return (theData's base64EncodedStringWithOptions:0) as text
+            end getByteDataFrom
+            """,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, [
+            "2",
+            "front cover",
+            "New Picture",
+            "image/png"
+        ])
+    }
+
     @MainActor
     func testAppleScriptHarnessClosesEditorWindowSavingNo() throws {
         try requireAppleScriptHarnessEnabled()

@@ -1154,7 +1154,8 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
             in: arguments,
             matching: ["picture", "picturedata", "data", "pdat", "pcda", "tdta"]
         )
-        let rawDataValue = firstCoercibleDataValue(in: [namedDataValue, rawData])
+        let rawDataCandidates = (rawData as? [Any?]) ?? [rawData]
+        let rawDataValue = firstCoercibleDataValue(in: [namedDataValue] + rawDataCandidates)
             ?? firstCoercibleDataValue(in: arguments)
         let pictureTypeValue = value(
             in: arguments,
@@ -1350,16 +1351,45 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
             return value
         case let value as NSData:
             return value as Data
+        case let value as String:
+            return base64DecodedData(from: value)
+        case let value as NSString:
+            return base64DecodedData(from: value as String)
         case let descriptor as NSAppleEventDescriptor:
-            guard descriptor.descriptorType == SwiftTagAppleScriptDescriptorType.data else {
-                return nil
+            if descriptor.descriptorType == SwiftTagAppleScriptDescriptorType.data {
+                return descriptor.data as Data
             }
-            return descriptor.data as Data
+            if let stringValue = descriptor.stringValue,
+               let data = base64DecodedData(from: stringValue) {
+                return data
+            }
+            return descriptor
+                .coerce(toDescriptorType: SwiftTagAppleScriptDescriptorType.data)?
+                .data as Data?
         case nil:
             return nil
         default:
             return nil
         }
+    }
+
+    private static func base64DecodedData(from rawValue: String) -> Data? {
+        let compactValue = rawValue
+            .components(separatedBy: .whitespacesAndNewlines)
+            .joined()
+        guard !compactValue.isEmpty,
+              compactValue.count.isMultiple(of: 4) else {
+            return nil
+        }
+
+        let allowedCharacters = CharacterSet(
+            charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+        )
+        guard compactValue.rangeOfCharacter(from: allowedCharacters.inverted) == nil else {
+            return nil
+        }
+
+        return Data(base64Encoded: compactValue)
     }
 }
 
@@ -1893,6 +1923,8 @@ final class SwiftTagScriptTag: NSObject {
 @MainActor
 @objc(SwiftTagScriptTrack)
 final class SwiftTagScriptTrack: NSObject {
+    private static let directObjectAppleEventKeyword = fourCharCode("----")
+
     private let sessionIDValue: UUID
     private let trackIDValue: UUID
 
@@ -2584,7 +2616,7 @@ final class SwiftTagScriptTrack: NSObject {
 
     fileprivate func importPicture(using command: NSScriptCommand) throws -> SwiftTagScriptPicture? {
         let payload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
-            data: command.directParameter,
+            data: importPictureDataCandidates(from: command),
             arguments: importPictureArguments(from: command)
         )
         let pictureIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
@@ -2645,6 +2677,21 @@ final class SwiftTagScriptTrack: NSObject {
             }
         }
         return arguments
+    }
+
+    private func importPictureDataCandidates(from command: NSScriptCommand) -> [Any?] {
+        [
+            command.directParameter,
+            command.appleEvent?.paramDescriptor(forKeyword: Self.directObjectAppleEventKeyword)
+        ]
+    }
+
+    nonisolated private static func fourCharCode(_ value: String) -> AEKeyword {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
+        return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
     }
     
     override var objectSpecifier: NSScriptObjectSpecifier? {
