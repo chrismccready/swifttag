@@ -1222,9 +1222,24 @@ struct SwiftTagAppleScriptTests {
         #expect(viewModel.trackItems.first?.tags["RENAMEDKEY"] == "UPDATED")
 
         let renamedIndex = try #require(scriptTrack.tags.firstIndex(where: { $0.key == "RENAMEDKEY" }))
-        scriptTrack.removeObjectFromTags(at: renamedIndex)
+        scriptTrack.mutableArrayValue(forKey: "tags").removeObject(at: renamedIndex)
         #expect(viewModel.trackItems.first?.tags["RENAMEDKEY"] == nil)
         #expect(scriptTrack.valueInTags(withUniqueID: "RENAMEDKEY") == nil)
+
+        let albumTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.album) as? SwiftTagScriptTag)
+        try albumTag.delete()
+        #expect(viewModel.trackItems.first?.album == "")
+        #expect(viewModel.trackItems.first?.tags[TagKey.album] == nil)
+        #expect(scriptTrack.album == nil)
+        #expect(scriptTrack.valueInTags(withUniqueID: TagKey.album) == nil)
+
+        scriptTrack.album = "Property Delete Album"
+        #expect(viewModel.trackItems.first?.tags[TagKey.album] == "Property Delete Album")
+
+        try scriptTrack.deleteTagValue(forScriptPropertyKey: "album")
+        #expect(viewModel.trackItems.first?.album == "")
+        #expect(viewModel.trackItems.first?.tags[TagKey.album] == nil)
+        #expect(scriptTrack.album == nil)
     }
 
     @MainActor

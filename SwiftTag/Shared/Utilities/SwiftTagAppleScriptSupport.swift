@@ -69,6 +69,218 @@ final class SwiftTagCreateCommand: NSCreateCommand {
     }
 }
 
+@objc(SwiftTagDeleteCommand)
+final class SwiftTagDeleteCommand: NSDeleteCommand {
+    private static let directObjectKeyword = fourCharCode("----")
+
+    override var isWellFormed: Bool {
+        true
+    }
+
+    override func execute() -> Any? {
+        MainActor.assumeIsolated {
+            performSwiftTagDefaultImplementation()
+        }
+    }
+
+    override func performDefaultImplementation() -> Any? {
+        MainActor.assumeIsolated {
+            performSwiftTagDefaultImplementation()
+        }
+    }
+
+    @MainActor
+    private func performSwiftTagDefaultImplementation() -> Any? {
+        do {
+            if try deleteSwiftTagTargetIfNeeded() {
+                return nil
+            }
+
+            return super.performDefaultImplementation()
+        } catch {
+            return fail(error)
+        }
+    }
+
+    @MainActor
+    private func deleteSwiftTagTargetIfNeeded() throws -> Bool {
+        let directObjectSpecifier = directObjectSpecifier()
+
+        if try deleteTrackPropertyIfNeeded(keySpecifier, receiverSpecifier: receiversSpecifier) {
+            return true
+        }
+
+        if try deleteTagSpecifierIfNeeded(keySpecifier, receiverSpecifier: receiversSpecifier) {
+            return true
+        }
+
+        if let directObjectSpecifier,
+           try deleteTrackPropertyIfNeeded(directObjectSpecifier, receiverSpecifier: receiversSpecifier) {
+            return true
+        }
+
+        if let directObjectSpecifier,
+           try deleteTagSpecifierIfNeeded(directObjectSpecifier, receiverSpecifier: receiversSpecifier) {
+            return true
+        }
+
+        if try deleteResolvedValue(directParameter) {
+            return true
+        }
+
+        if try deleteResolvedValue(evaluatedReceivers) {
+            return true
+        }
+
+        if try deleteResolvedValue(keySpecifier) {
+            return true
+        }
+
+        if let directObjectSpecifier, try deleteResolvedValue(directObjectSpecifier) {
+            return true
+        }
+
+        return false
+    }
+
+    @MainActor
+    private func deleteTrackPropertyIfNeeded(
+        _ specifier: NSScriptObjectSpecifier?,
+        receiverSpecifier: NSScriptObjectSpecifier?
+    ) throws -> Bool {
+        guard let specifier,
+              SwiftTagScriptTrack.tagKey(forScriptPropertyKey: specifier.key) != nil else {
+            return false
+        }
+
+        guard let track = Self.track(from: specifier.container?.objectsByEvaluatingSpecifier)
+                ?? Self.track(from: receiverSpecifier?.objectsByEvaluatingSpecifier) else {
+            throw SwiftTagAppleScriptCommandError.invalidTagTrackTarget
+        }
+
+        try track.deleteTagValue(forScriptPropertyKey: specifier.key)
+        return true
+    }
+
+    @MainActor
+    private func deleteTagSpecifierIfNeeded(
+        _ specifier: NSScriptObjectSpecifier?,
+        receiverSpecifier: NSScriptObjectSpecifier?
+    ) throws -> Bool {
+        guard let specifier, specifier.key == "tags" else {
+            return false
+        }
+
+        guard let track = Self.track(from: specifier.container?.objectsByEvaluatingSpecifier)
+                ?? Self.track(from: receiverSpecifier?.objectsByEvaluatingSpecifier) else {
+            throw SwiftTagAppleScriptCommandError.invalidTagTrackTarget
+        }
+
+        if let uniqueIDSpecifier = specifier as? NSUniqueIDSpecifier {
+            let key = try tagKey(fromUniqueID: uniqueIDSpecifier.uniqueID)
+            try SwiftTagAppleScriptController.shared.deleteTag(
+                key: key,
+                forSessionID: track.sessionID,
+                trackID: track.trackID
+            )
+            return true
+        }
+
+        if let indexSpecifier = specifier as? NSIndexSpecifier,
+           let tag = track.tags[safe: indexSpecifier.index] {
+            try tag.delete()
+            return true
+        }
+
+        return false
+    }
+
+    @MainActor
+    private func deleteResolvedValue(_ value: Any?) throws -> Bool {
+        switch value {
+        case nil:
+            return false
+        case let tag as SwiftTagScriptTag:
+            try tag.delete()
+            return true
+        case let specifier as NSScriptObjectSpecifier:
+            if try deleteTrackPropertyIfNeeded(specifier, receiverSpecifier: receiversSpecifier) {
+                return true
+            }
+            return try deleteResolvedValue(specifier.objectsByEvaluatingSpecifier)
+        case let values as [Any]:
+            return try deleteResolvedValues(values)
+        case let values as NSArray:
+            return try deleteResolvedValues(values.map { $0 })
+        default:
+            return false
+        }
+    }
+
+    @MainActor
+    private func deleteResolvedValues(_ values: [Any]) throws -> Bool {
+        var deletedAny = false
+        for value in values {
+            if try deleteResolvedValue(value) {
+                deletedAny = true
+            }
+        }
+        return deletedAny
+    }
+
+    private func directObjectSpecifier() -> NSScriptObjectSpecifier? {
+        guard let descriptor = appleEvent?.paramDescriptor(forKeyword: Self.directObjectKeyword) else {
+            return nil
+        }
+
+        return NSScriptObjectSpecifier(descriptor: descriptor)
+    }
+
+    private func tagKey(fromUniqueID uniqueID: Any) throws -> String {
+        let rawKey: String?
+        switch uniqueID {
+        case let string as String:
+            rawKey = string
+        case let string as NSString:
+            rawKey = string as String
+        case let number as NSNumber:
+            rawKey = number.stringValue
+        default:
+            rawKey = String(describing: uniqueID)
+        }
+
+        let normalizedKey = SwiftTagAppleScriptTagKey.normalizedKey(rawKey ?? "")
+        guard !normalizedKey.isEmpty else {
+            throw SwiftTagAppleScriptCommandError.invalidTagKey
+        }
+        return normalizedKey
+    }
+
+    @MainActor
+    private static func track(from value: Any?) -> SwiftTagScriptTrack? {
+        switch value {
+        case let track as SwiftTagScriptTrack:
+            return track
+        case let tracks as [SwiftTagScriptTrack] where tracks.count == 1:
+            return tracks[0]
+        case let tracks as NSArray where tracks.count == 1:
+            return tracks.firstObject as? SwiftTagScriptTrack
+        case let specifier as NSScriptObjectSpecifier:
+            return track(from: specifier.objectsByEvaluatingSpecifier)
+        default:
+            return nil
+        }
+    }
+
+    nonisolated private static func fourCharCode(_ value: String) -> AEKeyword {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
+        return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
+    }
+}
+
 @objc(SwiftTagImportPictureCommand)
 final class SwiftTagImportPictureCommand: NSScriptCommand {
     private static let directObjectKeyword = fourCharCode("----")
@@ -1923,12 +2135,66 @@ final class SwiftTagScriptTag: NSObject {
             )
         }
     }
+
+    func delete() throws {
+        guard case let .attached(sessionID, trackID, key) = storage else {
+            return
+        }
+
+        try SwiftTagAppleScriptController.shared.deleteTag(
+            key: key,
+            forSessionID: sessionID,
+            trackID: trackID
+        )
+    }
 }
 
 @MainActor
 @objc(SwiftTagScriptTrack)
 final class SwiftTagScriptTrack: NSObject {
     private static let directObjectAppleEventKeyword = fourCharCode("----")
+    private static let scriptPropertyTagKeys: [String: String] = [
+        "album": TagKey.album,
+        "albumArtist": TagKey.albumArtist,
+        "artist": TagKey.artist,
+        "comment": "COMMENT",
+        "compilation": TagKey.compilation,
+        "composer": TagKey.composer,
+        "copyright": "COPYRIGHT",
+        "releaseDate": TagKey.date,
+        "trackDescription": TagKey.description,
+        "director": "DIRECTOR",
+        "discCount": SwiftTagAppleScriptTagKey.totalDiscs,
+        "discNumber": TagKey.discNumber,
+        "encodedBy": "ENCODED_BY",
+        "encodedUsing": "ENCODED_USING",
+        "encoder": "ENCODER",
+        "encoderOptions": "ENCODER_OPTIONS",
+        "genre": TagKey.genre,
+        "isrc": "ISRC",
+        "license": "LICENSE",
+        "lineage": "LINEAGE",
+        "location": TagKey.location,
+        "narrator": "NARRATOR",
+        "performer": "PERFORMER",
+        "producer": "PRODUCER",
+        "rating": "RATING",
+        "replayAlbumGain": "REPLAYGAIN_ALBUM_GAIN",
+        "replayAlbumPeak": "REPLAYGAIN_ALBUM_PEAK",
+        "replayTrackGain": "REPLAYGAIN_TRACK_GAIN",
+        "replayTrackPeak": "REPLAYGAIN_TRACK_PEAK",
+        "sortAlbum": "ALBUMSORT",
+        "sortAlbumArtist": "ALBUMARTISTSORT",
+        "sortArtist": "ARTISTSORT",
+        "sortComposer": "COMPOSERSORT",
+        "sortTitle": "TITLESORT",
+        "source": "SOURCE",
+        "title": TagKey.title,
+        "trackCount": SwiftTagAppleScriptTagKey.totalTracks,
+        "trackNumber": TagKey.trackNumber,
+        "vendor": "VENDOR",
+        "trackVersion": "VERSION"
+    ]
 
     private let sessionIDValue: UUID
     private let trackIDValue: UUID
@@ -2724,6 +2990,22 @@ final class SwiftTagScriptTrack: NSObject {
 
     fileprivate var trackID: UUID {
         trackIDValue
+    }
+
+    static func tagKey(forScriptPropertyKey key: String) -> String? {
+        scriptPropertyTagKeys[key]
+    }
+
+    func deleteTagValue(forScriptPropertyKey key: String) throws {
+        guard let tagKey = Self.tagKey(forScriptPropertyKey: key) else {
+            throw SwiftTagAppleScriptCommandError.invalidTagKey
+        }
+
+        try SwiftTagAppleScriptController.shared.deleteTag(
+            key: tagKey,
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue
+        )
     }
 
     private var trackSnapshot: Track? {

@@ -342,6 +342,59 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessDeletesTagAndAlbumProperty() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(importFixture: true)
+        defer {
+            app.terminate()
+        }
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    tell first track
+                        set albumBefore to album
+                        set tagAlbum to (first tag whose key is "ALBUM")
+                        delete tagAlbum
+                        set albumMissingAfterTagDelete to (album is missing value)
+                        set albumTagCountAfterTagDelete to count of (every tag whose key is "ALBUM")
+                        set album to "AppleScript Property Delete Album"
+                        set albumTagCountBeforePropertyDelete to count of (every tag whose key is "ALBUM")
+                        delete album
+                        set albumMissingAfterPropertyDelete to (album is missing value)
+                        set albumTagCountAfterPropertyDelete to count of (every tag whose key is "ALBUM")
+                        return albumBefore & linefeed & (albumTagCountAfterTagDelete as text) & linefeed & (albumMissingAfterTagDelete as text) & linefeed & (albumTagCountBeforePropertyDelete as text) & linefeed & (albumTagCountAfterPropertyDelete as text) & linefeed & (albumMissingAfterPropertyDelete as text)
+                    end tell
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, [
+            "Test Album",
+            "0",
+            "true",
+            "1",
+            "0",
+            "true"
+        ])
+    }
+
+    @MainActor
     func testAppleScriptHarnessSavesWithScopeAndPayloadEnumerations() throws {
         try requireAppleScriptHarnessEnabled()
 

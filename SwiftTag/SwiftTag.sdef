@@ -76,7 +76,7 @@
         </command>
 
         <command name="delete" code="coredelo" description="Delete object.">
-            <cocoa class="NSDeleteCommand"/>
+            <cocoa class="SwiftTagDeleteCommand"/>
             <access-group identifier="*"/>
             <direct-parameter type="specifier" description="Object(s) to delete."/>
         </command>
@@ -263,7 +263,7 @@
 
         <class name="track" plural="tracks" code="trck" description="A FLAC track file.">
             <cocoa class="SwiftTagScriptTrack"/>
-            <element type="tag">
+            <element type="tag" access="rw">
                 <cocoa key="tags"/>
             </element>
             <element type="picture" access="rw">
