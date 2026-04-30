@@ -386,6 +386,56 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessReadsEmptyAlbumTagWhoseKeyAfterUIClear() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(importFixture: true)
+        defer {
+            app.terminate()
+        }
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        let albumField = editableAlbumField(in: app)
+        XCTAssertTrue(albumField.waitForExistence(timeout: 5.0))
+        clearText(in: app, element: albumField)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: app,
+                identifier: UIID.albumTextField,
+                expectedValue: "",
+                timeout: 5.0
+            )
+        )
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    tell first track
+                        set tagAlbum to (first tag whose key is "ALBUM")
+                        set tagValueIsMissing to ((value of tagAlbum) is missing value)
+                        set albumIsMissing to (album is missing value)
+                        return (key of tagAlbum) & linefeed & (tagValueIsMissing as text) & linefeed & (albumIsMissing as text)
+                    end tell
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, ["ALBUM", "true", "true"])
+    }
+
+    @MainActor
     func testAppleScriptHarnessMakesTagInTellTrackContext() throws {
         try requireAppleScriptHarnessEnabled()
 
@@ -3101,6 +3151,13 @@ final class SwiftTagUITests: XCTestCase {
         app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
         app.typeKey("a", modifierFlags: .command)
         app.typeText(text)
+    }
+
+    private func clearText(in app: XCUIApplication, element: XCUIElement) {
+        element.tap()
+        app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+        app.typeKey("a", modifierFlags: .command)
+        app.typeKey(XCUIKeyboardKey.delete.rawValue, modifierFlags: [])
     }
 
     private func replaceMiscTagValue(in app: XCUIApplication, key: String, text: String) {

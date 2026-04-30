@@ -1018,11 +1018,11 @@ enum SwiftTagAppleScriptTagKey {
             }
 
             let value = normalizedValue(rawValue)
-            guard !value.isEmpty else {
-                continue
-            }
-
             if key == TagKey.compilation {
+                guard !value.isEmpty else {
+                    tagsByKey[key] = ""
+                    continue
+                }
                 guard let normalizedCompilation = CompilationTag.normalizedValue(value) else {
                     continue
                 }
@@ -1033,20 +1033,10 @@ enum SwiftTagAppleScriptTagKey {
             tagsByKey[key] = value
         }
 
-        if let album = track.album.appleScriptNonEmptyValue {
-            tagsByKey[TagKey.album] = album
-        } else {
-            tagsByKey.removeValue(forKey: TagKey.album)
-        }
-
-        if let albumArtist = track.albumArtist.appleScriptNonEmptyValue {
-            tagsByKey[TagKey.albumArtist] = albumArtist
-        } else {
-            tagsByKey.removeValue(forKey: TagKey.albumArtist)
-        }
-
         if let totalTracks = track.totalTracks.appleScriptNonEmptyValue.map(normalizedValue(_:)) {
             tagsByKey[Self.totalTracks] = totalTracks
+        } else if tagsByKey[Self.totalTracks] != nil {
+            tagsByKey[Self.totalTracks] = ""
         } else {
             tagsByKey.removeValue(forKey: Self.totalTracks)
         }
@@ -1057,6 +1047,8 @@ enum SwiftTagAppleScriptTagKey {
             .first
         if let totalDiscValue {
             tagsByKey[totalDiscs] = totalDiscValue
+        } else if tagsByKey[totalDiscs] != nil {
+            tagsByKey[totalDiscs] = ""
         } else {
             tagsByKey.removeValue(forKey: totalDiscs)
         }
@@ -1064,7 +1056,7 @@ enum SwiftTagAppleScriptTagKey {
         return tagsByKey.keys
             .sorted()
             .compactMap { key in
-                guard let value = tagsByKey[key], !value.isEmpty else {
+                guard let value = tagsByKey[key] else {
                     return nil
                 }
 
@@ -2093,7 +2085,7 @@ final class SwiftTagScriptTag: NSObject {
     @objc(value)
     var value: String? {
         get {
-            snapshot?.value
+            snapshot?.value.appleScriptNonEmptyValue
         }
         set {
             do {
@@ -2281,7 +2273,7 @@ final class SwiftTagScriptTrack: NSObject {
     @objc(album)
     var album: String? {
         get {
-            currentTextValue(for: [TagKey.album], fallback: \.album)
+            currentTextValue(for: [TagKey.album])
         }
         set {
             updateTagValue(TagKey.album, to: newValue)
@@ -2291,7 +2283,7 @@ final class SwiftTagScriptTrack: NSObject {
     @objc(albumArtist)
     var albumArtist: String? {
         get {
-            currentTextValue(for: [TagKey.albumArtist], fallback: \.albumArtist)
+            currentTextValue(for: [TagKey.albumArtist])
         }
         set {
             updateTagValue(TagKey.albumArtist, to: newValue)
@@ -3103,8 +3095,8 @@ final class SwiftTagScriptTrack: NSObject {
             return nil
         }
 
-        if let fallback, let fallbackValue = trackSnapshot[keyPath: fallback].appleScriptNonEmptyValue {
-            return fallbackValue
+        if let fallback {
+            return trackSnapshot[keyPath: fallback].appleScriptNonEmptyValue
         }
 
         return trackSnapshot.appleScriptText(for: keys)

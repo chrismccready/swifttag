@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import SwiftUI
 import Testing
 @testable import SwiftTag
 
@@ -674,6 +675,196 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func tagWhoseKeyReturnsMissingValueForExistingEmptyTag() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let track = Track(
+            album: "",
+            tags: [
+                TagKey.album: "",
+                TagKey.title: "Empty Album"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-empty-album.flac")
+        )
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [track],
+                        selectedTrackIDs: []
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptTrack = try #require(scriptWindow.tracks.first)
+        let albumTagSpecifier = try Self.whoseTagSpecifier(
+            in: scriptTrack,
+            propertyKey: "key",
+            value: TagKey.album
+        )
+        let albumTags = Self.evaluatedTagWrappers(from: albumTagSpecifier)
+
+        #expect(scriptTrack.album == nil)
+        #expect(albumTags.count == 1)
+        let albumTag = try #require(albumTags.first)
+        #expect(albumTag.key == TagKey.album)
+        #expect(albumTag.value == nil)
+        let uniqueAlbumTag = try #require(
+            scriptTrack.valueInTags(withUniqueID: TagKey.album) as? SwiftTagScriptTag
+        )
+        #expect(uniqueAlbumTag.value == nil)
+    }
+
+    @MainActor
+    @Test
+    func albumPropertyReturnsMissingValueWhenAlbumTagIsAbsent() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let track = Track(
+            album: "Convenience Album",
+            tags: [TagKey.title: "No Album Tag"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-no-album-tag.flac")
+        )
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [track],
+                        selectedTrackIDs: []
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptTrack = try #require(scriptWindow.tracks.first)
+        let albumTagSpecifier = try Self.whoseTagSpecifier(
+            in: scriptTrack,
+            propertyKey: "key",
+            value: TagKey.album
+        )
+
+        #expect(scriptTrack.album == nil)
+        #expect(scriptTrack.valueInTags(withUniqueID: TagKey.album) == nil)
+        #expect(Self.evaluatedTagWrappers(from: albumTagSpecifier).isEmpty)
+    }
+
+    @MainActor
+    @Test
+    func clearingAlbumThroughSelectedBindingClearsAppleScriptAlbum() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let viewModel = TagEditorViewModel()
+        let track = Track(
+            album: "Original Album",
+            tags: [
+                TagKey.album: "Original Album",
+                TagKey.title: "Album Clear"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-clear-album.flac"),
+            latestFileSnapshot: TrackFileSnapshot(
+                tags: [
+                    TagKey.album: "Original Album",
+                    TagKey.title: "Album Clear"
+                ],
+                picturesByType: [:]
+            )
+        )
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: viewModel.trackItems,
+                        selectedTrackIDs: viewModel.selectedTrackIDs
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { trackIDs in
+                    viewModel.selectedTrackIDs = trackIDs
+                },
+                saveDocument: { _ in .init() },
+                upsertTag: { trackID, key, value in
+                    try viewModel.appleScriptUpsertTag(key: key, value: value, forTrackID: trackID)
+                },
+                deleteTag: { trackID, key in
+                    try viewModel.appleScriptDeleteTag(key: key, forTrackID: trackID)
+                }
+            )
+        )
+
+        let albumBinding = try #require(viewModel.selectedAlbumBinding())
+        albumBinding.wrappedValue = ""
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptTrack = try #require(scriptWindow.tracks.first)
+
+        #expect(viewModel.trackItems.first?.album == "")
+        #expect(viewModel.trackItems.first?.tags[TagKey.album] == "")
+        #expect(scriptTrack.album == nil)
+    }
+
+    @MainActor
+    @Test
     func pictureDescriptionSetterRoutesThroughBridge() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()
@@ -1121,6 +1312,8 @@ struct SwiftTagAppleScriptTests {
                         albumArtist: "London Symphony Orchestra",
                         totalTracks: "7",
                         tags: [
+                            TagKey.album: "The Planets",
+                            TagKey.albumArtist: "London Symphony Orchestra",
                             TagKey.title: "Mars, the Bringer of War",
                             TagKey.artist: "Gustav Holst",
                             "COMMENT": "Live broadcast",
@@ -1228,7 +1421,7 @@ struct SwiftTagAppleScriptTests {
 
         let albumTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.album) as? SwiftTagScriptTag)
         try albumTag.delete()
-        #expect(viewModel.trackItems.first?.album == "")
+        #expect(viewModel.trackItems.first?.album == "The Planets")
         #expect(viewModel.trackItems.first?.tags[TagKey.album] == nil)
         #expect(scriptTrack.album == nil)
         #expect(scriptTrack.valueInTags(withUniqueID: TagKey.album) == nil)
@@ -1237,7 +1430,7 @@ struct SwiftTagAppleScriptTests {
         #expect(viewModel.trackItems.first?.tags[TagKey.album] == "Property Delete Album")
 
         try scriptTrack.deleteTagValue(forScriptPropertyKey: "album")
-        #expect(viewModel.trackItems.first?.album == "")
+        #expect(viewModel.trackItems.first?.album == "The Planets")
         #expect(viewModel.trackItems.first?.tags[TagKey.album] == nil)
         #expect(scriptTrack.album == nil)
     }

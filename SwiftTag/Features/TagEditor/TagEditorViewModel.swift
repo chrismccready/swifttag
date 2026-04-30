@@ -1246,18 +1246,6 @@ final class TagEditorViewModel {
 
         let normalizedValue = SwiftTagAppleScriptTagKey.normalizedValue(rawValue)
         switch normalizedKey {
-        case TagKey.album:
-            trackItems[index].album = normalizedValue
-            trackItems[index].tags.removeValue(forKey: TagKey.album)
-            if !normalizedValue.isEmpty {
-                trackItems[index].tags[TagKey.album] = normalizedValue
-            }
-        case TagKey.albumArtist:
-            trackItems[index].albumArtist = normalizedValue
-            trackItems[index].tags.removeValue(forKey: TagKey.albumArtist)
-            if !normalizedValue.isEmpty {
-                trackItems[index].tags[TagKey.albumArtist] = normalizedValue
-            }
         case SwiftTagAppleScriptTagKey.totalTracks:
             trackItems[index].totalTracks = normalizedValue
             trackItems[index].tags.removeValue(forKey: "TOTALTRACKS")
@@ -1277,11 +1265,7 @@ final class TagEditorViewModel {
             for key in SwiftTagAppleScriptTagKey.relatedKeys(for: normalizedKey) where key != normalizedKey {
                 trackItems[index].tags.removeValue(forKey: key)
             }
-            if normalizedValue.isEmpty {
-                trackItems[index].tags.removeValue(forKey: normalizedKey)
-            } else {
-                trackItems[index].tags[normalizedKey] = normalizedValue
-            }
+            trackItems[index].tags[normalizedKey] = normalizedValue
         }
 
         clearExternallyModifiedDifference(
@@ -1305,12 +1289,6 @@ final class TagEditorViewModel {
         }
 
         switch normalizedKey {
-        case TagKey.album:
-            trackItems[index].album = ""
-            trackItems[index].tags.removeValue(forKey: TagKey.album)
-        case TagKey.albumArtist:
-            trackItems[index].albumArtist = ""
-            trackItems[index].tags.removeValue(forKey: TagKey.albumArtist)
         case SwiftTagAppleScriptTagKey.totalTracks:
             trackItems[index].totalTracks = ""
             trackItems[index].tags.removeValue(forKey: "TOTALTRACKS")
@@ -2935,6 +2913,11 @@ final class TagEditorViewModel {
                         continue
                     }
                     self.trackItems[index][keyPath: keyPath] = trimmedValue
+                    if keyPath == \Track.album {
+                        self.trackItems[index].tags[TagKey.album] = trimmedValue
+                    } else if keyPath == \Track.albumArtist {
+                        self.trackItems[index].tags[TagKey.albumArtist] = trimmedValue
+                    }
                     self.clearExternallyModifiedDifference(forTrackAt: index, keys: keysToClear)
                 }
             }
