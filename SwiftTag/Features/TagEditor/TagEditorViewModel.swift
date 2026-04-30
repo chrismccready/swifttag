@@ -190,6 +190,9 @@ final class TagEditorViewModel {
     var originalMiscTagKeyByRowID: [MiscTagRow.ID: String] = [:]
     var trackItems: [Track] {
         didSet {
+            guard oldValue.map(\.id) != trackItems.map(\.id) else {
+                return
+            }
             applyLegacySharedMetadataIfNeeded()
         }
     }
@@ -1248,11 +1251,6 @@ final class TagEditorViewModel {
         switch normalizedKey {
         case SwiftTagAppleScriptTagKey.totalTracks:
             trackItems[index].totalTracks = normalizedValue
-            trackItems[index].tags.removeValue(forKey: "TOTALTRACKS")
-            trackItems[index].tags.removeValue(forKey: "TRACKTOTAL")
-            if !normalizedValue.isEmpty {
-                trackItems[index].tags["TOTALTRACKS"] = normalizedValue
-            }
         case SwiftTagAppleScriptTagKey.totalDiscs:
             setCurrentTotalDiscsValue(normalizedValue, forTrackAt: index)
         case TagKey.compilation:
@@ -1290,7 +1288,6 @@ final class TagEditorViewModel {
 
         switch normalizedKey {
         case SwiftTagAppleScriptTagKey.totalTracks:
-            trackItems[index].totalTracks = ""
             trackItems[index].tags.removeValue(forKey: "TOTALTRACKS")
             trackItems[index].tags.removeValue(forKey: "TRACKTOTAL")
         case SwiftTagAppleScriptTagKey.totalDiscs:
@@ -1954,10 +1951,16 @@ final class TagEditorViewModel {
                     relativeTo: nil
                 )
 
-                updatedTrackItems[index].album = (initialValues.album ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                updatedTrackItems[index].albumArtist = (initialValues.albumArtist ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                updatedTrackItems[index].totalTracks = Int(initialValues.totalTracks ?? "").map(String.init) ?? (initialValues.totalTracks ?? "")
                 updatedTrackItems[index].tags = mappedTrackTags
+                if let album = initialValues.album {
+                    updatedTrackItems[index].album = album
+                }
+                if let albumArtist = initialValues.albumArtist {
+                    updatedTrackItems[index].albumArtist = albumArtist
+                }
+                if let totalTracks = initialValues.totalTracks {
+                    updatedTrackItems[index].totalTracks = totalTracks
+                }
                 updatedTrackItems[index].flacPictureRecords = pictureRecords
                 updatedTrackItems[index].flacPicturesByType = picturesByType
                 updatedTrackItems[index].sourceFileURL = fileURL
@@ -2913,11 +2916,6 @@ final class TagEditorViewModel {
                         continue
                     }
                     self.trackItems[index][keyPath: keyPath] = trimmedValue
-                    if keyPath == \Track.album {
-                        self.trackItems[index].tags[TagKey.album] = trimmedValue
-                    } else if keyPath == \Track.albumArtist {
-                        self.trackItems[index].tags[TagKey.albumArtist] = trimmedValue
-                    }
                     self.clearExternallyModifiedDifference(forTrackAt: index, keys: keysToClear)
                 }
             }
@@ -3136,18 +3134,32 @@ final class TagEditorViewModel {
         let normalizedTrackCount = String(trackItems.count)
 
         for index in trackItems.indices {
-            if trackItems[index].album.isEmpty, !pendingAlbumValue.isEmpty {
+            if !hasTagStorage(in: trackItems[index], keys: [TagKey.album]),
+               trackItems[index].album.isEmpty,
+               !pendingAlbumValue.isEmpty {
                 trackItems[index].album = pendingAlbumValue
             }
 
-            if trackItems[index].albumArtist.isEmpty, !pendingAlbumArtistValue.isEmpty {
+            if !hasTagStorage(in: trackItems[index], keys: [TagKey.albumArtist]),
+               trackItems[index].albumArtist.isEmpty,
+               !pendingAlbumArtistValue.isEmpty {
                 trackItems[index].albumArtist = pendingAlbumArtistValue
             }
 
-            if trackItems[index].totalTracks.isEmpty {
+            if !hasTagStorage(in: trackItems[index], keys: totalTrackTagKeys),
+               trackItems[index].totalTracks.isEmpty {
                 trackItems[index].totalTracks = normalizedTrackCount
             }
         }
+    }
+
+    private func hasTagStorage(in track: Track, keys: [String]) -> Bool {
+        let normalizedKeys = Set(keys.map(normalizedTagKey).filter { !$0.isEmpty })
+        guard !normalizedKeys.isEmpty else {
+            return false
+        }
+
+        return track.tags.keys.contains { normalizedKeys.contains(normalizedTagKey($0)) }
     }
 
     private func withAccessingSecurityScopedTrackURL<T>(

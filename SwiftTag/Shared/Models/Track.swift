@@ -2,9 +2,6 @@ import Foundation
 
 struct Track: Identifiable {
     let id: UUID
-    var album: String
-    var albumArtist: String
-    var totalTracks: String
     var tags: [String: String]
     private var storedFlacPicturesByType: [Int: Data]
     var flacPictureRecords: [FlacWritablePictureRecord]
@@ -69,6 +66,33 @@ struct Track: Identifiable {
         TrackSampleRateFormatter.string(from: sampleRate) ?? ""
     }
 
+    var album: String {
+        get {
+            Track.normalizedSharedValue(tagValue(for: [TagKey.album]) ?? "")
+        }
+        set {
+            setTagValue(newValue, for: TagKey.album)
+        }
+    }
+
+    var albumArtist: String {
+        get {
+            Track.normalizedSharedValue(tagValue(for: [TagKey.albumArtist]) ?? "")
+        }
+        set {
+            setTagValue(newValue, for: TagKey.albumArtist)
+        }
+    }
+
+    var totalTracks: String {
+        get {
+            Track.normalizedNumericValue(tagValue(for: ["TOTALTRACKS", "TRACKTOTAL"]) ?? "")
+        }
+        set {
+            setTotalTracksValue(newValue)
+        }
+    }
+
     var displayFileName: String {
         if let sourceFileURL {
             return sourceFileURL.lastPathComponent
@@ -99,9 +123,6 @@ struct Track: Identifiable {
         preservesEditorStateDuringFileRefresh: Bool = false
     ) {
         self.id = id
-        self.album = Track.normalizedSharedValue(album ?? tags[TagKey.album] ?? "")
-        self.albumArtist = Track.normalizedSharedValue(albumArtist ?? tags[TagKey.albumArtist] ?? "")
-        self.totalTracks = Track.normalizedNumericValue(totalTracks ?? tags["TOTALTRACKS"] ?? tags["TRACKTOTAL"] ?? "")
         self.tags = tags
         self.storedFlacPicturesByType = flacPicturesByType
         self.flacPictureRecords = flacPictureRecords.isEmpty
@@ -121,6 +142,75 @@ struct Track: Identifiable {
         self.channels = Track.normalizedPositiveValue(channels)
         self.isLocked = isLocked
         self.preservesEditorStateDuringFileRefresh = preservesEditorStateDuringFileRefresh
+
+        normalizeTagBackedValues(
+            album: album,
+            albumArtist: albumArtist,
+            totalTracks: totalTracks
+        )
+    }
+
+    mutating func setTagValue(_ value: String, for key: String) {
+        let normalizedKey = TagNormalization.normalizeTagKey(key)
+        guard !normalizedKey.isEmpty else {
+            return
+        }
+
+        removeTagValues(for: [normalizedKey])
+        tags[normalizedKey] = Track.normalizedSharedValue(value)
+    }
+
+    mutating func removeTagValues(for keys: [String]) {
+        let normalizedKeys = Set(keys.map { TagNormalization.normalizeTagKey($0) }.filter { !$0.isEmpty })
+        guard !normalizedKeys.isEmpty else {
+            return
+        }
+
+        for key in Array(tags.keys) where normalizedKeys.contains(TagNormalization.normalizeTagKey(key)) {
+            tags.removeValue(forKey: key)
+        }
+    }
+
+    private mutating func normalizeTagBackedValues(
+        album explicitAlbum: String?,
+        albumArtist explicitAlbumArtist: String?,
+        totalTracks explicitTotalTracks: String?
+    ) {
+        if let albumValue = explicitAlbum ?? tagValue(for: [TagKey.album]) {
+            album = albumValue
+        }
+
+        if let albumArtistValue = explicitAlbumArtist ?? tagValue(for: [TagKey.albumArtist]) {
+            albumArtist = albumArtistValue
+        }
+
+        if let totalTracksValue = explicitTotalTracks ?? tagValue(for: ["TOTALTRACKS", "TRACKTOTAL"]) {
+            totalTracks = totalTracksValue
+        }
+    }
+
+    private func tagValue(for keys: [String]) -> String? {
+        for key in keys {
+            let normalizedKey = TagNormalization.normalizeTagKey(key)
+            guard !normalizedKey.isEmpty else {
+                continue
+            }
+
+            if let value = tags[normalizedKey] {
+                return value
+            }
+
+            if let match = tags.first(where: { TagNormalization.normalizeTagKey($0.key) == normalizedKey }) {
+                return match.value
+            }
+        }
+
+        return nil
+    }
+
+    private mutating func setTotalTracksValue(_ value: String) {
+        removeTagValues(for: ["TOTALTRACKS", "TRACKTOTAL"])
+        tags["TOTALTRACKS"] = Track.normalizedNumericValue(value)
     }
 
     private static func normalizedSharedValue(_ value: String) -> String {

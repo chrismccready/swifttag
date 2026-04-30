@@ -520,6 +520,81 @@ struct SwiftTagTests {
     }
 
     @Test
+    func trackSharedTagAccessorsUseTagsAsSourceOfTruth() {
+        var track = Track(
+            album: "  Explicit Album  ",
+            tags: [
+                TagKey.album: "Tag Album",
+                TagKey.albumArtist: "  Tag Artist  ",
+                "TRACKTOTAL": "07",
+                TagKey.title: "Track"
+            ]
+        )
+
+        #expect(track.album == "Explicit Album")
+        #expect(track.tags[TagKey.album] == "Explicit Album")
+        #expect(track.albumArtist == "Tag Artist")
+        #expect(track.tags[TagKey.albumArtist] == "Tag Artist")
+        #expect(track.totalTracks == "7")
+        #expect(track.tags["TOTALTRACKS"] == "7")
+        #expect(track.tags["TRACKTOTAL"] == nil)
+
+        track.album = ""
+        track.albumArtist = "  New Artist  "
+        track.totalTracks = " 09 "
+
+        #expect(track.tags[TagKey.album] == "")
+        #expect(track.tags[TagKey.albumArtist] == "New Artist")
+        #expect(track.tags["TOTALTRACKS"] == "9")
+        #expect(track.tags["TRACKTOTAL"] == nil)
+
+        track.totalTracks = ""
+        #expect(track.totalTracks == "")
+        #expect(track.tags["TOTALTRACKS"] == "")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorSelectedSharedBindingsWriteTagBackedValues() throws {
+        let firstTrack = Track(
+            tags: [
+                TagKey.title: "First",
+                TagKey.filename: "first.flac"
+            ]
+        )
+        let secondTrack = Track(
+            tags: [
+                TagKey.title: "Second",
+                TagKey.filename: "second.flac"
+            ]
+        )
+        let outOfScopeTrack = Track(
+            tags: [
+                TagKey.title: "Third",
+                TagKey.filename: "third.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack, secondTrack, outOfScopeTrack]
+        viewModel.selectedTrackIDs = [firstTrack.id, secondTrack.id]
+
+        let albumBinding = try #require(viewModel.selectedAlbumBinding())
+        let albumArtistBinding = try #require(viewModel.selectedAlbumArtistBinding())
+        let totalTracksBinding = try #require(viewModel.selectedTotalTracksBinding())
+
+        albumBinding.wrappedValue = " Shared Album "
+        albumArtistBinding.wrappedValue = " Shared Artist "
+        totalTracksBinding.wrappedValue = " 12 "
+
+        let selectedTracks = viewModel.trackItems.filter { viewModel.selectedTrackIDs.contains($0.id) }
+        #expect(selectedTracks.map { $0.tags[TagKey.album] } == ["Shared Album", "Shared Album"])
+        #expect(selectedTracks.map { $0.tags[TagKey.albumArtist] } == ["Shared Artist", "Shared Artist"])
+        #expect(selectedTracks.map { $0.tags["TOTALTRACKS"] } == ["12", "12"])
+        #expect(selectedTracks.allSatisfy { $0.tags["TRACKTOTAL"] == nil })
+        #expect(viewModel.trackItems.first(where: { $0.id == outOfScopeTrack.id })?.tags[TagKey.album] == nil)
+    }
+
+    @Test
     func compilationTagNormalizesPresenceToCanonicalValue() {
         #expect(CompilationTag.normalizedValue(nil) == nil)
         #expect(CompilationTag.normalizedValue("") == nil)

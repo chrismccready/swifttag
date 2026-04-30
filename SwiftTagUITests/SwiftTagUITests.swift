@@ -774,6 +774,9 @@ final class SwiftTagUITests: XCTestCase {
     func testFinderLaunchOpenShowsVisibleImportedFlacWindow() throws {
         let flacURL = try prepareReadableFlacFixture(fileName: Self.fixtureFileName)
         let app = try launchAppByOpeningFileWithSwiftTag(url: flacURL)
+        defer {
+            app.terminate()
+        }
         let window = app.windows.firstMatch
 
         XCTAssertTrue(window.waitForExistence(timeout: 10.0))

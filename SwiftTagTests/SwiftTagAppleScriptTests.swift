@@ -739,7 +739,7 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
-    func albumPropertyReturnsMissingValueWhenAlbumTagIsAbsent() throws {
+    func albumInitializerBacksConvenienceValueWithTag() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()
         defer {
@@ -786,9 +786,10 @@ struct SwiftTagAppleScriptTests {
             value: TagKey.album
         )
 
-        #expect(scriptTrack.album == nil)
-        #expect(scriptTrack.valueInTags(withUniqueID: TagKey.album) == nil)
-        #expect(Self.evaluatedTagWrappers(from: albumTagSpecifier).isEmpty)
+        #expect(scriptTrack.album == "Convenience Album")
+        let albumTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.album) as? SwiftTagScriptTag)
+        #expect(albumTag.value == "Convenience Album")
+        #expect(Self.evaluatedTagWrappers(from: albumTagSpecifier).count == 1)
     }
 
     @MainActor
@@ -1362,6 +1363,28 @@ struct SwiftTagAppleScriptTests {
 
         #expect(scriptTrack.valueInTags(withUniqueID: "ALBUM ARTIST") == nil)
 
+        let totalTracksTag = try #require(scriptTrack.valueInTags(withUniqueID: "TRACKTOTAL") as? SwiftTagScriptTag)
+        #expect(totalTracksTag.id == SwiftTagAppleScriptTagKey.totalTracks)
+        #expect(totalTracksTag.value == "7")
+        totalTracksTag.value = ""
+        #expect(viewModel.trackItems.first?.tags["TOTALTRACKS"] == "")
+        #expect(viewModel.trackItems.first?.tags["TRACKTOTAL"] == nil)
+        #expect(scriptTrack.trackCount == nil)
+        #expect((scriptTrack.valueInTags(withUniqueID: SwiftTagAppleScriptTagKey.totalTracks) as? SwiftTagScriptTag)?.value == nil)
+
+        scriptTrack.trackCount = NSNumber(value: 11)
+        #expect(viewModel.trackItems.first?.totalTracks == "11")
+        #expect(viewModel.trackItems.first?.tags["TOTALTRACKS"] == "11")
+        #expect(viewModel.trackItems.first?.tags["TRACKTOTAL"] == nil)
+
+        scriptTrack.album = ""
+        #expect(viewModel.trackItems.first?.tags[TagKey.album] == "")
+        #expect(scriptTrack.album == nil)
+        #expect((scriptTrack.valueInTags(withUniqueID: TagKey.album) as? SwiftTagScriptTag)?.value == nil)
+
+        scriptTrack.album = "The Planets"
+        #expect(viewModel.trackItems.first?.tags[TagKey.album] == "The Planets")
+
         let albumArtistTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.albumArtist) as? SwiftTagScriptTag)
         #expect(albumArtistTag.id == TagKey.albumArtist)
         #expect(albumArtistTag.key == TagKey.albumArtist)
@@ -1420,8 +1443,11 @@ struct SwiftTagAppleScriptTests {
         #expect(scriptTrack.valueInTags(withUniqueID: "RENAMEDKEY") == nil)
 
         let albumTag = try #require(scriptTrack.valueInTags(withUniqueID: TagKey.album) as? SwiftTagScriptTag)
+        albumTag.value = "Tag Element Album"
+        #expect(viewModel.trackItems.first?.album == "Tag Element Album")
+        #expect(scriptTrack.album == "Tag Element Album")
         try albumTag.delete()
-        #expect(viewModel.trackItems.first?.album == "The Planets")
+        #expect(viewModel.trackItems.first?.album == "")
         #expect(viewModel.trackItems.first?.tags[TagKey.album] == nil)
         #expect(scriptTrack.album == nil)
         #expect(scriptTrack.valueInTags(withUniqueID: TagKey.album) == nil)
@@ -1430,9 +1456,14 @@ struct SwiftTagAppleScriptTests {
         #expect(viewModel.trackItems.first?.tags[TagKey.album] == "Property Delete Album")
 
         try scriptTrack.deleteTagValue(forScriptPropertyKey: "album")
-        #expect(viewModel.trackItems.first?.album == "The Planets")
+        #expect(viewModel.trackItems.first?.album == "")
         #expect(viewModel.trackItems.first?.tags[TagKey.album] == nil)
         #expect(scriptTrack.album == nil)
+
+        try scriptTrack.deleteTagValue(forScriptPropertyKey: "trackCount")
+        #expect(viewModel.trackItems.first?.totalTracks == "")
+        #expect(viewModel.trackItems.first?.tags["TOTALTRACKS"] == nil)
+        #expect(scriptTrack.trackCount == nil)
     }
 
     @MainActor

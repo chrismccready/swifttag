@@ -1033,14 +1033,6 @@ enum SwiftTagAppleScriptTagKey {
             tagsByKey[key] = value
         }
 
-        if let totalTracks = track.totalTracks.appleScriptNonEmptyValue.map(normalizedValue(_:)) {
-            tagsByKey[Self.totalTracks] = totalTracks
-        } else if tagsByKey[Self.totalTracks] != nil {
-            tagsByKey[Self.totalTracks] = ""
-        } else {
-            tagsByKey.removeValue(forKey: Self.totalTracks)
-        }
-
         let totalDiscValue = relatedKeys(for: totalDiscs)
             .compactMap { track.tags[$0]?.appleScriptNonEmptyValue }
             .map(normalizedValue(_:))
@@ -2696,7 +2688,7 @@ final class SwiftTagScriptTrack: NSObject {
     @objc(trackCount)
     var trackCount: NSNumber? {
         get {
-            currentIntegerValue(for: ["TOTALTRACKS", "TRACKTOTAL"], fallback: \.totalTracks)
+            currentIntegerValue(for: ["TOTALTRACKS", "TRACKTOTAL"])
         }
         set {
             updateTagValue(SwiftTagAppleScriptTagKey.totalTracks, to: newValue)
