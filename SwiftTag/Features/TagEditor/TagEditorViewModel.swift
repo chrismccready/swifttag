@@ -1391,6 +1391,25 @@ final class TagEditorViewModel {
         return pictureIndex
     }
 
+    func appleScriptDeletePicture(
+        forTrackID trackID: UUID,
+        pictureIndex: Int
+    ) throws {
+        guard let trackIndex = trackItems.firstIndex(where: { $0.id == trackID }) else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+        guard !trackItems[trackIndex].isLocked else {
+            throw SwiftTagAppleScriptCommandError.trackLocked
+        }
+        guard trackItems[trackIndex].flacPictureRecords.indices.contains(pictureIndex) else {
+            throw SwiftTagAppleScriptCommandError.invalidPictureObject
+        }
+
+        var records = trackItems[trackIndex].flacPictureRecords
+        records.remove(at: pictureIndex)
+        updatePictureRecords(records, forTrackAt: trackIndex)
+    }
+
     func appleScriptPictureIndex(
         matching payload: SwiftTagAppleScriptPicturePayload,
         forTrackID trackID: UUID

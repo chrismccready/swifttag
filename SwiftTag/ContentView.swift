@@ -1706,6 +1706,18 @@ struct ContentView: View {
         return updatedIndex
     }
 
+    private func performAppleScriptDeletePicture(
+        for trackID: UUID,
+        pictureIndex: Int
+    ) throws {
+        try viewModel.appleScriptDeletePicture(
+            forTrackID: trackID,
+            pictureIndex: pictureIndex
+        )
+        albumArtViewModel.discardTransientState(for: [trackID], albumArtTypes: albumArtTypes)
+        refreshAlbumArtContextFromTrackItems()
+    }
+
     private func resolveDeletedSwiftTagDocumentRecoveryDestination(
         currentState: SwiftTagDocumentSaveState
     ) -> URL? {
@@ -2062,6 +2074,12 @@ struct ContentView: View {
                 updatePictureDescription: { trackID, pictureIndex, description in
                     try performAppleScriptUpdatePictureDescription(
                         description,
+                        for: trackID,
+                        pictureIndex: pictureIndex
+                    )
+                },
+                deletePicture: { trackID, pictureIndex in
+                    try performAppleScriptDeletePicture(
                         for: trackID,
                         pictureIndex: pictureIndex
                     )
@@ -2466,6 +2484,11 @@ struct ContentView: View {
     }
 
     private func syncAlbumArtContext() {
+        refreshAlbumArtContextFromTrackItems()
+        syncTrackPictureRecordsFromAlbumArt()
+    }
+
+    private func refreshAlbumArtContextFromTrackItems() {
         albumArtViewModel.configurePinSettings(
             saveFrontCoverToAllTracks: saveFrontCoverToAllTracks,
             saveAllPicturesToAllTracks: saveAllPicturesToAllTracks
@@ -2475,7 +2498,6 @@ struct ContentView: View {
             selectedTrackIDs: selectedTrackIDs,
             albumArtTypes: albumArtTypes
         )
-        syncTrackPictureRecordsFromAlbumArt()
     }
 
     private func syncTrackPictureRecordsFromAlbumArt() {

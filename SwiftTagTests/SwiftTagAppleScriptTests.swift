@@ -936,6 +936,110 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func pictureDeletionRoutesThroughBridgeForSingleAndWhoseMatches() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let originalFrontData = try #require(Self.singlePixelPNGData())
+        let deleteData = try Self.pngData(color: .systemGreen)
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: [TagKey.title: "Picture Delete Track"],
+                flacPictureRecords: [
+                    FlacWritablePictureRecord(
+                        type: 3,
+                        mimeType: "image/png",
+                        description: "Original Front",
+                        data: originalFrontData
+                    ).withComputedPictureMetadata(),
+                    FlacWritablePictureRecord(
+                        type: 3,
+                        mimeType: "image/png",
+                        description: "delete me",
+                        data: deleteData
+                    ).withComputedPictureMetadata(),
+                    FlacWritablePictureRecord(
+                        type: 4,
+                        mimeType: "image/png",
+                        description: "delete me",
+                        data: deleteData
+                    ).withComputedPictureMetadata()
+                ],
+                sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-delete-picture.flac")
+            )
+        ]
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: viewModel.trackItems,
+                        selectedTrackIDs: viewModel.selectedTrackIDs
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { trackIDs in
+                    viewModel.selectedTrackIDs = trackIDs
+                },
+                saveDocument: { _ in .init() },
+                deletePicture: { trackID, pictureIndex in
+                    try viewModel.appleScriptDeletePicture(
+                        forTrackID: trackID,
+                        pictureIndex: pictureIndex
+                    )
+                }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptTrack = try #require(scriptWindow.tracks.first)
+        let frontCoverSpecifier = try Self.whosePictureSpecifier(
+            in: scriptTrack,
+            propertyKey: "pictureType",
+            value: Self.fourCharCode("frcv")
+        )
+        let frontCovers = Self.evaluatedPictureWrappers(from: frontCoverSpecifier)
+        #expect(frontCovers.count == 2)
+
+        try frontCovers[0].delete()
+
+        #expect(viewModel.trackItems.first?.flacPictureRecords.map(\.description) == [
+            "delete me",
+            "delete me"
+        ])
+
+        let deleteMeSpecifier = try Self.whosePictureSpecifier(
+            in: scriptTrack,
+            propertyKey: "pictureDescription",
+            value: "delete me"
+        )
+        let deleteMePictures = Self.evaluatedPictureWrappers(from: deleteMeSpecifier)
+        #expect(deleteMePictures.count == 2)
+
+        try SwiftTagScriptPicture.delete(deleteMePictures)
+
+        #expect(viewModel.trackItems.first?.flacPictureRecords.isEmpty == true)
+        #expect(scriptTrack.countOfPictures == 0)
+    }
+
+    @MainActor
+    @Test
     func pictureImportPayloadAcceptsBase64TextData() throws {
         let pictureData = try #require(Self.singlePixelPNGData())
         let payload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
@@ -1119,6 +1223,7 @@ struct SwiftTagAppleScriptTests {
         #expect(classDescription.supportsCommand(commandDescription))
         #expect(classDescription.selector(forCommand: commandDescription) == makeSelector)
         #expect(pictureClassDescription.hasWritableProperty(forKey: "data"))
+        #expect(track.responds(to: NSSelectorFromString("removeObjectFromPicturesAtIndex:")))
     }
 
     @MainActor

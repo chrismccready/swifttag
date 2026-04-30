@@ -49,6 +49,7 @@ class SwiftTagUITestCase: XCTestCase {
         static let albumArtSheetPictureDescriptionDoneButton = "albumArt.sheet.pictureDescription.doneButton"
         static let albumArtSheetCurrentSlot = "albumArt.sheet.currentSlot"
         static let albumArtSheetExternalDifferenceState = "albumArt.sheet.externalDifferenceState"
+        static let albumArtSheetImagePresence = "albumArt.sheet.imageWell.hasImage"
         static let albumArtSheetSlotPrefix = "albumArt.sheet.slot."
     }
 
@@ -659,6 +660,76 @@ class SwiftTagUITestCase: XCTestCase {
             "AppleScript Edited Front",
             "image/png"
         ])
+    }
+
+    @MainActor
+    func scenarioAppleScriptHarnessDeletesTrackPictures() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let deletePictureDataBase64 =
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO3ZbZ0AAAAASUVORK5CYII="
+        let app = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover"
+        )
+        defer {
+            app.terminate()
+        }
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    tell first track
+                        repeat 50 times
+                            if (count of pictures) > 0 then exit repeat
+                            delay 0.1
+                        end repeat
+                        set deletePictureData to "\(deletePictureDataBase64)"
+                        import picture deletePictureData with picture type back cover with description "delete me"
+                        import picture deletePictureData with picture type front cover with description "delete me"
+                        set countBeforeDelete to count of pictures
+                        set firstCover to item 1 of (every picture whose picture type is front cover)
+                        set firstCoverDescription to description of firstCover
+                        delete firstCover
+                        set countAfterFirstDelete to count of pictures
+                        delete (every picture whose description is "delete me")
+                        return (countBeforeDelete as text) & linefeed & firstCoverDescription & linefeed & (countAfterFirstDelete as text) & linefeed & ((count of pictures) as text) & linefeed & ((count of (every picture whose description is "delete me")) as text)
+                    end tell
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, [
+            "3",
+            "UI Test Single Front Cover",
+            "2",
+            "0",
+            "0"
+        ])
+
+        let window = app.windows.firstMatch
+        let albumArtSheet = openAlbumArtSheet(in: window, app: app)
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: albumArtSheet,
+                identifier: UIID.albumArtSheetImagePresence,
+                expectedValue: "absent",
+                timeout: 10.0
+            )
+        )
     }
 
     func scenarioAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data() throws {

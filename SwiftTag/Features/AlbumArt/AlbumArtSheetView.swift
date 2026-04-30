@@ -380,6 +380,10 @@ struct AlbumArtSheetView: View {
                 .font(.system(size: 1))
                 .foregroundStyle(.clear)
                 .accessibilityIdentifier("albumArt.sheet.externalDifferenceState")
+            Text(hasImageForSlot(albumArtSlot) ? "present" : "absent")
+                .font(.system(size: 1))
+                .foregroundStyle(.clear)
+                .accessibilityIdentifier("albumArt.sheet.imageWell.hasImage")
         }
         .padding(22)
         .navigationTitle(slotName)

@@ -132,6 +132,12 @@ final class SwiftTagCreateCommand: NSCreateCommand {
 @objc(SwiftTagDeleteCommand)
 final class SwiftTagDeleteCommand: NSDeleteCommand {
     private static let directObjectKeyword = fourCharCode("----")
+    private static let subjectAttribute = fourCharCode("subj")
+
+    private struct ResolvedPictureExtraction {
+        let pictures: [SwiftTagScriptPicture]
+        let handlesValue: Bool
+    }
 
     override var isWellFormed: Bool {
         true
@@ -174,6 +180,10 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
             return true
         }
 
+        if try deletePictureSpecifierIfNeeded(keySpecifier, receiverSpecifier: receiversSpecifier) {
+            return true
+        }
+
         if let directObjectSpecifier,
            try deleteTrackPropertyIfNeeded(directObjectSpecifier, receiverSpecifier: receiversSpecifier) {
             return true
@@ -181,6 +191,11 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
 
         if let directObjectSpecifier,
            try deleteTagSpecifierIfNeeded(directObjectSpecifier, receiverSpecifier: receiversSpecifier) {
+            return true
+        }
+
+        if let directObjectSpecifier,
+           try deletePictureSpecifierIfNeeded(directObjectSpecifier, receiverSpecifier: receiversSpecifier) {
             return true
         }
 
@@ -256,6 +271,44 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
     }
 
     @MainActor
+    private func deletePictureSpecifierIfNeeded(
+        _ specifier: NSScriptObjectSpecifier?,
+        receiverSpecifier: NSScriptObjectSpecifier?
+    ) throws -> Bool {
+        guard let specifier, specifier.key == "pictures" else {
+            return false
+        }
+
+        let containingTrack = Self.track(from: specifier.container?.objectsByEvaluatingSpecifier)
+            ?? Self.track(from: receiverSpecifier?.objectsByEvaluatingSpecifier)
+            ?? targetTrack()
+
+        if let indexSpecifier = specifier as? NSIndexSpecifier {
+            guard let containingTrack else {
+                throw SwiftTagAppleScriptCommandError.invalidPictureTrackTarget
+            }
+
+            try SwiftTagAppleScriptController.shared.deletePicture(
+                forSessionID: containingTrack.sessionID,
+                trackID: containingTrack.trackID,
+                pictureIndex: indexSpecifier.index
+            )
+            return true
+        }
+
+        let pictureExtraction = try resolvedPicturesIfPossible(
+            from: specifier,
+            container: containingTrack
+        )
+        guard pictureExtraction.handlesValue, !pictureExtraction.pictures.isEmpty else {
+            return false
+        }
+
+        try SwiftTagScriptPicture.delete(pictureExtraction.pictures)
+        return true
+    }
+
+    @MainActor
     private func deleteResolvedValue(_ value: Any?) throws -> Bool {
         switch value {
         case nil:
@@ -263,8 +316,19 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
         case let tag as SwiftTagScriptTag:
             try tag.delete()
             return true
+        case let picture as SwiftTagScriptPicture:
+            try picture.delete()
+            return true
         case let specifier as NSScriptObjectSpecifier:
             if try deleteTrackPropertyIfNeeded(specifier, receiverSpecifier: receiversSpecifier) {
+                return true
+            }
+            let pictureExtraction = try resolvedPicturesIfPossible(from: specifier)
+            if pictureExtraction.handlesValue {
+                guard !pictureExtraction.pictures.isEmpty else {
+                    return false
+                }
+                try SwiftTagScriptPicture.delete(pictureExtraction.pictures)
                 return true
             }
             return try deleteResolvedValue(specifier.objectsByEvaluatingSpecifier)
@@ -279,13 +343,81 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
 
     @MainActor
     private func deleteResolvedValues(_ values: [Any]) throws -> Bool {
+        let pictureExtraction = try resolvedPicturesIfPossible(from: values)
+        if pictureExtraction.handlesValue {
+            try SwiftTagScriptPicture.delete(pictureExtraction.pictures)
+            return true
+        }
+
         var deletedAny = false
+        let pictures = values.compactMap { $0 as? SwiftTagScriptPicture }
+        if !pictures.isEmpty {
+            try SwiftTagScriptPicture.delete(pictures)
+            deletedAny = true
+        }
+
         for value in values {
+            if value is SwiftTagScriptPicture {
+                continue
+            }
             if try deleteResolvedValue(value) {
                 deletedAny = true
             }
         }
         return deletedAny
+    }
+
+    @MainActor
+    private func resolvedPicturesIfPossible(
+        from value: Any?,
+        container: Any? = nil
+    ) throws -> ResolvedPictureExtraction {
+        switch value {
+        case nil:
+            return ResolvedPictureExtraction(pictures: [], handlesValue: false)
+        case let picture as SwiftTagScriptPicture:
+            return ResolvedPictureExtraction(pictures: [picture], handlesValue: true)
+        case let specifier as NSScriptObjectSpecifier:
+            if SwiftTagScriptTrack.tagKey(forScriptPropertyKey: specifier.key) != nil
+                || specifier.key == "tags" {
+                return ResolvedPictureExtraction(pictures: [], handlesValue: false)
+            }
+
+            let evaluatedValue: Any?
+            if let container {
+                evaluatedValue = specifier.objectsByEvaluating(withContainers: container)
+            } else {
+                evaluatedValue = specifier.objectsByEvaluatingSpecifier
+            }
+            return try resolvedPicturesIfPossible(from: evaluatedValue)
+        case let values as [Any]:
+            return try resolvedPicturesIfPossible(fromArray: values, container: container)
+        case let values as NSArray:
+            return try resolvedPicturesIfPossible(fromArray: values.map { $0 }, container: container)
+        default:
+            return ResolvedPictureExtraction(pictures: [], handlesValue: false)
+        }
+    }
+
+    @MainActor
+    private func resolvedPicturesIfPossible(
+        fromArray values: [Any],
+        container: Any? = nil
+    ) throws -> ResolvedPictureExtraction {
+        guard !values.isEmpty else {
+            return ResolvedPictureExtraction(pictures: [], handlesValue: true)
+        }
+
+        var pictures: [SwiftTagScriptPicture] = []
+        for value in values {
+            let extraction = try resolvedPicturesIfPossible(from: value, container: container)
+            guard extraction.handlesValue else {
+                return ResolvedPictureExtraction(pictures: [], handlesValue: false)
+            }
+            pictures.append(contentsOf: extraction.pictures)
+        }
+
+        return ResolvedPictureExtraction(pictures: pictures, handlesValue: true)
     }
 
     private func directObjectSpecifier() -> NSScriptObjectSpecifier? {
@@ -294,6 +426,31 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
         }
 
         return NSScriptObjectSpecifier(descriptor: descriptor)
+    }
+
+    @MainActor
+    private func targetTrack() -> SwiftTagScriptTrack? {
+        if let track = Self.track(from: evaluatedReceivers) {
+            return track
+        }
+
+        if let track = Self.track(from: receiversSpecifier?.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        if let subjectDescriptor = appleEvent?.attributeDescriptor(forKeyword: Self.subjectAttribute),
+           let subjectSpecifier = NSScriptObjectSpecifier(descriptor: subjectDescriptor),
+           let track = Self.track(from: subjectSpecifier.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        if let directObjectDescriptor = appleEvent?.paramDescriptor(forKeyword: Self.directObjectKeyword),
+           let directObjectSpecifier = NSScriptObjectSpecifier(descriptor: directObjectDescriptor),
+           let track = Self.track(from: directObjectSpecifier.container?.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        return nil
     }
 
     private func tagKey(fromUniqueID uniqueID: Any) throws -> String {
@@ -856,6 +1013,7 @@ struct SwiftTagAppleScriptSessionBridge {
     let upsertPicture: (UUID, SwiftTagAppleScriptPicturePayload) throws -> Int
     let replacePicture: (UUID, Int, SwiftTagAppleScriptPicturePayload) throws -> Int
     let updatePictureDescription: (UUID, Int, String) throws -> Void
+    let deletePicture: (UUID, Int) throws -> Void
 
     init(
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
@@ -874,7 +1032,10 @@ struct SwiftTagAppleScriptSessionBridge {
         replacePicture: @escaping (UUID, Int, SwiftTagAppleScriptPicturePayload) throws -> Int = { _, _, _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
         },
-        updatePictureDescription: @escaping (UUID, Int, String) throws -> Void = { _, _, _ in }
+        updatePictureDescription: @escaping (UUID, Int, String) throws -> Void = { _, _, _ in },
+        deletePicture: @escaping (UUID, Int) throws -> Void = { _, _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
     ) {
         self.documentSnapshot = documentSnapshot
         self.sessionSnapshot = sessionSnapshot
@@ -887,6 +1048,7 @@ struct SwiftTagAppleScriptSessionBridge {
         self.upsertPicture = upsertPicture
         self.replacePicture = replacePicture
         self.updatePictureDescription = updatePictureDescription
+        self.deletePicture = deletePicture
     }
 }
 
@@ -1672,6 +1834,17 @@ extension NSData {
 @MainActor
 @objc(SwiftTagScriptPicture)
 final class SwiftTagScriptPicture: NSObject {
+    private struct AttachedReference: Hashable {
+        let sessionID: UUID
+        let trackID: UUID
+        let pictureIndex: Int
+    }
+
+    private struct AttachedContainer: Hashable {
+        let sessionID: UUID
+        let trackID: UUID
+    }
+
     private enum Storage {
         case attached(sessionID: UUID, trackID: UUID, pictureIndex: Int)
         case detached(SwiftTagAppleScriptPicturePayload?)
@@ -1929,6 +2102,43 @@ final class SwiftTagScriptPicture: NSObject {
         storage = .attached(sessionID: sessionID, trackID: trackID, pictureIndex: pictureIndex)
     }
 
+    func delete() throws {
+        try Self.delete([self])
+    }
+
+    static func delete(_ pictures: [SwiftTagScriptPicture]) throws {
+        var pictureIndexesByContainer: [AttachedContainer: Set<Int>] = [:]
+        for picture in pictures {
+            guard let reference = picture.attachedReference else {
+                continue
+            }
+
+            let container = AttachedContainer(
+                sessionID: reference.sessionID,
+                trackID: reference.trackID
+            )
+            pictureIndexesByContainer[container, default: []].insert(reference.pictureIndex)
+        }
+
+        let orderedContainers = pictureIndexesByContainer.keys.sorted {
+            if $0.sessionID.uuidString == $1.sessionID.uuidString {
+                return $0.trackID.uuidString < $1.trackID.uuidString
+            }
+            return $0.sessionID.uuidString < $1.sessionID.uuidString
+        }
+
+        for container in orderedContainers {
+            let indexes = pictureIndexesByContainer[container, default: []].sorted(by: >)
+            for index in indexes {
+                try SwiftTagAppleScriptController.shared.deletePicture(
+                    forSessionID: container.sessionID,
+                    trackID: container.trackID,
+                    pictureIndex: index
+                )
+            }
+        }
+    }
+
     private var pictureSnapshot: FlacWritablePictureRecord? {
         switch storage {
         case .attached(let sessionID, let trackID, let pictureIndex):
@@ -1940,6 +2150,18 @@ final class SwiftTagScriptPicture: NSObject {
         case .detached(let payload):
             payload?.record()
         }
+    }
+
+    private var attachedReference: AttachedReference? {
+        guard case let .attached(sessionID, trackID, pictureIndex) = storage else {
+            return nil
+        }
+
+        return AttachedReference(
+            sessionID: sessionID,
+            trackID: trackID,
+            pictureIndex: pictureIndex
+        )
     }
 
     private func integerValue(_ keyPath: KeyPath<FlacWritablePictureRecord, Int>) -> NSNumber? {
@@ -2905,6 +3127,19 @@ final class SwiftTagScriptTrack: NSObject {
                 key: key,
                 forSessionID: sessionIDValue,
                 trackID: trackIDValue
+            )
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    @objc(removeObjectFromPicturesAtIndex:)
+    func removeObjectFromPictures(at index: Int) {
+        do {
+            try SwiftTagAppleScriptController.shared.deletePicture(
+                forSessionID: sessionIDValue,
+                trackID: trackIDValue,
+                pictureIndex: index
             )
         } catch {
             _ = NSScriptCommand.current()?.fail(error)
@@ -3913,6 +4148,18 @@ final class SwiftTagAppleScriptController {
         }
 
         try bridge.updatePictureDescription(trackID, pictureIndex, description)
+    }
+
+    func deletePicture(
+        forSessionID sessionID: UUID,
+        trackID: UUID,
+        pictureIndex: Int
+    ) throws {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        try bridge.deletePicture(trackID, pictureIndex)
     }
 
     func documentSnapshot(

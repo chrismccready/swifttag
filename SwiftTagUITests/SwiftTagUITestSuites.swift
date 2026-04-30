@@ -131,6 +131,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessDeletesTrackPictures() throws {
+        try scenarioAppleScriptHarnessDeletesTrackPictures()
+    }
+
+    @MainActor
     func testAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data() throws {
         try scenarioAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data()
     }
