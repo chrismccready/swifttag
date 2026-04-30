@@ -8,7 +8,7 @@
 import XCTest
 import AppKit
 
-final class SwiftTagUITests: XCTestCase {
+class SwiftTagUITestCase: XCTestCase {
     private static let appBundleIdentifier = "com.toowalks.swifttag"
     private static let fixtureDirectoryName = "SwiftTagTestFiles"
     private static let fixtureFileName = "test.flac"
@@ -72,7 +72,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
+    func scenarioExample() throws {
         // UI tests must launch the application that they test.
         let app = XCUIApplication()
         app.launch()
@@ -81,7 +81,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testLaunchPerformance() throws {
+    func scenarioLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             XCUIApplication().launch()
@@ -89,7 +89,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuContainsReadOnlyLoadCommand() throws {
+    func scenarioFileMenuContainsReadOnlyLoadCommand() throws {
         let app = try launchApp()
         let fileMenu = app.menuBars.menuBarItems["File"]
         XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
@@ -100,7 +100,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuContainsSwiftTagDocumentCommandAndStartsDisabled() throws {
+    func scenarioFileMenuContainsSwiftTagDocumentCommandAndStartsDisabled() throws {
         let app = try launchApp()
         let fileMenu = app.menuBars.menuBarItems["File"]
         XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
@@ -112,7 +112,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuContainsOpenSwiftTagDocumentCommand() throws {
+    func scenarioFileMenuContainsOpenSwiftTagDocumentCommand() throws {
         let app = try launchApp()
         let fileMenu = app.menuBars.menuBarItems["File"]
         XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
@@ -123,7 +123,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testDefaultWindowShowsSwiftTagTitleAndNoDocumentURL() throws {
+    func scenarioDefaultWindowShowsSwiftTagTitleAndNoDocumentURL() throws {
         let app = try launchApp(exposeNavigationMetadata: true)
         let window = app.windows.firstMatch
 
@@ -132,7 +132,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testNewWindowShowsSwiftTagTitleAndNoDocumentURL() throws {
+    func scenarioNewWindowShowsSwiftTagTitleAndNoDocumentURL() throws {
         let app = try launchApp(exposeNavigationMetadata: true)
         let existingIdentifiers = Set(currentWindowIdentifiers(in: app))
 
@@ -145,7 +145,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testImportedFlacWithAlbumShowsAlbumTitleAndNoDocumentURL() throws {
+    func scenarioImportedFlacWithAlbumShowsAlbumTitleAndNoDocumentURL() throws {
         let app = try launchApp(importFixture: true, exposeNavigationMetadata: true)
         let window = app.windows.firstMatch
 
@@ -154,7 +154,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testImportedFlacWithoutAlbumShowsUntitledAndNoDocumentURL() throws {
+    func scenarioImportedFlacWithoutAlbumShowsUntitledAndNoDocumentURL() throws {
         let app = try launchApp(
             importFixture: true,
             importedAlbumMode: "empty",
@@ -168,7 +168,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testTrackTitleEditingKeepsFocusAfterFirstTextChange() throws {
+    func scenarioTrackTitleEditingKeepsFocusAfterFirstTextChange() throws {
         let app = try launchApp(importFixture: true)
 
         let originalTitleField = app.textFields.matching(NSPredicate(format: "value == %@", "Test Title")).firstMatch
@@ -180,7 +180,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testMiscTagValueUsesPlaceholderWhenNoTrackIsSelected() throws {
+    func scenarioMiscTagValueUsesPlaceholderWhenNoTrackIsSelected() throws {
         let app = try launchApp(importFixture: true)
 
         XCTAssertTrue(
@@ -193,7 +193,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testMiscTagReloadSelectedTrackRestoresEditedAndDeletedRows() throws {
+    func scenarioMiscTagReloadSelectedTrackRestoresEditedAndDeletedRows() throws {
         let app = try launchApp(importFixture: true)
 
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
@@ -222,7 +222,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testMixedAlbumSelectionUpdatesWindowTitleBetweenAlbumAndUntitled() throws {
+    func scenarioMixedAlbumSelectionUpdatesWindowTitleBetweenAlbumAndUntitled() throws {
         let addFixturePath = fixtureFlacPath(fileName: Self.fixtureFileName)
         let app = try launchApp(
             importFixture: true,
@@ -248,7 +248,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuEnablesSwiftTagDocumentCommandWhenTracksAreLoaded() throws {
+    func scenarioFileMenuEnablesSwiftTagDocumentCommandWhenTracksAreLoaded() throws {
         let app = try launchApp(importFixture: true)
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
 
@@ -262,7 +262,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testLaunchDocumentOpenImportsFlacFixture() throws {
+    func scenarioLaunchDocumentOpenImportsFlacFixture() throws {
         let app = try launchApp(
             openDocumentFixture: true,
             waitForEditorUI: false
@@ -280,7 +280,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessSelectsMatchingTracksInTableOrder() throws {
+    func scenarioAppleScriptHarnessSelectsMatchingTracksInTableOrder() throws {
         try requireAppleScriptHarnessEnabled()
 
         let firstFixtureURL = try prepareExternalOpenPanelFlacFixture(
@@ -321,7 +321,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessSetsTitleOfFirstTrack() throws {
+    func scenarioAppleScriptHarnessSetsTitleOfFirstTrack() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(importFixture: true)
@@ -349,7 +349,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessReadsFirstTagWhoseKey() throws {
+    func scenarioAppleScriptHarnessReadsFirstTagWhoseKey() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(importFixture: true)
@@ -386,7 +386,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessReadsEmptyAlbumTagWhoseKeyAfterUIClear() throws {
+    func scenarioAppleScriptHarnessReadsEmptyAlbumTagWhoseKeyAfterUIClear() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(importFixture: true)
@@ -436,7 +436,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessMakesTagInTellTrackContext() throws {
+    func scenarioAppleScriptHarnessMakesTagInTellTrackContext() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(importFixture: true)
@@ -466,7 +466,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessDeletesTagAndAlbumProperty() throws {
+    func scenarioAppleScriptHarnessDeletesTagAndAlbumProperty() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(importFixture: true)
@@ -519,7 +519,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessSavesWithScopeAndPayloadEnumerations() throws {
+    func scenarioAppleScriptHarnessSavesWithScopeAndPayloadEnumerations() throws {
         try requireAppleScriptHarnessEnabled()
 
         let fixtureURL = try prepareExternalOpenPanelFlacFixture(
@@ -560,7 +560,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessReadsTrackPicturesByType() throws {
+    func scenarioAppleScriptHarnessReadsTrackPicturesByType() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(
@@ -608,7 +608,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessImportsTrackPictureFromExistingData() throws {
+    func scenarioAppleScriptHarnessImportsTrackPictureFromExistingData() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(
@@ -661,7 +661,7 @@ final class SwiftTagUITests: XCTestCase {
         ])
     }
 
-    func testAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data() throws {
+    func scenarioAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data() throws {
         try requireAppleScriptHarnessEnabled()
 
         let imageURL = FileManager.default.temporaryDirectory
@@ -733,7 +733,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessClosesEditorWindowSavingNo() throws {
+    func scenarioAppleScriptHarnessClosesEditorWindowSavingNo() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp()
@@ -771,7 +771,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFinderLaunchOpenShowsVisibleImportedFlacWindow() throws {
+    func scenarioFinderLaunchOpenShowsVisibleImportedFlacWindow() throws {
         let flacURL = try prepareReadableFlacFixture(fileName: Self.fixtureFileName)
         let app = try launchAppByOpeningFileWithSwiftTag(url: flacURL)
         defer {
@@ -794,7 +794,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testReopeningClosedSwiftTagDocumentReloadsDocumentContents() throws {
+    func scenarioReopeningClosedSwiftTagDocumentReloadsDocumentContents() throws {
         let savedAlbum = "Saved UI Album \(UUID().uuidString)"
         let savedTitle = "Saved Document Title \(UUID().uuidString)"
         let flacURL = try prepareReadableFlacFixture(fileName: Self.fixtureFileName)
@@ -830,7 +830,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testOpeningSwiftTagDocumentShowsDocumentTitleAndDocumentURL() throws {
+    func scenarioOpeningSwiftTagDocumentShowsDocumentTitleAndDocumentURL() throws {
         let savedAlbum = "Opened UI Album \(UUID().uuidString)"
         let savedTitle = "Opened Document Title \(UUID().uuidString)"
         let flacURL = try prepareReadableFlacFixture(fileName: Self.fixtureFileName)
@@ -856,7 +856,7 @@ final class SwiftTagUITests: XCTestCase {
         )
     }
 
-    func testReopeningSavedSwiftTagDocumentShowsZeroDifferenceSubtitleWhenLiveFileMatches() throws {
+    func scenarioReopeningSavedSwiftTagDocumentShowsZeroDifferenceSubtitleWhenLiveFileMatches() throws {
         let persistentFixtureName = "saved-document-match-\(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
             .appendingPathComponent("Saved Match \(UUID().uuidString)")
@@ -895,7 +895,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testSavingSwiftTagDocumentUpdatesTrackFilenameAfterReferencedFlacRename() throws {
+    func scenarioSavingSwiftTagDocumentUpdatesTrackFilenameAfterReferencedFlacRename() throws {
         let persistentFixtureName = "saved-document-rename-open-\(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
             .appendingPathComponent("Saved Rename Open \(UUID().uuidString)")
@@ -929,7 +929,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAddingExternalFlacFileUpdatesTrackFilenameAfterRename() throws {
+    func scenarioAddingExternalFlacFileUpdatesTrackFilenameAfterRename() throws {
         let flacURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let renamedURL = flacURL.deletingLastPathComponent()
             .appendingPathComponent("renamed-\(UUID().uuidString).flac")
@@ -971,7 +971,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAddingExternalFlacFileKeepsRenamedFilenameWhenDeleted() throws {
+    func scenarioAddingExternalFlacFileKeepsRenamedFilenameWhenDeleted() throws {
         let flacURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let renamedURL = flacURL.deletingLastPathComponent()
             .appendingPathComponent("deleted-after-rename-\(UUID().uuidString).flac")
@@ -1023,7 +1023,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testSavingSwiftTagDocumentKeepsRenamedFilenameWhenReferencedFlacIsDeleted() throws {
+    func scenarioSavingSwiftTagDocumentKeepsRenamedFilenameWhenReferencedFlacIsDeleted() throws {
         let persistentFixtureName = "saved-document-delete-open-\(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
             .appendingPathComponent("Saved Delete Open \(UUID().uuidString)")
@@ -1074,7 +1074,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testReopeningSavedSwiftTagDocumentShowsRenamedReferencedFilenameAndZeroDifferenceSubtitle() throws {
+    func scenarioReopeningSavedSwiftTagDocumentShowsRenamedReferencedFilenameAndZeroDifferenceSubtitle() throws {
         let persistentFixtureName = "saved-document-rename-reopen-\(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
             .appendingPathComponent("Saved Rename Reopen \(UUID().uuidString)")
@@ -1132,7 +1132,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testReopeningSavedSwiftTagDocumentShowsExternalTagDifferenceCounts() throws {
+    func scenarioReopeningSavedSwiftTagDocumentShowsExternalTagDifferenceCounts() throws {
         let persistentFixtureName = "saved-document-tag-diff-\(UUID().uuidString)"
         let liveChangedTitle = "Live Changed Title \(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
@@ -1185,7 +1185,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testReopeningSavedSwiftTagDocumentIgnoresEquivalentMultiPictureOrderingAfterExternalTagSave() throws {
+    func scenarioReopeningSavedSwiftTagDocumentIgnoresEquivalentMultiPictureOrderingAfterExternalTagSave() throws {
         let singlePictureTitle = "Single Picture Track \(UUID().uuidString)"
         let multiPictureTitle = "Multi Picture Track \(UUID().uuidString)"
         let changedAlbum = "Changed Album \(UUID().uuidString)"
@@ -1279,7 +1279,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testSavingSwiftTagDocumentKeepsTracksLoadedAndShowsDocumentTitleAndURL() throws {
+    func scenarioSavingSwiftTagDocumentKeepsTracksLoadedAndShowsDocumentTitleAndURL() throws {
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
             .appendingPathComponent("Test Album")
             .appendingPathExtension("swifttag")
@@ -1312,7 +1312,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuSaveAutoSavesReferencedSwiftTagDocumentWhenSettingEnabled() throws {
+    func scenarioFileMenuSaveAutoSavesReferencedSwiftTagDocumentWhenSettingEnabled() throws {
         let persistentFixtureName = "auto-save-referenced-\(UUID().uuidString)"
         let updatedAlbum = "Updated Album \(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
@@ -1369,7 +1369,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testControlSSavesReferencedSwiftTagDocumentWithoutSavingFlacFiles() throws {
+    func scenarioControlSSavesReferencedSwiftTagDocumentWithoutSavingFlacFiles() throws {
         let persistentFixtureName = "control-s-document-only-\(UUID().uuidString)"
         let updatedAlbum = "Control Save Album \(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
@@ -1443,7 +1443,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testControlSSavesMovedReferencedSwiftTagDocumentAfterExternalMove() throws {
+    func scenarioControlSSavesMovedReferencedSwiftTagDocumentAfterExternalMove() throws {
         let persistentFixtureName = "control-s-moved-document-\(UUID().uuidString)"
         let updatedAlbum = "Moved Document Album \(UUID().uuidString)"
         let originalDocumentURL = appContainerUITestFixturesDirectoryURL()
@@ -1503,7 +1503,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuSavePromptsToCreateSwiftTagDocumentWhenSettingsEnabled() throws {
+    func scenarioFileMenuSavePromptsToCreateSwiftTagDocumentWhenSettingsEnabled() throws {
         let promptedAlbum = "Prompted Album \(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
             .appendingPathComponent("Prompt Created \(UUID().uuidString)")
@@ -1540,7 +1540,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuSaveDoNotSaveSuppressesPromptInSameWindow() throws {
+    func scenarioFileMenuSaveDoNotSaveSuppressesPromptInSameWindow() throws {
         let firstAlbum = "Do Not Save First \(UUID().uuidString)"
         let secondAlbum = "Do Not Save Second \(UUID().uuidString)"
 
@@ -1571,7 +1571,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuSavePromptsAgainAfterCancelingNewSwiftTagDocumentSavePanel() throws {
+    func scenarioFileMenuSavePromptsAgainAfterCancelingNewSwiftTagDocumentSavePanel() throws {
         let firstAlbum = "Canceled Prompt First \(UUID().uuidString)"
         let secondAlbum = "Canceled Prompt Second \(UUID().uuidString)"
 
@@ -1602,7 +1602,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testCloseWindowWithUnsavedChangesShowsExpandedNewDocumentChoices() throws {
+    func scenarioCloseWindowWithUnsavedChangesShowsExpandedNewDocumentChoices() throws {
         let app = try launchApp(importFixture: true)
         let window = app.windows.firstMatch
 
@@ -1624,7 +1624,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testCloseWindowSaveNewSwiftTagDocumentCancelKeepsWindowOpen() throws {
+    func scenarioCloseWindowSaveNewSwiftTagDocumentCancelKeepsWindowOpen() throws {
         let app = try launchApp(importFixture: true)
         let window = app.windows.firstMatch
 
@@ -1646,7 +1646,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuSaveShowsSwiftTagSaveErrorWhileKeepingFlacSaveResult() throws {
+    func scenarioFileMenuSaveShowsSwiftTagSaveErrorWhileKeepingFlacSaveResult() throws {
         let persistentFixtureName = "follow-on-save-error-\(UUID().uuidString)"
         let updatedAlbum = "Follow On Error Album \(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
@@ -1697,7 +1697,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testSimulatedSaveReEnablesEditorAfterCompletion() throws {
+    func scenarioSimulatedSaveReEnablesEditorAfterCompletion() throws {
         let app = try launchApp(
             importFixture: true,
             simulateSaveStatus: true,
@@ -1711,7 +1711,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testAddFlacFilesPreservesDirtyTrackStatusIcon() throws {
+    func scenarioAddFlacFilesPreservesDirtyTrackStatusIcon() throws {
         let addFixturePath = fixtureFlacPath(fileName: Self.fixtureFileName)
         let app = try launchApp(
             importFixture: true,
@@ -1731,7 +1731,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testCompilationCheckboxRetainsOnStateWhenSelectedTrackIsLocked() throws {
+    func scenarioCompilationCheckboxRetainsOnStateWhenSelectedTrackIsLocked() throws {
         let app = try launchApp(importFixture: true)
 
         selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
@@ -1754,7 +1754,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testNewWindowsCanBeSelectedAndEditedDeterministicallyWithOpenPanel() throws {
+    func scenarioNewWindowsCanBeSelectedAndEditedDeterministicallyWithOpenPanel() throws {
         let firstFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let secondFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let firstAlbum = "Window A Album \(UUID().uuidString)"
@@ -1874,7 +1874,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testRepeatedExternalSavesAcrossWindowsContinueUpdatingObservedAlbumDifference() throws {
+    func scenarioRepeatedExternalSavesAcrossWindowsContinueUpdatingObservedAlbumDifference() throws {
         let sharedFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let firstSavedAlbum = "Shared Window Album A \(UUID().uuidString)"
         let secondSavedAlbum = "Shared Window Album B \(UUID().uuidString)"
@@ -1926,7 +1926,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testConflictingSaveInSecondWindowUpdatesFirstWindowObservedAlbumDifference() throws {
+    func scenarioConflictingSaveInSecondWindowUpdatesFirstWindowObservedAlbumDifference() throws {
         let sharedFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let firstSavedAlbum = "Shared First Album \(UUID().uuidString)"
         let conflictingAlbum = "Shared Conflict Album \(UUID().uuidString)"
@@ -1968,7 +1968,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testPictureDescriptionEditKeepsInternalTrackStatusIcon() throws {
+    func scenarioPictureDescriptionEditKeepsInternalTrackStatusIcon() throws {
         let updatedDescription = "Internal Description \(UUID().uuidString)"
         let app = try launchApp(importFixture: true, exposeDiffMetadata: true)
         let window = app.windows.firstMatch
@@ -2011,7 +2011,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testPictureDescriptionSaveInSecondWindowShowsExternalPictureDifferenceInFirstWindow() throws {
+    func scenarioPictureDescriptionSaveInSecondWindowShowsExternalPictureDifferenceInFirstWindow() throws {
         let sharedFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let updatedDescription = "Observed External Description \(UUID().uuidString)"
 
@@ -2059,7 +2059,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testPictureBrowserShowsExternalOverlayOnlyForDifferingSlot() throws {
+    func scenarioPictureBrowserShowsExternalOverlayOnlyForDifferingSlot() throws {
         let sharedFixtureURL = try prepareExternalOpenPanelFlacFixture(fileName: Self.fixtureFileName)
         let updatedDescription = "Slot Scoped External Description \(UUID().uuidString)"
 
@@ -2119,7 +2119,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testReopeningSavedSwiftTagDocumentShowsExternalPictureDescriptionDifferenceInPictureBrowser() throws {
+    func scenarioReopeningSavedSwiftTagDocumentShowsExternalPictureDescriptionDifferenceInPictureBrowser() throws {
         let persistentFixtureName = "saved-document-picture-description-\(UUID().uuidString)"
         let updatedDescription = "Saved Document External Description \(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
@@ -2211,7 +2211,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testReopeningSavedSwiftTagDocumentShowsExternalAddedPictureSlotInPictureBrowser() throws {
+    func scenarioReopeningSavedSwiftTagDocumentShowsExternalAddedPictureSlotInPictureBrowser() throws {
         let persistentFixtureName = "saved-document-picture-slot-\(UUID().uuidString)"
         let swiftTagDocumentURL = appContainerUITestFixturesDirectoryURL()
             .appendingPathComponent("Saved Document Picture Slot \(UUID().uuidString)")
@@ -2318,7 +2318,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testSettingsWindowPersistsSavePreferencesAcrossRelaunch() throws {
+    func scenarioSettingsWindowPersistsSavePreferencesAcrossRelaunch() throws {
         let app = try launchApp(resetSaveSettings: true)
 
         openSettings(in: app)
@@ -2348,7 +2348,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuSavePicturesDoesNotPersistTagOnlyEditsAcrossRelaunch() throws {
+    func scenarioFileMenuSavePicturesDoesNotPersistTagOnlyEditsAcrossRelaunch() throws {
         let destinationName = "save-pictures-\(UUID().uuidString)"
         let app = try launchApp(
             importFixture: true,
@@ -2380,7 +2380,7 @@ final class SwiftTagUITests: XCTestCase {
     }
 
     @MainActor
-    func testFileMenuSaveUsesPersistedDefaultPayloadAcrossRelaunch() throws {
+    func scenarioFileMenuSaveUsesPersistedDefaultPayloadAcrossRelaunch() throws {
         let destinationName = "save-default-\(UUID().uuidString)"
         let app = try launchApp(
             importFixture: true,
