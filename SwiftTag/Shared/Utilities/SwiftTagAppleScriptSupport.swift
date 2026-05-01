@@ -940,16 +940,53 @@ private enum SwiftTagAppleScriptEnumerationToken {
     }
 }
 
+private enum SwiftTagAppleScriptCode {
+    static func fourCharCode(_ value: String) -> FourCharCode {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
+        return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
+    }
+}
+
+private enum SwiftTagAppleScriptMissingValue {
+    static func isMissing(_ rawValue: Any?) -> Bool {
+        guard let rawValue else {
+            return true
+        }
+
+        if rawValue is NSNull {
+            return true
+        }
+
+        if let descriptor = rawValue as? NSAppleEventDescriptor {
+            return descriptor.descriptorType == typeNull
+        }
+
+        return false
+    }
+}
+
 private extension SaveScopeOption {
+    var appleScriptCode: FourCharCode {
+        switch self {
+        case .allTracks:
+            SwiftTagAppleScriptCode.fourCharCode("altr")
+        case .selectedTracks:
+            SwiftTagAppleScriptCode.fourCharCode("sltr")
+        }
+    }
+
     static func appleScriptValue(from rawValue: Any?, optionName: String) throws -> Self? {
         guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
             return nil
         }
 
         switch token {
-        case "altr":
+        case "altr", "all":
             return .allTracks
-        case "sltr":
+        case "sltr", "selected":
             return .selectedTracks
         default:
             throw SwiftTagAppleScriptCommandError.invalidSaveScopeOptionValue(optionName)
@@ -958,20 +995,167 @@ private extension SaveScopeOption {
 }
 
 private extension SavePayloadOption {
+    var appleScriptCode: FourCharCode {
+        switch self {
+        case .writeTags:
+            SwiftTagAppleScriptCode.fourCharCode("tgos")
+        case .writePictures:
+            SwiftTagAppleScriptCode.fourCharCode("pcos")
+        case .writeTagsAndPictures:
+            SwiftTagAppleScriptCode.fourCharCode("tpos")
+        }
+    }
+
     static func appleScriptValue(from rawValue: Any?, optionName: String) throws -> Self? {
         guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
             return nil
         }
 
         switch token {
-        case "tgos":
+        case "tgos", "tags only":
             return .writeTags
-        case "pcos":
+        case "pcos", "pictures only":
             return .writePictures
-        case "tpos":
+        case "tpos", "tags and pictures":
             return .writeTagsAndPictures
         default:
             throw SwiftTagAppleScriptCommandError.invalidSavePayloadOptionValue(optionName)
+        }
+    }
+}
+
+private extension TrackCountKeyStrategy {
+    var appleScriptCode: FourCharCode? {
+        switch self {
+        case .totalTracks:
+            SwiftTagAppleScriptCode.fourCharCode("tott")
+        case .trackTotal:
+            SwiftTagAppleScriptCode.fourCharCode("ttot")
+        case .both:
+            SwiftTagAppleScriptCode.fourCharCode("tatt")
+        case .none:
+            Optional<FourCharCode>.none
+        }
+    }
+
+    static func appleScriptValue(from rawValue: Any?) -> Self? {
+        if SwiftTagAppleScriptMissingValue.isMissing(rawValue) {
+            return Self.none
+        }
+
+        guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
+            return nil
+        }
+
+        switch token {
+        case "tott", "totaltracks":
+            return .totalTracks
+        case "ttot", "tracktotal":
+            return .trackTotal
+        case "tatt", "totaltracks and tracktotal", "both":
+            return .both
+        case "none", "missing value":
+            return Self.none
+        default:
+            return nil
+        }
+    }
+}
+
+private extension DiscCountKeyStrategy {
+    var appleScriptCode: FourCharCode? {
+        switch self {
+        case .totalDiscs:
+            SwiftTagAppleScriptCode.fourCharCode("dott")
+        case .discTotal:
+            SwiftTagAppleScriptCode.fourCharCode("dtot")
+        case .both:
+            SwiftTagAppleScriptCode.fourCharCode("datt")
+        case .none:
+            Optional<FourCharCode>.none
+        }
+    }
+
+    static func appleScriptValue(from rawValue: Any?) -> Self? {
+        if SwiftTagAppleScriptMissingValue.isMissing(rawValue) {
+            return Self.none
+        }
+
+        guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
+            return nil
+        }
+
+        switch token {
+        case "dott", "totaldiscs":
+            return .totalDiscs
+        case "dtot", "disctotal":
+            return .discTotal
+        case "datt", "totaldiscs and disctotal", "both":
+            return .both
+        case "none", "missing value":
+            return Self.none
+        default:
+            return nil
+        }
+    }
+}
+
+private extension SaveNotificationMode {
+    var appleScriptCode: FourCharCode {
+        switch self {
+        case .always:
+            SwiftTagAppleScriptCode.fourCharCode("snda")
+        case .whenNotFrontmost:
+            SwiftTagAppleScriptCode.fourCharCode("sndn")
+        case .never:
+            SwiftTagAppleScriptCode.fourCharCode("sndv")
+        }
+    }
+
+    static func appleScriptValue(from rawValue: Any?) -> Self? {
+        guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
+            return nil
+        }
+
+        switch token {
+        case "snda", "always":
+            return .always
+        case "sndn", "when not frontmost", "whennotfrontmost":
+            return .whenNotFrontmost
+        case "sndv", "never":
+            return .never
+        default:
+            return nil
+        }
+    }
+}
+
+private extension AppThemePreference {
+    var appleScriptCode: FourCharCode {
+        switch self {
+        case .light:
+            SwiftTagAppleScriptCode.fourCharCode("lght")
+        case .dark:
+            SwiftTagAppleScriptCode.fourCharCode("dark")
+        case .system:
+            SwiftTagAppleScriptCode.fourCharCode("sysp")
+        }
+    }
+
+    static func appleScriptValue(from rawValue: Any?) -> Self? {
+        guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
+            return nil
+        }
+
+        switch token {
+        case "lght", "light":
+            return .light
+        case "dark":
+            return .dark
+        case "sysp", "system":
+            return .system
+        default:
+            return nil
         }
     }
 }
@@ -1828,6 +2012,271 @@ extension NSData {
     @objc(scriptingAnyDescriptor)
     var swiftTagScriptingAnyDescriptor: NSAppleEventDescriptor? {
         swiftTagScriptingDataDescriptor
+    }
+}
+
+@objc(SwiftTagScriptColor)
+final class SwiftTagScriptColor: NSObject {
+    private var redComponent: Double
+    private var greenComponent: Double
+    private var blueComponent: Double
+    private var alphaComponent: Double
+    private var scriptPropertyKey: String?
+    private var defaultsKey: String?
+
+    @objc
+    override init() {
+        redComponent = 0
+        greenComponent = 0
+        blueComponent = 0
+        alphaComponent = 1
+        super.init()
+    }
+
+    init(red: Double, green: Double, blue: Double, alpha: Double) {
+        redComponent = Self.clamped(red)
+        greenComponent = Self.clamped(green)
+        blueComponent = Self.clamped(blue)
+        alphaComponent = Self.clamped(alpha)
+        super.init()
+    }
+
+    convenience init(nsColor: NSColor, fallback: NSColor) {
+        let resolvedColor = Self.resolvedColor(nsColor, fallback: fallback)
+        self.init(
+            red: Double(resolvedColor.redComponent),
+            green: Double(resolvedColor.greenComponent),
+            blue: Double(resolvedColor.blueComponent),
+            alpha: Double(resolvedColor.alphaComponent)
+        )
+    }
+
+    @objc(red)
+    var red: Double {
+        get { redComponent }
+        set {
+            redComponent = Self.clamped(newValue)
+            persistIfNeeded()
+        }
+    }
+
+    @objc(green)
+    var green: Double {
+        get { greenComponent }
+        set {
+            greenComponent = Self.clamped(newValue)
+            persistIfNeeded()
+        }
+    }
+
+    @objc(blue)
+    var blue: Double {
+        get { blueComponent }
+        set {
+            blueComponent = Self.clamped(newValue)
+            persistIfNeeded()
+        }
+    }
+
+    @objc(alpha)
+    var alpha: Double {
+        get { alphaComponent }
+        set {
+            alphaComponent = Self.clamped(newValue)
+            persistIfNeeded()
+        }
+    }
+
+    override var objectSpecifier: NSScriptObjectSpecifier? {
+        guard let scriptPropertyKey,
+              let classDescription = NSScriptClassDescription(for: NSApplication.self) else {
+            return nil
+        }
+
+        return NSPropertySpecifier(
+            containerClassDescription: classDescription,
+            containerSpecifier: nil,
+            key: scriptPropertyKey
+        )
+    }
+
+    var nsColor: NSColor {
+        NSColor(
+            deviceRed: CGFloat(redComponent),
+            green: CGFloat(greenComponent),
+            blue: CGFloat(blueComponent),
+            alpha: CGFloat(alphaComponent)
+        )
+    }
+
+    var archivedRawValue: String {
+        guard let data = try? NSKeyedArchiver.archivedData(
+            withRootObject: nsColor,
+            requiringSecureCoding: true
+        ) else {
+            return ""
+        }
+
+        return data.base64EncodedString()
+    }
+
+    static func from(rawValue: String?, fallback: NSColor) -> SwiftTagScriptColor {
+        let color = nsColor(from: rawValue, fallback: fallback)
+        return SwiftTagScriptColor(nsColor: color, fallback: fallback)
+    }
+
+    func attached(scriptPropertyKey: String, defaultsKey: String) -> SwiftTagScriptColor {
+        self.scriptPropertyKey = scriptPropertyKey
+        self.defaultsKey = defaultsKey
+        return self
+    }
+
+    static func from(scriptValue rawValue: Any?, fallback: NSColor) -> SwiftTagScriptColor? {
+        switch rawValue {
+        case let color as SwiftTagScriptColor:
+            return color
+        case let color as NSColor:
+            return SwiftTagScriptColor(nsColor: color, fallback: fallback)
+        case let dictionary as [AnyHashable: Any]:
+            return from(dictionary: dictionary, fallback: fallback)
+        case let dictionary as NSDictionary:
+            var bridgedDictionary: [AnyHashable: Any] = [:]
+            for case let (key as AnyHashable, value) in dictionary {
+                bridgedDictionary[key] = value
+            }
+            return from(dictionary: bridgedDictionary, fallback: fallback)
+        case let descriptor as NSAppleEventDescriptor where descriptor.isRecordDescriptor:
+            return from(dictionary: dictionary(from: descriptor), fallback: fallback)
+        default:
+            return nil
+        }
+    }
+
+    static func nsColor(from rawValue: String?, fallback: NSColor) -> NSColor {
+        guard
+            let rawValue,
+            let data = Data(base64Encoded: rawValue),
+            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data)
+        else {
+            return resolvedColor(fallback, fallback: fallback)
+        }
+
+        return resolvedColor(color, fallback: fallback)
+    }
+
+    private static func from(
+        dictionary: [AnyHashable: Any],
+        fallback: NSColor
+    ) -> SwiftTagScriptColor {
+        let fallbackColor = SwiftTagScriptColor(nsColor: fallback, fallback: fallback)
+        return SwiftTagScriptColor(
+            red: doubleValue(in: dictionary, matching: ["red", "redc"]) ?? fallbackColor.red,
+            green: doubleValue(in: dictionary, matching: ["green", "grec"]) ?? fallbackColor.green,
+            blue: doubleValue(in: dictionary, matching: ["blue", "bluc"]) ?? fallbackColor.blue,
+            alpha: doubleValue(in: dictionary, matching: ["alpha", "alph"]) ?? fallbackColor.alpha
+        )
+    }
+
+    private static func dictionary(from descriptor: NSAppleEventDescriptor) -> [AnyHashable: Any] {
+        guard descriptor.numberOfItems > 0 else {
+            return [:]
+        }
+
+        var dictionary: [AnyHashable: Any] = [:]
+        for index in 1...descriptor.numberOfItems {
+            let keyword = descriptor.keywordForDescriptor(at: index)
+            guard keyword != 0,
+                  let value = descriptor.atIndex(index) else {
+                continue
+            }
+            dictionary[NSNumber(value: keyword)] = value
+        }
+        return dictionary
+    }
+
+    private static func doubleValue(
+        in dictionary: [AnyHashable: Any],
+        matching names: Set<String>
+    ) -> Double? {
+        dictionary
+            .first { names.contains(normalizedPropertyName($0.key)) }
+            .flatMap { doubleValue(from: $0.value) }
+    }
+
+    private static func doubleValue(from rawValue: Any?) -> Double? {
+        switch rawValue {
+        case let value as Double:
+            return value
+        case let value as NSNumber:
+            return value.doubleValue
+        case let value as String:
+            return Double(value)
+        case let value as NSString:
+            return Double(value as String)
+        case let descriptor as NSAppleEventDescriptor:
+            if let stringValue = descriptor.stringValue {
+                return Double(stringValue)
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    private static func normalizedPropertyName(_ rawKey: AnyHashable) -> String {
+        if let string = rawKey as? String {
+            return normalizePropertyString(string)
+        }
+
+        if let string = rawKey as? NSString {
+            return normalizePropertyString(string as String)
+        }
+
+        if let number = rawKey as? NSNumber,
+           let codeString = fourCharString(from: number.uint32Value) {
+            return normalizePropertyString(codeString)
+        }
+
+        return normalizePropertyString(String(describing: rawKey))
+    }
+
+    private static func normalizePropertyString(_ string: String) -> String {
+        string
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
+    }
+
+    private static func fourCharString(from code: UInt32) -> String? {
+        let bytes = [
+            UInt8((code >> 24) & 0xff),
+            UInt8((code >> 16) & 0xff),
+            UInt8((code >> 8) & 0xff),
+            UInt8(code & 0xff)
+        ]
+        guard bytes.allSatisfy({ $0 == 32 || (33...126).contains($0) }) else {
+            return nil
+        }
+
+        return String(bytes: bytes, encoding: .ascii)
+    }
+
+    private static func resolvedColor(_ color: NSColor, fallback: NSColor) -> NSColor {
+        color.usingColorSpace(.deviceRGB)
+            ?? fallback.usingColorSpace(.deviceRGB)
+            ?? NSColor(deviceRed: 0, green: 0, blue: 0, alpha: 1)
+    }
+
+    private static func clamped(_ value: Double) -> Double {
+        min(max(value, 0), 1)
+    }
+
+    private func persistIfNeeded() {
+        guard let defaultsKey else {
+            return
+        }
+
+        UserDefaults.standard.set(archivedRawValue, forKey: defaultsKey)
     }
 }
 
@@ -4424,6 +4873,269 @@ extension NSApplication {
         SwiftTagAppleScriptController.shared.orderedTracks()
     }
 
+    @objc(SaveScopeOptionsSetting)
+    var saveScopeOptionsSetting: Any {
+        get {
+            NSNumber(value: saveScopeOptionSetting.appleScriptCode)
+        }
+        set {
+            guard let option = try? SaveScopeOption.appleScriptValue(
+                from: newValue,
+                optionName: "track save scope"
+            ) else {
+                return
+            }
+            UserDefaults.standard.set(option.rawValue, forKey: SaveSettingsKey.defaultSaveScope)
+        }
+    }
+
+    @objc(SavePayloadOptionsSetting)
+    var savePayloadOptionsSetting: Any {
+        get {
+            NSNumber(value: savePayloadOptionSetting.appleScriptCode)
+        }
+        set {
+            guard let option = try? SavePayloadOption.appleScriptValue(
+                from: newValue,
+                optionName: "track save payload"
+            ) else {
+                return
+            }
+            UserDefaults.standard.set(option.rawValue, forKey: SaveSettingsKey.defaultSavePayload)
+        }
+    }
+
+    @objc(SaveReferencedDocumentSetting)
+    var saveReferencedDocumentSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.saveReferencedSwiftTagDocument,
+                defaultValue: SaveSettingsDefaults.saveReferencedSwiftTagDocument
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.saveReferencedSwiftTagDocument)
+        }
+    }
+
+    @objc(AskToSaveNewDocumentSetting)
+    var askToSaveNewDocumentSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.askToSaveNewSwiftTagDocument,
+                defaultValue: SaveSettingsDefaults.askToSaveNewSwiftTagDocument
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.askToSaveNewSwiftTagDocument)
+        }
+    }
+
+    @objc(ZeroPadTrackNumbersSetting)
+    var zeroPadTrackNumbersSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.zeroPadTrackNumber,
+                defaultValue: SaveSettingsDefaults.zeroPadTrackNumber
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.zeroPadTrackNumber)
+        }
+    }
+
+    @objc(ZeroPadDiscNumbersSetting)
+    var zeroPadDiscNumbersSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.zeroPadDiscNumber,
+                defaultValue: SaveSettingsDefaults.zeroPadDiscNumber
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.zeroPadDiscNumber)
+        }
+    }
+
+    @objc(TrackTotalKeySetting)
+    var trackTotalKeySetting: Any? {
+        get {
+            trackCountKeyStrategySetting.appleScriptCode.map { NSNumber(value: $0) }
+        }
+        set {
+            guard let strategy = TrackCountKeyStrategy.appleScriptValue(from: newValue) else {
+                return
+            }
+            UserDefaults.standard.set(strategy.rawValue, forKey: SaveSettingsKey.trackCountKeyStrategy)
+        }
+    }
+
+    @objc(DiscTotalKeySetting)
+    var discTotalKeySetting: Any? {
+        get {
+            discCountKeyStrategySetting.appleScriptCode.map { NSNumber(value: $0) }
+        }
+        set {
+            guard let strategy = DiscCountKeyStrategy.appleScriptValue(from: newValue) else {
+                return
+            }
+            UserDefaults.standard.set(strategy.rawValue, forKey: SaveSettingsKey.discCountKeyStrategy)
+        }
+    }
+
+    @objc(AutoUpdateTrackTotalSetting)
+    var autoUpdateTrackTotalSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.autoUpdateTrackTotal,
+                defaultValue: SaveSettingsDefaults.autoUpdateTrackTotal
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.autoUpdateTrackTotal)
+        }
+    }
+
+    @objc(ApplyCompilationToAllTracksSetting)
+    var applyCompilationToAllTracksSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.applyCompilationToAllTracks,
+                defaultValue: SaveSettingsDefaults.applyCompilationToAllTracks
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.applyCompilationToAllTracks)
+        }
+    }
+
+    @objc(SaveFrontCoverToAllTracksSetting)
+    var saveFrontCoverToAllTracksSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.saveFrontCoverToAllTracks,
+                defaultValue: SaveSettingsDefaults.saveFrontCoverToAllTracks
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.saveFrontCoverToAllTracks)
+        }
+    }
+
+    @objc(SaveAllPicturesToAllTracksSetting)
+    var saveAllPicturesToAllTracksSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.saveAllPicturesToAllTracks,
+                defaultValue: SaveSettingsDefaults.saveAllPicturesToAllTracks
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.saveAllPicturesToAllTracks)
+        }
+    }
+
+    @objc(SendSaveNotificationsSetting)
+    var sendSaveNotificationsSetting: Any {
+        get {
+            NSNumber(value: saveNotificationModeSetting.appleScriptCode)
+        }
+        set {
+            guard let mode = SaveNotificationMode.appleScriptValue(from: newValue) else {
+                return
+            }
+            UserDefaults.standard.set(mode.rawValue, forKey: FeedbackSettingsKey.saveNotificationMode)
+        }
+    }
+
+    @objc(ThemeSetting)
+    var themeSetting: Any {
+        get {
+            NSNumber(value: themePreferenceSetting.appleScriptCode)
+        }
+        set {
+            guard let preference = AppThemePreference.appleScriptValue(from: newValue) else {
+                return
+            }
+            UserDefaults.standard.set(preference.rawValue, forKey: FeedbackSettingsKey.themePreference)
+        }
+    }
+
+    @objc(TrackToTrackDiffColorSetting)
+    var trackToTrackDiffColorSetting: Any {
+        get {
+            scriptColorSetting(
+                scriptPropertyKey: "TrackToTrackDiffColorSetting",
+                key: FeedbackSettingsKey.trackToTrackDiffColor,
+                defaultRawValue: FeedbackSettingsDefaults.trackToTrackDiffColor,
+                fallback: .systemOrange
+            )
+        }
+        set {
+            setScriptColorSetting(newValue, key: FeedbackSettingsKey.trackToTrackDiffColor, fallback: .systemOrange)
+        }
+    }
+
+    @objc(TrackToFileDiffColorSetting)
+    var trackToFileDiffColorSetting: Any {
+        get {
+            scriptColorSetting(
+                scriptPropertyKey: "TrackToFileDiffColorSetting",
+                key: FeedbackSettingsKey.trackToFileDiffColor,
+                defaultRawValue: FeedbackSettingsDefaults.trackToFileDiffColor,
+                fallback: .labelColor
+            )
+        }
+        set {
+            setScriptColorSetting(newValue, key: FeedbackSettingsKey.trackToFileDiffColor, fallback: .labelColor)
+        }
+    }
+
+    @objc(ExternallyModifiedDiffColorSetting)
+    var externallyModifiedDiffColorSetting: Any {
+        get {
+            scriptColorSetting(
+                scriptPropertyKey: "ExternallyModifiedDiffColorSetting",
+                key: FeedbackSettingsKey.externallyModifiedDiffColor,
+                defaultRawValue: FeedbackSettingsDefaults.externallyModifiedDiffColor,
+                fallback: .systemRed
+            )
+        }
+        set {
+            setScriptColorSetting(newValue, key: FeedbackSettingsKey.externallyModifiedDiffColor, fallback: .systemRed)
+        }
+    }
+
+    @objc(TrackAndDiscTotalMismatchDiffColorSetting)
+    var trackAndDiscTotalMismatchDiffColorSetting: Any {
+        get {
+            scriptColorSetting(
+                scriptPropertyKey: "TrackAndDiscTotalMismatchDiffColorSetting",
+                key: FeedbackSettingsKey.trackDiscTotalMismatchColor,
+                defaultRawValue: FeedbackSettingsDefaults.trackDiscTotalMismatchColor,
+                fallback: .systemRed
+            )
+        }
+        set {
+            setScriptColorSetting(newValue, key: FeedbackSettingsKey.trackDiscTotalMismatchColor, fallback: .systemRed)
+        }
+    }
+
+    @objc(PictureStatusOverlayColorSetting)
+    var pictureStatusOverlayColorSetting: Any {
+        get {
+            scriptColorSetting(
+                scriptPropertyKey: "PictureStatusOverlayColorSetting",
+                key: FeedbackSettingsKey.pictureStatusOverlayColor,
+                defaultRawValue: FeedbackSettingsDefaults.pictureStatusOverlayColor,
+                fallback: .systemOrange
+            )
+        }
+        set {
+            setScriptColorSetting(newValue, key: FeedbackSettingsKey.pictureStatusOverlayColor, fallback: .systemOrange)
+        }
+    }
+
     @objc(countOfScriptTracks)
     var countOfScriptTracks: Int {
         scriptTracks.count
@@ -4523,6 +5235,64 @@ extension NSApplication {
     func handleQuitScriptCommand(_ command: NSScriptCommand) -> Any? {
         terminate(nil)
         return nil
+    }
+
+    private var saveScopeOptionSetting: SaveScopeOption {
+        let rawValue = UserDefaults.standard.string(forKey: SaveSettingsKey.defaultSaveScope)
+        return SaveScopeOption(rawValue: rawValue ?? "") ?? SaveSettingsDefaults.defaultSaveScope
+    }
+
+    private var savePayloadOptionSetting: SavePayloadOption {
+        let rawValue = UserDefaults.standard.string(forKey: SaveSettingsKey.defaultSavePayload)
+        return SavePayloadOption(rawValue: rawValue ?? "") ?? SaveSettingsDefaults.defaultSavePayload
+    }
+
+    private var trackCountKeyStrategySetting: TrackCountKeyStrategy {
+        let rawValue = UserDefaults.standard.string(forKey: SaveSettingsKey.trackCountKeyStrategy)
+        return TrackCountKeyStrategy(rawValue: rawValue ?? "") ?? SaveSettingsDefaults.trackCountKeyStrategy
+    }
+
+    private var discCountKeyStrategySetting: DiscCountKeyStrategy {
+        let rawValue = UserDefaults.standard.string(forKey: SaveSettingsKey.discCountKeyStrategy)
+        return DiscCountKeyStrategy(rawValue: rawValue ?? "") ?? SaveSettingsDefaults.discCountKeyStrategy
+    }
+
+    private var saveNotificationModeSetting: SaveNotificationMode {
+        let rawValue = UserDefaults.standard.string(forKey: FeedbackSettingsKey.saveNotificationMode)
+        return SaveNotificationMode(rawValue: rawValue ?? "") ?? FeedbackSettingsDefaults.saveNotificationMode
+    }
+
+    private var themePreferenceSetting: AppThemePreference {
+        let rawValue = UserDefaults.standard.string(forKey: FeedbackSettingsKey.themePreference)
+        return AppThemePreference(rawValue: rawValue ?? "") ?? FeedbackSettingsDefaults.themePreference
+    }
+
+    private func boolSetting(key: String, defaultValue: Bool) -> Bool {
+        guard UserDefaults.standard.object(forKey: key) != nil else {
+            return defaultValue
+        }
+
+        return UserDefaults.standard.bool(forKey: key)
+    }
+
+    private func scriptColorSetting(
+        scriptPropertyKey: String,
+        key: String,
+        defaultRawValue: String,
+        fallback: NSColor
+    ) -> SwiftTagScriptColor {
+        SwiftTagScriptColor.from(
+            rawValue: UserDefaults.standard.string(forKey: key) ?? defaultRawValue,
+            fallback: fallback
+        ).attached(scriptPropertyKey: scriptPropertyKey, defaultsKey: key)
+    }
+
+    private func setScriptColorSetting(_ rawValue: Any?, key: String, fallback: NSColor) {
+        guard let color = SwiftTagScriptColor.from(scriptValue: rawValue, fallback: fallback) else {
+            return
+        }
+
+        UserDefaults.standard.set(color.archivedRawValue, forKey: key)
     }
 
     private func scriptEditorWindowTarget(from command: NSScriptCommand) throws -> SwiftTagScriptEditorWindow {

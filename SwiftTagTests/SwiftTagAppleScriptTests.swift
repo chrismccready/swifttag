@@ -264,6 +264,98 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func applicationSettingsExposeUserDefaultsThroughAppleScriptKeys() throws {
+        let application = NSApplication.shared
+        let defaults = UserDefaults.standard
+        let settingKeys = [
+            SaveSettingsKey.defaultSaveScope,
+            SaveSettingsKey.defaultSavePayload,
+            SaveSettingsKey.saveReferencedSwiftTagDocument,
+            SaveSettingsKey.askToSaveNewSwiftTagDocument,
+            SaveSettingsKey.zeroPadTrackNumber,
+            SaveSettingsKey.zeroPadDiscNumber,
+            SaveSettingsKey.trackCountKeyStrategy,
+            SaveSettingsKey.discCountKeyStrategy,
+            SaveSettingsKey.autoUpdateTrackTotal,
+            SaveSettingsKey.applyCompilationToAllTracks,
+            SaveSettingsKey.saveFrontCoverToAllTracks,
+            SaveSettingsKey.saveAllPicturesToAllTracks,
+            FeedbackSettingsKey.saveNotificationMode,
+            FeedbackSettingsKey.themePreference,
+            FeedbackSettingsKey.trackToTrackDiffColor
+        ]
+        let previousValues = settingKeys.map { key in
+            (key: key, value: defaults.object(forKey: key))
+        }
+        defer {
+            for previousValue in previousValues {
+                if let value = previousValue.value {
+                    defaults.set(value, forKey: previousValue.key)
+                } else {
+                    defaults.removeObject(forKey: previousValue.key)
+                }
+            }
+        }
+
+        for key in settingKeys {
+            defaults.removeObject(forKey: key)
+        }
+
+        application.setValue(Self.fourCharCode("sltr"), forKey: "SaveScopeOptionsSetting")
+        application.setValue(Self.fourCharCode("pcos"), forKey: "SavePayloadOptionsSetting")
+        application.setValue(Self.fourCharCode("ttot"), forKey: "TrackTotalKeySetting")
+        application.setValue(Self.fourCharCode("dtot"), forKey: "DiscTotalKeySetting")
+        application.setValue(Self.fourCharCode("sndv"), forKey: "SendSaveNotificationsSetting")
+        application.setValue(Self.fourCharCode("dark"), forKey: "ThemeSetting")
+
+        let boolSettings: [(cocoaKey: String, defaultsKey: String, value: Bool)] = [
+            ("SaveReferencedDocumentSetting", SaveSettingsKey.saveReferencedSwiftTagDocument, true),
+            ("AskToSaveNewDocumentSetting", SaveSettingsKey.askToSaveNewSwiftTagDocument, true),
+            ("ZeroPadTrackNumbersSetting", SaveSettingsKey.zeroPadTrackNumber, false),
+            ("ZeroPadDiscNumbersSetting", SaveSettingsKey.zeroPadDiscNumber, false),
+            ("AutoUpdateTrackTotalSetting", SaveSettingsKey.autoUpdateTrackTotal, true),
+            ("ApplyCompilationToAllTracksSetting", SaveSettingsKey.applyCompilationToAllTracks, true),
+            ("SaveFrontCoverToAllTracksSetting", SaveSettingsKey.saveFrontCoverToAllTracks, true),
+            ("SaveAllPicturesToAllTracksSetting", SaveSettingsKey.saveAllPicturesToAllTracks, true)
+        ]
+        for setting in boolSettings {
+            application.setValue(NSNumber(value: setting.value), forKey: setting.cocoaKey)
+        }
+
+        let color = SwiftTagScriptColor(red: 0.25, green: 0.5, blue: 0.75, alpha: 0.8)
+        application.setValue(color, forKey: "TrackToTrackDiffColorSetting")
+
+        #expect(defaults.string(forKey: SaveSettingsKey.defaultSaveScope) == SaveScopeOption.selectedTracks.rawValue)
+        #expect(defaults.string(forKey: SaveSettingsKey.defaultSavePayload) == SavePayloadOption.writePictures.rawValue)
+        #expect(defaults.string(forKey: SaveSettingsKey.trackCountKeyStrategy) == TrackCountKeyStrategy.trackTotal.rawValue)
+        #expect(defaults.string(forKey: SaveSettingsKey.discCountKeyStrategy) == DiscCountKeyStrategy.discTotal.rawValue)
+        #expect(defaults.string(forKey: FeedbackSettingsKey.saveNotificationMode) == SaveNotificationMode.never.rawValue)
+        #expect(defaults.string(forKey: FeedbackSettingsKey.themePreference) == AppThemePreference.dark.rawValue)
+
+        for setting in boolSettings {
+            #expect(defaults.bool(forKey: setting.defaultsKey) == setting.value)
+            let value = try #require(application.value(forKey: setting.cocoaKey) as? NSNumber)
+            #expect(value.boolValue == setting.value)
+        }
+
+        try Self.expectAppleScriptCode(application, key: "SaveScopeOptionsSetting", code: "sltr")
+        try Self.expectAppleScriptCode(application, key: "SavePayloadOptionsSetting", code: "pcos")
+        try Self.expectAppleScriptCode(application, key: "TrackTotalKeySetting", code: "ttot")
+        try Self.expectAppleScriptCode(application, key: "DiscTotalKeySetting", code: "dtot")
+        try Self.expectAppleScriptCode(application, key: "SendSaveNotificationsSetting", code: "sndv")
+        try Self.expectAppleScriptCode(application, key: "ThemeSetting", code: "dark")
+
+        let savedColor = try #require(
+            application.value(forKey: "TrackToTrackDiffColorSetting") as? SwiftTagScriptColor
+        )
+        #expect(abs(savedColor.red - 0.25) < 0.001)
+        #expect(abs(savedColor.green - 0.5) < 0.001)
+        #expect(abs(savedColor.blue - 0.75) < 0.001)
+        #expect(abs(savedColor.alpha - 0.8) < 0.001)
+    }
+
+    @MainActor
+    @Test
     func appleScriptCloseRequestMapsSavingDestinationScopeAndPayloadOptions() throws {
         let destinationURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-close.swifttag")
         let request = try SwiftTagAppleScriptCloseRequest.from(
@@ -1842,5 +1934,15 @@ private extension SwiftTagAppleScriptTests {
             (result << 8) | UInt32(byte)
         }
         return NSNumber(value: code)
+    }
+
+    @MainActor
+    static func expectAppleScriptCode(
+        _ application: NSApplication,
+        key: String,
+        code: String
+    ) throws {
+        let value = try #require(application.value(forKey: key) as? NSNumber)
+        #expect(value.uint32Value == fourCharCode(code).uint32Value)
     }
 }

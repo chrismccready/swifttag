@@ -166,9 +166,49 @@
             <enumerator name="publisher logo" code="pubo" description="A publisher logo image of the track."/>
         </enumeration>
 
+        <enumeration name="track total key setting" code="ttks">
+            <enumerator name="TOTALTRACKS" code="tott" description="Save track count with tag key TOTALTRACKS."/>
+            <enumerator name="TRACKTOTAL" code="ttot" description="Save track count with tag key TRACKTOTAL."/>
+            <enumerator name="TOTALTRACKS and TRACKTOTAL" code="tatt" description="Save track count with both tag keys TOTALTRACKS and TRACKTOTAL."/>
+        </enumeration>
+
+        <enumeration name="disc total key setting" code="dtks">
+            <enumerator name="TOTALDISCS" code="dott" description="Save disc count with tag key TOTALDISCS."/>
+            <enumerator name="DISCTOTAL" code="dtot" description="Save disc count with tag key DISCTOTAL."/>
+            <enumerator name="TOTALDISCS and DISCTOTAL" code="datt" description="Save disc count with both tag keys TOTALDISCS and DISCTOTAL."/>
+        </enumeration>
+
+        <enumeration name="save notifications setting" code="snse">
+            <enumerator name="always" code="snda" description="Send save notifications always."/>
+            <enumerator name="when not frontmost" code="sndn" description="Send save notifications when SwiftTag application is not frontmost."/>
+            <enumerator name="never" code="sndv" description="Never send save notifications."/>
+        </enumeration>
+
+        <enumeration name="theme setting" code="thse">
+            <enumerator name="light" code="lght" description="Use light theme."/>
+            <enumerator name="dark" code="dark" description="Use dark theme."/>
+            <enumerator name="system" code="sysp" description="Use system theme."/>
+        </enumeration>
+
         <value-type name="data" code="tdta" description="Raw binary data.">
             <cocoa class="NSData"/>
         </value-type>
+
+        <class name="color" code="colr" description="A color value in RGBA color space (values 0-1.0).">
+            <cocoa class="SwiftTagScriptColor"/>
+            <property name="red" code="redc" type="real" access="rw" description="The red component value (0-1.0).">
+                <cocoa key="red"/>
+            </property>
+            <property name="green" code="grec" type="real" access="rw" description="The green component value (0-1.0).">
+                <cocoa key="green"/>
+            </property>
+            <property name="blue" code="bluc" type="real" access="rw" description="The blue component value (0-1.0).">
+                <cocoa key="blue"/>
+            </property>
+            <property name="alpha" code="alph" type="real" access="rw" description="The alpha component value (0-1.0).">
+                <cocoa key="alpha"/>
+            </property>
+        </class>
 
         <command name="add" code="SwTGaddt" description="Add one or more FLAC files to an editor window.">
             <direct-parameter description="The FLAC file(s) to add.">
@@ -214,6 +254,63 @@
             <element type="track">
                 <cocoa key="scriptTracks"/>
             </element>
+            <property name="track save scope" code="svso" type="save scope options" access="rw" description="The track selection scope of a save operation (aka: FLAC File Save (⌘S): Write).">
+                <cocoa key="SaveScopeOptionsSetting"/>
+            </property>
+            <property name="track save payload" code="svpo" type="save payload options" access="rw" description="The track save payload of a save operation (aka: FLAC File Save (⌘S): To).">
+                <cocoa key="SavePayloadOptionsSetting"/>
+            </property>
+            <property name="save referenced document" code="svrd" type="boolean" access="rw" description="Save editor window's referenced document on save operation (aka: SwiftTag Document Save (⌘S): Save referenced document).">
+                <cocoa key="SaveReferencedDocumentSetting"/>
+            </property>
+            <property name="ask to save new document" code="asnd" type="boolean" access="rw" description="Ask to save new document on save operation when editor window does not have a referenced document (aka: SwiftTag Document Save (⌘S): Ask to save new documents).">
+                <cocoa key="AskToSaveNewDocumentSetting"/>
+            </property>
+            <property name="zero pad track numbers" code="zptn" type="boolean" access="rw" description="Zero pad track number/total on save operation (aka: Value preferences: Zero pad Track Number/Total).">
+                <cocoa key="ZeroPadTrackNumbersSetting"/>
+            </property>
+            <property name="zero pad disc numbers" code="zpdn" type="boolean" access="rw" description="Zero pad disc number/total on save operation (aka: Value preferences: Zero pad Disc Number/Total).">
+                <cocoa key="ZeroPadDiscNumbersSetting"/>
+            </property>
+            <property name="track total key" code="ttks" type="track total key setting" access="rw" description="Track total key preference (aka: Key preferences: Write Track Total key).">
+                <cocoa key="TrackTotalKeySetting"/>
+            </property>
+            <property name="disc total key" code="dtks" type="disc total key setting" access="rw" description="Disc total key preference (aka: Key preferences: Write Disc Total key).">
+                <cocoa key="DiscTotalKeySetting"/>
+            </property>
+            <property name="auto update track total" code="autt" type="boolean" access="rw" description="Automatically update track total based on track table count (aka: Track Total/Compilation Management: Auto update Track Total).">
+                <cocoa key="AutoUpdateTrackTotalSetting"/>
+            </property>
+            <property name="apply compilation to all tracks" code="apct" type="boolean" access="rw" description="Apply compilation setting to all tracks (aka: Track Total/Compilation Management: Apply Compilation to all Tracks).">
+                <cocoa key="ApplyCompilationToAllTracksSetting"/>
+            </property>
+            <property name="save front cover to all tracks" code="sfct" type="boolean" access="rw" description="Save front cover(s) to all tracks (aka: Picture Management: Save Front Cover to all Tracks).">
+                <cocoa key="SaveFrontCoverToAllTracksSetting"/>
+            </property>
+            <property name="save all pictures to all tracks" code="sapt" type="boolean" access="rw" description="Save all pictures to all tracks (aka: Picture Management: Save all Pictures to all Tracks).">
+                <cocoa key="SaveAllPicturesToAllTracksSetting"/>
+            </property>
+            <property name="send save notifications" code="snse" type="save notifications setting" access="rw" description="Send save notifications preference (aka: Send Save Notifications).">
+                <cocoa key="SendSaveNotificationsSetting"/>
+            </property>
+            <property name="theme" code="thse" type="theme setting" access="rw" description="Theme preference (aka: Theme).">
+                <cocoa key="ThemeSetting"/>
+            </property>
+            <property name="track to track diff color" code="ttdc" type="color" access="rw" description="Track to track diff color preference (aka: Tag Value Difference Colors: Track to Track Diff Color).">
+                <cocoa key="TrackToTrackDiffColorSetting"/>
+            </property>
+            <property name="track to file diff color" code="ttfd" type="color" access="rw" description="Track to file diff color preference (aka: Tag Value Difference Colors: Track to File Diff Color).">
+                <cocoa key="TrackToFileDiffColorSetting"/>
+            </property>
+            <property name="externally modified diff color" code="emdc" type="color" access="rw" description="Externally modified diff color preference (aka: Tag Value Difference Colors: Externally Modified Diff Color).">
+                <cocoa key="ExternallyModifiedDiffColorSetting"/>
+            </property>
+            <property name="track and disc total mismatch diff color" code="tddc" type="color" access="rw" description="Track/disc total mismatch diff color preference (aka: Tag Value Difference Colors: Track/Disc Total Mismatch Diff Color).">
+                <cocoa key="TrackAndDiscTotalMismatchDiffColorSetting"/>
+            </property>
+            <property name="picture status overlay color" code="psoc" type="color" access="rw" description="Picture status overlay color preference (aka: Tag Value Difference Colors: Picture Status Overlay Color).">
+                <cocoa key="PictureStatusOverlayColorSetting"/>
+            </property>
             <responds-to command="add">
                 <cocoa method="handleAddTracksScriptCommand:"/>
             </responds-to>

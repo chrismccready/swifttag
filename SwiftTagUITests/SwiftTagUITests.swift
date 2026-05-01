@@ -842,6 +842,83 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessReadsAndWritesApplicationSettings() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(resetSaveSettings: true)
+        defer {
+            app.terminate()
+        }
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                set track save scope to selected
+                set track save payload to pictures only
+                set save referenced document to true
+                set ask to save new document to true
+                set zero pad track numbers to false
+                set zero pad disc numbers to false
+                set track total key to TRACKTOTAL
+                set disc total key to DISCTOTAL
+                set auto update track total to true
+                set apply compilation to all tracks to true
+                set save front cover to all tracks to true
+                set save all pictures to all tracks to true
+                set send save notifications to never
+                set theme to dark
+                set colorSample to track to track diff color
+                set red of colorSample to 0.25
+                set green of colorSample to 0.5
+                set blue of colorSample to 0.75
+                set alpha of colorSample to 0.8
+                set track to track diff color to colorSample
+                set colorSample to track to track diff color
+                return (track save scope as text) & linefeed & (track save payload as text) & linefeed & (save referenced document as text) & linefeed & (ask to save new document as text) & linefeed & (zero pad track numbers as text) & linefeed & (zero pad disc numbers as text) & linefeed & (track total key as text) & linefeed & (disc total key as text) & linefeed & (auto update track total as text) & linefeed & (apply compilation to all tracks as text) & linefeed & (save front cover to all tracks as text) & linefeed & (save all pictures to all tracks as text) & linefeed & (send save notifications as text) & linefeed & (theme as text) & linefeed & (red of colorSample as text) & linefeed & (green of colorSample as text) & linefeed & (blue of colorSample as text) & linefeed & (alpha of colorSample as text)
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, [
+            "selected",
+            "pictures only",
+            "true",
+            "true",
+            "false",
+            "false",
+            "TRACKTOTAL",
+            "DISCTOTAL",
+            "true",
+            "true",
+            "true",
+            "true",
+            "never",
+            "dark",
+            "0.25",
+            "0.5",
+            "0.75",
+            "0.8"
+        ])
+
+        openSettings(in: app)
+        clickSettingsTab(in: app, named: "General")
+        XCTAssertTrue(optionControl(in: app, titled: "Pictures").waitForExistence(timeout: 2.0))
+        XCTAssertTrue(optionControl(in: app, titled: "Selected Tracks").waitForExistence(timeout: 2.0))
+        XCTAssertTrue(isToggleOn(in: app, identifier: UIID.saveReferencedSwiftTagDocument))
+        XCTAssertTrue(isToggleOn(in: app, identifier: UIID.askToSaveNewSwiftTagDocument))
+
+        clickSettingsTab(in: app, named: "Tags")
+        XCTAssertFalse(isToggleOn(in: app, identifier: UIID.zeroPadTrackNumber))
+        XCTAssertFalse(isToggleOn(in: app, identifier: UIID.zeroPadDiscNumber))
+    }
+
+    @MainActor
     func scenarioFinderLaunchOpenShowsVisibleImportedFlacWindow() throws {
         let flacURL = try prepareReadableFlacFixture(fileName: Self.fixtureFileName)
         let app = try launchAppByOpeningFileWithSwiftTag(url: flacURL)
