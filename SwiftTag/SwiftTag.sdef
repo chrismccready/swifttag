@@ -310,6 +310,24 @@
             <property name="picture status overlay color" code="psoc" type="color" access="rw" description="Picture status overlay color preference (aka: Tag Value Difference Colors: Picture Status Overlay Color).">
                 <cocoa key="PictureStatusOverlayColorSetting"/>
             </property>
+            <property name="format on track to file diff" code="ftfd" type="boolean" access="rw" description="Perform text formatting on track to file diff (aka: Diff Tools: Format on Track to File Diff).">
+                <cocoa key="FormatOnTrackToFileDiffSetting"/>
+            </property>
+            <property name="format on track to track diff" code="fttd" type="boolean" access="rw" description="Perform text formatting on track to track diff (aka: Diff Tools: Format on Track to Track Diff).">
+                <cocoa key="FormatOnTrackToTrackDiffSetting"/>
+            </property>
+            <property name="format on externally modified diff" code="ftem" type="boolean" access="rw" description="Perform text formatting on externally modified diff (aka: Diff Tools: Format on Externally Modified Diff).">
+                <cocoa key="FormatOnExternallyModifiedDiffSetting"/>
+            </property>
+            <property name="format on track total mismatch" code="fttm" type="boolean" access="rw" description="Perform text formatting on track total mismatch (aka: Diff Tools: Format on Track Total Mismatch).">
+                <cocoa key="FormatOnTrackTotalMismatchSetting"/>
+            </property>
+            <property name="format on disc total mismatch" code="ftdm" type="boolean" access="rw" description="Perform text formatting on disc total mismatch (aka: Diff Tools: Format on Disc Total Mismatch).">
+                <cocoa key="FormatOnDiscTotalMismatchSetting"/>
+            </property>
+            <property name="format on duplicate picture" code="fodp" type="boolean" access="rw" description="Show color overlay on duplicate picture (aka: Diff Tools: Format on Duplicate Picture).">
+                <cocoa key="FormatOnDuplicatePictureSetting"/>
+            </property>
             <responds-to command="add">
                 <cocoa method="handleAddTracksScriptCommand:"/>
             </responds-to>

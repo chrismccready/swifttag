@@ -74,6 +74,7 @@ struct DiffToolsToggleRow: View {
                 .labelsHidden()
                 .padding(.bottom, pad)
                 .accessibilityIdentifier(accessibilityID)
+                .accessibilityValue(isOn ? "On" : "Off")
         }
         .overlay(
             Rectangle()

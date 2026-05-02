@@ -5114,6 +5114,84 @@ extension NSApplication {
         }
     }
 
+    @objc(FormatOnTrackToFileDiffSetting)
+    var formatOnTrackToFileDiffSetting: Bool {
+        get {
+            boolSetting(
+                key: FeedbackSettingsKey.formatOnTrackToFileDiff,
+                defaultValue: FeedbackSettingsDefaults.formatOnTrackToFileDiff
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: FeedbackSettingsKey.formatOnTrackToFileDiff)
+        }
+    }
+
+    @objc(FormatOnTrackToTrackDiffSetting)
+    var formatOnTrackToTrackDiffSetting: Bool {
+        get {
+            boolSetting(
+                key: FeedbackSettingsKey.formatOnTrackToTrackDiff,
+                defaultValue: FeedbackSettingsDefaults.formatOnTrackToTrackDiff
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: FeedbackSettingsKey.formatOnTrackToTrackDiff)
+        }
+    }
+
+    @objc(FormatOnExternallyModifiedDiffSetting)
+    var formatOnExternallyModifiedDiffSetting: Bool {
+        get {
+            boolSetting(
+                key: FeedbackSettingsKey.formatOnExternallyModifiedDiff,
+                defaultValue: FeedbackSettingsDefaults.formatOnExternallyModifiedDiff
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: FeedbackSettingsKey.formatOnExternallyModifiedDiff)
+        }
+    }
+
+    @objc(FormatOnTrackTotalMismatchSetting)
+    var formatOnTrackTotalMismatchSetting: Bool {
+        get {
+            boolSetting(
+                key: FeedbackSettingsKey.formatOnTrackTotalMismatch,
+                defaultValue: FeedbackSettingsDefaults.formatOnTrackTotalMismatch
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: FeedbackSettingsKey.formatOnTrackTotalMismatch)
+        }
+    }
+
+    @objc(FormatOnDiscTotalMismatchSetting)
+    var formatOnDiscTotalMismatchSetting: Bool {
+        get {
+            boolSetting(
+                key: FeedbackSettingsKey.formatOnDiscTotalMismatch,
+                defaultValue: FeedbackSettingsDefaults.formatOnDiscTotalMismatch
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: FeedbackSettingsKey.formatOnDiscTotalMismatch)
+        }
+    }
+
+    @objc(FormatOnDuplicatePictureSetting)
+    var formatOnDuplicatePictureSetting: Bool {
+        get {
+            boolSetting(
+                key: FeedbackSettingsKey.formatOnDuplicatePicture,
+                defaultValue: FeedbackSettingsDefaults.formatOnDuplicatePicture
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: FeedbackSettingsKey.formatOnDuplicatePicture)
+        }
+    }
+
     @objc(countOfScriptTracks)
     var countOfScriptTracks: Int {
         scriptTracks.count

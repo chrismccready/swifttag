@@ -282,7 +282,13 @@ struct SwiftTagAppleScriptTests {
             SaveSettingsKey.saveAllPicturesToAllTracks,
             FeedbackSettingsKey.saveNotificationMode,
             FeedbackSettingsKey.themePreference,
-            FeedbackSettingsKey.trackToTrackDiffColor
+            FeedbackSettingsKey.trackToTrackDiffColor,
+            FeedbackSettingsKey.formatOnTrackToFileDiff,
+            FeedbackSettingsKey.formatOnTrackToTrackDiff,
+            FeedbackSettingsKey.formatOnExternallyModifiedDiff,
+            FeedbackSettingsKey.formatOnTrackTotalMismatch,
+            FeedbackSettingsKey.formatOnDiscTotalMismatch,
+            FeedbackSettingsKey.formatOnDuplicatePicture
         ]
         let previousValues = settingKeys.map { key in
             (key: key, value: defaults.object(forKey: key))
@@ -316,7 +322,13 @@ struct SwiftTagAppleScriptTests {
             ("AutoUpdateTrackTotalSetting", SaveSettingsKey.autoUpdateTrackTotal, true),
             ("ApplyCompilationToAllTracksSetting", SaveSettingsKey.applyCompilationToAllTracks, true),
             ("SaveFrontCoverToAllTracksSetting", SaveSettingsKey.saveFrontCoverToAllTracks, true),
-            ("SaveAllPicturesToAllTracksSetting", SaveSettingsKey.saveAllPicturesToAllTracks, true)
+            ("SaveAllPicturesToAllTracksSetting", SaveSettingsKey.saveAllPicturesToAllTracks, true),
+            ("FormatOnTrackToFileDiffSetting", FeedbackSettingsKey.formatOnTrackToFileDiff, false),
+            ("FormatOnTrackToTrackDiffSetting", FeedbackSettingsKey.formatOnTrackToTrackDiff, false),
+            ("FormatOnExternallyModifiedDiffSetting", FeedbackSettingsKey.formatOnExternallyModifiedDiff, false),
+            ("FormatOnTrackTotalMismatchSetting", FeedbackSettingsKey.formatOnTrackTotalMismatch, false),
+            ("FormatOnDiscTotalMismatchSetting", FeedbackSettingsKey.formatOnDiscTotalMismatch, false),
+            ("FormatOnDuplicatePictureSetting", FeedbackSettingsKey.formatOnDuplicatePicture, false)
         ]
         for setting in boolSettings {
             application.setValue(NSNumber(value: setting.value), forKey: setting.cocoaKey)

@@ -35,6 +35,12 @@ class SwiftTagUITestCase: XCTestCase {
         static let trackCountKeyStrategy = "settings.tags.trackCountKeyStrategy"
         static let zeroPadDiscNumber = "settings.tags.zeroPadDiscNumber"
         static let discCountKeyStrategy = "settings.tags.discCountKeyStrategy"
+        static let diffFormatOnTrackToFileDiff = "diffTools.formatOnTrackToFileDiff"
+        static let diffFormatOnTrackToTrackDiff = "diffTools.formatOnTrackToTrackDiff"
+        static let diffFormatOnExternallyModifiedDiff = "diffTools.formatOnExternallyModifiedDiff"
+        static let diffFormatOnTrackTotalMismatch = "diffTools.formatOnTrackTotalMismatch"
+        static let diffFormatOnDiscTotalMismatch = "diffTools.formatOnDiscTotalMismatch"
+        static let diffFormatOnDuplicatePicture = "diffTools.formatOnDuplicatePicture"
         static let navigationTitleProbe = "uiTest.navigation.title"
         static let navigationSubtitleProbe = "uiTest.navigation.subtitle"
         static let navigationDocumentURLProbe = "uiTest.navigation.documentURL"
@@ -868,6 +874,12 @@ class SwiftTagUITestCase: XCTestCase {
                 set save all pictures to all tracks to true
                 set send save notifications to never
                 set theme to dark
+                set format on track to file diff to false
+                set format on track to track diff to false
+                set format on externally modified diff to false
+                set format on track total mismatch to false
+                set format on disc total mismatch to false
+                set format on duplicate picture to false
                 set colorSample to track to track diff color
                 set red of colorSample to 0.25
                 set green of colorSample to 0.5
@@ -875,7 +887,33 @@ class SwiftTagUITestCase: XCTestCase {
                 set alpha of colorSample to 0.8
                 set track to track diff color to colorSample
                 set colorSample to track to track diff color
-                return (track save scope as text) & linefeed & (track save payload as text) & linefeed & (save referenced document as text) & linefeed & (ask to save new document as text) & linefeed & (zero pad track numbers as text) & linefeed & (zero pad disc numbers as text) & linefeed & (track total key as text) & linefeed & (disc total key as text) & linefeed & (auto update track total as text) & linefeed & (apply compilation to all tracks as text) & linefeed & (save front cover to all tracks as text) & linefeed & (save all pictures to all tracks as text) & linefeed & (send save notifications as text) & linefeed & (theme as text) & linefeed & (red of colorSample as text) & linefeed & (green of colorSample as text) & linefeed & (blue of colorSample as text) & linefeed & (alpha of colorSample as text)
+                set AppleScript's text item delimiters to linefeed
+                set outputLines to {}
+                set end of outputLines to track save scope as text
+                set end of outputLines to track save payload as text
+                set end of outputLines to save referenced document as text
+                set end of outputLines to ask to save new document as text
+                set end of outputLines to zero pad track numbers as text
+                set end of outputLines to zero pad disc numbers as text
+                set end of outputLines to track total key as text
+                set end of outputLines to disc total key as text
+                set end of outputLines to auto update track total as text
+                set end of outputLines to apply compilation to all tracks as text
+                set end of outputLines to save front cover to all tracks as text
+                set end of outputLines to save all pictures to all tracks as text
+                set end of outputLines to send save notifications as text
+                set end of outputLines to theme as text
+                set end of outputLines to format on track to file diff as text
+                set end of outputLines to format on track to track diff as text
+                set end of outputLines to format on externally modified diff as text
+                set end of outputLines to format on track total mismatch as text
+                set end of outputLines to format on disc total mismatch as text
+                set end of outputLines to format on duplicate picture as text
+                set end of outputLines to red of colorSample as text
+                set end of outputLines to green of colorSample as text
+                set end of outputLines to blue of colorSample as text
+                set end of outputLines to alpha of colorSample as text
+                return outputLines as text
             end tell
             """,
             terminologyBundleIdentifier: Self.appBundleIdentifier,
@@ -900,6 +938,12 @@ class SwiftTagUITestCase: XCTestCase {
             "true",
             "never",
             "dark",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
             "0.25",
             "0.5",
             "0.75",
@@ -916,6 +960,15 @@ class SwiftTagUITestCase: XCTestCase {
         clickSettingsTab(in: app, named: "Tags")
         XCTAssertFalse(isToggleOn(in: app, identifier: UIID.zeroPadTrackNumber))
         XCTAssertFalse(isToggleOn(in: app, identifier: UIID.zeroPadDiscNumber))
+
+        app.typeKey("d", modifierFlags: .command)
+        XCTAssertTrue(settingsControl(in: app, identifier: UIID.diffFormatOnTrackToFileDiff).waitForExistence(timeout: 2.0))
+        XCTAssertFalse(isToggleOn(in: app, identifier: UIID.diffFormatOnTrackToFileDiff))
+        XCTAssertFalse(isToggleOn(in: app, identifier: UIID.diffFormatOnTrackToTrackDiff))
+        XCTAssertFalse(isToggleOn(in: app, identifier: UIID.diffFormatOnExternallyModifiedDiff))
+        XCTAssertFalse(isToggleOn(in: app, identifier: UIID.diffFormatOnTrackTotalMismatch))
+        XCTAssertFalse(isToggleOn(in: app, identifier: UIID.diffFormatOnDiscTotalMismatch))
+        XCTAssertFalse(isToggleOn(in: app, identifier: UIID.diffFormatOnDuplicatePicture))
     }
 
     @MainActor
