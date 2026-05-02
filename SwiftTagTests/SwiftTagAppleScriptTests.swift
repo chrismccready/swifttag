@@ -322,8 +322,24 @@ struct SwiftTagAppleScriptTests {
             application.setValue(NSNumber(value: setting.value), forKey: setting.cocoaKey)
         }
 
-        let color = SwiftTagScriptColor(red: 0.25, green: 0.5, blue: 0.75, alpha: 0.8)
-        application.setValue(color, forKey: "TrackToTrackDiffColorSetting")
+        let colorRecord = NSAppleEventDescriptor.record()
+        colorRecord.setDescriptor(
+            NSAppleEventDescriptor(double: 0.25),
+            forKeyword: Self.fourCharCode("redc").uint32Value
+        )
+        colorRecord.setDescriptor(
+            NSAppleEventDescriptor(double: 0.5),
+            forKeyword: Self.fourCharCode("grec").uint32Value
+        )
+        colorRecord.setDescriptor(
+            NSAppleEventDescriptor(double: 0.75),
+            forKeyword: Self.fourCharCode("bluc").uint32Value
+        )
+        colorRecord.setDescriptor(
+            NSAppleEventDescriptor(double: 0.8),
+            forKeyword: Self.fourCharCode("alph").uint32Value
+        )
+        application.setValue(colorRecord, forKey: "TrackToTrackDiffColorSetting")
 
         #expect(defaults.string(forKey: SaveSettingsKey.defaultSaveScope) == SaveScopeOption.selectedTracks.rawValue)
         #expect(defaults.string(forKey: SaveSettingsKey.defaultSavePayload) == SavePayloadOption.writePictures.rawValue)
@@ -346,12 +362,9 @@ struct SwiftTagAppleScriptTests {
         try Self.expectAppleScriptCode(application, key: "ThemeSetting", code: "dark")
 
         let savedColor = try #require(
-            application.value(forKey: "TrackToTrackDiffColorSetting") as? SwiftTagScriptColor
+            application.value(forKey: "TrackToTrackDiffColorSetting") as? NSDictionary
         )
-        #expect(abs(savedColor.red - 0.25) < 0.001)
-        #expect(abs(savedColor.green - 0.5) < 0.001)
-        #expect(abs(savedColor.blue - 0.75) < 0.001)
-        #expect(abs(savedColor.alpha - 0.8) < 0.001)
+        try Self.expectColorRecord(savedColor, red: 0.25, green: 0.5, blue: 0.75, alpha: 0.8)
     }
 
     @MainActor
@@ -1944,5 +1957,23 @@ private extension SwiftTagAppleScriptTests {
     ) throws {
         let value = try #require(application.value(forKey: key) as? NSNumber)
         #expect(value.uint32Value == fourCharCode(code).uint32Value)
+    }
+
+    static func expectColorRecord(
+        _ record: NSDictionary,
+        red: Double,
+        green: Double,
+        blue: Double,
+        alpha: Double
+    ) throws {
+        let redValue = try #require(record["red"] as? NSNumber)
+        let greenValue = try #require(record["green"] as? NSNumber)
+        let blueValue = try #require(record["blue"] as? NSNumber)
+        let alphaValue = try #require(record["alpha"] as? NSNumber)
+
+        #expect(abs(redValue.doubleValue - red) < 0.001)
+        #expect(abs(greenValue.doubleValue - green) < 0.001)
+        #expect(abs(blueValue.doubleValue - blue) < 0.001)
+        #expect(abs(alphaValue.doubleValue - alpha) < 0.001)
     }
 }

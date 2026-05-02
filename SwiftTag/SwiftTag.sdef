@@ -194,21 +194,20 @@
             <cocoa class="NSData"/>
         </value-type>
 
-        <class name="color" code="colr" description="A color value in RGBA color space (values 0-1.0).">
-            <cocoa class="SwiftTagScriptColor"/>
-            <property name="red" code="redc" type="real" access="rw" description="The red component value (0-1.0).">
+        <record-type name="color" code="colr" description="A color value in RGBA color space (values 0-1.0).">
+            <property name="red" code="redc" type="real" description="The red component value (0-1.0).">
                 <cocoa key="red"/>
             </property>
-            <property name="green" code="grec" type="real" access="rw" description="The green component value (0-1.0).">
+            <property name="green" code="grec" type="real" description="The green component value (0-1.0).">
                 <cocoa key="green"/>
             </property>
-            <property name="blue" code="bluc" type="real" access="rw" description="The blue component value (0-1.0).">
+            <property name="blue" code="bluc" type="real" description="The blue component value (0-1.0).">
                 <cocoa key="blue"/>
             </property>
-            <property name="alpha" code="alph" type="real" access="rw" description="The alpha component value (0-1.0).">
+            <property name="alpha" code="alph" type="real" description="The alpha component value (0-1.0).">
                 <cocoa key="alpha"/>
             </property>
-        </class>
+        </record-type>
 
         <command name="add" code="SwTGaddt" description="Add one or more FLAC files to an editor window.">
             <direct-parameter description="The FLAC file(s) to add.">
@@ -305,8 +304,8 @@
             <property name="externally modified diff color" code="emdc" type="color" access="rw" description="Externally modified diff color preference (aka: Tag Value Difference Colors: Externally Modified Diff Color).">
                 <cocoa key="ExternallyModifiedDiffColorSetting"/>
             </property>
-            <property name="track and disc total mismatch diff color" code="tddc" type="color" access="rw" description="Track/disc total mismatch diff color preference (aka: Tag Value Difference Colors: Track/Disc Total Mismatch Diff Color).">
-                <cocoa key="TrackAndDiscTotalMismatchDiffColorSetting"/>
+            <property name="track and disc total mismatch color" code="tddc" type="color" access="rw" description="Track/disc total mismatch color preference (aka: Tag Value Difference Colors: Track/Disc Total Mismatch Color).">
+                <cocoa key="TrackAndDiscTotalMismatchColorSetting"/>
             </property>
             <property name="picture status overlay color" code="psoc" type="color" access="rw" description="Picture status overlay color preference (aka: Tag Value Difference Colors: Picture Status Overlay Color).">
                 <cocoa key="PictureStatusOverlayColorSetting"/>

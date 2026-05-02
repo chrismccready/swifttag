@@ -2021,8 +2021,6 @@ final class SwiftTagScriptColor: NSObject {
     private var greenComponent: Double
     private var blueComponent: Double
     private var alphaComponent: Double
-    private var scriptPropertyKey: String?
-    private var defaultsKey: String?
 
     @objc
     override init() {
@@ -2056,7 +2054,6 @@ final class SwiftTagScriptColor: NSObject {
         get { redComponent }
         set {
             redComponent = Self.clamped(newValue)
-            persistIfNeeded()
         }
     }
 
@@ -2065,7 +2062,6 @@ final class SwiftTagScriptColor: NSObject {
         get { greenComponent }
         set {
             greenComponent = Self.clamped(newValue)
-            persistIfNeeded()
         }
     }
 
@@ -2074,7 +2070,6 @@ final class SwiftTagScriptColor: NSObject {
         get { blueComponent }
         set {
             blueComponent = Self.clamped(newValue)
-            persistIfNeeded()
         }
     }
 
@@ -2083,21 +2078,7 @@ final class SwiftTagScriptColor: NSObject {
         get { alphaComponent }
         set {
             alphaComponent = Self.clamped(newValue)
-            persistIfNeeded()
         }
-    }
-
-    override var objectSpecifier: NSScriptObjectSpecifier? {
-        guard let scriptPropertyKey,
-              let classDescription = NSScriptClassDescription(for: NSApplication.self) else {
-            return nil
-        }
-
-        return NSPropertySpecifier(
-            containerClassDescription: classDescription,
-            containerSpecifier: nil,
-            key: scriptPropertyKey
-        )
     }
 
     var nsColor: NSColor {
@@ -2107,6 +2088,15 @@ final class SwiftTagScriptColor: NSObject {
             blue: CGFloat(blueComponent),
             alpha: CGFloat(alphaComponent)
         )
+    }
+
+    var scriptRecord: NSDictionary {
+        [
+            "red": NSNumber(value: redComponent),
+            "green": NSNumber(value: greenComponent),
+            "blue": NSNumber(value: blueComponent),
+            "alpha": NSNumber(value: alphaComponent)
+        ] as NSDictionary
     }
 
     var archivedRawValue: String {
@@ -2123,12 +2113,6 @@ final class SwiftTagScriptColor: NSObject {
     static func from(rawValue: String?, fallback: NSColor) -> SwiftTagScriptColor {
         let color = nsColor(from: rawValue, fallback: fallback)
         return SwiftTagScriptColor(nsColor: color, fallback: fallback)
-    }
-
-    func attached(scriptPropertyKey: String, defaultsKey: String) -> SwiftTagScriptColor {
-        self.scriptPropertyKey = scriptPropertyKey
-        self.defaultsKey = defaultsKey
-        return self
     }
 
     static func from(scriptValue rawValue: Any?, fallback: NSColor) -> SwiftTagScriptColor? {
@@ -2214,8 +2198,15 @@ final class SwiftTagScriptColor: NSObject {
         case let value as NSString:
             return Double(value as String)
         case let descriptor as NSAppleEventDescriptor:
-            if let stringValue = descriptor.stringValue {
-                return Double(stringValue)
+            if let stringValue = descriptor.stringValue,
+               let value = Double(stringValue) {
+                return value
+            }
+            if let coerced = descriptor.coerce(toDescriptorType: typeIEEE64BitFloatingPoint) {
+                return coerced.doubleValue
+            }
+            if descriptor.descriptorType == typeSInt32 {
+                return Double(descriptor.int32Value)
             }
             return nil
         default:
@@ -2269,14 +2260,6 @@ final class SwiftTagScriptColor: NSObject {
 
     private static func clamped(_ value: Double) -> Double {
         min(max(value, 0), 1)
-    }
-
-    private func persistIfNeeded() {
-        guard let defaultsKey else {
-            return
-        }
-
-        UserDefaults.standard.set(archivedRawValue, forKey: defaultsKey)
     }
 }
 
@@ -5065,7 +5048,6 @@ extension NSApplication {
     var trackToTrackDiffColorSetting: Any {
         get {
             scriptColorSetting(
-                scriptPropertyKey: "TrackToTrackDiffColorSetting",
                 key: FeedbackSettingsKey.trackToTrackDiffColor,
                 defaultRawValue: FeedbackSettingsDefaults.trackToTrackDiffColor,
                 fallback: .systemOrange
@@ -5080,7 +5062,6 @@ extension NSApplication {
     var trackToFileDiffColorSetting: Any {
         get {
             scriptColorSetting(
-                scriptPropertyKey: "TrackToFileDiffColorSetting",
                 key: FeedbackSettingsKey.trackToFileDiffColor,
                 defaultRawValue: FeedbackSettingsDefaults.trackToFileDiffColor,
                 fallback: .labelColor
@@ -5095,7 +5076,6 @@ extension NSApplication {
     var externallyModifiedDiffColorSetting: Any {
         get {
             scriptColorSetting(
-                scriptPropertyKey: "ExternallyModifiedDiffColorSetting",
                 key: FeedbackSettingsKey.externallyModifiedDiffColor,
                 defaultRawValue: FeedbackSettingsDefaults.externallyModifiedDiffColor,
                 fallback: .systemRed
@@ -5106,11 +5086,10 @@ extension NSApplication {
         }
     }
 
-    @objc(TrackAndDiscTotalMismatchDiffColorSetting)
-    var trackAndDiscTotalMismatchDiffColorSetting: Any {
+    @objc(TrackAndDiscTotalMismatchColorSetting)
+    var trackAndDiscTotalMismatchColorSetting: Any {
         get {
             scriptColorSetting(
-                scriptPropertyKey: "TrackAndDiscTotalMismatchDiffColorSetting",
                 key: FeedbackSettingsKey.trackDiscTotalMismatchColor,
                 defaultRawValue: FeedbackSettingsDefaults.trackDiscTotalMismatchColor,
                 fallback: .systemRed
@@ -5125,7 +5104,6 @@ extension NSApplication {
     var pictureStatusOverlayColorSetting: Any {
         get {
             scriptColorSetting(
-                scriptPropertyKey: "PictureStatusOverlayColorSetting",
                 key: FeedbackSettingsKey.pictureStatusOverlayColor,
                 defaultRawValue: FeedbackSettingsDefaults.pictureStatusOverlayColor,
                 fallback: .systemOrange
@@ -5276,15 +5254,14 @@ extension NSApplication {
     }
 
     private func scriptColorSetting(
-        scriptPropertyKey: String,
         key: String,
         defaultRawValue: String,
         fallback: NSColor
-    ) -> SwiftTagScriptColor {
+    ) -> NSDictionary {
         SwiftTagScriptColor.from(
             rawValue: UserDefaults.standard.string(forKey: key) ?? defaultRawValue,
             fallback: fallback
-        ).attached(scriptPropertyKey: scriptPropertyKey, defaultsKey: key)
+        ).scriptRecord
     }
 
     private func setScriptColorSetting(_ rawValue: Any?, key: String, fallback: NSColor) {
