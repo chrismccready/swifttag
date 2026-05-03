@@ -4677,6 +4677,444 @@ final class SwiftTagScriptDocument: NSObject {
 }
 
 @MainActor
+final class SettingsWindowCoordinator {
+    static let shared = SettingsWindowCoordinator()
+
+    private weak var registeredWindow: NSWindow?
+    private var openSettingsWindowAction: (() -> Void)?
+    private let settingsWindowIdentifier = NSUserInterfaceItemIdentifier("SwiftTag.settingsWindow")
+
+    private init() {}
+
+    func setOpenSettingsWindowAction(_ action: @escaping () -> Void) {
+        openSettingsWindowAction = action
+    }
+
+    func registerSettingsWindow(_ window: NSWindow?) {
+        registeredWindow = window
+        window?.identifier = settingsWindowIdentifier
+    }
+
+    var currentSettingsWindow: NSWindow? {
+        if let registeredWindow {
+            return registeredWindow
+        }
+
+        return NSApp.orderedWindows.first { window in
+            window.identifier == settingsWindowIdentifier
+        }
+    }
+
+    @discardableResult
+    func openSettingsWindow() -> NSWindow? {
+        if let window = currentSettingsWindow {
+            orderSettingsWindowInFront(window)
+            return window
+        }
+
+        presentSettingsWindow()
+        return currentSettingsWindow
+    }
+
+    private func presentSettingsWindow() {
+        if let window = currentSettingsWindow {
+            orderSettingsWindowInFront(window)
+            return
+        }
+
+        if let openSettingsWindowAction {
+            openSettingsWindowAction()
+        } else {
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        }
+        currentSettingsWindow.map(orderSettingsWindowInFront)
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let window = self.currentSettingsWindow else {
+                return
+            }
+
+            self.orderSettingsWindowInFront(window)
+        }
+    }
+
+    private func orderSettingsWindowInFront(_ window: NSWindow) {
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    #if DEBUG
+    func resetForTesting() {
+        registeredWindow = nil
+        openSettingsWindowAction = nil
+    }
+    #endif
+}
+
+@MainActor
+@objc(SwiftTagScriptSettingsWindow)
+final class SwiftTagScriptSettingsWindow: NSObject {
+    @objc
+    override init() {
+        super.init()
+    }
+
+    @objc(title)
+    var title: String {
+        resolvedTitle
+    }
+
+    @objc(name)
+    var name: String {
+        resolvedTitle
+    }
+
+    @objc(uniqueID)
+    var uniqueID: Int {
+        liveWindow?.windowNumber ?? 0
+    }
+
+    @objc(orderedIndex)
+    var orderedIndex: Int {
+        liveWindow?.orderedIndex ?? 0
+    }
+
+    @objc(bounds)
+    var bounds: NSDictionary {
+        scriptRectangle(from: liveWindow?.frame ?? .zero)
+    }
+
+    @objc(hasCloseBox)
+    var hasCloseBox: Bool {
+        liveWindowBoolean(forKey: "hasCloseBox")
+    }
+
+    @objc(isCollapseable)
+    var isCollapseable: Bool {
+        false
+    }
+
+    @objc(isCollapsed)
+    var isCollapsed: Bool {
+        false
+    }
+
+    @objc(isFullScreen)
+    var isFullScreen: Bool {
+        false
+    }
+
+    @objc(position)
+    var position: NSDictionary {
+        scriptPoint(from: liveWindow?.frame ?? .zero)
+    }
+
+    @objc(isResizable)
+    var isResizable: Bool {
+        false
+    }
+
+    @objc(isVisible)
+    var isVisible: Bool {
+        liveWindow?.isVisible ?? false
+    }
+
+    @objc(isZoomable)
+    var isZoomable: Bool {
+        false
+    }
+
+    @objc(isZoomed)
+    var isZoomed: Bool {
+        false
+    }
+
+    override var objectSpecifier: NSScriptObjectSpecifier? {
+        guard let classDescription = NSScriptClassDescription(for: NSApplication.self) else {
+            return nil
+        }
+
+        return NSIndexSpecifier(
+            containerClassDescription: classDescription,
+            containerSpecifier: nil,
+            key: "scriptSettingsWindows",
+            index: 0
+        )
+    }
+
+    @discardableResult
+    func openSettingsWindow() -> SwiftTagScriptSettingsWindow {
+        SettingsWindowCoordinator.shared.openSettingsWindow()
+        return self
+    }
+
+    override func setValue(_ value: Any?, forKey key: String) {
+        switch key {
+        case "bounds":
+            setBounds(from: value)
+        case "position":
+            setPosition(from: value)
+        case "orderedIndex":
+            if let index = scriptInteger(from: value) {
+                liveWindow?.orderedIndex = index
+            }
+        case "isCollapsed":
+            if let collapsed = scriptBoolean(from: value) {
+                setCollapsed(collapsed)
+            }
+        case "isFullScreen":
+            if let fullScreen = scriptBoolean(from: value) {
+                setFullScreen(fullScreen)
+            }
+        case "isVisible":
+            if let visible = scriptBoolean(from: value) {
+                setVisible(visible)
+            }
+        case "isZoomed":
+            if let zoomed = scriptBoolean(from: value) {
+                setZoomed(zoomed)
+            }
+        default:
+            super.setValue(value, forKey: key)
+        }
+    }
+
+    private var liveWindow: NSWindow? {
+        SettingsWindowCoordinator.shared.currentSettingsWindow
+    }
+
+    private var resolvedTitle: String {
+        let windowTitle = liveWindow?.title.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return windowTitle.isEmpty ? "Settings" : windowTitle
+    }
+
+    private func setBounds(from rawValue: Any?) {
+        // Settings window does not support resize.
+    }
+
+    private func setPosition(from rawValue: Any?) {
+        guard let window = liveWindow else {
+            return
+        }
+
+        if let point = scriptPoint(from: rawValue) {
+            window.setFrameTopLeftPoint(NSPoint(x: point.x, y: point.y))
+            return
+        }
+
+        if let values = scriptNumbers(from: rawValue, expectedCount: 2) {
+            window.setFrameTopLeftPoint(NSPoint(x: values[0], y: values[1]))
+        }
+    }
+
+    private func setCollapsed(_ collapsed: Bool) {
+        // Settings window does not support collaspse.
+    }
+
+    private func setFullScreen(_ fullScreen: Bool) {
+        // Settings window does not support full screen.
+    }
+
+    private func setVisible(_ visible: Bool) {
+        guard let window = liveWindow,
+              window.isVisible != visible else {
+            return
+        }
+
+        if visible {
+            window.orderFront(nil)
+        } else {
+            window.orderOut(nil)
+        }
+    }
+
+    private func setZoomed(_ zoomed: Bool) {
+        // Settings window does not support full zoom.
+    }
+
+    private func liveWindowBoolean(forKey key: String) -> Bool {
+        guard let value = liveWindow?.value(forKey: key) else {
+            return false
+        }
+
+        return scriptBoolean(from: value) ?? false
+    }
+
+    private struct ScriptPoint {
+        let x: CGFloat
+        let y: CGFloat
+    }
+
+    private struct ScriptRectangle {
+        let x: CGFloat
+        let y: CGFloat
+        let width: CGFloat
+        let height: CGFloat
+    }
+
+    private func scriptPoint(from frame: NSRect) -> NSDictionary {
+        [
+            "x": NSNumber(value: Double(frame.minX)),
+            "y": NSNumber(value: Double(frame.maxY))
+        ] as NSDictionary
+    }
+
+    private func scriptRectangle(from frame: NSRect) -> NSDictionary {
+        [
+            "x": NSNumber(value: Double(frame.minX)),
+            "y": NSNumber(value: Double(frame.maxY)),
+            "width": NSNumber(value: Double(frame.width)),
+            "height": NSNumber(value: Double(frame.height))
+        ] as NSDictionary
+    }
+
+    private func scriptPoint(from rawValue: Any?) -> ScriptPoint? {
+        guard let dictionary = scriptRecordDictionary(from: rawValue),
+              let x = scriptNumber(in: dictionary, matching: ["x", "xpos"]),
+              let y = scriptNumber(in: dictionary, matching: ["y", "ypos"]) else {
+            return nil
+        }
+
+        return ScriptPoint(x: x, y: y)
+    }
+
+    private func scriptRectangle(from rawValue: Any?) -> ScriptRectangle? {
+        guard let dictionary = scriptRecordDictionary(from: rawValue),
+              let x = scriptNumber(in: dictionary, matching: ["x", "xpos"]),
+              let y = scriptNumber(in: dictionary, matching: ["y", "ypos"]),
+              let width = scriptNumber(in: dictionary, matching: ["width", "widt"]),
+              let height = scriptNumber(in: dictionary, matching: ["height", "heig"]) else {
+            return nil
+        }
+
+        return ScriptRectangle(x: x, y: y, width: width, height: height)
+    }
+
+    private func scriptNumbers(from rawValue: Any?, expectedCount: Int) -> [CGFloat]? {
+        let values: [CGFloat]
+        switch rawValue {
+        case let numbers as [NSNumber]:
+            values = numbers.map { CGFloat(truncating: $0) }
+        case let array as NSArray:
+            values = array.compactMap { value in
+                switch value {
+                case let number as NSNumber:
+                    return CGFloat(truncating: number)
+                case let string as NSString:
+                    return Double(string as String).map { CGFloat($0) }
+                case let string as String:
+                    return Double(string).map { CGFloat($0) }
+                default:
+                    return nil
+                }
+            }
+        case let descriptor as NSAppleEventDescriptor where descriptor.numberOfItems >= expectedCount:
+            values = (1...descriptor.numberOfItems).compactMap { index in
+                descriptor.atIndex(index).map { CGFloat($0.doubleValue) }
+            }
+        default:
+            return nil
+        }
+
+        guard values.count >= expectedCount else {
+            return nil
+        }
+
+        return Array(values.prefix(expectedCount))
+    }
+
+    private func scriptBoolean(from rawValue: Any?) -> Bool? {
+        switch rawValue {
+        case let value as Bool:
+            return value
+        case let value as NSNumber:
+            return value.boolValue
+        case let value as NSString:
+            return Bool(value as String)
+        case let value as String:
+            return Bool(value)
+        case let descriptor as NSAppleEventDescriptor:
+            return descriptor.booleanValue
+        default:
+            return nil
+        }
+    }
+
+    private func scriptInteger(from rawValue: Any?) -> Int? {
+        switch rawValue {
+        case let value as Int:
+            return value
+        case let value as NSNumber:
+            return value.intValue
+        case let value as NSString:
+            return Int(value as String)
+        case let value as String:
+            return Int(value)
+        case let descriptor as NSAppleEventDescriptor:
+            return Int(descriptor.int32Value)
+        default:
+            return nil
+        }
+    }
+
+    private func scriptRecordDictionary(from rawValue: Any?) -> [String: Any]? {
+        switch rawValue {
+        case let dictionary as [String: Any]:
+            return dictionary
+        case let dictionary as NSDictionary:
+            var result: [String: Any] = [:]
+            for (key, value) in dictionary {
+                result[String(describing: key)] = value
+            }
+            return result
+        case let descriptor as NSAppleEventDescriptor:
+            var result: [String: Any] = [:]
+            for (name, code) in [
+                ("x", "xpos"), ("y", "ypos"), ("width", "widt"), ("height", "heig")
+            ] {
+                if let value = descriptor.forKeyword(fourCharCode(code)) {
+                    result[name] = NSNumber(value: value.doubleValue)
+                }
+            }
+            return result
+        default:
+            return nil
+        }
+    }
+
+    private func scriptNumber(in dictionary: [String: Any], matching keys: [String]) -> CGFloat? {
+        for key in keys {
+            guard let value = dictionary[key] else {
+                continue
+            }
+
+            switch value {
+            case let number as NSNumber:
+                return CGFloat(truncating: number)
+            case let string as NSString:
+                return Double(string as String).map { CGFloat($0) }
+            case let string as String:
+                return Double(string).map { CGFloat($0) }
+            default:
+                continue
+            }
+        }
+
+        return nil
+    }
+
+    private static func fourCharCode(_ value: String) -> AEKeyword {
+        let bytes = Array(value.utf8.prefix(4))
+        let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
+        return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
+            (result << 8) | UInt32(byte)
+        }
+    }
+
+    private func fourCharCode(_ value: String) -> AEKeyword {
+        Self.fourCharCode(value)
+    }
+}
+
+@MainActor
 final class SwiftTagAppleScriptController {
     static let shared = SwiftTagAppleScriptController()
 
@@ -4686,6 +5124,7 @@ final class SwiftTagAppleScriptController {
     }
 
     private var editorWindowsBySessionID: [UUID: SwiftTagScriptEditorWindow] = [:]
+    private let settingsWindow = SwiftTagScriptSettingsWindow()
     private var documentsBySessionID: [UUID: SwiftTagScriptDocument] = [:]
     private var trackWrappersByKey: [TrackCacheKey: SwiftTagScriptTrack] = [:]
     private var sessionBridgesBySessionID: [UUID: SwiftTagAppleScriptSessionBridge] = [:]
@@ -4723,6 +5162,14 @@ final class SwiftTagAppleScriptController {
 
         pendingWrappers.sort { $0.windowID < $1.windowID }
         return orderedWrappers + pendingWrappers
+    }
+
+    func settingsWindows() -> [SwiftTagScriptSettingsWindow] {
+        [settingsWindow]
+    }
+
+    func openSettingsWindow() -> SwiftTagScriptSettingsWindow {
+        settingsWindow.openSettingsWindow()
     }
 
     func orderedDocuments() -> [SwiftTagScriptDocument] {
@@ -4792,6 +5239,15 @@ final class SwiftTagAppleScriptController {
         }
 
         return orderedEditorWindows().first { $0.uniqueID == windowUniqueID }
+    }
+
+    func settingsWindow(withUniqueID uniqueID: Any) -> SwiftTagScriptSettingsWindow? {
+        guard let windowUniqueID = normalizedWindowUniqueID(from: uniqueID),
+              windowUniqueID == settingsWindow.uniqueID else {
+            return nil
+        }
+
+        return settingsWindow
     }
 
     func document(withUniqueID uniqueID: Any) -> SwiftTagScriptDocument? {
@@ -5303,6 +5759,11 @@ extension NSApplication {
         SwiftTagAppleScriptController.shared.orderedEditorWindows()
     }
 
+    @objc(scriptSettingsWindows)
+    var scriptSettingsWindows: [SwiftTagScriptSettingsWindow] {
+        SwiftTagAppleScriptController.shared.settingsWindows()
+    }
+
     @objc(scriptDocuments)
     var scriptDocuments: [SwiftTagScriptDocument] {
         SwiftTagAppleScriptController.shared.orderedDocuments()
@@ -5654,6 +6115,16 @@ extension NSApplication {
         scriptTracks.count
     }
 
+    @objc(countOfScriptSettingsWindows)
+    var countOfScriptSettingsWindows: Int {
+        scriptSettingsWindows.count
+    }
+
+    @objc(objectInScriptSettingsWindowsAtIndex:)
+    func objectInScriptSettingsWindows(at index: Int) -> SwiftTagScriptSettingsWindow {
+        scriptSettingsWindows[index]
+    }
+
     @objc(objectInScriptTracksAtIndex:)
     func objectInScriptTracks(at index: Int) -> SwiftTagScriptTrack {
         scriptTracks[index]
@@ -5667,6 +6138,11 @@ extension NSApplication {
     @objc(valueInScriptEditorWindowsWithUniqueID:)
     func valueInScriptEditorWindows(withUniqueID uniqueID: Any) -> Any? {
         SwiftTagAppleScriptController.shared.editorWindow(withUniqueID: uniqueID)
+    }
+
+    @objc(valueInScriptSettingsWindowsWithUniqueID:)
+    func valueInScriptSettingsWindows(withUniqueID uniqueID: Any) -> Any? {
+        SwiftTagAppleScriptController.shared.settingsWindow(withUniqueID: uniqueID)
     }
 
     @objc(valueInScriptDocumentsWithUniqueID:)
@@ -5702,6 +6178,11 @@ extension NSApplication {
         } catch {
             return command.fail(error)
         }
+    }
+
+    @objc(handleOpenSettingsWindowScriptCommand:)
+    func handleOpenSettingsWindowScriptCommand(_ command: NSScriptCommand) -> Any? {
+        SwiftTagAppleScriptController.shared.openSettingsWindow()
     }
 
     @objc(handleMakeScriptCommand:)

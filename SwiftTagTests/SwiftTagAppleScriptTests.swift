@@ -211,6 +211,43 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func applicationClassDescriptionExposesWindowsAndEditorWindows() throws {
+        let classDescription = try #require(NSScriptClassDescription(for: NSApplication.self))
+
+        #expect(classDescription.type(forKey: "orderedWindows") == "window")
+        #expect(classDescription.type(forKey: "scriptSettingsWindows") == "settings window")
+        #expect(classDescription.type(forKey: "scriptEditorWindows") == "editor window")
+    }
+
+    @MainActor
+    @Test
+    func settingsWindowIsSingletonApplicationElementAndInheritsWindowProperties() throws {
+        let application = NSApplication.shared
+        let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptSettingsWindow.self))
+        let applicationClassDescription = try #require(NSScriptClassDescription(for: NSApplication.self))
+        let openSettingsWindowSelector = NSSelectorFromString("handleOpenSettingsWindowScriptCommand:")
+        let openSettingsWindowCommand = try #require(
+            NSScriptSuiteRegistry.shared().commandDescription(
+                withAppleEventClass: Self.fourCharCode("SwTG").uint32Value,
+                andAppleEventCode: Self.fourCharCode("oswn").uint32Value
+            )
+        )
+
+        #expect(application.scriptSettingsWindows.count == 1)
+        #expect(application.scriptSettingsWindows.first?.objectSpecifier != nil)
+        #expect(classDescription.superclass?.className == "window")
+        #expect(classDescription.hasReadableProperty(forKey: "title"))
+        #expect(classDescription.hasReadableProperty(forKey: "uniqueID"))
+        #expect(classDescription.hasWritableProperty(forKey: "orderedIndex"))
+        #expect(classDescription.hasWritableProperty(forKey: "bounds"))
+        #expect(classDescription.hasWritableProperty(forKey: "isVisible"))
+        #expect(application.responds(to: openSettingsWindowSelector))
+        #expect(applicationClassDescription.supportsCommand(openSettingsWindowCommand))
+        #expect(applicationClassDescription.selector(forCommand: openSettingsWindowCommand) == openSettingsWindowSelector)
+    }
+
+    @MainActor
+    @Test
     func editorWindowInheritsWindowClassDescriptionProperties() throws {
         let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptEditorWindow.self))
 

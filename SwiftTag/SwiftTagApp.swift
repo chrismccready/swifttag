@@ -127,6 +127,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
 private struct AppCommands: Commands {
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
     @FocusedValue(\.showTomlSheet) private var showTomlSheet
     @FocusedValue(\.showFlacImporter) private var showFlacImporter
     @FocusedValue(\.showReadOnlyFlacImporter) private var showReadOnlyFlacImporter
@@ -158,6 +159,7 @@ private struct AppCommands: Commands {
 
     var body: some Commands {
         let _ = configureEditorWindowFallback()
+        let _ = configureSettingsWindowFallback()
 
         CommandGroup(after: .newItem) {
             Button("Add FLAC files...") {
@@ -287,6 +289,12 @@ private struct AppCommands: Commands {
     private func configureEditorWindowFallback() {
         EditorWindowCoordinator.shared.setOpenEditorWindowAction { sessionValue in
             openWindow(id: AppSceneID.editor, value: sessionValue)
+        }
+    }
+
+    private func configureSettingsWindowFallback() {
+        SettingsWindowCoordinator.shared.setOpenSettingsWindowAction {
+            openSettings()
         }
     }
 

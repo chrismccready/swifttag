@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct SettingsView: View {
     var body: some View {
@@ -21,5 +22,27 @@ struct SettingsView: View {
         .accessibilityIdentifier("settings.tabView")
         .padding(4)
         .frame(width: 352, height: 476)
+        .background(SettingsWindowRegistrar())
+    }
+}
+
+private struct SettingsWindowRegistrar: NSViewRepresentable {
+    func makeNSView(context: Context) -> RegistrationView {
+        RegistrationView()
+    }
+
+    func updateNSView(_ nsView: RegistrationView, context: Context) {
+        nsView.registerCurrentWindow()
+    }
+
+    final class RegistrationView: NSView {
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            registerCurrentWindow()
+        }
+
+        func registerCurrentWindow() {
+            SettingsWindowCoordinator.shared.registerSettingsWindow(window)
+        }
     }
 }

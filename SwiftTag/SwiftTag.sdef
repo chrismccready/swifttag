@@ -266,10 +266,20 @@
             <result type="picture" description="The imported or matched track picture."/>
         </command>
 
+        <command name="open settings window" code="SwTGoswn" description="Open the SwiftTag settings window, or bring it frontmost if it is already open.">
+            <result type="settings window" description="The SwiftTag settings window."/>
+        </command>
+
         <class name="application" plural="applications" code="capp" description="Application program.">
             <cocoa class="NSApplication"/>
             <element type="document">
                 <cocoa key="scriptDocuments"/>
+            </element>
+            <element type="window" access="r">
+                <cocoa key="orderedWindows"/>
+            </element>
+            <element type="settings window" access="r">
+                <cocoa key="scriptSettingsWindows"/>
             </element>
             <element type="editor window">
                 <cocoa key="scriptEditorWindows"/>
@@ -358,6 +368,9 @@
             <responds-to command="open">
                 <cocoa method="handleOpenScriptCommand:"/>
             </responds-to>
+            <responds-to command="open settings window">
+                <cocoa method="handleOpenSettingsWindowScriptCommand:"/>
+            </responds-to>
             <responds-to command="make">
                 <cocoa method="handleMakeScriptCommand:"/>
             </responds-to>
@@ -369,7 +382,7 @@
             </responds-to>
         </class>
 
-        <class name="window" code="cwin" description="A window.">
+        <class name="window" plural="windows" code="cwin" description="A window.">
             <cocoa class="NSWindow"/>
             <property name="name" code="pnam" type="text" access="r" description="The title of the window.">
                 <cocoa key="title"/>
@@ -410,6 +423,10 @@
             <property name="zoomed" code="pzum" type="boolean" description="Is the window zoomed right now?">
                 <cocoa key="isZoomed"/>
             </property>
+        </class>
+
+        <class name="settings window" plural="settings windows" code="swin" inherits="window" description="The SwiftTag settings window.">
+            <cocoa class="SwiftTagScriptSettingsWindow"/>
         </class>
 
         <class name="editor window" plural="editor windows" code="edtw" inherits="window" description="A SwiftTag editor window.">

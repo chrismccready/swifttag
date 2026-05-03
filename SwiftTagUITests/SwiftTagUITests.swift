@@ -848,6 +848,122 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessEnumeratesApplicationWindows() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                set windowCount to count of windows
+                set editorWindowCount to count of editor windows
+                set AppleScript's text item delimiters to linefeed
+                set outputLines to {}
+                set end of outputLines to windowCount as text
+                set end of outputLines to editorWindowCount as text
+                repeat with thisWindow in windows
+                    set end of outputLines to "window `name`: " & (name of thisWindow as text)
+                    set end of outputLines to "window `index`: " & (index of thisWindow as text)
+                    set end of outputLines to "window `class`: " & (class of thisWindow as text)
+                end repeat
+                return outputLines as text
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        let windowCount = try XCTUnwrap(outputLines.first.flatMap(Int.init))
+        let editorWindowCount = try XCTUnwrap(outputLines.dropFirst().first.flatMap(Int.init))
+        XCTAssertGreaterThanOrEqual(windowCount, 1)
+        XCTAssertEqual(editorWindowCount, 1)
+        XCTAssertGreaterThanOrEqual(windowCount, editorWindowCount)
+        XCTAssertEqual(outputLines.count, 2 + windowCount * 3)
+
+        for windowIndex in 0..<windowCount {
+            let lineOffset = 2 + windowIndex * 3
+            XCTAssertTrue(outputLines[lineOffset].hasPrefix("window `name`: "))
+            let windowName = outputLines[lineOffset]
+                .replacingOccurrences(of: "window `name`: ", with: "")
+            XCTAssertFalse(windowName.isEmpty)
+
+            XCTAssertTrue(outputLines[lineOffset + 1].hasPrefix("window `index`: "))
+            let orderedIndex = outputLines[lineOffset + 1]
+                .replacingOccurrences(of: "window `index`: ", with: "")
+            XCTAssertNotNil(Int(orderedIndex))
+
+            XCTAssertTrue(outputLines[lineOffset + 2].hasPrefix("window `class`: "))
+            let windowClass = outputLines[lineOffset + 2]
+                .replacingOccurrences(of: "window `class`: ", with: "")
+            XCTAssertTrue(["window", "editor window"].contains(windowClass))
+        }
+    }
+
+    @MainActor
+    func scenarioAppleScriptHarnessOpensSingletonSettingsWindow() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                set AppleScript's text item delimiters to linefeed
+                set outputLines to {}
+                set end of outputLines to (count of settings windows) as text
+                set openedSettingsWindow to open settings window
+                repeat 50 times
+                    if visible of first settings window then exit repeat
+                    delay 0.1
+                end repeat
+                set end of outputLines to (count of settings windows) as text
+                set end of outputLines to (count of windows) as text
+                set end of outputLines to name of first settings window as text
+                set end of outputLines to index of first settings window as text
+                set end of outputLines to class of openedSettingsWindow as text
+                set end of outputLines to visible of first settings window as text
+                open settings window
+                delay 0.25
+                set end of outputLines to (count of settings windows) as text
+                return outputLines as text
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        XCTAssertTrue(settingsControl(in: app, identifier: UIID.settingsTabView).waitForExistence(timeout: 3.0))
+
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines.count, 8)
+        XCTAssertEqual(outputLines[0], "1")
+        XCTAssertEqual(outputLines[1], "1")
+        XCTAssertGreaterThanOrEqual(Int(outputLines[2]) ?? 0, 1)
+        XCTAssertFalse(outputLines[3].isEmpty)
+        XCTAssertNotNil(Int(outputLines[4]))
+        XCTAssertEqual(outputLines[5], "settings window")
+        XCTAssertEqual(outputLines[6], "true")
+        XCTAssertEqual(outputLines[7], "1")
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessReadsEditorWindowWindowProperties() throws {
         try requireAppleScriptHarnessEnabled()
 

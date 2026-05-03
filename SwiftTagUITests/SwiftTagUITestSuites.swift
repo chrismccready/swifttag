@@ -146,6 +146,16 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessEnumeratesApplicationWindows() throws {
+        try scenarioAppleScriptHarnessEnumeratesApplicationWindows()
+    }
+
+    @MainActor
+    func testAppleScriptHarnessOpensSingletonSettingsWindow() throws {
+        try scenarioAppleScriptHarnessOpensSingletonSettingsWindow()
+    }
+
+    @MainActor
     func testAppleScriptHarnessReadsEditorWindowWindowProperties() throws {
         try scenarioAppleScriptHarnessReadsEditorWindowWindowProperties()
     }
