@@ -146,6 +146,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessReadsEditorWindowWindowProperties() throws {
+        try scenarioAppleScriptHarnessReadsEditorWindowWindowProperties()
+    }
+
+    @MainActor
     func testAppleScriptHarnessReadsAndWritesApplicationSettings() throws {
         try scenarioAppleScriptHarnessReadsAndWritesApplicationSettings()
     }

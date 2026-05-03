@@ -848,6 +848,76 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessReadsEditorWindowWindowProperties() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                set w to front editor window
+                set visible of w to true
+                set positionSample to position of w
+                set boundsSample to bounds of w
+                set AppleScript's text item delimiters to linefeed
+                set outputLines to {}
+                set end of outputLines to name of w as text
+                set end of outputLines to id of w as text
+                set end of outputLines to window id of w as text
+                set end of outputLines to index of w as text
+                set end of outputLines to closeable of w as text
+                set end of outputLines to collapseable of w as text
+                set end of outputLines to collapsed of w as text
+                set end of outputLines to full screen of w as text
+                set end of outputLines to resizable of w as text
+                set end of outputLines to visible of w as text
+                set end of outputLines to zoomable of w as text
+                set end of outputLines to zoomed of w as text
+                set end of outputLines to x of positionSample as text
+                set end of outputLines to y of positionSample as text
+                set end of outputLines to x of boundsSample as text
+                set end of outputLines to y of boundsSample as text
+                set end of outputLines to width of boundsSample as text
+                set end of outputLines to height of boundsSample as text
+                return outputLines as text
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines.count, 18)
+        XCTAssertFalse(outputLines[0].isEmpty)
+        XCTAssertNotNil(Int(outputLines[1]))
+        XCTAssertNotNil(UUID(uuidString: outputLines[2]))
+        XCTAssertNotNil(Int(outputLines[3]))
+        XCTAssertEqual(outputLines[4], "true")
+        XCTAssertEqual(outputLines[5], "true")
+        XCTAssertEqual(outputLines[6], "false")
+        XCTAssertEqual(outputLines[7], "false")
+        XCTAssertEqual(outputLines[8], "true")
+        XCTAssertEqual(outputLines[9], "true")
+        XCTAssertEqual(outputLines[10], "true")
+        XCTAssertEqual(outputLines[11], "false")
+        XCTAssertNotNil(Int(outputLines[12]))
+        XCTAssertNotNil(Int(outputLines[13]))
+        XCTAssertNotNil(Int(outputLines[14]))
+        XCTAssertNotNil(Int(outputLines[15]))
+        XCTAssertGreaterThan(Int(outputLines[16]) ?? 0, 0)
+        XCTAssertGreaterThan(Int(outputLines[17]) ?? 0, 0)
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessReadsAndWritesApplicationSettings() throws {
         try requireAppleScriptHarnessEnabled()
 

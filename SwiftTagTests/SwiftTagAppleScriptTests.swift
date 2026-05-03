@@ -211,6 +211,108 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func editorWindowInheritsWindowClassDescriptionProperties() throws {
+        let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptEditorWindow.self))
+
+        #expect(classDescription.superclass?.className == "window")
+        #expect(classDescription.hasReadableProperty(forKey: "title"))
+        #expect(classDescription.hasReadableProperty(forKey: "uniqueID"))
+        #expect(classDescription.hasWritableProperty(forKey: "orderedIndex"))
+        #expect(classDescription.hasWritableProperty(forKey: "bounds"))
+        #expect(classDescription.type(forKey: "bounds") == "rectangle")
+        #expect(classDescription.hasReadableProperty(forKey: "hasCloseBox"))
+        #expect(classDescription.hasReadableProperty(forKey: "isCollapseable"))
+        #expect(classDescription.hasWritableProperty(forKey: "isCollapsed"))
+        #expect(classDescription.hasWritableProperty(forKey: "isFullScreen"))
+        #expect(classDescription.hasWritableProperty(forKey: "position"))
+        #expect(classDescription.type(forKey: "position") == "point")
+        #expect(classDescription.hasReadableProperty(forKey: "isResizable"))
+        #expect(classDescription.hasWritableProperty(forKey: "isVisible"))
+        #expect(classDescription.hasReadableProperty(forKey: "isZoomable"))
+        #expect(classDescription.hasWritableProperty(forKey: "isZoomed"))
+    }
+
+    @MainActor
+    @Test
+    func editorWindowWindowPropertiesForwardToLiveNSWindow() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 80, y: 90, width: 320, height: 240),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        defer {
+            window.close()
+        }
+
+        window.title = "Script Window"
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: UUID(), liveWindow: window)
+
+        #expect(scriptWindow.title == "Script Window")
+        #expect(scriptWindow.name == "Script Window")
+        #expect(scriptWindow.uniqueID == window.windowNumber)
+        #expect(scriptWindow.hasCloseBox)
+        #expect(scriptWindow.isCollapseable)
+        #expect(scriptWindow.isResizable)
+        #expect(scriptWindow.isZoomable)
+        #expect(!scriptWindow.isCollapsed)
+        #expect(!scriptWindow.isFullScreen)
+
+        let top = window.frame.maxY + 25
+        let positionRecord = NSAppleEventDescriptor.record()
+        positionRecord.setDescriptor(
+            NSAppleEventDescriptor(int32: 120),
+            forKeyword: Self.fourCharCode("xpos").uint32Value
+        )
+        positionRecord.setDescriptor(
+            NSAppleEventDescriptor(int32: Int32(top)),
+            forKeyword: Self.fourCharCode("ypos").uint32Value
+        )
+        scriptWindow.setValue(positionRecord, forKey: "position")
+        #expect(window.frame.minX == 120)
+        #expect(window.frame.maxY == top)
+
+        let position = try #require(scriptWindow.position as? [String: NSNumber])
+        #expect(position["x"]?.doubleValue == 120)
+        #expect(position["y"]?.doubleValue == Double(top))
+
+        let boundsRecord = NSAppleEventDescriptor.record()
+        boundsRecord.setDescriptor(
+            NSAppleEventDescriptor(int32: 130),
+            forKeyword: Self.fourCharCode("xpos").uint32Value
+        )
+        boundsRecord.setDescriptor(
+            NSAppleEventDescriptor(int32: Int32(top)),
+            forKeyword: Self.fourCharCode("ypos").uint32Value
+        )
+        boundsRecord.setDescriptor(
+            NSAppleEventDescriptor(int32: 300),
+            forKeyword: Self.fourCharCode("widt").uint32Value
+        )
+        boundsRecord.setDescriptor(
+            NSAppleEventDescriptor(int32: 210),
+            forKeyword: Self.fourCharCode("heig").uint32Value
+        )
+        scriptWindow.setValue(boundsRecord, forKey: "bounds")
+        #expect(window.frame.minX == 130)
+        #expect(window.frame.maxX == 430)
+        #expect(window.frame.minY == top - 210)
+        #expect(window.frame.maxY == top)
+
+        let bounds = try #require(scriptWindow.bounds as? [String: NSNumber])
+        #expect(bounds["x"]?.doubleValue == 130)
+        #expect(bounds["y"]?.doubleValue == Double(top))
+        #expect(bounds["width"]?.doubleValue == 300)
+        #expect(bounds["height"]?.doubleValue == 210)
+
+        scriptWindow.setValue(NSNumber(value: true), forKey: "isVisible")
+        #expect(window.isVisible)
+        scriptWindow.setValue(NSNumber(value: false), forKey: "isVisible")
+        #expect(!window.isVisible)
+    }
+
+    @MainActor
+    @Test
     func appleScriptFlacSaveRequestUsesDefaultsWhenOptionsOmitted() throws {
         let request = try SwiftTagAppleScriptFlacSaveRequest.from(arguments: nil)
 

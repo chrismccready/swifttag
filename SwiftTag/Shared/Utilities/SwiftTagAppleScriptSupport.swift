@@ -3855,8 +3855,79 @@ final class SwiftTagScriptEditorWindow: NSObject {
         sessionIDValue.uuidString
     }
 
+    @objc(title)
+    var title: String {
+        resolvedTitle
+    }
+
+    @objc(uniqueID)
+    var uniqueID: Int {
+        liveWindow?.windowNumber ?? 0
+    }
+
+    @objc(orderedIndex)
+    var orderedIndex: Int {
+        liveWindow?.orderedIndex
+            ?? SwiftTagAppleScriptController.shared.indexOfEditorWindow(sessionID: sessionIDValue)
+            ?? 0
+    }
+
+    @objc(bounds)
+    var bounds: NSDictionary {
+        scriptRectangle(from: currentWindowFrame)
+    }
+
+    @objc(hasCloseBox)
+    var hasCloseBox: Bool {
+        liveWindowBoolean(forKey: "hasCloseBox")
+    }
+
+    @objc(isCollapseable)
+    var isCollapseable: Bool {
+        liveWindowBoolean(forKey: "isMiniaturizable")
+    }
+
+    @objc(isCollapsed)
+    var isCollapsed: Bool {
+        liveWindow?.isMiniaturized ?? false
+    }
+
+    @objc(isFullScreen)
+    var isFullScreen: Bool {
+        liveWindow?.styleMask.contains(.fullScreen) ?? false
+    }
+
+    @objc(position)
+    var position: NSDictionary {
+        scriptPoint(from: currentWindowFrame)
+    }
+
+    @objc(isResizable)
+    var isResizable: Bool {
+        liveWindowBoolean(forKey: "isResizable")
+    }
+
+    @objc(isVisible)
+    var isVisible: Bool {
+        liveWindow?.isVisible ?? false
+    }
+
+    @objc(isZoomable)
+    var isZoomable: Bool {
+        liveWindowBoolean(forKey: "isZoomable")
+    }
+
+    @objc(isZoomed)
+    var isZoomed: Bool {
+        liveWindow?.isZoomed ?? false
+    }
+
     @objc(name)
     var name: String {
+        resolvedTitle
+    }
+
+    private var resolvedTitle: String {
         let windowTitle = liveWindow?.title.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !windowTitle.isEmpty {
             return windowTitle
@@ -3908,7 +3979,41 @@ final class SwiftTagScriptEditorWindow: NSObject {
     }
 
     override func setValue(_ value: Any?, forKey key: String) {
-        guard key == "selectedTracks" else {
+        switch key {
+        case "bounds":
+            setBounds(from: value)
+            return
+        case "position":
+            setPosition(from: value)
+            return
+        case "orderedIndex":
+            if let index = scriptInteger(from: value) {
+                liveWindow?.orderedIndex = index
+            }
+            return
+        case "isCollapsed":
+            if let collapsed = scriptBoolean(from: value) {
+                setCollapsed(collapsed)
+            }
+            return
+        case "isFullScreen":
+            if let fullScreen = scriptBoolean(from: value) {
+                setFullScreen(fullScreen)
+            }
+            return
+        case "isVisible":
+            if let visible = scriptBoolean(from: value) {
+                setVisible(visible)
+            }
+            return
+        case "isZoomed":
+            if let zoomed = scriptBoolean(from: value) {
+                setZoomed(zoomed)
+            }
+            return
+        case "selectedTracks":
+            break
+        default:
             super.setValue(value, forKey: key)
             return
         }
@@ -4091,6 +4196,334 @@ final class SwiftTagScriptEditorWindow: NSObject {
         if window != nil {
             pendingCreationExpiration = nil
         }
+    }
+
+    private var currentWindowFrame: NSRect {
+        liveWindow?.frame ?? .zero
+    }
+
+    private func setBounds(from rawValue: Any?) {
+        guard let window = liveWindow else {
+            return
+        }
+
+        if let rectangle = scriptRectangle(from: rawValue) {
+            window.setFrame(
+                NSRect(
+                    x: rectangle.x,
+                    y: rectangle.y - rectangle.height,
+                    width: max(1, rectangle.width),
+                    height: max(1, rectangle.height)
+                ),
+                display: true
+            )
+            return
+        }
+
+        if let values = scriptNumbers(from: rawValue, expectedCount: 4) {
+            let left = values[0]
+            let top = values[1]
+            let right = values[2]
+            let bottom = values[3]
+            let width = max(1, right - left)
+            let height = max(1, top - bottom)
+            window.setFrame(
+                NSRect(x: left, y: bottom, width: width, height: height),
+                display: true
+            )
+        }
+    }
+
+    private func setPosition(from rawValue: Any?) {
+        guard let window = liveWindow else {
+            return
+        }
+
+        if let point = scriptPoint(from: rawValue) {
+            window.setFrameTopLeftPoint(NSPoint(x: point.x, y: point.y))
+            return
+        }
+
+        if let values = scriptNumbers(from: rawValue, expectedCount: 2) {
+            window.setFrameTopLeftPoint(NSPoint(x: values[0], y: values[1]))
+        }
+    }
+
+    private func setCollapsed(_ collapsed: Bool) {
+        guard let window = liveWindow,
+              window.isMiniaturized != collapsed else {
+            return
+        }
+
+        if collapsed {
+            window.miniaturize(nil)
+        } else {
+            window.deminiaturize(nil)
+        }
+    }
+
+    private func setFullScreen(_ fullScreen: Bool) {
+        guard let window = liveWindow,
+              window.styleMask.contains(.fullScreen) != fullScreen else {
+            return
+        }
+
+        window.toggleFullScreen(nil)
+    }
+
+    private func setVisible(_ visible: Bool) {
+        guard let window = liveWindow,
+              window.isVisible != visible else {
+            return
+        }
+
+        if visible {
+            window.orderFront(nil)
+        } else {
+            window.orderOut(nil)
+        }
+    }
+
+    private func setZoomed(_ zoomed: Bool) {
+        guard let window = liveWindow,
+              window.isZoomed != zoomed,
+              isZoomable else {
+            return
+        }
+
+        window.zoom(nil)
+    }
+
+    private func liveWindowBoolean(forKey key: String) -> Bool {
+        guard let value = liveWindow?.value(forKey: key) else {
+            return false
+        }
+
+        return scriptBoolean(from: value) ?? false
+    }
+
+    private func scriptNumbers(from rawValue: Any?, expectedCount: Int) -> [CGFloat]? {
+        let values: [CGFloat]
+        switch rawValue {
+        case let numbers as [NSNumber]:
+            values = numbers.map { CGFloat(truncating: $0) }
+        case let array as NSArray:
+            values = array.compactMap { value in
+                switch value {
+                case let number as NSNumber:
+                    return CGFloat(truncating: number)
+                case let string as NSString:
+                    return Double(string as String).map { CGFloat($0) }
+                case let string as String:
+                    return Double(string).map { CGFloat($0) }
+                default:
+                    return nil
+                }
+            }
+        case let descriptor as NSAppleEventDescriptor where descriptor.numberOfItems >= expectedCount:
+            values = (1...descriptor.numberOfItems).compactMap { index in
+                descriptor.atIndex(index).map { CGFloat($0.doubleValue) }
+            }
+        default:
+            return nil
+        }
+
+        guard values.count >= expectedCount else {
+            return nil
+        }
+
+        return Array(values.prefix(expectedCount))
+    }
+
+    private func scriptBoolean(from rawValue: Any?) -> Bool? {
+        switch rawValue {
+        case let value as Bool:
+            return value
+        case let value as NSNumber:
+            return value.boolValue
+        case let value as NSString:
+            return Bool(value as String)
+        case let value as String:
+            return Bool(value)
+        case let descriptor as NSAppleEventDescriptor:
+            return descriptor.booleanValue
+        default:
+            return nil
+        }
+    }
+
+    private func scriptInteger(from rawValue: Any?) -> Int? {
+        switch rawValue {
+        case let value as Int:
+            return value
+        case let value as NSNumber:
+            return value.intValue
+        case let value as NSString:
+            return Int(value as String)
+        case let value as String:
+            return Int(value)
+        case let descriptor as NSAppleEventDescriptor:
+            return Int(descriptor.int32Value)
+        default:
+            return nil
+        }
+    }
+
+    private struct ScriptPoint {
+        let x: CGFloat
+        let y: CGFloat
+    }
+
+    private struct ScriptRectangle {
+        let x: CGFloat
+        let y: CGFloat
+        let width: CGFloat
+        let height: CGFloat
+    }
+
+    private func scriptPoint(from frame: NSRect) -> NSDictionary {
+        [
+            "x": NSNumber(value: Double(frame.minX)),
+            "y": NSNumber(value: Double(frame.maxY))
+        ] as NSDictionary
+    }
+
+    private func scriptRectangle(from frame: NSRect) -> NSDictionary {
+        [
+            "x": NSNumber(value: Double(frame.minX)),
+            "y": NSNumber(value: Double(frame.maxY)),
+            "width": NSNumber(value: Double(frame.width)),
+            "height": NSNumber(value: Double(frame.height))
+        ] as NSDictionary
+    }
+
+    private func scriptPoint(from rawValue: Any?) -> ScriptPoint? {
+        guard let dictionary = scriptRecordDictionary(from: rawValue),
+              let x = scriptNumber(in: dictionary, matching: ["x", "xpos"]),
+              let y = scriptNumber(in: dictionary, matching: ["y", "ypos"]) else {
+            return nil
+        }
+
+        return ScriptPoint(x: x, y: y)
+    }
+
+    private func scriptRectangle(from rawValue: Any?) -> ScriptRectangle? {
+        guard let dictionary = scriptRecordDictionary(from: rawValue),
+              let x = scriptNumber(in: dictionary, matching: ["x", "xpos"]),
+              let y = scriptNumber(in: dictionary, matching: ["y", "ypos"]),
+              let width = scriptNumber(in: dictionary, matching: ["width", "widt"]),
+              let height = scriptNumber(in: dictionary, matching: ["height", "heig"]) else {
+            return nil
+        }
+
+        return ScriptRectangle(x: x, y: y, width: width, height: height)
+    }
+
+    private func scriptRecordDictionary(from rawValue: Any?) -> [AnyHashable: Any]? {
+        switch rawValue {
+        case let dictionary as [AnyHashable: Any]:
+            return dictionary
+        case let dictionary as NSDictionary:
+            var bridgedDictionary: [AnyHashable: Any] = [:]
+            for case let (key as AnyHashable, value) in dictionary {
+                bridgedDictionary[key] = value
+            }
+            return bridgedDictionary
+        case let descriptor as NSAppleEventDescriptor where descriptor.isRecordDescriptor:
+            return scriptRecordDictionary(from: descriptor)
+        default:
+            return nil
+        }
+    }
+
+    private func scriptRecordDictionary(from descriptor: NSAppleEventDescriptor) -> [AnyHashable: Any] {
+        guard descriptor.numberOfItems > 0 else {
+            return [:]
+        }
+
+        var dictionary: [AnyHashable: Any] = [:]
+        for index in 1...descriptor.numberOfItems {
+            let keyword = descriptor.keywordForDescriptor(at: index)
+            guard keyword != 0,
+                  let value = descriptor.atIndex(index) else {
+                continue
+            }
+            dictionary[NSNumber(value: keyword)] = value
+        }
+        return dictionary
+    }
+
+    private func scriptNumber(in dictionary: [AnyHashable: Any], matching names: Set<String>) -> CGFloat? {
+        dictionary
+            .first { names.contains(normalizedScriptRecordKey($0.key)) }
+            .flatMap { scriptNumber(from: $0.value) }
+    }
+
+    private func scriptNumber(from rawValue: Any?) -> CGFloat? {
+        switch rawValue {
+        case let value as CGFloat:
+            return value
+        case let value as Double:
+            return CGFloat(value)
+        case let value as NSNumber:
+            return CGFloat(truncating: value)
+        case let value as NSString:
+            return Double(value as String).map { CGFloat($0) }
+        case let value as String:
+            return Double(value).map { CGFloat($0) }
+        case let descriptor as NSAppleEventDescriptor:
+            if let stringValue = descriptor.stringValue,
+               let value = Double(stringValue) {
+                return CGFloat(value)
+            }
+            if let coerced = descriptor.coerce(toDescriptorType: typeIEEE64BitFloatingPoint) {
+                return CGFloat(coerced.doubleValue)
+            }
+            if descriptor.descriptorType == typeSInt32 {
+                return CGFloat(descriptor.int32Value)
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    private func normalizedScriptRecordKey(_ rawKey: AnyHashable) -> String {
+        if let string = rawKey as? String {
+            return normalizeScriptRecordString(string)
+        }
+
+        if let string = rawKey as? NSString {
+            return normalizeScriptRecordString(string as String)
+        }
+
+        if let number = rawKey as? NSNumber,
+           let codeString = fourCharString(from: number.uint32Value) {
+            return normalizeScriptRecordString(codeString)
+        }
+
+        return normalizeScriptRecordString(String(describing: rawKey))
+    }
+
+    private func normalizeScriptRecordString(_ string: String) -> String {
+        string
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
+    }
+
+    private func fourCharString(from code: UInt32) -> String? {
+        let bytes = [
+            UInt8((code >> 24) & 0xff),
+            UInt8((code >> 16) & 0xff),
+            UInt8((code >> 8) & 0xff),
+            UInt8(code & 0xff)
+        ]
+        guard bytes.allSatisfy({ $0 == 32 || (33...126).contains($0) }) else {
+            return nil
+        }
+
+        return String(bytes: bytes, encoding: .ascii)
     }
 
     private func normalizedScriptTracks(from rawValue: Any?) throws -> [SwiftTagScriptTrack] {
@@ -4349,12 +4782,16 @@ final class SwiftTagAppleScriptController {
     }
 
     func editorWindow(withUniqueID uniqueID: Any) -> SwiftTagScriptEditorWindow? {
-        guard let sessionID = normalizedSessionID(from: uniqueID) else {
+        if let sessionID = normalizedSessionID(from: uniqueID) {
+            _ = orderedEditorWindows()
+            return editorWindowsBySessionID[sessionID]
+        }
+
+        guard let windowUniqueID = normalizedWindowUniqueID(from: uniqueID) else {
             return nil
         }
 
-        _ = orderedEditorWindows()
-        return editorWindowsBySessionID[sessionID]
+        return orderedEditorWindows().first { $0.uniqueID == windowUniqueID }
     }
 
     func document(withUniqueID uniqueID: Any) -> SwiftTagScriptDocument? {
@@ -4819,6 +5256,26 @@ final class SwiftTagAppleScriptController {
 
         if let string = uniqueID as? NSString {
             return UUID(uuidString: string as String)
+        }
+
+        return nil
+    }
+
+    private func normalizedWindowUniqueID(from uniqueID: Any) -> Int? {
+        if let number = uniqueID as? NSNumber {
+            return number.intValue
+        }
+
+        if let integer = uniqueID as? Int {
+            return integer
+        }
+
+        if let string = uniqueID as? String {
+            return Int(string)
+        }
+
+        if let string = uniqueID as? NSString {
+            return Int(string as String)
         }
 
         return nil

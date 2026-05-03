@@ -194,6 +194,30 @@
             <cocoa class="NSData"/>
         </value-type>
 
+        <record-type name="point" code="poin" description="A point value in 2D space.">
+            <property name="x" code="xpos" type="integer" description="The x coordinate value.">
+                <cocoa key="x"/>
+            </property>
+            <property name="y" code="ypos" type="integer" description="The y coordinate value.">
+                <cocoa key="y"/>
+            </property>
+        </record-type>
+
+        <record-type name="rectangle" code="rect" description="A rectangle value in 2D space.">
+            <property name="x" code="xpos" type="integer" description="The x coordinate value.">
+                <cocoa key="x"/>
+            </property>
+            <property name="y" code="ypos" type="integer" description="The y coordinate value.">
+                <cocoa key="y"/>
+            </property>
+            <property name="width" code="widt" type="integer" description="The width coordinate value.">
+                <cocoa key="width"/>
+            </property>
+            <property name="height" code="heig" type="integer" description="The height coordinate value.">
+                <cocoa key="height"/>
+            </property>
+        </record-type>
+
         <record-type name="color" code="colr" description="A color value in RGBA color space (values 0-1.0).">
             <property name="red" code="redc" type="real" description="The red component value (0-1.0).">
                 <cocoa key="red"/>
@@ -345,16 +369,56 @@
             </responds-to>
         </class>
 
-        <class name="editor window" plural="editor windows" code="edtw" description="A SwiftTag editor window.">
+        <class name="window" code="cwin" description="A window.">
+            <cocoa class="NSWindow"/>
+            <property name="name" code="pnam" type="text" access="r" description="The title of the window.">
+                <cocoa key="title"/>
+            </property>
+            <property name="id" code="ID  " type="integer" access="r" description="The unique identifier of the window.">
+                <cocoa key="uniqueID"/>
+            </property>
+            <property name="index" code="pidx" type="integer" description="The index of the window, ordered front to back.">
+                <cocoa key="orderedIndex"/>
+            </property>
+            <property name="bounds" code="pbnd" type="rectangle" description="The bounding rectangle of the window.">
+                <cocoa key="bounds"/>
+            </property>
+            <property name="closeable" code="hclb" type="boolean" access="r" description="Does the window have a close button?">
+                <cocoa key="hasCloseBox"/>
+            </property>
+            <property name="collapseable" code="pWSh" type="boolean" access="r" description="does the window have a collapse button?">
+                <cocoa key="isCollapseable"/>
+            </property>
+            <property name="collapsed" code="wshd" type="boolean" description="is the window collapsed?">
+                <cocoa key="isCollapsed"/>
+            </property>
+            <property name="full screen" code="pFSc" type="boolean" description="is the window full screen?">
+                <cocoa key="isFullScreen"/>
+            </property>
+            <property name="position" code="ppos" type="point" description="the upper left position of the window">
+                <cocoa key="position"/>
+            </property>
+            <property name="resizable" code="prsz" type="boolean" access="r" description="Can the window be resized?">
+                <cocoa key="isResizable"/>
+            </property>
+            <property name="visible" code="pvis" type="boolean" description="Is the window visible right now?">
+                <cocoa key="isVisible"/>
+            </property>
+            <property name="zoomable" code="iszm" type="boolean" access="r" description="Does the window have a zoom button?">
+                <cocoa key="isZoomable"/>
+            </property>
+            <property name="zoomed" code="pzum" type="boolean" description="Is the window zoomed right now?">
+                <cocoa key="isZoomed"/>
+            </property>
+        </class>
+
+        <class name="editor window" plural="editor windows" code="edtw" inherits="window" description="A SwiftTag editor window.">
             <cocoa class="SwiftTagScriptEditorWindow"/>
             <element type="track">
                 <cocoa key="tracks"/>
             </element>
             <property name="document" code="docu" type="document" access="r" description="Editor window document.">
                 <cocoa key="document"/>
-            </property>
-            <property name="name" code="pnam" type="text" access="r" description="Window title.">
-                <cocoa key="name"/>
             </property>
             <property name="selected tracks" code="selt" access="rw" description="Currently selected tracks in editor window.">
                 <cocoa key="selectedTracks"/>
