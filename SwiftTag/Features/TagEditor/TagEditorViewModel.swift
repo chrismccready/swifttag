@@ -511,6 +511,14 @@ final class TagEditorViewModel {
         }
     }
 
+    func setLockState(_ isLocked: Bool, for trackID: UUID) throws {
+        guard let index = trackItems.firstIndex(where: { $0.id == trackID }) else {
+            throw SwiftTagAppleScriptCommandError.invalidTrackTarget
+        }
+
+        trackItems[index].isLocked = isLocked
+    }
+
     func titleBinding(for trackID: UUID) -> Binding<String>? {
         tagBinding(for: trackID, tagName: TagKey.title)
     }

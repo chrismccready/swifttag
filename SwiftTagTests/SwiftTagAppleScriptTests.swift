@@ -221,6 +221,33 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func addCommandDescriptionExposesOptionalWithLockParameter() throws {
+        let commandDescription = try #require(
+            NSScriptSuiteRegistry.shared().commandDescription(
+                withAppleEventClass: Self.fourCharCode("SwTG").uint32Value,
+                andAppleEventCode: Self.fourCharCode("addt").uint32Value
+            )
+        )
+
+        #expect(commandDescription.argumentNames.contains("WithLock"))
+        #expect(commandDescription.typeForArgument(withName: "WithLock") == "boolean")
+        #expect(commandDescription.isOptionalArgument(withName: "WithLock"))
+        #expect(commandDescription.appleEventCodeForArgument(withName: "WithLock") == Self.fourCharCode("wlok").uint32Value)
+    }
+
+    @MainActor
+    @Test
+    func trackClassDescriptionExposesWritableLockedProperty() throws {
+        let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptTrack.self))
+
+        #expect(classDescription.key(withAppleEventCode: Self.fourCharCode("tlok").uint32Value) == "trackLocked")
+        #expect(classDescription.type(forKey: "trackLocked") == "boolean")
+        #expect(classDescription.hasReadableProperty(forKey: "trackLocked"))
+        #expect(classDescription.hasWritableProperty(forKey: "trackLocked"))
+    }
+
+    @MainActor
+    @Test
     func settingsWindowIsSingletonApplicationElementAndInheritsWindowProperties() throws {
         let application = NSApplication.shared
         let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptSettingsWindow.self))
@@ -354,6 +381,31 @@ struct SwiftTagAppleScriptTests {
         let request = try SwiftTagAppleScriptFlacSaveRequest.from(arguments: nil)
 
         #expect(request == .defaults)
+    }
+
+    @Test
+    func appleScriptAddTracksRequestUsesUnlockedDefaultWhenOptionOmitted() throws {
+        let request = try SwiftTagAppleScriptAddTracksRequest.from(arguments: nil)
+
+        #expect(request == .defaults)
+        #expect(!request.locked)
+    }
+
+    @Test
+    func appleScriptAddTracksRequestMapsWithLockBooleanOption() throws {
+        let lockedRequest = try SwiftTagAppleScriptAddTracksRequest.from(
+            arguments: [
+                "WithLock": true
+            ]
+        )
+        let unlockedRequest = try SwiftTagAppleScriptAddTracksRequest.from(
+            arguments: [
+                "WithLock": NSNumber(value: false)
+            ]
+        )
+
+        #expect(lockedRequest.locked)
+        #expect(!unlockedRequest.locked)
     }
 
     @Test
@@ -1885,6 +1937,127 @@ struct SwiftTagAppleScriptTests {
         #expect(scriptWindow.countOfTracks == 1)
         #expect(addedTracks.first?.fileURL == addedURL.standardizedFileURL)
         #expect(scriptWindow.tracks.first?.title == "Added Track")
+    }
+
+    @MainActor
+    @Test
+    func addingTracksThroughScriptEditorWindowPassesLockRequest() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let addedURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-locked-added.flac")
+        var receivedLocked: Bool?
+        var sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackIDs: [])
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    sessionSnapshot
+                },
+                addTracksWithLock: { urls, locked in
+                    #expect(urls == [addedURL.standardizedFileURL])
+                    receivedLocked = locked
+
+                    let addedTrack = Track(
+                        tags: [TagKey.title: "Locked Added Track"],
+                        sourceFileURL: addedURL,
+                        isLocked: locked
+                    )
+                    sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [addedTrack],
+                        selectedTrackIDs: []
+                    )
+                    return [addedTrack.id]
+                },
+                selectTracks: { trackIDs in
+                    sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
+                        tracks: sessionSnapshot.tracks,
+                        selectedTrackIDs: trackIDs
+                    )
+                },
+                saveDocument: { _ in
+                    .init()
+                }
+            )
+        )
+
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
+        let addedTracks = try scriptWindow.addTracks(at: [addedURL], locked: true)
+
+        #expect(receivedLocked == true)
+        #expect(addedTracks.count == 1)
+        #expect(sessionSnapshot.tracks.first?.isLocked == true)
+        #expect(scriptWindow.tracks.first?.title == "Locked Added Track")
+    }
+
+    @MainActor
+    @Test
+    func trackLockedPropertyReadsAndWritesBridgeLockState() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let trackID = UUID()
+        let trackURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-lock-property.flac")
+        var track = Track(
+            id: trackID,
+            tags: [TagKey.title: "Lock Property Track"],
+            sourceFileURL: trackURL,
+            isLocked: false
+        )
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [track],
+                        selectedTrackIDs: []
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                setTrackLocked: { requestedTrackID, locked in
+                    #expect(requestedTrackID == trackID)
+                    track.isLocked = locked
+                },
+                saveDocument: { _ in
+                    .init()
+                }
+            )
+        )
+
+        let scriptTrack = SwiftTagScriptTrack(sessionID: sessionID, trackID: trackID)
+
+        #expect(!scriptTrack.trackLocked)
+        scriptTrack.trackLocked = true
+        #expect(track.isLocked)
+        #expect(scriptTrack.trackLocked)
+        scriptTrack.setValue(NSNumber(value: false), forKey: "trackLocked")
+        #expect(!track.isLocked)
+        #expect(!scriptTrack.trackLocked)
     }
 }
 

@@ -242,6 +242,10 @@
                 <cocoa key="Target"/>
                 <type type="editor window"/>
             </parameter>
+            <parameter name="with lock" code="wlok" optional="yes" description="Whether to lock the added file(s).">
+                <cocoa key="WithLock"/>
+                <type type="boolean"/>
+            </parameter>
             <result description="Reference to the added track(s).">
                 <type type="track"/>
                 <type type="track" list="yes"/>
@@ -541,6 +545,9 @@
             </property>
             <property name="lineage" code="ling" type="text" description="The lineage of the track.">
                 <cocoa key="lineage"/>
+            </property>
+            <property name="locked" code="tlok" type="boolean" description="Whether the track is locked (read-only in editor window).">
+                <cocoa key="trackLocked"/>
             </property>
             <property name="location" code="locn" type="text" description="Recording/performance location/venue of the track.">
                 <cocoa key="location"/>

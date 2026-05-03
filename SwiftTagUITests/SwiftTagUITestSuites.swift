@@ -121,6 +121,16 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessAddsLockedTrackWithOptionalParameter() throws {
+        try scenarioAppleScriptHarnessAddsLockedTrackWithOptionalParameter()
+    }
+
+    @MainActor
+    func testAppleScriptHarnessReadsAndWritesTrackLockedProperty() throws {
+        try scenarioAppleScriptHarnessReadsAndWritesTrackLockedProperty()
+    }
+
+    @MainActor
     func testAppleScriptHarnessReadsTrackPicturesByType() throws {
         try scenarioAppleScriptHarnessReadsTrackPicturesByType()
     }

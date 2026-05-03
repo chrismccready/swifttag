@@ -1630,7 +1630,7 @@ struct ContentView: View {
         return saveResult
     }
 
-    private func performAppleScriptAddTracks(_ urls: [URL]) throws -> [UUID] {
+    private func performAppleScriptAddTracks(_ urls: [URL], locked: Bool) throws -> [UUID] {
         let startedScopedURLs = urls.filter { $0.startAccessingSecurityScopedResource() }
         defer {
             for scopedURL in startedScopedURLs {
@@ -1648,7 +1648,7 @@ struct ContentView: View {
             return []
         }
 
-        return try importFlacFilesSynchronously(filteredFiles, locked: false, append: true)
+        return try importFlacFilesSynchronously(filteredFiles, locked: locked, append: true)
     }
 
     private func performAppleScriptSelectTracks(_ trackIDs: Set<UUID>) throws {
@@ -2043,11 +2043,14 @@ struct ContentView: View {
                         selectedTrackIDs: viewModel.selectedTrackIDs
                     )
                 },
-                addTracks: { urls in
-                    try performAppleScriptAddTracks(urls)
+                addTracksWithLock: { urls, locked in
+                    try performAppleScriptAddTracks(urls, locked: locked)
                 },
                 selectTracks: { trackIDs in
                     try performAppleScriptSelectTracks(trackIDs)
+                },
+                setTrackLocked: { trackID, locked in
+                    try viewModel.setLockState(locked, for: trackID)
                 },
                 saveDocument: { destinationURL in
                     try performAppleScriptSwiftTagDocumentSave(to: destinationURL)

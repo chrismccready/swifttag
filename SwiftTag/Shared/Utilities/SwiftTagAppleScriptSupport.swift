@@ -597,11 +597,13 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
     case noFlacFilesProvided
     case noSwiftTagDocumentsProvided
     case invalidFileValue
+    case invalidAddLockOptionValue(String)
     case invalidSaveOptionValue(String)
     case invalidSaveScopeOptionValue(String)
     case invalidSavePayloadOptionValue(String)
     case invalidCloseSaveOptionValue(String)
     case invalidSelectedTrack
+    case invalidTrackTarget
     case invalidSaveDestination
     case invalidTagKey
     case invalidTagObject
@@ -635,6 +637,8 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
             return "No .swifttag documents were provided."
         case .invalidFileValue:
             return "AppleScript file argument must resolve to a local file URL."
+        case let .invalidAddLockOptionValue(optionName):
+            return "Add option \(optionName) must be true or false."
         case let .invalidSaveOptionValue(optionName):
             return "Save option \(optionName) must be true or false."
         case let .invalidSaveScopeOptionValue(optionName):
@@ -645,6 +649,8 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
             return "Close save option \(optionName) must be yes, no, or ask."
         case .invalidSelectedTrack:
             return "Selected tracks must belong to target editor window."
+        case .invalidTrackTarget:
+            return "Track command target must resolve to a track in the current editor window."
         case .invalidSaveDestination:
             return "Save destination must be a single local file URL."
         case .invalidTagKey:
@@ -685,11 +691,13 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
              .noFlacFilesProvided,
              .noSwiftTagDocumentsProvided,
              .invalidFileValue,
+             .invalidAddLockOptionValue,
              .invalidSaveOptionValue,
              .invalidSaveScopeOptionValue,
              .invalidSavePayloadOptionValue,
              .invalidCloseSaveOptionValue,
              .invalidSelectedTrack,
+             .invalidTrackTarget,
              .invalidSaveDestination,
              .invalidTagKey,
              .invalidTagObject,
@@ -791,6 +799,24 @@ private enum SwiftTagAppleScriptFileURLResolver {
     }
 }
 
+struct SwiftTagAppleScriptAddTracksRequest: Equatable {
+    let locked: Bool
+
+    static let defaults = Self(locked: false)
+
+    static func from(arguments: [String: Any]?) throws -> Self {
+        let locked = try SwiftTagAppleScriptBooleanOption.boolValue(
+            from: SwiftTagAppleScriptArgumentValue.value(
+                key: "WithLock",
+                in: arguments
+            ),
+            optionName: "with lock"
+        )
+
+        return Self(locked: locked)
+    }
+}
+
 struct SwiftTagAppleScriptFlacSaveRequest: Equatable {
     let payload: SavePayloadOption?
     let scope: SaveScopeOption?
@@ -888,6 +914,55 @@ private enum SwiftTagAppleScriptArgumentValue {
         }
         
         return nil
+    }
+}
+
+private enum SwiftTagAppleScriptBooleanOption {
+    static func boolValue(
+        from rawValue: Any?,
+        optionName: String
+    ) throws -> Bool {
+        guard let rawValue else {
+            return false
+        }
+
+        switch rawValue {
+        case let value as Bool:
+            return value
+        case let value as NSNumber:
+            return value.boolValue
+        case let value as NSString:
+            if let parsedValue = boolValue(from: value as String) {
+                return parsedValue
+            }
+        case let value as String:
+            if let parsedValue = boolValue(from: value) {
+                return parsedValue
+            }
+        case let descriptor as NSAppleEventDescriptor:
+            if descriptor.descriptorType == typeBoolean {
+                return descriptor.booleanValue
+            }
+            if let stringValue = descriptor.stringValue,
+               let parsedValue = boolValue(from: stringValue) {
+                return parsedValue
+            }
+        default:
+            break
+        }
+
+        throw SwiftTagAppleScriptCommandError.invalidAddLockOptionValue(optionName)
+    }
+
+    private static func boolValue(from rawValue: String) -> Bool? {
+        switch rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "true", "yes", "1":
+            return true
+        case "false", "no", "0":
+            return false
+        default:
+            return nil
+        }
     }
 }
 
@@ -1188,8 +1263,9 @@ struct SwiftTagAppleScriptSessionSnapshot {
 struct SwiftTagAppleScriptSessionBridge {
     let documentSnapshot: () -> SwiftTagAppleScriptDocumentSnapshot
     let sessionSnapshot: () -> SwiftTagAppleScriptSessionSnapshot
-    let addTracks: ([URL]) throws -> [UUID]
+    let addTracks: ([URL], Bool) throws -> [UUID]
     let selectTracks: (Set<UUID>) throws -> Void
+    let setTrackLocked: (UUID, Bool) throws -> Void
     let saveDocument: (URL?) throws -> SwiftTagDocumentSaveState
     let saveTracks: (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult
     let upsertTag: (UUID, String, String) throws -> Void
@@ -1204,6 +1280,53 @@ struct SwiftTagAppleScriptSessionBridge {
         sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
         addTracks: @escaping ([URL]) throws -> [UUID],
         selectTracks: @escaping (Set<UUID>) throws -> Void,
+        setTrackLocked: @escaping (UUID, Bool) throws -> Void = { _, _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
+        saveDocument: @escaping (URL?) throws -> SwiftTagDocumentSaveState,
+        saveTracks: @escaping (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult = { _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
+        upsertTag: @escaping (UUID, String, String) throws -> Void = { _, _, _ in },
+        deleteTag: @escaping (UUID, String) throws -> Void = { _, _ in },
+        upsertPicture: @escaping (UUID, SwiftTagAppleScriptPicturePayload) throws -> Int = { _, _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
+        replacePicture: @escaping (UUID, Int, SwiftTagAppleScriptPicturePayload) throws -> Int = { _, _, _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
+        updatePictureDescription: @escaping (UUID, Int, String) throws -> Void = { _, _, _ in },
+        deletePicture: @escaping (UUID, Int) throws -> Void = { _, _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+    ) {
+        self.init(
+            documentSnapshot: documentSnapshot,
+            sessionSnapshot: sessionSnapshot,
+            addTracksWithLock: { urls, _ in
+                try addTracks(urls)
+            },
+            selectTracks: selectTracks,
+            setTrackLocked: setTrackLocked,
+            saveDocument: saveDocument,
+            saveTracks: saveTracks,
+            upsertTag: upsertTag,
+            deleteTag: deleteTag,
+            upsertPicture: upsertPicture,
+            replacePicture: replacePicture,
+            updatePictureDescription: updatePictureDescription,
+            deletePicture: deletePicture
+        )
+    }
+
+    init(
+        documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
+        sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
+        addTracksWithLock: @escaping ([URL], Bool) throws -> [UUID],
+        selectTracks: @escaping (Set<UUID>) throws -> Void,
+        setTrackLocked: @escaping (UUID, Bool) throws -> Void = { _, _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
         saveDocument: @escaping (URL?) throws -> SwiftTagDocumentSaveState,
         saveTracks: @escaping (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult = { _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
@@ -1223,8 +1346,9 @@ struct SwiftTagAppleScriptSessionBridge {
     ) {
         self.documentSnapshot = documentSnapshot
         self.sessionSnapshot = sessionSnapshot
-        self.addTracks = addTracks
+        self.addTracks = addTracksWithLock
         self.selectTracks = selectTracks
+        self.setTrackLocked = setTrackLocked
         self.saveDocument = saveDocument
         self.saveTracks = saveTracks
         self.upsertTag = upsertTag
@@ -3384,6 +3508,24 @@ final class SwiftTagScriptTrack: NSObject {
         trackSnapshot?.sourceFileURL?.standardizedFileURL
     }
 
+    @objc(trackLocked)
+    var trackLocked: Bool {
+        get {
+            trackSnapshot?.isLocked == true
+        }
+        set {
+            do {
+                try SwiftTagAppleScriptController.shared.setTrackLocked(
+                    newValue,
+                    forSessionID: sessionIDValue,
+                    trackID: trackIDValue
+                )
+            } catch {
+                _ = NSScriptCommand.current()?.fail(error)
+            }
+        }
+    }
+
     @objc(tags)
     var tags: [SwiftTagScriptTag] {
         SwiftTagAppleScriptController.shared.tags(
@@ -4115,8 +4257,12 @@ final class SwiftTagScriptEditorWindow: NSObject {
         }
     }
 
-    func addTracks(at urls: [URL]) throws -> [SwiftTagScriptTrack] {
-        try SwiftTagAppleScriptController.shared.addTracks(urls, toSessionID: sessionIDValue)
+    func addTracks(at urls: [URL], locked: Bool = false) throws -> [SwiftTagScriptTrack] {
+        try SwiftTagAppleScriptController.shared.addTracks(
+            urls,
+            locked: locked,
+            toSessionID: sessionIDValue
+        )
     }
 
     @objc(handleAddTracksScriptCommand:)
@@ -4126,7 +4272,8 @@ final class SwiftTagScriptEditorWindow: NSObject {
                 from: command.directParameter,
                 missingValueError: .missingAddTracksInput
             )
-            let tracks = try addTracks(at: urls)
+            let request = try SwiftTagAppleScriptAddTracksRequest.from(arguments: command.evaluatedArguments)
+            let tracks = try addTracks(at: urls, locked: request.locked)
             return tracks.count == 1 ? tracks[0] : tracks
         } catch {
             return command.fail(error)
@@ -5343,12 +5490,32 @@ final class SwiftTagAppleScriptController {
         sessionSnapshot(forSessionID: sessionID)?.tracks.first(where: { $0.id == trackID })
     }
 
-    func addTracks(_ urls: [URL], toSessionID sessionID: UUID) throws -> [SwiftTagScriptTrack] {
+    func setTrackLocked(
+        _ locked: Bool,
+        forSessionID sessionID: UUID,
+        trackID: UUID
+    ) throws {
         guard let bridge = sessionBridgesBySessionID[sessionID] else {
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
         }
 
-        let trackIDs = try bridge.addTracks(urls)
+        guard sessionSnapshot(forSessionID: sessionID)?.tracks.contains(where: { $0.id == trackID }) == true else {
+            throw SwiftTagAppleScriptCommandError.invalidTrackTarget
+        }
+
+        try bridge.setTrackLocked(trackID, locked)
+    }
+
+    func addTracks(
+        _ urls: [URL],
+        locked: Bool = false,
+        toSessionID sessionID: UUID
+    ) throws -> [SwiftTagScriptTrack] {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        let trackIDs = try bridge.addTracks(urls, locked)
         return trackIDs.compactMap { track(forSessionID: sessionID, trackID: $0) }
     }
 
@@ -6161,8 +6328,9 @@ extension NSApplication {
                 from: command.directParameter,
                 missingValueError: .missingAddTracksInput
             )
+            let request = try SwiftTagAppleScriptAddTracksRequest.from(arguments: command.evaluatedArguments)
             let targetWindow = try scriptEditorWindowTarget(from: command)
-            let tracks = try targetWindow.addTracks(at: urls)
+            let tracks = try targetWindow.addTracks(at: urls, locked: request.locked)
             return tracks.count == 1 ? tracks[0] : tracks
         } catch {
             return command.fail(error)

@@ -567,6 +567,111 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessAddsLockedTrackWithOptionalParameter() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let fixtureURL = try prepareExternalOpenPanelFlacFixture(
+            fileName: Self.fixtureFileName,
+            destinationFileName: "swifttag-applescript-locked-add-\(UUID().uuidString).flac"
+        )
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    add POSIX file "\(fixtureURL.path)" with lock true
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    if (count of tracks) is 0 then error "SwiftTag add did not load track."
+                    try
+                        set title of first track to "Locked Add Mutation \(UUID().uuidString)"
+                        return "mutation unexpectedly succeeded"
+                    on error messageText
+                        return messageText
+                    end try
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        XCTAssertEqual(
+            normalizedAppleScriptTextOutput(output),
+            "Target track is locked for editing."
+        )
+    }
+
+    @MainActor
+    func scenarioAppleScriptHarnessReadsAndWritesTrackLockedProperty() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let fixtureURL = try prepareExternalOpenPanelFlacFixture(
+            fileName: Self.fixtureFileName,
+            destinationFileName: "swifttag-applescript-track-locked-\(UUID().uuidString).flac"
+        )
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let title = "Unlocked By Property \(UUID().uuidString)"
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    add POSIX file "\(fixtureURL.path)" with lock true
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    if (count of tracks) is 0 then error "SwiftTag add did not load track."
+
+                    set initialLocked to locked of first track
+                    set locked of first track to false
+                    set unlockedValue to locked of first track
+                    set title of first track to "\(title)"
+                    set editedTitle to title of first track as text
+                    set locked of first track to true
+
+                    try
+                        set title of first track to "Locked Property Mutation"
+                        set lockedError to "mutation unexpectedly succeeded"
+                    on error messageText
+                        set lockedError to messageText
+                    end try
+
+                    set AppleScript's text item delimiters to linefeed
+                    return {initialLocked as text, unlockedValue as text, editedTitle, locked of first track as text, lockedError} as text
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        XCTAssertEqual(normalizedAppleScriptTextOutput(output), [
+            "true",
+            "false",
+            title,
+            "true",
+            "Target track is locked for editing."
+        ].joined(separator: "\n"))
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessReadsTrackPicturesByType() throws {
         try requireAppleScriptHarnessEnabled()
 
