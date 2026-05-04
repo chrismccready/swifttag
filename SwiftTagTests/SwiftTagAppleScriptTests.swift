@@ -1611,6 +1611,78 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func trackFileWhoseSpecifiersMatchFileDescriptorsAndPaths() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let firstTrackURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-file-1.flac")
+        let secondTrackURL = URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-file-2.flac")
+        let firstTrack = Track(
+            tags: [TagKey.title: "First File"],
+            sourceFileURL: firstTrackURL
+        )
+        let secondTrack = Track(
+            tags: [TagKey.title: "Second File"],
+            sourceFileURL: secondTrackURL
+        )
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [firstTrack, secondTrack],
+                        selectedTrackIDs: []
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptTrack = try #require(scriptWindow.tracks.first)
+        #expect(scriptTrack.fileURL == firstTrackURL.standardizedFileURL)
+
+        let scriptFileURL = try #require(scriptTrack.value(forKey: "fileURL") as? SwiftTagScriptFileURL)
+        #expect(scriptFileURL.scriptingFileDescriptor?.fileURLValue as URL? == firstTrackURL.standardizedFileURL)
+
+        let descriptorMatches = Self.evaluatedTrackWrappers(
+            from: try Self.whoseTrackSpecifier(
+                in: scriptWindow,
+                propertyKey: "fileURL",
+                value: NSAppleEventDescriptor(fileURL: firstTrackURL)
+            )
+        )
+        #expect(descriptorMatches.map(\.fileURL) == [firstTrackURL.standardizedFileURL])
+
+        let pathMatches = Self.evaluatedTrackWrappers(
+            from: try Self.whoseTrackSpecifier(
+                in: scriptWindow,
+                propertyKey: "fileURL",
+                value: firstTrackURL.path
+            )
+        )
+        #expect(pathMatches.map(\.fileURL) == [firstTrackURL.standardizedFileURL])
+    }
+
+    @MainActor
+    @Test
     func editorWindowTracksFollowVisibleTableOrderForIndexSpecifiers() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()

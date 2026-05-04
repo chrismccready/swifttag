@@ -328,6 +328,48 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessFindsTracksWhoseFileMatchesFileValue() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(importFixture: true)
+        defer {
+            app.terminate()
+        }
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    set editorWindow to it
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    set trackFile to file of first track
+                    set trackPath to POSIX path of trackFile
+                    set foundByFileValue to first track whose its file is trackFile
+                    set foundByPOSIXFile to first track whose its file is POSIX file trackPath
+                    tell first track
+                        set nestedFoundByFileValue to first track of editorWindow whose its file is trackFile
+                        set nestedFoundByPOSIXFile to first track of editorWindow whose its file is POSIX file trackPath
+                    end tell
+                    return (title of foundByFileValue) & linefeed & (title of foundByPOSIXFile) & linefeed & (title of nestedFoundByFileValue) & linefeed & (title of nestedFoundByPOSIXFile)
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, Array(repeating: "Test Title", count: 4))
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessSetsTitleOfFirstTrack() throws {
         try requireAppleScriptHarnessEnabled()
 

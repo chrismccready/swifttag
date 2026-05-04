@@ -91,6 +91,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessFindsTracksWhoseFileMatchesFileValue() throws {
+        try scenarioAppleScriptHarnessFindsTracksWhoseFileMatchesFileValue()
+    }
+
+    @MainActor
     func testAppleScriptHarnessSetsTitleOfFirstTrack() throws {
         try scenarioAppleScriptHarnessSetsTitleOfFirstTrack()
     }

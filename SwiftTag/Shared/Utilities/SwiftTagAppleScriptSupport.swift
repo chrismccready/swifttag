@@ -2139,6 +2139,104 @@ extension NSData {
     }
 }
 
+@objc(SwiftTagScriptFileURL)
+final class SwiftTagScriptFileURL: NSObject {
+    fileprivate let url: URL
+
+    init(_ url: URL) {
+        self.url = url.standardizedFileURL
+        super.init()
+    }
+
+    @objc(path)
+    var path: String {
+        url.path
+    }
+
+    @objc(fileURLValue)
+    var fileURLValue: NSURL {
+        url as NSURL
+    }
+
+    @objc(scriptingAnyDescriptor)
+    var scriptingAnyDescriptor: NSAppleEventDescriptor? {
+        scriptingFileDescriptor
+    }
+
+    @objc(scriptingFileDescriptor)
+    var scriptingFileDescriptor: NSAppleEventDescriptor? {
+        NSAppleEventDescriptor(fileURL: url)
+    }
+
+    override var description: String {
+        url.path
+    }
+
+    override var hash: Int {
+        SwiftTagAppleScriptFileValue.normalizedPath(from: url).hashValue
+    }
+
+    override func isEqual(_ object: Any?) -> Bool {
+        guard let otherPath = SwiftTagAppleScriptFileValue.normalizedPath(from: object) else {
+            return false
+        }
+
+        return SwiftTagAppleScriptFileValue.normalizedPath(from: url) == otherPath
+    }
+
+    @objc(scriptingIsEqualTo:)
+    override func scriptingIsEqual(to object: Any?) -> Bool {
+        isEqual(object)
+    }
+}
+
+private enum SwiftTagAppleScriptFileValue {
+    static func normalizedPath(from value: Any?) -> String? {
+        switch value {
+        case let fileURL as SwiftTagScriptFileURL:
+            return normalizedPath(from: fileURL.url)
+        case let url as URL where url.isFileURL:
+            return normalizedPath(from: url)
+        case let url as NSURL where url.isFileURL:
+            return normalizedPath(from: url as URL)
+        case let descriptor as NSAppleEventDescriptor:
+            if let fileURL = descriptor.fileURLValue {
+                return normalizedPath(from: fileURL as URL)
+            }
+            if let stringValue = descriptor.stringValue {
+                return normalizedPath(fromPathString: stringValue)
+            }
+            return nil
+        case let string as String:
+            return normalizedPath(fromPathString: string)
+        case let string as NSString:
+            return normalizedPath(fromPathString: string as String)
+        default:
+            return nil
+        }
+    }
+
+    private static func normalizedPath(fromPathString rawValue: String) -> String? {
+        let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty else {
+            return nil
+        }
+
+        if let url = URL(string: trimmedValue), url.isFileURL {
+            return normalizedPath(from: url)
+        }
+
+        return normalizedPath(from: URL(fileURLWithPath: trimmedValue))
+    }
+
+    private static func normalizedPath(from url: URL) -> String {
+        url
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
+            .path
+    }
+}
+
 @objc(SwiftTagScriptColor)
 final class SwiftTagScriptColor: NSObject {
     private var redComponent: Double
@@ -3503,9 +3601,14 @@ final class SwiftTagScriptTrack: NSObject {
         }
     }
 
-    @objc(fileURL)
+    @nonobjc
     var fileURL: URL? {
         trackSnapshot?.sourceFileURL?.standardizedFileURL
+    }
+
+    @objc(fileURL)
+    var scriptingFileURL: SwiftTagScriptFileURL? {
+        fileURL.map(SwiftTagScriptFileURL.init)
     }
 
     @objc(trackLocked)
