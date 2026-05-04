@@ -1651,6 +1651,12 @@ struct ContentView: View {
         return try importFlacFilesSynchronously(filteredFiles, locked: locked, append: true)
     }
 
+    private func performAppleScriptDeleteTracks(_ trackIDs: Set<UUID>) throws {
+        try viewModel.appleScriptDeleteTracks(withIDs: trackIDs)
+        applyAutoTrackTotalIfNeeded()
+        refreshTrackMonitoring()
+    }
+
     private func performAppleScriptSelectTracks(_ trackIDs: Set<UUID>) throws {
         let availableTrackIDs = Set(viewModel.trackItems.map(\.id))
         guard trackIDs.isSubset(of: availableTrackIDs) else {
@@ -2045,6 +2051,9 @@ struct ContentView: View {
                 },
                 addTracksWithLock: { urls, locked in
                     try performAppleScriptAddTracks(urls, locked: locked)
+                },
+                deleteTracks: { trackIDs in
+                    try performAppleScriptDeleteTracks(trackIDs)
                 },
                 selectTracks: { trackIDs in
                     try performAppleScriptSelectTracks(trackIDs)

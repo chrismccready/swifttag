@@ -288,7 +288,7 @@
             <element type="editor window">
                 <cocoa key="scriptEditorWindows"/>
             </element>
-            <element type="track">
+            <element type="track" access="rw">
                 <cocoa key="scriptTracks"/>
             </element>
             <property name="track save scope" code="svso" type="save scope options" access="rw" description="The track selection scope of a save operation (aka: FLAC File Save (⌘S): Write).">
@@ -435,7 +435,7 @@
 
         <class name="editor window" plural="editor windows" code="edtw" inherits="window" description="A SwiftTag editor window.">
             <cocoa class="SwiftTagScriptEditorWindow"/>
-            <element type="track">
+            <element type="track" access="rw">
                 <cocoa key="tracks"/>
             </element>
             <property name="document" code="docu" type="document" access="r" description="Editor window document.">
@@ -620,6 +620,9 @@
             </responds-to>
             <responds-to command="import picture">
                 <cocoa method="handleImportPictureScriptCommand:"/>
+            </responds-to>
+            <responds-to command="delete">
+                <cocoa method="handleDeleteScriptCommand:"/>
             </responds-to>
         </class>
 

@@ -568,6 +568,68 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessDeletesTracks() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let firstFixtureURL = try prepareExternalOpenPanelFlacFixture(
+            fileName: Self.fixtureFileName,
+            destinationFileName: "01-swifttag-delete-track-\(UUID().uuidString).flac"
+        )
+        let secondFixtureURL = try prepareExternalOpenPanelFlacFixture(
+            fileName: Self.fixtureFileName,
+            destinationFileName: "02-swifttag-delete-track-\(UUID().uuidString).flac"
+        )
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    add {POSIX file "\(firstFixtureURL.path)", POSIX file "\(secondFixtureURL.path)"}
+                    repeat 50 times
+                        if (count of tracks) is 2 then exit repeat
+                        delay 0.1
+                    end repeat
+                    tell first track
+                        set title to "Dirty Delete Target"
+                        delete
+                    end tell
+                    set countAfterNestedDelete to count of tracks
+                    add {POSIX file "\(firstFixtureURL.path)"}
+                    repeat 50 times
+                        if (count of tracks) is 2 then exit repeat
+                        delay 0.1
+                    end repeat
+                    set matchingBeforeWhoseDelete to count of (every track whose title is "Test Title")
+                    delete every track whose title is "Test Title"
+                    set countAfterWhoseDelete to count of tracks
+                    add {POSIX file "\(firstFixtureURL.path)", POSIX file "\(secondFixtureURL.path)"}
+                    repeat 50 times
+                        if (count of tracks) is 2 then exit repeat
+                        delay 0.1
+                    end repeat
+                    delete every track
+                    return (countAfterNestedDelete as text) & linefeed & (matchingBeforeWhoseDelete as text) & linefeed & (countAfterWhoseDelete as text) & linefeed & ((count of tracks) as text)
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        XCTAssertFalse(app.alerts["Remove Selected Track(s)?"].exists)
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, ["1", "2", "0", "0"])
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessSavesWithScopeAndPayloadEnumerations() throws {
         try requireAppleScriptHarnessEnabled()
 

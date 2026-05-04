@@ -1242,6 +1242,19 @@ final class TagEditorViewModel {
         reloadMiscTagRowsFromSelection()
     }
 
+    func appleScriptDeleteTracks(withIDs trackIDs: Set<UUID>) throws {
+        guard !trackIDs.isEmpty else {
+            return
+        }
+
+        let availableTrackIDs = Set(trackItems.map(\.id))
+        guard trackIDs.isSubset(of: availableTrackIDs) else {
+            throw SwiftTagAppleScriptCommandError.invalidTrackTarget
+        }
+
+        removeTracks(withIDs: trackIDs)
+    }
+
     func appleScriptUpsertTag(key rawKey: String, value rawValue: String, forTrackID trackID: UUID) throws {
         guard let index = trackItems.firstIndex(where: { $0.id == trackID }) else {
             throw SwiftTagAppleScriptCommandError.invalidTagTrackTarget

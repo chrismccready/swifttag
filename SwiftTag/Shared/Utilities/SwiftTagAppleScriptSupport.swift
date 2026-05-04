@@ -139,6 +139,11 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
         let handlesValue: Bool
     }
 
+    private struct ResolvedTrackExtraction {
+        let tracks: [SwiftTagScriptTrack]
+        let handlesValue: Bool
+    }
+
     override var isWellFormed: Bool {
         true
     }
@@ -172,18 +177,6 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
     private func deleteSwiftTagTargetIfNeeded() throws -> Bool {
         let directObjectSpecifier = directObjectSpecifier()
 
-        if try deleteTrackPropertyIfNeeded(keySpecifier, receiverSpecifier: receiversSpecifier) {
-            return true
-        }
-
-        if try deleteTagSpecifierIfNeeded(keySpecifier, receiverSpecifier: receiversSpecifier) {
-            return true
-        }
-
-        if try deletePictureSpecifierIfNeeded(keySpecifier, receiverSpecifier: receiversSpecifier) {
-            return true
-        }
-
         if let directObjectSpecifier,
            try deleteTrackPropertyIfNeeded(directObjectSpecifier, receiverSpecifier: receiversSpecifier) {
             return true
@@ -199,7 +192,38 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
             return true
         }
 
+        if let directObjectSpecifier,
+           try deleteTrackSpecifierIfNeeded(directObjectSpecifier) {
+            return true
+        }
+
+        if let directObjectSpecifier, try deleteResolvedValue(directObjectSpecifier) {
+            return true
+        }
+
+        if try deleteTrackPropertyIfNeeded(keySpecifier, receiverSpecifier: receiversSpecifier) {
+            return true
+        }
+
+        if try deleteTagSpecifierIfNeeded(keySpecifier, receiverSpecifier: receiversSpecifier) {
+            return true
+        }
+
+        if try deletePictureSpecifierIfNeeded(keySpecifier, receiverSpecifier: receiversSpecifier) {
+            return true
+        }
+
+        if try deleteTrackSpecifierIfNeeded(keySpecifier) {
+            return true
+        }
+
         if try deleteResolvedValue(directParameter) {
+            return true
+        }
+
+        if directObjectSpecifier == nil,
+           let track = unevaluatedTargetTrack() {
+            try track.delete()
             return true
         }
 
@@ -211,11 +235,22 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
             return true
         }
 
-        if let directObjectSpecifier, try deleteResolvedValue(directObjectSpecifier) {
-            return true
+        return false
+    }
+
+    @MainActor
+    private func deleteTrackSpecifierIfNeeded(_ specifier: NSScriptObjectSpecifier?) throws -> Bool {
+        guard let specifier, Self.isTrackCollectionKey(specifier.key) else {
+            return false
         }
 
-        return false
+        let trackExtraction = try resolvedTracksIfPossible(from: specifier)
+        guard trackExtraction.handlesValue else {
+            return false
+        }
+
+        try SwiftTagScriptTrack.delete(trackExtraction.tracks)
+        return true
     }
 
     @MainActor
@@ -316,11 +351,19 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
         case let tag as SwiftTagScriptTag:
             try tag.delete()
             return true
+        case let track as SwiftTagScriptTrack:
+            try track.delete()
+            return true
         case let picture as SwiftTagScriptPicture:
             try picture.delete()
             return true
         case let specifier as NSScriptObjectSpecifier:
             if try deleteTrackPropertyIfNeeded(specifier, receiverSpecifier: receiversSpecifier) {
+                return true
+            }
+            let trackExtraction = try resolvedTracksIfPossible(from: specifier)
+            if trackExtraction.handlesValue {
+                try SwiftTagScriptTrack.delete(trackExtraction.tracks)
                 return true
             }
             let pictureExtraction = try resolvedPicturesIfPossible(from: specifier)
@@ -343,6 +386,12 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
 
     @MainActor
     private func deleteResolvedValues(_ values: [Any]) throws -> Bool {
+        let trackExtraction = try resolvedTracksIfPossible(from: values)
+        if trackExtraction.handlesValue {
+            try SwiftTagScriptTrack.delete(trackExtraction.tracks)
+            return true
+        }
+
         let pictureExtraction = try resolvedPicturesIfPossible(from: values)
         if pictureExtraction.handlesValue {
             try SwiftTagScriptPicture.delete(pictureExtraction.pictures)
@@ -365,6 +414,58 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
             }
         }
         return deletedAny
+    }
+
+    @MainActor
+    private func resolvedTracksIfPossible(
+        from value: Any?,
+        container: Any? = nil
+    ) throws -> ResolvedTrackExtraction {
+        switch value {
+        case nil:
+            return ResolvedTrackExtraction(tracks: [], handlesValue: false)
+        case let track as SwiftTagScriptTrack:
+            return ResolvedTrackExtraction(tracks: [track], handlesValue: true)
+        case let specifier as NSScriptObjectSpecifier:
+            guard Self.isTrackCollectionKey(specifier.key) else {
+                return ResolvedTrackExtraction(tracks: [], handlesValue: false)
+            }
+
+            let evaluatedValue: Any?
+            if let container {
+                evaluatedValue = specifier.objectsByEvaluating(withContainers: container)
+            } else {
+                evaluatedValue = specifier.objectsByEvaluatingSpecifier
+            }
+            return try resolvedTracksIfPossible(from: evaluatedValue)
+        case let values as [Any]:
+            return try resolvedTracksIfPossible(fromArray: values, container: container)
+        case let values as NSArray:
+            return try resolvedTracksIfPossible(fromArray: values.map { $0 }, container: container)
+        default:
+            return ResolvedTrackExtraction(tracks: [], handlesValue: false)
+        }
+    }
+
+    @MainActor
+    private func resolvedTracksIfPossible(
+        fromArray values: [Any],
+        container: Any? = nil
+    ) throws -> ResolvedTrackExtraction {
+        guard !values.isEmpty else {
+            return ResolvedTrackExtraction(tracks: [], handlesValue: true)
+        }
+
+        var tracks: [SwiftTagScriptTrack] = []
+        for value in values {
+            let extraction = try resolvedTracksIfPossible(from: value, container: container)
+            guard extraction.handlesValue else {
+                return ResolvedTrackExtraction(tracks: [], handlesValue: false)
+            }
+            tracks.append(contentsOf: extraction.tracks)
+        }
+
+        return ResolvedTrackExtraction(tracks: tracks, handlesValue: true)
     }
 
     @MainActor
@@ -420,6 +521,10 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
         return ResolvedPictureExtraction(pictures: pictures, handlesValue: true)
     }
 
+    private static func isTrackCollectionKey(_ key: String) -> Bool {
+        key == "tracks" || key == "scriptTracks"
+    }
+
     private func directObjectSpecifier() -> NSScriptObjectSpecifier? {
         guard let descriptor = appleEvent?.paramDescriptor(forKeyword: Self.directObjectKeyword) else {
             return nil
@@ -441,6 +546,27 @@ final class SwiftTagDeleteCommand: NSDeleteCommand {
         if let subjectDescriptor = appleEvent?.attributeDescriptor(forKeyword: Self.subjectAttribute),
            let subjectSpecifier = NSScriptObjectSpecifier(descriptor: subjectDescriptor),
            let track = Self.track(from: subjectSpecifier.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        if let directObjectDescriptor = appleEvent?.paramDescriptor(forKeyword: Self.directObjectKeyword),
+           let directObjectSpecifier = NSScriptObjectSpecifier(descriptor: directObjectDescriptor),
+           let track = Self.track(from: directObjectSpecifier.container?.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        return nil
+    }
+
+    @MainActor
+    private func unevaluatedTargetTrack() -> SwiftTagScriptTrack? {
+        if let subjectDescriptor = appleEvent?.attributeDescriptor(forKeyword: Self.subjectAttribute),
+           let subjectSpecifier = NSScriptObjectSpecifier(descriptor: subjectDescriptor),
+           let track = Self.track(from: subjectSpecifier.objectsByEvaluatingSpecifier) {
+            return track
+        }
+
+        if let track = Self.track(from: receiversSpecifier?.objectsByEvaluatingSpecifier) {
             return track
         }
 
@@ -1264,6 +1390,7 @@ struct SwiftTagAppleScriptSessionBridge {
     let documentSnapshot: () -> SwiftTagAppleScriptDocumentSnapshot
     let sessionSnapshot: () -> SwiftTagAppleScriptSessionSnapshot
     let addTracks: ([URL], Bool) throws -> [UUID]
+    let deleteTracks: (Set<UUID>) throws -> Void
     let selectTracks: (Set<UUID>) throws -> Void
     let setTrackLocked: (UUID, Bool) throws -> Void
     let saveDocument: (URL?) throws -> SwiftTagDocumentSaveState
@@ -1279,6 +1406,9 @@ struct SwiftTagAppleScriptSessionBridge {
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
         sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
         addTracks: @escaping ([URL]) throws -> [UUID],
+        deleteTracks: @escaping (Set<UUID>) throws -> Void = { _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
         selectTracks: @escaping (Set<UUID>) throws -> Void,
         setTrackLocked: @escaping (UUID, Bool) throws -> Void = { _, _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
@@ -1306,6 +1436,7 @@ struct SwiftTagAppleScriptSessionBridge {
             addTracksWithLock: { urls, _ in
                 try addTracks(urls)
             },
+            deleteTracks: deleteTracks,
             selectTracks: selectTracks,
             setTrackLocked: setTrackLocked,
             saveDocument: saveDocument,
@@ -1323,6 +1454,9 @@ struct SwiftTagAppleScriptSessionBridge {
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
         sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
         addTracksWithLock: @escaping ([URL], Bool) throws -> [UUID],
+        deleteTracks: @escaping (Set<UUID>) throws -> Void = { _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
         selectTracks: @escaping (Set<UUID>) throws -> Void,
         setTrackLocked: @escaping (UUID, Bool) throws -> Void = { _, _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
@@ -1347,6 +1481,7 @@ struct SwiftTagAppleScriptSessionBridge {
         self.documentSnapshot = documentSnapshot
         self.sessionSnapshot = sessionSnapshot
         self.addTracks = addTracksWithLock
+        self.deleteTracks = deleteTracks
         self.selectTracks = selectTracks
         self.setTrackLocked = setTrackLocked
         self.saveDocument = saveDocument
@@ -3984,6 +4119,28 @@ final class SwiftTagScriptTrack: NSObject {
         )
     }
 
+    func delete() throws {
+        try Self.delete([self])
+    }
+
+    static func delete(_ tracks: [SwiftTagScriptTrack]) throws {
+        let tracksBySessionID = Dictionary(grouping: tracks, by: \.sessionID)
+        for (sessionID, tracks) in tracksBySessionID {
+            let trackIDs = Set(tracks.map(\.trackID))
+            try SwiftTagAppleScriptController.shared.deleteTracks(trackIDs, forSessionID: sessionID)
+        }
+    }
+
+    @objc(handleDeleteScriptCommand:)
+    func handleDeleteScriptCommand(_ command: NSScriptCommand) -> Any? {
+        do {
+            try delete()
+            return nil
+        } catch {
+            return command.fail(error)
+        }
+    }
+
     private var trackSnapshot: Track? {
         SwiftTagAppleScriptController.shared.trackSnapshot(
             forSessionID: sessionIDValue,
@@ -4286,6 +4443,45 @@ final class SwiftTagScriptEditorWindow: NSObject {
     @objc(objectInTracksAtIndex:)
     func objectInTracks(at index: Int) -> SwiftTagScriptTrack {
         tracks[index]
+    }
+
+    @objc(removeObjectFromTracksAtIndex:)
+    func removeObjectFromTracks(at index: Int) {
+        removeTrack(at: index)
+    }
+
+    @objc(removeFromTracksAtIndex:)
+    func removeFromTracks(at index: Int) {
+        removeTrack(at: index)
+    }
+
+    private func removeTrack(at index: Int) {
+        do {
+            try tracks[index].delete()
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
+    }
+
+    override func removeValue(at index: Int, fromPropertyWithKey key: String) {
+        guard key == "tracks" else {
+            super.removeValue(at: index, fromPropertyWithKey: key)
+            return
+        }
+
+        removeTrack(at: index)
+    }
+
+    @objc(removeTracksAtIndexes:)
+    func removeTracks(at indexes: NSIndexSet) {
+        do {
+            let indexedTracks = tracks.enumerated()
+                .filter { indexes.contains($0.offset) }
+                .map(\.element)
+            try SwiftTagScriptTrack.delete(indexedTracks)
+        } catch {
+            _ = NSScriptCommand.current()?.fail(error)
+        }
     }
 
     override var objectSpecifier: NSScriptObjectSpecifier? {
@@ -5620,6 +5816,27 @@ final class SwiftTagAppleScriptController {
 
         let trackIDs = try bridge.addTracks(urls, locked)
         return trackIDs.compactMap { track(forSessionID: sessionID, trackID: $0) }
+    }
+
+    func deleteTracks(
+        _ trackIDs: Set<UUID>,
+        forSessionID sessionID: UUID
+    ) throws {
+        guard !trackIDs.isEmpty else {
+            return
+        }
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        let availableTrackIDs = Set(sessionSnapshot(forSessionID: sessionID)?.tracks.map(\.id) ?? [])
+        guard trackIDs.isSubset(of: availableTrackIDs) else {
+            throw SwiftTagAppleScriptCommandError.invalidTrackTarget
+        }
+
+        try bridge.deleteTracks(trackIDs)
+        let validTrackIDs = Set(sessionSnapshot(forSessionID: sessionID)?.tracks.map(\.id) ?? [])
+        pruneTrackWrappers(forSessionID: sessionID, validTrackIDs: validTrackIDs)
     }
 
     func tags(forSessionID sessionID: UUID, trackID: UUID) -> [SwiftTagScriptTag] {

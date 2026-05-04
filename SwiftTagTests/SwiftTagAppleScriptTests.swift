@@ -1762,6 +1762,93 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func trackDeletionRoutesThroughBridgeForSingleAndWhoseMatches() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let singleDeleteTrack = Track(
+            tags: [TagKey.title: "Single Delete"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/01-single-delete.flac")
+        )
+        let firstMatchedTrack = Track(
+            tags: [TagKey.title: "Delete Me"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/02-delete-me-a.flac")
+        )
+        let keepTrack = Track(
+            tags: [TagKey.title: "Keep Me"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/03-keep-me.flac")
+        )
+        let secondMatchedTrack = Track(
+            tags: [TagKey.title: "Delete Me"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/04-delete-me-b.flac")
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            singleDeleteTrack,
+            firstMatchedTrack,
+            keepTrack,
+            secondMatchedTrack
+        ]
+        viewModel.selectedTrackIDs = [secondMatchedTrack.id]
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: viewModel.trackItems,
+                        selectedTrackIDs: viewModel.selectedTrackIDs
+                    )
+                },
+                addTracks: { _ in [] },
+                deleteTracks: { trackIDs in
+                    try viewModel.appleScriptDeleteTracks(withIDs: trackIDs)
+                },
+                selectTracks: { trackIDs in
+                    viewModel.selectedTrackIDs = trackIDs
+                },
+                saveDocument: { _ in .init() }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        try scriptWindow.objectInTracks(at: 0).delete()
+
+        #expect(scriptWindow.tracks.compactMap(\.title) == ["Delete Me", "Keep Me", "Delete Me"])
+        #expect(viewModel.trackItems.contains(where: { $0.id == singleDeleteTrack.id }) == false)
+
+        let matchingTracks = Self.evaluatedTrackWrappers(
+            from: try Self.whoseTrackSpecifier(
+                in: scriptWindow,
+                propertyKey: "title",
+                value: "Delete Me"
+            )
+        )
+        #expect(matchingTracks.count == 2)
+
+        try SwiftTagScriptTrack.delete(matchingTracks)
+
+        #expect(scriptWindow.countOfTracks == 1)
+        #expect(scriptWindow.tracks.compactMap(\.title) == ["Keep Me"])
+        #expect(viewModel.selectedTrackIDs.isEmpty)
+    }
+
+    @MainActor
+    @Test
     func trackTagsSupportCanonicalLookupUpsertRenamingAndDeletion() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()

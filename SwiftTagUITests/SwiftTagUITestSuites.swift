@@ -121,6 +121,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessDeletesTracks() throws {
+        try scenarioAppleScriptHarnessDeletesTracks()
+    }
+
+    @MainActor
     func testAppleScriptHarnessSavesWithScopeAndPayloadEnumerations() throws {
         try scenarioAppleScriptHarnessSavesWithScopeAndPayloadEnumerations()
     }

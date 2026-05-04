@@ -251,7 +251,7 @@ struct TagEditorCoreTagsView: View {
                         .frame(width: 130)
                         .disabled(!isSelectionEditable)
                 } else {
-                    TextField("Date", text: .constant(""))
+                    TextField("Date", text: .constant("YYYY-MM-DD"))
                         .frame(width: 130)
                         .disabled(true)
                 }
@@ -269,10 +269,12 @@ struct TagEditorCoreTagsView: View {
                         )
                         .frame(minHeight: 60, idealHeight: 60)
                         .disabled(!isSelectionEditable)
+                        .opacity(!isSelectionEditable ? 0.20 : 1)
                 } else {
                     TextEditor(text: .constant("Select track(s) to edit description."))
                         .frame(minHeight: 60, idealHeight: 60)
                         .disabled(true)
+                        .opacity(0.20)
                 }
             }
             .padding(.top, 22)
