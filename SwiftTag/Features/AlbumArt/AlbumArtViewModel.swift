@@ -782,6 +782,40 @@ final class AlbumArtViewModel {
         return nonFrontCoverRecords + frontCoverRecords
     }
 
+    func appleScriptPictureIdentity(
+        for trackID: UUID,
+        pictureIndex: Int,
+        albumArtTypes: [AlbumArtType]
+    ) -> SwiftTagAppleScriptPictureIdentity? {
+        var nonFrontCoverIdentities: [SwiftTagAppleScriptPictureIdentity] = []
+        var frontCoverIdentities: [SwiftTagAppleScriptPictureIdentity] = []
+        for slot in albumArtTypes.map(\.slot) {
+            for reference in pinnedReferences(for: trackID, slot: slot) {
+                guard picturePool[reference.poolItemID] != nil,
+                      albumArtTypes.contains(where: { $0.slot == reference.slot }) else {
+                    continue
+                }
+
+                let identity = SwiftTagAppleScriptPictureIdentity(
+                    id: reference.id,
+                    poolId: reference.poolItemID
+                )
+
+                if reference.slot == .frontCover {
+                    frontCoverIdentities.append(identity)
+                } else {
+                    nonFrontCoverIdentities.append(identity)
+                }
+            }
+        }
+
+        let identities = nonFrontCoverIdentities + frontCoverIdentities
+        guard identities.indices.contains(pictureIndex) else {
+            return nil
+        }
+        return identities[pictureIndex]
+    }
+
     private func mergePoolAndReferences(from trackItems: [Track], albumArtTypes: [AlbumArtType]) {
         let slotByType = Dictionary(uniqueKeysWithValues: albumArtTypes.map { ($0.flacPictureType, $0.slot) })
 

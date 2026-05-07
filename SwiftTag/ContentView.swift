@@ -2095,6 +2095,13 @@ struct ContentView: View {
                         for: trackID,
                         pictureIndex: pictureIndex
                     )
+                },
+                pictureIdentity: { trackID, pictureIndex in
+                    albumArtViewModel.appleScriptPictureIdentity(
+                        for: trackID,
+                        pictureIndex: pictureIndex,
+                        albumArtTypes: albumArtTypes
+                    )
                 }
             )
         )

@@ -248,6 +248,22 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func pictureClassDescriptionExposesReadableIdentityProperties() throws {
+        let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptPicture.self))
+
+        #expect(classDescription.key(withAppleEventCode: Self.fourCharCode("ID  ").uint32Value) == "id")
+        #expect(classDescription.type(forKey: "id") == "text")
+        #expect(classDescription.hasReadableProperty(forKey: "id"))
+        #expect(!classDescription.hasWritableProperty(forKey: "id"))
+
+        #expect(classDescription.key(withAppleEventCode: Self.fourCharCode("poid").uint32Value) == "poolId")
+        #expect(classDescription.type(forKey: "poolId") == "text")
+        #expect(classDescription.hasReadableProperty(forKey: "poolId"))
+        #expect(!classDescription.hasWritableProperty(forKey: "poolId"))
+    }
+
+    @MainActor
+    @Test
     func settingsWindowIsSingletonApplicationElementAndInheritsWindowProperties() throws {
         let application = NSApplication.shared
         let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptSettingsWindow.self))
@@ -1417,6 +1433,118 @@ struct SwiftTagAppleScriptTests {
 
         #expect(viewModel.trackItems.first?.flacPictureRecords.isEmpty == true)
         #expect(scriptTrack.countOfPictures == 0)
+    }
+
+    @MainActor
+    @Test
+    func pictureIdentityPropertiesSupportWhoseAndUniqueIDLookup() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let firstPictureID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
+        let secondPictureID = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
+        let thirdPictureID = UUID(uuidString: "33333333-3333-3333-3333-333333333333")!
+        let sharedPoolID = UUID(uuidString: "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")!
+        let thirdPoolID = UUID(uuidString: "BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB")!
+        let pictureIdentities = [
+            SwiftTagAppleScriptPictureIdentity(id: firstPictureID, poolId: sharedPoolID),
+            SwiftTagAppleScriptPictureIdentity(id: secondPictureID, poolId: sharedPoolID),
+            SwiftTagAppleScriptPictureIdentity(id: thirdPictureID, poolId: thirdPoolID)
+        ]
+        let firstData = try #require(Self.singlePixelPNGData())
+        let secondData = try Self.pngData(color: .systemBlue)
+        let thirdData = try Self.pngData(color: .systemRed)
+        let track = Track(
+            tags: [TagKey.title: "Picture Identity Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(
+                    type: 3,
+                    mimeType: "image/png",
+                    description: "First shared pool",
+                    data: firstData
+                ).withComputedPictureMetadata(),
+                FlacWritablePictureRecord(
+                    type: 4,
+                    mimeType: "image/png",
+                    description: "Second shared pool",
+                    data: secondData
+                ).withComputedPictureMetadata(),
+                FlacWritablePictureRecord(
+                    type: 3,
+                    mimeType: "image/png",
+                    description: "Third pool",
+                    data: thirdData
+                ).withComputedPictureMetadata()
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-picture-identity.flac")
+        )
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [track],
+                        selectedTrackIDs: []
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() },
+                pictureIdentity: { _, pictureIndex in
+                    guard pictureIdentities.indices.contains(pictureIndex) else {
+                        return nil
+                    }
+                    return pictureIdentities[pictureIndex]
+                }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptTrack = try #require(scriptWindow.tracks.first)
+        let firstPicture = try #require(scriptTrack.pictures.first)
+
+        #expect(firstPicture.id == firstPictureID.uuidString)
+        #expect(firstPicture.poolId == sharedPoolID.uuidString)
+
+        let idSpecifier = try Self.whosePictureSpecifier(
+            in: scriptTrack,
+            propertyKey: "id",
+            value: firstPictureID.uuidString
+        )
+        let idMatches = Self.evaluatedPictureWrappers(from: idSpecifier)
+        #expect(idMatches.compactMap(\.pictureDescription) == ["First shared pool"])
+
+        let poolSpecifier = try Self.whosePictureSpecifier(
+            in: scriptTrack,
+            propertyKey: "poolId",
+            value: sharedPoolID.uuidString
+        )
+        let poolMatches = Self.evaluatedPictureWrappers(from: poolSpecifier)
+        #expect(poolMatches.compactMap(\.pictureDescription) == [
+            "First shared pool",
+            "Second shared pool"
+        ])
+
+        let uniqueIDMatch = try #require(
+            scriptTrack.valueInPictures(withUniqueID: firstPictureID.uuidString) as? SwiftTagScriptPicture
+        )
+        #expect(uniqueIDMatch.id == firstPictureID.uuidString)
+        #expect(scriptTrack.valueInPictures(withUniqueID: UUID().uuidString) == nil)
     }
 
     @MainActor

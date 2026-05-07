@@ -1394,6 +1394,11 @@ struct SwiftTagAppleScriptSessionSnapshot {
     let selectedTrackIDs: Set<UUID>
 }
 
+struct SwiftTagAppleScriptPictureIdentity: Equatable {
+    let id: UUID
+    let poolId: UUID
+}
+
 struct SwiftTagAppleScriptSessionBridge {
     let documentSnapshot: () -> SwiftTagAppleScriptDocumentSnapshot
     let sessionSnapshot: () -> SwiftTagAppleScriptSessionSnapshot
@@ -1409,6 +1414,7 @@ struct SwiftTagAppleScriptSessionBridge {
     let replacePicture: (UUID, Int, SwiftTagAppleScriptPicturePayload) throws -> Int
     let updatePictureDescription: (UUID, Int, String) throws -> Void
     let deletePicture: (UUID, Int) throws -> Void
+    let pictureIdentity: (UUID, Int) -> SwiftTagAppleScriptPictureIdentity?
 
     init(
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
@@ -1436,7 +1442,8 @@ struct SwiftTagAppleScriptSessionBridge {
         updatePictureDescription: @escaping (UUID, Int, String) throws -> Void = { _, _, _ in },
         deletePicture: @escaping (UUID, Int) throws -> Void = { _, _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
-        }
+        },
+        pictureIdentity: @escaping (UUID, Int) -> SwiftTagAppleScriptPictureIdentity? = { _, _ in nil }
     ) {
         self.init(
             documentSnapshot: documentSnapshot,
@@ -1454,7 +1461,8 @@ struct SwiftTagAppleScriptSessionBridge {
             upsertPicture: upsertPicture,
             replacePicture: replacePicture,
             updatePictureDescription: updatePictureDescription,
-            deletePicture: deletePicture
+            deletePicture: deletePicture,
+            pictureIdentity: pictureIdentity
         )
     }
 
@@ -1484,7 +1492,8 @@ struct SwiftTagAppleScriptSessionBridge {
         updatePictureDescription: @escaping (UUID, Int, String) throws -> Void = { _, _, _ in },
         deletePicture: @escaping (UUID, Int) throws -> Void = { _, _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
-        }
+        },
+        pictureIdentity: @escaping (UUID, Int) -> SwiftTagAppleScriptPictureIdentity? = { _, _ in nil }
     ) {
         self.documentSnapshot = documentSnapshot
         self.sessionSnapshot = sessionSnapshot
@@ -1500,6 +1509,7 @@ struct SwiftTagAppleScriptSessionBridge {
         self.replacePicture = replacePicture
         self.updatePictureDescription = updatePictureDescription
         self.deletePicture = deletePicture
+        self.pictureIdentity = pictureIdentity
     }
 }
 
@@ -2679,6 +2689,16 @@ final class SwiftTagScriptPicture: NSObject {
         super.init()
     }
 
+    @objc(id)
+    var id: String? {
+        pictureIdentity?.id.uuidString
+    }
+
+    @objc(poolId)
+    var poolId: String? {
+        pictureIdentity?.poolId.uuidString
+    }
+
     @objc(pictureType)
     var pictureType: NSNumber? {
         guard let pictureSnapshot else {
@@ -2903,6 +2923,15 @@ final class SwiftTagScriptPicture: NSObject {
             return nil
         }
 
+        if let id {
+            return NSUniqueIDSpecifier(
+                containerClassDescription: trackClassDescription,
+                containerSpecifier: containerSpecifier,
+                key: "pictures",
+                uniqueID: id
+            )
+        }
+
         return NSIndexSpecifier(
             containerClassDescription: trackClassDescription,
             containerSpecifier: containerSpecifier,
@@ -2975,6 +3004,19 @@ final class SwiftTagScriptPicture: NSObject {
             )
         case .detached(let payload):
             payload?.record()
+        }
+    }
+
+    private var pictureIdentity: SwiftTagAppleScriptPictureIdentity? {
+        switch storage {
+        case .attached(let sessionID, let trackID, let pictureIndex):
+            SwiftTagAppleScriptController.shared.pictureIdentity(
+                forSessionID: sessionID,
+                trackID: trackID,
+                pictureIndex: pictureIndex
+            )
+        case .detached:
+            nil
         }
     }
 
@@ -3886,6 +3928,15 @@ final class SwiftTagScriptTrack: NSObject {
     @objc(valueInTagsWithUniqueID:)
     func valueInTags(withUniqueID uniqueID: Any) -> Any? {
         SwiftTagAppleScriptController.shared.tag(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue,
+            uniqueID: uniqueID
+        )
+    }
+
+    @objc(valueInPicturesWithUniqueID:)
+    func valueInPictures(withUniqueID uniqueID: Any) -> Any? {
+        SwiftTagAppleScriptController.shared.picture(
             forSessionID: sessionIDValue,
             trackID: trackIDValue,
             uniqueID: uniqueID
@@ -5928,6 +5979,18 @@ final class SwiftTagAppleScriptController {
             .flacPictureRecords[safe: pictureIndex]
     }
 
+    func pictureIdentity(
+        forSessionID sessionID: UUID,
+        trackID: UUID,
+        pictureIndex: Int
+    ) -> SwiftTagAppleScriptPictureIdentity? {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            return nil
+        }
+
+        return bridge.pictureIdentity(trackID, pictureIndex)
+    }
+
     func tagSnapshot(
         forSessionID sessionID: UUID,
         trackID: UUID,
@@ -5953,6 +6016,29 @@ final class SwiftTagAppleScriptController {
             trackID: trackID,
             key: key
         )
+    }
+
+    func picture(
+        forSessionID sessionID: UUID,
+        trackID: UUID,
+        uniqueID: Any
+    ) -> SwiftTagScriptPicture? {
+        guard let id = normalizedPictureUniqueID(uniqueID),
+              let track = trackSnapshot(forSessionID: sessionID, trackID: trackID) else {
+            return nil
+        }
+
+        for pictureIndex in track.flacPictureRecords.indices {
+            if pictureIdentity(forSessionID: sessionID, trackID: trackID, pictureIndex: pictureIndex)?.id == id {
+                return SwiftTagScriptPicture(
+                    sessionID: sessionID,
+                    trackID: trackID,
+                    pictureIndex: pictureIndex
+                )
+            }
+        }
+
+        return nil
     }
 
     func upsertTag(
@@ -6292,6 +6378,10 @@ final class SwiftTagAppleScriptController {
         }
 
         return nil
+    }
+
+    private func normalizedPictureUniqueID(_ uniqueID: Any) -> UUID? {
+        normalizedSessionID(from: uniqueID)
     }
 }
 

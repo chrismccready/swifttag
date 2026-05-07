@@ -833,6 +833,57 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessFiltersTrackPicturesByIdentity() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover"
+        )
+        defer {
+            app.terminate()
+        }
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    tell first track
+                        repeat 50 times
+                            if (count of pictures) > 0 then exit repeat
+                            delay 0.1
+                        end repeat
+                        set firstPictureID to id of first picture
+                        set firstPicturePoolID to pool id of first picture
+                        set firstPictureByID to (first picture whose id is firstPictureID)
+                        set samePicturePoolList to (every picture whose pool id is firstPicturePoolID)
+                        return firstPictureID & linefeed & (id of firstPictureByID) & linefeed & firstPicturePoolID & linefeed & (pool id of firstPictureByID) & linefeed & ((count of samePicturePoolList) as text)
+                    end tell
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines.count, 5)
+        XCTAssertNotNil(UUID(uuidString: outputLines[0]))
+        XCTAssertNotNil(UUID(uuidString: outputLines[2]))
+        XCTAssertEqual(outputLines[0], outputLines[1])
+        XCTAssertEqual(outputLines[2], outputLines[3])
+        XCTAssertEqual(outputLines[4], "1")
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessImportsTrackPictureFromExistingData() throws {
         try requireAppleScriptHarnessEnabled()
 

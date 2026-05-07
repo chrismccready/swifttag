@@ -716,6 +716,12 @@
             <contents type="data" description="The raw image data in bytes. Accepted as picture data when making or importing a new picture.">
                 <cocoa key="data"/>
             </contents>
+            <property name="id" code="ID  " type="text" access="r" description="The unique identifier of the picture.">
+                <cocoa key="id"/>
+            </property>
+            <property name="pool id" code="poid" type="text" access="r" description="The unique SwiftTag picture pool identifier of the picture.">
+                <cocoa key="poolId"/>
+            </property>
             <property name="picture type" code="pcty" type="flac picture type" in-properties="yes" description="The FLAC track file picture type. Accepted when making or importing a new picture; defaults to front cover when omitted.">
                 <cocoa key="pictureType"/>
             </property>
