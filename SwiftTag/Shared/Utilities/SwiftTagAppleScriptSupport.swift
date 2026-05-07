@@ -1152,6 +1152,10 @@ private enum SwiftTagAppleScriptCode {
 }
 
 private enum SwiftTagAppleScriptMissingValue {
+    static func descriptor() -> NSAppleEventDescriptor {
+        NSAppleEventDescriptor(typeCode: SwiftTagAppleScriptCode.fourCharCode("msng"))
+    }
+
     static func isMissing(_ rawValue: Any?) -> Bool {
         guard let rawValue else {
             return true
@@ -1163,6 +1167,10 @@ private enum SwiftTagAppleScriptMissingValue {
 
         if let descriptor = rawValue as? NSAppleEventDescriptor {
             return descriptor.descriptorType == typeNull
+                || (
+                    descriptor.descriptorType == typeType
+                    && descriptor.typeCodeValue == SwiftTagAppleScriptCode.fourCharCode("msng")
+                )
         }
 
         return false
@@ -1499,6 +1507,12 @@ private extension String {
     var appleScriptNonEmptyValue: String? {
         let trimmedValue = trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmedValue.isEmpty ? nil : trimmedValue
+    }
+}
+
+private extension FlacWritablePictureRecord {
+    var hasAvailableImageMetadata: Bool {
+        width > 0 || height > 0 || depth > 0
     }
 }
 
@@ -2810,22 +2824,30 @@ final class SwiftTagScriptPicture: NSObject {
 
     @objc(width)
     var width: NSNumber? {
-        integerValue(\.width)
+        availableIntegerValue(\.width)
     }
 
     @objc(height)
     var height: NSNumber? {
-        integerValue(\.height)
+        availableIntegerValue(\.height)
     }
 
     @objc(colorDepth)
     var colorDepth: NSNumber? {
-        integerValue(\.depth)
+        availableIntegerValue(\.depth)
     }
 
     @objc(colors)
     var colors: NSNumber? {
-        integerValue(\.colors)
+        guard let pictureSnapshot else {
+            return nil
+        }
+
+        guard pictureSnapshot.colors > 0 || pictureSnapshot.hasAvailableImageMetadata else {
+            return nil
+        }
+
+        return NSNumber(value: pictureSnapshot.colors)
     }
 
     @objc(data)
@@ -2849,6 +2871,21 @@ final class SwiftTagScriptPicture: NSObject {
             } catch {
                 _ = NSScriptCommand.current()?.fail(error)
             }
+        }
+    }
+
+    override func scriptingValue(for objectSpecifier: NSScriptObjectSpecifier) -> Any? {
+        switch objectSpecifier.key {
+        case "width":
+            return appleScriptMetricValue(width)
+        case "height":
+            return appleScriptMetricValue(height)
+        case "colorDepth":
+            return appleScriptMetricValue(colorDepth)
+        case "colors":
+            return appleScriptMetricValue(colors)
+        default:
+            return super.scriptingValue(for: objectSpecifier)
         }
     }
 
@@ -2953,12 +2990,20 @@ final class SwiftTagScriptPicture: NSObject {
         )
     }
 
-    private func integerValue(_ keyPath: KeyPath<FlacWritablePictureRecord, Int>) -> NSNumber? {
+    private func availableIntegerValue(_ keyPath: KeyPath<FlacWritablePictureRecord, Int>) -> NSNumber? {
         guard let value = pictureSnapshot?[keyPath: keyPath] else {
             return nil
         }
 
+        guard value > 0 else {
+            return nil
+        }
+
         return NSNumber(value: value)
+    }
+
+    private func appleScriptMetricValue(_ value: NSNumber?) -> Any {
+        value ?? SwiftTagAppleScriptMissingValue.descriptor()
     }
 
     private func updateDescription(_ description: String) throws {
@@ -3228,6 +3273,7 @@ final class SwiftTagScriptTrack: NSObject {
         "comment": "COMMENT",
         "compilation": TagKey.compilation,
         "composer": TagKey.composer,
+        "conductor": "CONDUCTOR",
         "copyright": "COPYRIGHT",
         "releaseDate": TagKey.date,
         "trackDescription": TagKey.description,
@@ -3350,7 +3396,17 @@ final class SwiftTagScriptTrack: NSObject {
             updateTagValue(TagKey.composer, to: newValue)
         }
     }
-
+    
+    @objc(conductor)
+    var conductor: String? {
+        get {
+            currentTextValue(for: ["CONDUCTOR"])
+        }
+        set {
+            updateTagValue("CONDUCTOR", to: newValue)
+        }
+    }
+    
     @objc(copyright)
     var copyright: String? {
         get {

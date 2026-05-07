@@ -924,6 +924,79 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func pictureUnavailableImageMetadataReturnsNilForScriptProperties() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let pictureData = try #require(Self.singlePixelPNGData())
+        let track = Track(
+            tags: [TagKey.title: "Missing Picture Metadata"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(
+                    type: 3,
+                    mimeType: "image/png",
+                    description: "Front",
+                    data: pictureData,
+                    width: 0,
+                    height: 0,
+                    depth: 0,
+                    colors: 0
+                )
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-missing-picture-metadata.flac")
+        )
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [track],
+                        selectedTrackIDs: []
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() }
+            )
+        )
+
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
+        let scriptPicture = try #require(scriptWindow.tracks.first?.pictures.first)
+
+        #expect(Self.isAppleScriptMissingValue(scriptPicture.width))
+        #expect(Self.isAppleScriptMissingValue(scriptPicture.height))
+        #expect(Self.isAppleScriptMissingValue(scriptPicture.colorDepth))
+        #expect(Self.isAppleScriptMissingValue(scriptPicture.colors))
+
+        let pictureClassDescription = try #require(
+            NSScriptClassDescription(for: SwiftTagScriptPicture.self)
+        )
+        for propertyKey in ["width", "height", "colorDepth", "colors"] {
+            let propertySpecifier = NSPropertySpecifier(
+                containerClassDescription: pictureClassDescription,
+                containerSpecifier: nil,
+                key: propertyKey
+            )
+
+            #expect(Self.isAppleScriptMissingValue(scriptPicture.scriptingValue(for: propertySpecifier)))
+        }
+    }
+
+    @MainActor
+    @Test
     func trackPropertySettersRouteThroughTagBridge() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()
@@ -2288,6 +2361,22 @@ private extension SwiftTagAppleScriptTests {
         }
 
         return []
+    }
+
+    static func isAppleScriptMissingValue(_ value: Any?) -> Bool {
+        guard let value else {
+            return true
+        }
+
+        guard let descriptor = value as? NSAppleEventDescriptor else {
+            return false
+        }
+
+        return descriptor.descriptorType == typeNull
+            || (
+                descriptor.descriptorType == typeType
+                && descriptor.typeCodeValue == fourCharCode("msng").uint32Value
+            )
     }
 
     @MainActor

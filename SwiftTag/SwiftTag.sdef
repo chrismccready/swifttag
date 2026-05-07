@@ -218,7 +218,7 @@
             </property>
         </record-type>
 
-        <record-type name="color" code="colr" description="A color value in RGBA color space (values 0-1.0).">
+        <record-type name="color" plural="color records" code="colr" description="A color value in RGBA color space (values 0-1.0).">
             <property name="red" code="redc" type="real" description="The red component value (0-1.0).">
                 <cocoa key="red"/>
             </property>
@@ -468,13 +468,19 @@
             <element type="picture" access="rw">
                 <cocoa key="pictures"/>
             </element>
-            <property name="album" code="albm" type="text" description="The album name of the track.">
+            <property name="album" code="albm" description="The album name of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="album"/>
             </property>
-            <property name="album artist" code="aart" type="text" description="The album artist of the track.">
+            <property name="album artist" code="aart" description="The album artist of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="albumArtist"/>
             </property>
-            <property name="artist" code="arts" type="text" description="The artist/source of the track.">
+            <property name="artist" code="arts" description="The artist/source of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="artist"/>
             </property>
             <property name="bits per sample" code="btps" type="integer" access="r" description="The bits per sample of the track.">
@@ -483,46 +489,77 @@
             <property name="channels" code="chnl" type="integer" access="r" description="The number of sound channels of the track.">
                 <cocoa key="channels"/>
             </property>
-            <property name="comment" code="cmnt" type="text" description="Notes about the track.">
+            <property name="comment" code="cmnt" description="Notes about the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="comment"/>
             </property>
-            <property name="compilation" code="cpil" type="boolean" description="Is this track from a compilation album?">
+            <property name="compilation" code="cpil" description="Is this track from a compilation album?">
+                <type type="boolean"/>
+                <type type="missing value"/>
                 <cocoa key="compilation"/>
             </property>
-            <property name="composer" code="cmps" type="text" description="The composer of the track.">
+            <property name="composer" code="cmps" description="The composer of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="composer"/>
             </property>
-            <property name="copyright" code="cprt" type="text" description="The copyright of the track.">
+            <property name="conductor" code="cndr" description="The conductor of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
+                <cocoa key="conductor"/>
+            </property>
+            <property name="copyright" code="cprt" description="The copyright of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="copyright"/>
             </property>
-            <property name="date" code="rdat" type="date" description="The release date of track.">
+            <property name="release date" code="rdat" description="The release date of track.">
+                <type type="date"/>
+                <type type="missing value"/>
                 <cocoa key="releaseDate"/>
             </property>
-            <property name="description" code="tdsc" type="text" description="The description of the track.">
+            <property name="description" code="tdsc" description="The description of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="trackDescription"/>
             </property>
-            <property name="director" code="drct" type="text" description="The director(s) of the track.">
+            <property name="director" code="drct" description="The director(s) of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="director"/>
             </property>
             <property name="disc count" code="dcnt" type="integer" description="The total number of discs in the source album.">
+                <type type="integer"/>
+                <type type="missing value"/>
                 <cocoa key="discCount"/>
             </property>
-            <property name="disc number" code="dnbr" type="integer" description="The index of the disc containing this track on the source album.">
+            <property name="disc number" code="dnbr" description="The index of the disc containing this track on the source album.">
+                <type type="integer"/>
+                <type type="missing value"/>
                 <cocoa key="discNumber"/>
             </property>
             <property name="duration" code="dura" type="real" access="r" description="The length of the track in seconds.">
                 <cocoa key="duration"/>
             </property>
-            <property name="encoded by" code="encb" type="text" description="Track audio encoded by.">
+            <property name="encoded by" code="encb" description="Track audio encoded by.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="encodedBy"/>
             </property>
-            <property name="encoded using" code="encu" type="text" description="Track audio encoded using.">
+            <property name="encoded using" code="encu" description="Track audio encoded using.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="encodedUsing"/>
             </property>
-            <property name="encoder" code="encr" type="text" description="Track audio encoder.">
+            <property name="encoder" code="encr" description="Track audio encoder.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="encoder"/>
             </property>
-            <property name="encoder options" code="enco" type="text" description="Track audio encoder options used.">
+            <property name="encoder options" code="enco" description="Track audio encoder options used.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="encoderOptions"/>
             </property>
             <property name="file" code="file" type="file" access="r" description="FLAC file location on disk.">
@@ -534,85 +571,133 @@
             <property name="FLAC fingerprint" code="ffpr" type="text" access="r" description="The track audio MD5 hash.">
                 <cocoa key="flacFingerprint"/>
             </property>
-            <property name="genre" code="genr" type="text" description="The music/audio genre (category) of the track.">
+            <property name="genre" code="genr" description="The music/audio genre (category) of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="genre"/>
             </property>
-            <property name="ISRC" code="isrc" type="text" description="The ISRC number of the track.">
+            <property name="ISRC" code="isrc" description="The ISRC number of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="isrc"/>
             </property>
-            <property name="license" code="lice" type="text" description="License information for track.">
+            <property name="license" code="lice" description="License information for track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="license"/>
             </property>
-            <property name="lineage" code="ling" type="text" description="The lineage of the track.">
+            <property name="lineage" code="ling" description="The lineage of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="lineage"/>
             </property>
             <property name="locked" code="tlok" type="boolean" description="Whether the track is locked (read-only in editor window).">
                 <cocoa key="trackLocked"/>
             </property>
-            <property name="location" code="locn" type="text" description="Recording/performance location/venue of the track.">
+            <property name="location" code="locn" description="Recording/performance location/venue of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="location"/>
             </property>
-            <property name="narrator" code="narr" type="text" description="The narrator(s) of the track.">
+            <property name="narrator" code="narr" description="The narrator(s) of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="narrator"/>
             </property>
-            <property name="performer" code="perf" type="text" description="The performer(s) of the track.">
+            <property name="performer" code="perf" description="The performer(s) of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="performer"/>
             </property>
-            <property name="producer" code="prod" type="text" description="The producer(s) of the track.">
+            <property name="producer" code="prod" description="The producer(s) of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="producer"/>
             </property>
-            <property name="rating" code="rate" type="integer" description="The rating of the track.">
+            <property name="rating" code="rate" description="The rating of the track.">
+                <type type="integer"/>
+                <type type="missing value"/>
                 <cocoa key="rating"/>
             </property>
-            <property name="replay album gain" code="ragn" type="text" description="Adjusts gain of all tracks on entire album.">
+            <property name="replay album gain" code="ragn" description="Adjusts gain of all tracks on entire album.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="replayAlbumGain"/>
             </property>
-            <property name="replay album peak" code="rapk" type="text" description="Adjusts maximum peak of all tracks on entire album.">
+            <property name="replay album peak" code="rapk" description="Adjusts maximum peak of all tracks on entire album.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="replayAlbumPeak"/>
             </property>
-            <property name="replay track gain" code="rtgn" type="text" description="Adjusts individual track volume.">
+            <property name="replay track gain" code="rtgn" description="Adjusts individual track volume.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="replayTrackGain"/>
             </property>
-            <property name="replay track peak" code="rtpk" type="text" description="Adjusts individual track volume to prevent clipping.">
+            <property name="replay track peak" code="rtpk" description="Adjusts individual track volume to prevent clipping.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="replayTrackPeak"/>
             </property>
             <property name="sample rate" code="srat" type="text" access="r" description="The sample rate of the track.">
                 <cocoa key="sampleRate"/>
             </property>
-            <property name="sort album" code="salb" type="text" description="Override string to use for the track when sorting by album.">
+            <property name="sort album" code="salb" description="Override string to use for the track when sorting by album.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="sortAlbum"/>
             </property>
-            <property name="sort album artist" code="saar" type="text" description="Override string to use for the track when sorting by album artist.">
+            <property name="sort album artist" code="saar" description="Override string to use for the track when sorting by album artist.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="sortAlbumArtist"/>
             </property>
-            <property name="sort artist" code="sart" type="text" description="Override string to use for the track when sorting by artist.">
+            <property name="sort artist" code="sart" description="Override string to use for the track when sorting by artist.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="sortArtist"/>
             </property>
-            <property name="sort composer" code="scmp" type="text" description="Override string to use for the track when sorting by composer.">
+            <property name="sort composer" code="scmp" description="Override string to use for the track when sorting by composer.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="sortComposer"/>
             </property>
-            <property name="sort title" code="sttl" type="text" description="Override string to use for the track when sorting by title/name.">
+            <property name="sort title" code="sttl" description="Override string to use for the track when sorting by title/name.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="sortTitle"/>
             </property>
-            <property name="source" code="srce" type="text" description="The source of the track (CD, SBD, etc.).">
+            <property name="source" code="srce" description="The source of the track (CD, SBD, etc.).">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="source"/>
             </property>
-            <property name="title" code="titl" type="text" description="The title/name of the track.">
+            <property name="title" code="titl" description="The title/name of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="title"/>
             </property>
             <property name="total samples" code="tsmp" type="real" access="r" description="The total number of samples for a single channel of the track.">
                 <cocoa key="totalSamples"/>
             </property>
-            <property name="track count" code="tcnt" type="integer" description="The total number of tracks on the source album.">
+            <property name="track count" code="tcnt" description="The total number of tracks on the source album.">
+                <type type="integer"/>
+                <type type="missing value"/>
                 <cocoa key="trackCount"/>
             </property>
-            <property name="track number" code="tnbr" type="integer" description="The index of the track on the source album.">
+            <property name="track number" code="tnbr" description="The index of the track on the source album.">
+                <type type="integer"/>
+                <type type="missing value"/>
                 <cocoa key="trackNumber"/>
             </property>
-            <property name="vendor" code="vend" type="text" description="The vendor of the track.">
+            <property name="vendor" code="vend" description="The vendor of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="vendor"/>
             </property>
-            <property name="version" code="tver" type="text" description="The version of the track.">
+            <property name="version" code="tver" description="The version of the track.">
+                <type type="text"/>
+                <type type="missing value"/>
                 <cocoa key="trackVersion"/>
             </property>
             <responds-to command="make">
@@ -640,16 +725,24 @@
             <property name="description" code="tdsc" type="text" access="rw" description="A UTF-8 text string describing the image.">
                 <cocoa key="pictureDescription"/>
             </property>
-            <property name="width" code="wdth" type="integer" access="r" in-properties="yes" description="The image width dimension in pixels. SwiftTag derives this value from image data when making or importing a picture.">
+            <property name="width" code="widt" access="r" in-properties="yes" description="The image width dimension in pixels. SwiftTag derives this value from image data when making or importing a picture.">
+                <type type="integer"/>
+                <type type="missing value"/>
                 <cocoa key="width"/>
             </property>
-            <property name="height" code="hght" type="integer" access="r" in-properties="yes" description="The image height dimension in pixels. SwiftTag derives this value from image data when making or importing a picture.">
+            <property name="height" code="heig" access="r" in-properties="yes" description="The image height dimension in pixels. SwiftTag derives this value from image data when making or importing a picture.">
+                <type type="integer"/>
+                <type type="missing value"/>
                 <cocoa key="height"/>
             </property>
-            <property name="color depth" code="cdpt" type="integer" access="r" in-properties="yes" description="The image color depth in bits per pixel. SwiftTag derives this value from image data when making or importing a picture.">
+            <property name="color depth" code="cdpt" access="r" in-properties="yes" description="The image color depth in bits per pixel. SwiftTag derives this value from image data when making or importing a picture.">
+                <type type="integer"/>
+                <type type="missing value"/>
                 <cocoa key="colorDepth"/>
             </property>
-            <property name="colors" code="cols" type="integer" access="r" in-properties="yes" description="The number of colors for indexed palettes (0 for non-indexed). SwiftTag derives this value from image data when making or importing a picture.">
+            <property name="colors" code="cols" access="r" in-properties="yes" description="The number of colors for indexed palettes (0 for non-indexed). SwiftTag derives this value from image data when making or importing a picture.">
+                <type type="integer"/>
+                <type type="missing value"/>
                 <cocoa key="colors"/>
             </property>
             <property name="data" code="pcda" type="data" access="rw" in-properties="yes" description="The raw image data in bytes. Accepted when making or importing a new picture; changing it derives MIME type and dimensions from the new data.">

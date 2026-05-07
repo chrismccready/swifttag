@@ -804,7 +804,11 @@ class SwiftTagUITestCase: XCTestCase {
                         set trackFrontCovers to every picture whose picture type is front cover
                         set firstCover to item 1 of trackFrontCovers
                         set frontCoverPictureData to data of firstCover
-                        return ((count of pictures) as text) & linefeed & ((count of trackFrontCovers) as text) & linefeed & (description of firstCover) & linefeed & (MIME type of firstCover) & linefeed & ((class of frontCoverPictureData) as text) & linefeed & ((frontCoverPictureData is missing value) as text)
+                        set frontCoverPictureWidth to width of firstCover
+                        set frontCoverPictureHeight to height of firstCover
+                        set frontCoverPictureColorDepth to color depth of firstCover
+                        set frontCoverPictureColors to colors of firstCover
+                        return ((count of pictures) as text) & linefeed & ((count of trackFrontCovers) as text) & linefeed & (description of firstCover) & linefeed & (MIME type of firstCover) & linefeed & ((class of frontCoverPictureData) as text) & linefeed & ((frontCoverPictureData is missing value) as text) & linefeed & ((frontCoverPictureWidth is missing value) as text) & linefeed & ((frontCoverPictureHeight is missing value) as text) & linefeed & ((frontCoverPictureColorDepth is missing value) as text) & linefeed & ((frontCoverPictureColors is missing value) as text)
                     end tell
                 end tell
             end tell
@@ -817,10 +821,15 @@ class SwiftTagUITestCase: XCTestCase {
         let outputLines = normalizedAppleScriptTextOutput(output)
             .components(separatedBy: .newlines)
             .filter { !$0.isEmpty }
-        XCTAssertEqual(outputLines.count, 6)
+        XCTAssertEqual(outputLines.count, 10)
         XCTAssertEqual(Array(outputLines.prefix(4)), ["1", "1", "UI Test Single Front Cover", "image/png"])
         XCTAssertTrue(outputLines[4] == "data" || outputLines[4].contains("tdta"))
         XCTAssertEqual(outputLines[5], "false")
+        XCTAssertEqual(
+            Array(outputLines.suffix(4)),
+            ["false", "false", "false", "false"],
+            outputLines.joined(separator: "|")
+        )
     }
 
     @MainActor

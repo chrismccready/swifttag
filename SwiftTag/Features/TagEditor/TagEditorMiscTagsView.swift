@@ -70,7 +70,7 @@ struct TagEditorMiscTagsView: View {
 
                 TableColumn("Value") { row in
                     if let valueBinding = valueBindingForRow(row.id) {
-                        TextField("Select track(s) to edit value.", text: valueBinding)
+                        TextField("<value>", text: valueBinding)
                             .tagDiffStyle(
                                 tag: .misc,
                                 hasTrackToTrackDifference: hasInternalDifferenceForRow(row),
