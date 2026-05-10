@@ -444,6 +444,9 @@
             <property name="document" code="docu" type="document" access="r" description="Editor window document.">
                 <cocoa key="document"/>
             </property>
+            <property name="modified" code="imod" type="boolean" access="r" description="Does the editor window contain any modified tracks since last save?">
+                <cocoa key="modified"/>
+            </property>
             <property name="selected tracks" code="selt" access="rw" description="Currently selected tracks in editor window.">
                 <cocoa key="selectedTracks"/>
                 <type type="specifier"/>

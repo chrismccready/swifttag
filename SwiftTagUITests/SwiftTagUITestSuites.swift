@@ -101,6 +101,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessReadsEditorWindowModifiedState() throws {
+        try scenarioAppleScriptHarnessReadsEditorWindowModifiedState()
+    }
+
+    @MainActor
     func testAppleScriptHarnessReadsFirstTagWhoseKey() throws {
         try scenarioAppleScriptHarnessReadsFirstTagWhoseKey()
     }

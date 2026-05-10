@@ -1402,6 +1402,7 @@ struct SwiftTagAppleScriptPictureIdentity: Equatable {
 struct SwiftTagAppleScriptSessionBridge {
     let documentSnapshot: () -> SwiftTagAppleScriptDocumentSnapshot
     let sessionSnapshot: () -> SwiftTagAppleScriptSessionSnapshot
+    let editorWindowModified: () -> Bool
     let addTracks: ([URL], Bool) throws -> [UUID]
     let deleteTracks: (Set<UUID>) throws -> Void
     let selectTracks: (Set<UUID>) throws -> Void
@@ -1419,6 +1420,7 @@ struct SwiftTagAppleScriptSessionBridge {
     init(
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
         sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
+        editorWindowModified: (() -> Bool)? = nil,
         addTracks: @escaping ([URL]) throws -> [UUID],
         deleteTracks: @escaping (Set<UUID>) throws -> Void = { _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
@@ -1448,6 +1450,7 @@ struct SwiftTagAppleScriptSessionBridge {
         self.init(
             documentSnapshot: documentSnapshot,
             sessionSnapshot: sessionSnapshot,
+            editorWindowModified: editorWindowModified,
             addTracksWithLock: { urls, _ in
                 try addTracks(urls)
             },
@@ -1469,6 +1472,7 @@ struct SwiftTagAppleScriptSessionBridge {
     init(
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
         sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
+        editorWindowModified: (() -> Bool)? = nil,
         addTracksWithLock: @escaping ([URL], Bool) throws -> [UUID],
         deleteTracks: @escaping (Set<UUID>) throws -> Void = { _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
@@ -1497,6 +1501,9 @@ struct SwiftTagAppleScriptSessionBridge {
     ) {
         self.documentSnapshot = documentSnapshot
         self.sessionSnapshot = sessionSnapshot
+        self.editorWindowModified = editorWindowModified ?? {
+            documentSnapshot().modified
+        }
         self.addTracks = addTracksWithLock
         self.deleteTracks = deleteTracks
         self.selectTracks = selectTracks
@@ -4505,6 +4512,11 @@ final class SwiftTagScriptEditorWindow: NSObject {
         SwiftTagAppleScriptController.shared.document(forSessionID: sessionIDValue)
     }
 
+    @objc(modified)
+    var modified: Bool {
+        SwiftTagAppleScriptController.shared.editorWindowIsModified(forSessionID: sessionIDValue)
+    }
+
     @objc(selectedTracks)
     var selectedTracks: [SwiftTagScriptTrack] {
         get {
@@ -4688,7 +4700,7 @@ final class SwiftTagScriptEditorWindow: NSObject {
 
         switch saveOption {
         case .yes:
-            if document.modified {
+            if modified {
                 _ = try saveFlacFiles(using: request.flacSaveRequest)
             }
             try SwiftTagAppleScriptController.shared.closeEditorWindow(
@@ -6212,6 +6224,10 @@ final class SwiftTagAppleScriptController {
             modified: false,
             saveState: fallbackState
         )
+    }
+
+    func editorWindowIsModified(forSessionID sessionID: UUID) -> Bool {
+        sessionBridgesBySessionID[sessionID]?.editorWindowModified() ?? false
     }
 
     func saveDocument(

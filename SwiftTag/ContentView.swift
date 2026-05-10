@@ -2062,6 +2062,9 @@ struct ContentView: View {
                         selectedTrackIDs: viewModel.selectedTrackIDs
                     )
                 },
+                editorWindowModified: {
+                    appleScriptEditorWindowIsModified()
+                },
                 addTracksWithLock: { urls, locked in
                     try performAppleScriptAddTracks(urls, locked: locked)
                 },
@@ -2227,6 +2230,11 @@ struct ContentView: View {
         return editCounts.tagEdits > 0
             || editCounts.pictureEdits > 0
             || viewModel.hasReferencedSwiftTagDocumentTrackListDifference()
+    }
+
+    private func appleScriptEditorWindowIsModified() -> Bool {
+        let editCounts = currentUnsavedEditCountsForLoadedTracks()
+        return editCounts.tagEdits > 0 || editCounts.pictureEdits > 0
     }
 
     private func registerEditorSession() {

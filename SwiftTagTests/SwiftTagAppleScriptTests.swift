@@ -239,6 +239,120 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func editorWindowClassDescriptionExposesReadOnlyModifiedProperty() throws {
+        let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptEditorWindow.self))
+        let modifiedCode = Self.fourCharCode("imod").uint32Value
+
+        #expect(classDescription.key(withAppleEventCode: modifiedCode) == "modified")
+        #expect(classDescription.appleEventCode(forKey: "modified") == modifiedCode)
+        #expect(classDescription.type(forKey: "modified") == "boolean")
+        #expect(classDescription.hasReadableProperty(forKey: "modified"))
+        #expect(!classDescription.hasWritableProperty(forKey: "modified"))
+    }
+
+    @MainActor
+    @Test
+    func editorWindowModifiedUsesEditorStateSeparateFromDocumentModified() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        var editorModified = false
+        var saveTrackCallCount = 0
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Track List Difference",
+                        modified: true,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackIDs: [])
+                },
+                editorWindowModified: {
+                    editorModified
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() },
+                saveTracks: { request in
+                    saveTrackCallCount += 1
+                    return SaveOperationResult(
+                        sourceSessionID: sessionID,
+                        payload: request.payload ?? .writeTagsAndPictures,
+                        trackReferences: [],
+                        fingerprint: "empty"
+                    )
+                }
+            )
+        )
+
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
+
+        #expect(scriptWindow.document.modified)
+        #expect(!scriptWindow.modified)
+
+        try scriptWindow.close(
+            using: SwiftTagAppleScriptCloseRequest(
+                saveOption: .yes,
+                destinationURL: nil,
+                flacSaveRequest: .defaults
+            )
+        )
+        #expect(saveTrackCallCount == 0)
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Track Edits",
+                        modified: true,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackIDs: [])
+                },
+                editorWindowModified: {
+                    editorModified
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() },
+                saveTracks: { request in
+                    saveTrackCallCount += 1
+                    return SaveOperationResult(
+                        sourceSessionID: sessionID,
+                        payload: request.payload ?? .writeTagsAndPictures,
+                        trackReferences: [],
+                        fingerprint: "empty"
+                    )
+                }
+            )
+        )
+
+        editorModified = true
+        #expect(scriptWindow.modified)
+        try scriptWindow.close(
+            using: SwiftTagAppleScriptCloseRequest(
+                saveOption: .yes,
+                destinationURL: nil,
+                flacSaveRequest: .defaults
+            )
+        )
+        #expect(saveTrackCallCount == 1)
+    }
+
+    @MainActor
+    @Test
     func addCommandDescriptionExposesOptionalWithLockParameter() throws {
         let commandDescription = try #require(
             NSScriptSuiteRegistry.shared().commandDescription(

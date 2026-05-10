@@ -398,6 +398,57 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessReadsEditorWindowModifiedState() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover"
+        )
+        defer {
+            app.terminate()
+        }
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        let title = "Modified State Title \(UUID().uuidString)"
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    repeat 50 times
+                        if (count of tracks) > 0 then exit repeat
+                        delay 0.1
+                    end repeat
+                    set modifiedBeforeEdit to modified
+                    set title of first track to "\(title)"
+                    set modifiedAfterTagEdit to modified
+                    save with scope all with payload tags and pictures
+                    set modifiedAfterSave to modified
+                    tell first track
+                        repeat 50 times
+                            if (count of pictures) > 0 then exit repeat
+                            delay 0.1
+                        end repeat
+                        set description of first picture to "Modified State Picture"
+                    end tell
+                    set modifiedAfterPictureEdit to modified
+                    return (modifiedBeforeEdit as text) & linefeed & (modifiedAfterTagEdit as text) & linefeed & (modifiedAfterSave as text) & linefeed & (modifiedAfterPictureEdit as text)
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, ["false", "true", "false", "true"])
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessReadsFirstTagWhoseKey() throws {
         try requireAppleScriptHarnessEnabled()
 
