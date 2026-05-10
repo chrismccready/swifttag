@@ -4981,17 +4981,17 @@ final class SwiftTagScriptEditorWindow: NSObject {
 
     private func scriptPoint(from frame: NSRect) -> NSDictionary {
         [
-            "x": NSNumber(value: Double(frame.minX)),
-            "y": NSNumber(value: Double(frame.maxY))
+            "x": NSNumber(value: Int(frame.minX.rounded())),
+            "y": NSNumber(value: Int(frame.maxY.rounded()))
         ] as NSDictionary
     }
 
     private func scriptRectangle(from frame: NSRect) -> NSDictionary {
         [
-            "x": NSNumber(value: Double(frame.minX)),
-            "y": NSNumber(value: Double(frame.maxY)),
-            "width": NSNumber(value: Double(frame.width)),
-            "height": NSNumber(value: Double(frame.height))
+            "x": NSNumber(value: Int(frame.minX.rounded())),
+            "y": NSNumber(value: Int(frame.maxY.rounded())),
+            "width": NSNumber(value: Int(frame.width.rounded())),
+            "height": NSNumber(value: Int(frame.height.rounded()))
         ] as NSDictionary
     }
 
@@ -5570,17 +5570,17 @@ final class SwiftTagScriptSettingsWindow: NSObject {
 
     private func scriptPoint(from frame: NSRect) -> NSDictionary {
         [
-            "x": NSNumber(value: Double(frame.minX)),
-            "y": NSNumber(value: Double(frame.maxY))
+            "x": NSNumber(value: Int(frame.minX.rounded())),
+            "y": NSNumber(value: Int(frame.maxY.rounded()))
         ] as NSDictionary
     }
 
     private func scriptRectangle(from frame: NSRect) -> NSDictionary {
         [
-            "x": NSNumber(value: Double(frame.minX)),
-            "y": NSNumber(value: Double(frame.maxY)),
-            "width": NSNumber(value: Double(frame.width)),
-            "height": NSNumber(value: Double(frame.height))
+            "x": NSNumber(value: Int(frame.minX.rounded())),
+            "y": NSNumber(value: Int(frame.maxY.rounded())),
+            "width": NSNumber(value: Int(frame.width.rounded())),
+            "height": NSNumber(value: Int(frame.height.rounded()))
         ] as NSDictionary
     }
 

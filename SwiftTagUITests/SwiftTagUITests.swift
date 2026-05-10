@@ -1421,6 +1421,48 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessReadsInlineEditorWindowPointCoordinates() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                set w to front editor window
+                set positionSample to position of w
+                set AppleScript's text item delimiters to linefeed
+                set outputLines to {}
+                tell w
+                    set end of outputLines to (x of (get position)) as text
+                    set end of outputLines to (y of (get position)) as text
+                end tell
+                set end of outputLines to (x of positionSample) as text
+                set end of outputLines to (y of positionSample) as text
+                return outputLines as text
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines.count, 4)
+        XCTAssertNotNil(Int(outputLines[0]))
+        XCTAssertNotNil(Int(outputLines[1]))
+        XCTAssertEqual(outputLines[0], outputLines[2])
+        XCTAssertEqual(outputLines[1], outputLines[3])
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessReadsAndWritesApplicationSettings() throws {
         try requireAppleScriptHarnessEnabled()
 

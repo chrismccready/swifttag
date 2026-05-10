@@ -420,8 +420,8 @@ struct SwiftTagAppleScriptTests {
         #expect(window.frame.maxY == top)
 
         let position = try #require(scriptWindow.position as? [String: NSNumber])
-        #expect(position["x"]?.doubleValue == 120)
-        #expect(position["y"]?.doubleValue == Double(top))
+        #expect(position["x"]?.intValue == 120)
+        #expect(position["y"]?.intValue == Int(top.rounded()))
 
         let boundsRecord = NSAppleEventDescriptor.record()
         boundsRecord.setDescriptor(
@@ -447,10 +447,10 @@ struct SwiftTagAppleScriptTests {
         #expect(window.frame.maxY == top)
 
         let bounds = try #require(scriptWindow.bounds as? [String: NSNumber])
-        #expect(bounds["x"]?.doubleValue == 130)
-        #expect(bounds["y"]?.doubleValue == Double(top))
-        #expect(bounds["width"]?.doubleValue == 300)
-        #expect(bounds["height"]?.doubleValue == 210)
+        #expect(bounds["x"]?.intValue == 130)
+        #expect(bounds["y"]?.intValue == Int(top.rounded()))
+        #expect(bounds["width"]?.intValue == 300)
+        #expect(bounds["height"]?.intValue == 210)
 
         scriptWindow.setValue(NSNumber(value: true), forKey: "isVisible")
         #expect(window.isVisible)

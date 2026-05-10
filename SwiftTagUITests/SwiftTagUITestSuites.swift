@@ -196,6 +196,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessReadsInlineEditorWindowPointCoordinates() throws {
+        try scenarioAppleScriptHarnessReadsInlineEditorWindowPointCoordinates()
+    }
+
+    @MainActor
     func testAppleScriptHarnessReadsAndWritesApplicationSettings() throws {
         try scenarioAppleScriptHarnessReadsAndWritesApplicationSettings()
     }
