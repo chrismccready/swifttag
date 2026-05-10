@@ -5314,6 +5314,16 @@ final class SettingsWindowCoordinator {
         return currentSettingsWindow
     }
 
+    @discardableResult
+    func closeSettingsWindow() -> NSWindow? {
+        guard let window = currentSettingsWindow else {
+            return nil
+        }
+
+        window.performClose(nil)
+        return window
+    }
+
     private func presentSettingsWindow() {
         if let window = currentSettingsWindow {
             orderSettingsWindowInFront(window)
@@ -5442,6 +5452,16 @@ final class SwiftTagScriptSettingsWindow: NSObject {
     func openSettingsWindow() -> SwiftTagScriptSettingsWindow {
         SettingsWindowCoordinator.shared.openSettingsWindow()
         return self
+    }
+
+    func closeSettingsWindow() {
+        SettingsWindowCoordinator.shared.closeSettingsWindow()
+    }
+
+    @objc(handleCloseScriptCommand:)
+    func handleCloseScriptCommand(_ command: NSScriptCommand) -> Any? {
+        closeSettingsWindow()
+        return nil
     }
 
     override func setValue(_ value: Any?, forKey key: String) {

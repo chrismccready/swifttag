@@ -1307,6 +1307,50 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessClosesSettingsWindow() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                set AppleScript's text item delimiters to linefeed
+                set outputLines to {}
+                open settings window
+                repeat 50 times
+                    if visible of first settings window then exit repeat
+                    delay 0.1
+                end repeat
+                set end of outputLines to visible of first settings window as text
+                close first settings window
+                repeat 50 times
+                    if not (visible of first settings window) then exit repeat
+                    delay 0.1
+                end repeat
+                set end of outputLines to visible of first settings window as text
+                set end of outputLines to (count of settings windows) as text
+                return outputLines as text
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, ["true", "false", "1"])
+        XCTAssertFalse(settingsControl(in: app, identifier: UIID.settingsTabView).exists)
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessReadsEditorWindowWindowProperties() throws {
         try requireAppleScriptHarnessEnabled()
 

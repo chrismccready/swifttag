@@ -33,7 +33,7 @@
             </result>
         </command>
 
-        <command name="close" code="coreclos" description="Close a document or editor window.">
+        <command name="close" code="coreclos" description="Close a document, editor window, or settings window.">
             <cocoa class="NSCloseCommand"/>
             <access-group identifier="*"/>
             <direct-parameter type="specifier" requires-access="r" description="The document(s) or window(s) to close."/>
@@ -431,6 +431,9 @@
 
         <class name="settings window" plural="settings windows" code="swin" inherits="window" description="The SwiftTag settings window.">
             <cocoa class="SwiftTagScriptSettingsWindow"/>
+            <responds-to command="close">
+                <cocoa method="handleCloseScriptCommand:"/>
+            </responds-to>
         </class>
 
         <class name="editor window" plural="editor windows" code="edtw" inherits="window" description="A SwiftTag editor window.">

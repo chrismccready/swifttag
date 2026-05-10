@@ -6,6 +6,24 @@ import Testing
 
 @Suite(.serialized)
 struct SwiftTagAppleScriptTests {
+    private final class TrackingSettingsWindow: NSWindow {
+        var performCloseCallCount = 0
+
+        init() {
+            super.init(
+                contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            isReleasedWhenClosed = false
+        }
+
+        override func performClose(_ sender: Any?) {
+            performCloseCallCount += 1
+        }
+    }
+
     @MainActor
     @Test
     func insertingScriptEditorWindowOpensMatchingEditorSession() throws {
@@ -269,24 +287,73 @@ struct SwiftTagAppleScriptTests {
         let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptSettingsWindow.self))
         let applicationClassDescription = try #require(NSScriptClassDescription(for: NSApplication.self))
         let openSettingsWindowSelector = NSSelectorFromString("handleOpenSettingsWindowScriptCommand:")
+        let closeSelector = NSSelectorFromString("handleCloseScriptCommand:")
         let openSettingsWindowCommand = try #require(
             NSScriptSuiteRegistry.shared().commandDescription(
                 withAppleEventClass: Self.fourCharCode("SwTG").uint32Value,
                 andAppleEventCode: Self.fourCharCode("oswn").uint32Value
             )
         )
+        let closeCommand = try #require(
+            NSScriptSuiteRegistry.shared().commandDescription(
+                withAppleEventClass: Self.fourCharCode("core").uint32Value,
+                andAppleEventCode: Self.fourCharCode("clos").uint32Value
+            )
+        )
 
         #expect(application.scriptSettingsWindows.count == 1)
         #expect(application.scriptSettingsWindows.first?.objectSpecifier != nil)
+        #expect(application.scriptSettingsWindows.first?.responds(to: closeSelector) == true)
         #expect(classDescription.superclass?.className == "window")
         #expect(classDescription.hasReadableProperty(forKey: "title"))
         #expect(classDescription.hasReadableProperty(forKey: "uniqueID"))
         #expect(classDescription.hasWritableProperty(forKey: "orderedIndex"))
         #expect(classDescription.hasWritableProperty(forKey: "bounds"))
         #expect(classDescription.hasWritableProperty(forKey: "isVisible"))
+        #expect(classDescription.supportsCommand(closeCommand))
+        #expect(classDescription.selector(forCommand: closeCommand) == closeSelector)
         #expect(application.responds(to: openSettingsWindowSelector))
         #expect(applicationClassDescription.supportsCommand(openSettingsWindowCommand))
         #expect(applicationClassDescription.selector(forCommand: openSettingsWindowCommand) == openSettingsWindowSelector)
+    }
+
+    @MainActor
+    @Test
+    func closingSettingsWindowThroughScriptWrapperPerformsWindowClose() throws {
+        let application = NSApplication.shared
+
+        SettingsWindowCoordinator.shared.resetForTesting()
+        defer {
+            SettingsWindowCoordinator.shared.resetForTesting()
+        }
+
+        let window = TrackingSettingsWindow()
+        SettingsWindowCoordinator.shared.registerSettingsWindow(window)
+
+        try #require(application.scriptSettingsWindows.first).closeSettingsWindow()
+
+        #expect(window.performCloseCallCount == 1)
+    }
+
+    @MainActor
+    @Test
+    func closingSettingsWindowWithoutLiveWindowDoesNotOpenSettingsWindow() throws {
+        let application = NSApplication.shared
+
+        SettingsWindowCoordinator.shared.resetForTesting()
+        defer {
+            SettingsWindowCoordinator.shared.resetForTesting()
+        }
+
+        var openRequests = 0
+        SettingsWindowCoordinator.shared.setOpenSettingsWindowAction {
+            openRequests += 1
+        }
+
+        try #require(application.scriptSettingsWindows.first).closeSettingsWindow()
+
+        #expect(openRequests == 0)
+        #expect(SettingsWindowCoordinator.shared.currentSettingsWindow == nil)
     }
 
     @MainActor
