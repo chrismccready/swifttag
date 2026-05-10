@@ -161,6 +161,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessKeepsPictureIDsAfterDeletingSameTypePicture() throws {
+        try scenarioAppleScriptHarnessKeepsPictureIDsAfterDeletingSameTypePicture()
+    }
+
+    @MainActor
     func testAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data() throws {
         try scenarioAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data()
     }

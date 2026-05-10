@@ -184,6 +184,29 @@ final class AlbumArtViewModel {
         syncLegacySlotImages(albumArtTypes: albumArtTypes)
     }
 
+    func removeAppleScriptPictureIdentity(
+        _ identity: SwiftTagAppleScriptPictureIdentity,
+        for trackID: UUID,
+        albumArtTypes: [AlbumArtType]
+    ) {
+        guard var refs = trackReferencesByTrackID[trackID] else {
+            return
+        }
+
+        let removedRefs = refs.filter { $0.id == identity.id }
+        guard !removedRefs.isEmpty else {
+            return
+        }
+
+        refs.removeAll { $0.id == identity.id }
+        for removedRef in removedRefs {
+            clearReferencePinState(removedRef, for: trackID)
+        }
+        trackReferencesByTrackID[trackID] = refs
+        garbageCollectPool()
+        syncLegacySlotImages(albumArtTypes: albumArtTypes)
+    }
+
     func uniquePictureCount(for albumArtSlot: AlbumArtSlot) -> (count: Int, pinCount: Int) {
         var uniquePoolIDs: Set<UUID> = []
         var pinCount = 0

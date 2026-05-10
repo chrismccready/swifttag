@@ -1716,11 +1716,24 @@ struct ContentView: View {
         for trackID: UUID,
         pictureIndex: Int
     ) throws {
+        let deletedIdentity = albumArtViewModel.appleScriptPictureIdentity(
+            for: trackID,
+            pictureIndex: pictureIndex,
+            albumArtTypes: albumArtTypes
+        )
         try viewModel.appleScriptDeletePicture(
             forTrackID: trackID,
             pictureIndex: pictureIndex
         )
-        albumArtViewModel.discardTransientState(for: [trackID], albumArtTypes: albumArtTypes)
+        if let deletedIdentity {
+            albumArtViewModel.removeAppleScriptPictureIdentity(
+                deletedIdentity,
+                for: trackID,
+                albumArtTypes: albumArtTypes
+            )
+        } else {
+            albumArtViewModel.discardTransientState(for: [trackID], albumArtTypes: albumArtTypes)
+        }
         refreshAlbumArtContextFromTrackItems()
     }
 

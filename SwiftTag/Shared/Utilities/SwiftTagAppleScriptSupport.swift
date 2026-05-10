@@ -2668,10 +2668,12 @@ final class SwiftTagScriptPicture: NSObject {
     private var detachedMimeType: String?
     private var detachedDescription: String?
     private var detachedData: Data?
+    private var stablePictureIdentity: SwiftTagAppleScriptPictureIdentity?
 
     @objc
     override init() {
         storage = .detached(nil)
+        stablePictureIdentity = nil
         super.init()
     }
 
@@ -2681,17 +2683,23 @@ final class SwiftTagScriptPicture: NSObject {
         detachedMimeType = payload.mimeType
         detachedDescription = payload.description
         detachedData = payload.data
+        stablePictureIdentity = nil
         super.init()
     }
 
     init(sessionID: UUID, trackID: UUID, pictureIndex: Int) {
         storage = .attached(sessionID: sessionID, trackID: trackID, pictureIndex: pictureIndex)
+        stablePictureIdentity = SwiftTagAppleScriptController.shared.pictureIdentity(
+            forSessionID: sessionID,
+            trackID: trackID,
+            pictureIndex: pictureIndex
+        )
         super.init()
     }
 
     @objc(id)
     var id: String? {
-        pictureIdentity?.id.uuidString
+        pictureIdentity?.id.uuidString ?? stablePictureIdentity?.id.uuidString
     }
 
     @objc(poolId)
@@ -2955,6 +2963,11 @@ final class SwiftTagScriptPicture: NSObject {
 
     func attach(sessionID: UUID, trackID: UUID, pictureIndex: Int) {
         storage = .attached(sessionID: sessionID, trackID: trackID, pictureIndex: pictureIndex)
+        stablePictureIdentity = SwiftTagAppleScriptController.shared.pictureIdentity(
+            forSessionID: sessionID,
+            trackID: trackID,
+            pictureIndex: pictureIndex
+        )
     }
 
     func delete() throws {
@@ -2997,26 +3010,36 @@ final class SwiftTagScriptPicture: NSObject {
     private var pictureSnapshot: FlacWritablePictureRecord? {
         switch storage {
         case .attached(let sessionID, let trackID, let pictureIndex):
-            SwiftTagAppleScriptController.shared.pictureSnapshot(
+            let currentIndex = currentPictureIndex(
+                sessionID: sessionID,
+                trackID: trackID,
+                fallback: pictureIndex
+            )
+            return SwiftTagAppleScriptController.shared.pictureSnapshot(
                 forSessionID: sessionID,
                 trackID: trackID,
-                pictureIndex: pictureIndex
+                pictureIndex: currentIndex
             )
         case .detached(let payload):
-            payload?.record()
+            return payload?.record()
         }
     }
 
     private var pictureIdentity: SwiftTagAppleScriptPictureIdentity? {
         switch storage {
         case .attached(let sessionID, let trackID, let pictureIndex):
-            SwiftTagAppleScriptController.shared.pictureIdentity(
+            let currentIndex = currentPictureIndex(
+                sessionID: sessionID,
+                trackID: trackID,
+                fallback: pictureIndex
+            )
+            return SwiftTagAppleScriptController.shared.pictureIdentity(
                 forSessionID: sessionID,
                 trackID: trackID,
-                pictureIndex: pictureIndex
+                pictureIndex: currentIndex
             )
         case .detached:
-            nil
+            return nil
         }
     }
 
@@ -3025,11 +3048,33 @@ final class SwiftTagScriptPicture: NSObject {
             return nil
         }
 
+        let currentIndex = currentPictureIndex(
+            sessionID: sessionID,
+            trackID: trackID,
+            fallback: pictureIndex
+        )
         return AttachedReference(
             sessionID: sessionID,
             trackID: trackID,
-            pictureIndex: pictureIndex
+            pictureIndex: currentIndex
         )
+    }
+
+    private func currentPictureIndex(
+        sessionID: UUID,
+        trackID: UUID,
+        fallback pictureIndex: Int
+    ) -> Int {
+        guard let stablePictureID = stablePictureIdentity?.id,
+              let resolvedIndex = SwiftTagAppleScriptController.shared.pictureIndex(
+                forSessionID: sessionID,
+                trackID: trackID,
+                uniqueID: stablePictureID
+              ) else {
+            return pictureIndex
+        }
+
+        return resolvedIndex
     }
 
     private func availableIntegerValue(_ keyPath: KeyPath<FlacWritablePictureRecord, Int>) -> NSNumber? {
@@ -6024,21 +6069,33 @@ final class SwiftTagAppleScriptController {
         uniqueID: Any
     ) -> SwiftTagScriptPicture? {
         guard let id = normalizedPictureUniqueID(uniqueID),
-              let track = trackSnapshot(forSessionID: sessionID, trackID: trackID) else {
+              let pictureIndex = pictureIndex(
+                forSessionID: sessionID,
+                trackID: trackID,
+                uniqueID: id
+              ) else {
             return nil
         }
 
-        for pictureIndex in track.flacPictureRecords.indices {
-            if pictureIdentity(forSessionID: sessionID, trackID: trackID, pictureIndex: pictureIndex)?.id == id {
-                return SwiftTagScriptPicture(
-                    sessionID: sessionID,
-                    trackID: trackID,
-                    pictureIndex: pictureIndex
-                )
-            }
+        return SwiftTagScriptPicture(
+            sessionID: sessionID,
+            trackID: trackID,
+            pictureIndex: pictureIndex
+        )
+    }
+
+    func pictureIndex(
+        forSessionID sessionID: UUID,
+        trackID: UUID,
+        uniqueID: UUID
+    ) -> Int? {
+        guard let track = trackSnapshot(forSessionID: sessionID, trackID: trackID) else {
+            return nil
         }
 
-        return nil
+        return track.flacPictureRecords.indices.first { pictureIndex in
+            pictureIdentity(forSessionID: sessionID, trackID: trackID, pictureIndex: pictureIndex)?.id == uniqueID
+        }
     }
 
     func upsertTag(

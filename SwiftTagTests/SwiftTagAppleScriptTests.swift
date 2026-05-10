@@ -1437,6 +1437,100 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func pictureWrapperKeepsStableIDAfterEarlierPictureDeletion() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let firstPictureID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
+        let secondPictureID = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
+        let firstPoolID = UUID(uuidString: "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA")!
+        let secondPoolID = UUID(uuidString: "BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB")!
+        var pictureIdentities = [
+            SwiftTagAppleScriptPictureIdentity(id: firstPictureID, poolId: firstPoolID),
+            SwiftTagAppleScriptPictureIdentity(id: secondPictureID, poolId: secondPoolID)
+        ]
+        let firstData = try #require(Self.singlePixelPNGData())
+        let secondData = try Self.pngData(color: .systemBlue)
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            Track(
+                tags: [TagKey.title: "Stable Wrapper ID Track"],
+                flacPictureRecords: [
+                    FlacWritablePictureRecord(
+                        type: 3,
+                        mimeType: "image/png",
+                        description: "Delete first",
+                        data: firstData
+                    ).withComputedPictureMetadata(),
+                    FlacWritablePictureRecord(
+                        type: 3,
+                        mimeType: "image/png",
+                        description: "Keep second",
+                        data: secondData
+                    ).withComputedPictureMetadata()
+                ],
+                sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-stable-wrapper.flac")
+            )
+        ]
+
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Untitled",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: viewModel.trackItems,
+                        selectedTrackIDs: []
+                    )
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() },
+                deletePicture: { trackID, pictureIndex in
+                    try viewModel.appleScriptDeletePicture(
+                        forTrackID: trackID,
+                        pictureIndex: pictureIndex
+                    )
+                    pictureIdentities.remove(at: pictureIndex)
+                },
+                pictureIdentity: { _, pictureIndex in
+                    guard pictureIdentities.indices.contains(pictureIndex) else {
+                        return nil
+                    }
+                    return pictureIdentities[pictureIndex]
+                }
+            )
+        )
+
+        let scriptWindow = try #require(
+            SwiftTagAppleScriptController.shared.editorWindow(forSessionID: sessionID)
+        )
+        let scriptTrack = try #require(scriptWindow.tracks.first)
+        let firstPicture = try #require(scriptTrack.pictures.first)
+        let secondPicture = try #require(scriptTrack.pictures.dropFirst().first)
+
+        #expect(secondPicture.id == secondPictureID.uuidString)
+
+        try firstPicture.delete()
+
+        #expect(secondPicture.id == secondPictureID.uuidString)
+        #expect(secondPicture.poolId == secondPoolID.uuidString)
+        #expect(secondPicture.pictureDescription == "Keep second")
+    }
+
+    @MainActor
+    @Test
     func pictureIdentityPropertiesSupportWhoseAndUniqueIDLookup() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()

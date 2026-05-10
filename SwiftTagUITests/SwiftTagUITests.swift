@@ -1007,6 +1007,80 @@ class SwiftTagUITestCase: XCTestCase {
         )
     }
 
+    @MainActor
+    func scenarioAppleScriptHarnessKeepsPictureIDsAfterDeletingSameTypePicture() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let keepImageURL = try temporaryPNGFixtureURL(name: "applescript-keep-front", color: .systemBlue)
+        let deleteImageURL = try temporaryPNGFixtureURL(name: "applescript-delete-front", color: .systemRed)
+        defer {
+            try? FileManager.default.removeItem(at: keepImageURL)
+            try? FileManager.default.removeItem(at: deleteImageURL)
+        }
+
+        let app = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover"
+        )
+        defer {
+            app.terminate()
+        }
+
+        let output = try runAppleScript(
+            """
+            use framework "Foundation"
+            use scripting additions
+
+            using terms from application id "\(Self.appBundleIdentifier)"
+                tell application id "\(Self.appBundleIdentifier)"
+                    activate
+                    tell front editor window
+                        repeat 50 times
+                            if (count of tracks) > 0 then exit repeat
+                            delay 0.1
+                        end repeat
+                        tell first track
+                            repeat 50 times
+                                if (count of pictures) > 0 then exit repeat
+                                delay 0.1
+                            end repeat
+                            import picture (my getByteDataFrom("\(keepImageURL.path)")) with picture type front cover with description "keep front"
+                            import picture (my getByteDataFrom("\(deleteImageURL.path)")) with picture type front cover with description "delete front"
+                            set originalBefore to id of first picture whose description is "UI Test Single Front Cover"
+                            set keepBefore to id of first picture whose description is "keep front"
+                            delete (first picture whose description is "delete front")
+                            set originalAfter to id of first picture whose description is "UI Test Single Front Cover"
+                            set keepAfter to id of first picture whose description is "keep front"
+                            return originalBefore & linefeed & originalAfter & linefeed & keepBefore & linefeed & keepAfter & linefeed & ((count of (every picture whose picture type is front cover)) as text)
+                        end tell
+                    end tell
+                end tell
+            end using terms from
+
+            on getByteDataFrom(thePath)
+                set theURL to current application's |NSURL|'s fileURLWithPath:thePath
+                set theData to current application's NSData's dataWithContentsOfURL:theURL
+                if theData is missing value then
+                    error "Could not read data from file. Check the path."
+                end if
+                return (theData's base64EncodedStringWithOptions:0) as text
+            end getByteDataFrom
+            """,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines.count, 5)
+        XCTAssertNotNil(UUID(uuidString: outputLines[0]))
+        XCTAssertNotNil(UUID(uuidString: outputLines[2]))
+        XCTAssertEqual(outputLines[0], outputLines[1])
+        XCTAssertEqual(outputLines[2], outputLines[3])
+        XCTAssertEqual(outputLines[4], "2")
+    }
+
     func scenarioAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data() throws {
         try requireAppleScriptHarnessEnabled()
 

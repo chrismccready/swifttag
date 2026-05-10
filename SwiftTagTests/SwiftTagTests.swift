@@ -1511,6 +1511,83 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func albumArtViewModelRemovesAppleScriptPictureIdentityWithoutRekeyingRemainingPictures() throws {
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let backData = try Self.pngData(color: .systemPurple)
+        let firstFrontData = try Self.pngData(color: .systemPink)
+        let secondFrontData = try Self.pngData(color: .systemTeal)
+        let track = Track(
+            tags: [TagKey.title: "Stable Picture IDs"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(
+                    type: 4,
+                    mimeType: "image/png",
+                    description: "Back",
+                    data: backData
+                ).withComputedPictureMetadata(),
+                FlacWritablePictureRecord(
+                    type: 3,
+                    mimeType: "image/png",
+                    description: "First Front",
+                    data: firstFrontData
+                ).withComputedPictureMetadata(),
+                FlacWritablePictureRecord(
+                    type: 3,
+                    mimeType: "image/png",
+                    description: "Second Front",
+                    data: secondFrontData
+                ).withComputedPictureMetadata()
+            ]
+        )
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(
+            trackItems: [track],
+            selectedTrackIDs: [track.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        let backIdentity = try #require(
+            viewModel.appleScriptPictureIdentity(for: track.id, pictureIndex: 0, albumArtTypes: albumArtTypes)
+        )
+        let firstFrontIdentity = try #require(
+            viewModel.appleScriptPictureIdentity(for: track.id, pictureIndex: 1, albumArtTypes: albumArtTypes)
+        )
+        let secondFrontIdentity = try #require(
+            viewModel.appleScriptPictureIdentity(for: track.id, pictureIndex: 2, albumArtTypes: albumArtTypes)
+        )
+
+        viewModel.removeAppleScriptPictureIdentity(
+            firstFrontIdentity,
+            for: track.id,
+            albumArtTypes: albumArtTypes
+        )
+        var updatedTrack = track
+        updatedTrack.flacPictureRecords.remove(at: 1)
+        viewModel.configureTrackContext(
+            trackItems: [updatedTrack],
+            selectedTrackIDs: [track.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        #expect(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).map(\.description) == [
+            "Back",
+            "Second Front"
+        ])
+        #expect(
+            viewModel.appleScriptPictureIdentity(for: track.id, pictureIndex: 0, albumArtTypes: albumArtTypes) ==
+                backIdentity
+        )
+        #expect(
+            viewModel.appleScriptPictureIdentity(for: track.id, pictureIndex: 1, albumArtTypes: albumArtTypes) ==
+                secondFrontIdentity
+        )
+    }
+
+    @Test
+    @MainActor
     func albumArtViewModelLetsTrackBrowseAndPinPicturesContributedByOtherTracks() throws {
         let sharedData = try Self.pngData(color: .cyan)
         let albumArtTypes: [AlbumArtType] = [
