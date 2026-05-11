@@ -839,6 +839,36 @@ final class AlbumArtViewModel {
         return identities[pictureIndex]
     }
 
+    func appleScriptPictureIdentity(
+        for trackID: UUID,
+        record: FlacWritablePictureRecord,
+        occurrence: Int,
+        albumArtTypes: [AlbumArtType]
+    ) -> SwiftTagAppleScriptPictureIdentity? {
+        guard let slot = albumArtTypes.first(where: { $0.flacPictureType == record.type })?.slot else {
+            return nil
+        }
+
+        let matchingReferences = pinnedReferences(for: trackID, slot: slot).filter { reference in
+            guard let poolItem = picturePool[reference.poolItemID] else {
+                return false
+            }
+
+            return poolItem.data == record.data &&
+                reference.mimeType == record.mimeType &&
+                reference.description == record.description
+        }
+        guard matchingReferences.indices.contains(occurrence) else {
+            return nil
+        }
+
+        let reference = matchingReferences[occurrence]
+        return SwiftTagAppleScriptPictureIdentity(
+            id: reference.id,
+            poolId: reference.poolItemID
+        )
+    }
+
     private func mergePoolAndReferences(from trackItems: [Track], albumArtTypes: [AlbumArtType]) {
         let slotByType = Dictionary(uniqueKeysWithValues: albumArtTypes.map { ($0.flacPictureType, $0.slot) })
 

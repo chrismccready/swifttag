@@ -1085,6 +1085,55 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func albumArtViewModelPictureIdentityCanFollowTrackRecordOrder() throws {
+        let sharedData = try Self.pngData(color: .purple)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let frontRecord = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Front",
+            data: sharedData
+        )
+        let backRecord = FlacWritablePictureRecord(
+            type: 4,
+            mimeType: "image/png",
+            description: "Back",
+            data: sharedData
+        )
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [frontRecord, backRecord]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let frontIdentity = try #require(
+            viewModel.appleScriptPictureIdentity(
+                for: track.id,
+                record: frontRecord,
+                occurrence: 0,
+                albumArtTypes: albumArtTypes
+            )
+        )
+        let backIdentity = try #require(
+            viewModel.appleScriptPictureIdentity(
+                for: track.id,
+                record: backRecord,
+                occurrence: 0,
+                albumArtTypes: albumArtTypes
+            )
+        )
+
+        #expect(frontIdentity.id != backIdentity.id)
+        #expect(frontIdentity.poolId == backIdentity.poolId)
+    }
+
+    @Test
+    @MainActor
     func albumArtViewModelRefreshUpdatesMatchingPictureDescriptionMetadata() throws {
         let frontData = try Self.pngData(color: .purple)
         let albumArtTypes: [AlbumArtType] = [

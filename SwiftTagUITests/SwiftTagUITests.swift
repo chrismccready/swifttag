@@ -1256,6 +1256,111 @@ class SwiftTagUITestCase: XCTestCase {
         ])
     }
 
+    func scenarioAppleScriptHarnessRestoresTrackStatusAfterBase64PictureImport() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let app = try launchApp(
+            importFixture: true,
+            importedPictureProfile: "single-front-cover"
+        )
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: app,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "fish.fill",
+                timeout: 10.0
+            )
+        )
+
+        let output = try runAppleScript(
+            """
+            use framework "Foundation"
+            use scripting additions
+
+            using terms from application id "\(Self.appBundleIdentifier)"
+                tell application id "\(Self.appBundleIdentifier)"
+                    activate
+                    tell first track of front editor window
+                        set originalPicture to first picture whose picture type is front cover
+                        copy data of originalPicture to originalPictureData
+                        copy pool id of originalPicture to originalPicturePoolId
+                        copy description of originalPicture to originalPictureDescription
+
+                        set reimportedAsBackCoverPicture to import picture originalPictureData with picture type back cover with description "Reimported Original Picture As Back"
+                        if (pool id of reimportedAsBackCoverPicture) is not equal to originalPicturePoolId then
+                            error "Reimported picture as different type has different pool ID."
+                        end if
+
+                        delete originalPicture
+
+                        set exportFilePath to (POSIX path of (path to temporary items)) & "SwiftTagUITestBase64RestoreFrontCover.png"
+                        my saveBinaryData to exportFilePath given binaryData:originalPictureData
+                        set exportedPictureData to my getBinaryData from exportFilePath
+                        set reimportedExportedPicture to import picture exportedPictureData with picture type front cover with description originalPictureDescription
+                        if (pool id of reimportedExportedPicture) is not equal to originalPicturePoolId then
+                            error "Reimported exported picture has different pool ID."
+                        end if
+
+                        if not modified then
+                            error "Track should be modified after picture changes, but is not."
+                        end if
+                        delete reimportedAsBackCoverPicture
+                        if modified then
+                            error "Track should not be modified after restoring original picture, but is still modified."
+                        end if
+                        return ((count of pictures) as text) & linefeed & (modified as text)
+                    end tell
+                end tell
+            end using terms from
+
+            on saveBinaryData to filePath given binaryData:binaryData
+                set fileDescriptor to open for access filePath with write permission
+                try
+                    set eof fileDescriptor to 0
+                    write (binaryData as data) to fileDescriptor
+                    close access fileDescriptor
+                on error errMsg number errNum
+                    try
+                        close access fileDescriptor
+                    end try
+                    error errMsg number errNum
+                end try
+            end saveBinaryData
+
+            on getBinaryData from filePath
+                set fileURL to current application's |NSURL|'s fileURLWithPath:filePath
+                set fileData to current application's NSData's dataWithContentsOfURL:fileURL
+                if fileData is missing value then
+                    error "Could not read data from file. Check the path."
+                end if
+                return (fileData's base64EncodedStringWithOptions:0) as text
+            end getBinaryData
+            """,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, [
+            "1",
+            "false"
+        ])
+        XCTAssertTrue(
+            waitForLabeledElement(
+                in: app,
+                identifier: UIID.trackStatusIcon,
+                expectedLabel: "fish.fill",
+                timeout: 10.0
+            )
+        )
+    }
+
     @MainActor
     func scenarioAppleScriptHarnessClosesEditorWindowSavingNo() throws {
         try requireAppleScriptHarnessEnabled()

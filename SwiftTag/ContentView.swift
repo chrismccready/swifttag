@@ -1686,7 +1686,7 @@ struct ContentView: View {
             forTrackID: trackID,
             pictureIndex: pictureIndex
         )
-        syncAlbumArtContext()
+        refreshAlbumArtContextFromTrackItems()
     }
 
     private func performAppleScriptUpsertPicture(
@@ -1694,7 +1694,7 @@ struct ContentView: View {
         for trackID: UUID
     ) throws -> Int {
         let initialIndex = try viewModel.appleScriptUpsertPicture(payload, forTrackID: trackID)
-        syncAlbumArtContext()
+        refreshAlbumArtContextFromTrackItems()
         return viewModel.appleScriptPictureIndex(matching: payload, forTrackID: trackID) ?? initialIndex
     }
 
@@ -1708,7 +1708,7 @@ struct ContentView: View {
             replacingPictureAt: pictureIndex,
             forTrackID: trackID
         )
-        syncAlbumArtContext()
+        refreshAlbumArtContextFromTrackItems()
         return updatedIndex
     }
 
@@ -1716,11 +1716,7 @@ struct ContentView: View {
         for trackID: UUID,
         pictureIndex: Int
     ) throws {
-        let deletedIdentity = albumArtViewModel.appleScriptPictureIdentity(
-            for: trackID,
-            pictureIndex: pictureIndex,
-            albumArtTypes: albumArtTypes
-        )
+        let deletedIdentity = appleScriptPictureIdentity(for: trackID, pictureIndex: pictureIndex)
         try viewModel.appleScriptDeletePicture(
             forTrackID: trackID,
             pictureIndex: pictureIndex
@@ -1735,6 +1731,37 @@ struct ContentView: View {
             albumArtViewModel.discardTransientState(for: [trackID], albumArtTypes: albumArtTypes)
         }
         refreshAlbumArtContextFromTrackItems()
+    }
+
+    private func appleScriptPictureIdentity(
+        for trackID: UUID,
+        pictureIndex: Int
+    ) -> SwiftTagAppleScriptPictureIdentity? {
+        guard let track = viewModel.trackItems.first(where: { $0.id == trackID }),
+              track.flacPictureRecords.indices.contains(pictureIndex) else {
+            return nil
+        }
+
+        let targetRecord = track.flacPictureRecords[pictureIndex]
+        let occurrence = track.flacPictureRecords[..<pictureIndex].filter {
+            appleScriptPictureRecordsMatch($0, targetRecord)
+        }.count
+        return albumArtViewModel.appleScriptPictureIdentity(
+            for: trackID,
+            record: targetRecord,
+            occurrence: occurrence,
+            albumArtTypes: albumArtTypes
+        )
+    }
+
+    private func appleScriptPictureRecordsMatch(
+        _ lhs: FlacWritablePictureRecord,
+        _ rhs: FlacWritablePictureRecord
+    ) -> Bool {
+        lhs.type == rhs.type &&
+            lhs.mimeType == rhs.mimeType &&
+            lhs.description == rhs.description &&
+            lhs.data == rhs.data
     }
 
     private func resolveDeletedSwiftTagDocumentRecoveryDestination(
@@ -2116,11 +2143,7 @@ struct ContentView: View {
                     )
                 },
                 pictureIdentity: { trackID, pictureIndex in
-                    albumArtViewModel.appleScriptPictureIdentity(
-                        for: trackID,
-                        pictureIndex: pictureIndex,
-                        albumArtTypes: albumArtTypes
-                    )
+                    appleScriptPictureIdentity(for: trackID, pictureIndex: pictureIndex)
                 }
             )
         )
