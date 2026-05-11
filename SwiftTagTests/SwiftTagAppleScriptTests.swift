@@ -380,6 +380,71 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func trackClassDescriptionExposesReadOnlyModifiedProperty() throws {
+        let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptTrack.self))
+        let modifiedCode = Self.fourCharCode("imod").uint32Value
+
+        #expect(classDescription.key(withAppleEventCode: modifiedCode) == "modified")
+        #expect(classDescription.appleEventCode(forKey: "modified") == modifiedCode)
+        #expect(classDescription.type(forKey: "modified") == "boolean")
+        #expect(classDescription.hasReadableProperty(forKey: "modified"))
+        #expect(!classDescription.hasWritableProperty(forKey: "modified"))
+    }
+
+    @MainActor
+    @Test
+    func trackModifiedUsesSessionBridgeTrackDifferenceState() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let cleanTrack = Track(tags: [TagKey.title: "Clean Track"])
+        let modifiedTrack = Track(tags: [TagKey.title: "Modified Track"])
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Track Modified",
+                        modified: true,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(
+                        tracks: [cleanTrack, modifiedTrack],
+                        selectedTrackIDs: []
+                    )
+                },
+                trackModified: { trackID in
+                    trackID == modifiedTrack.id
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() }
+            )
+        )
+
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
+        let scriptTracksByTitle = Dictionary(
+            uniqueKeysWithValues: scriptWindow.tracks.compactMap { track -> (String, SwiftTagScriptTrack)? in
+                guard let title = track.title else {
+                    return nil
+                }
+                return (title, track)
+            }
+        )
+
+        #expect(scriptTracksByTitle["Clean Track"]?.modified == false)
+        #expect(scriptTracksByTitle["Modified Track"]?.modified == true)
+    }
+
+    @MainActor
+    @Test
     func pictureClassDescriptionExposesReadableIdentityProperties() throws {
         let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptPicture.self))
 

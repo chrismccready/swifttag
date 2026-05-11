@@ -605,6 +605,9 @@
                 <type type="missing value"/>
                 <cocoa key="location"/>
             </property>
+            <property name="modified" code="imod" type="boolean" access="r" description="Has the track been modified since last save?">
+                <cocoa key="modified"/>
+            </property>
             <property name="narrator" code="narr" description="The narrator(s) of the track.">
                 <type type="text"/>
                 <type type="missing value"/>

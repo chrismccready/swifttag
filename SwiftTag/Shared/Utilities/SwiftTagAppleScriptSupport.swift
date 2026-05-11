@@ -1403,6 +1403,7 @@ struct SwiftTagAppleScriptSessionBridge {
     let documentSnapshot: () -> SwiftTagAppleScriptDocumentSnapshot
     let sessionSnapshot: () -> SwiftTagAppleScriptSessionSnapshot
     let editorWindowModified: () -> Bool
+    let trackModified: (UUID) -> Bool
     let addTracks: ([URL], Bool) throws -> [UUID]
     let deleteTracks: (Set<UUID>) throws -> Void
     let selectTracks: (Set<UUID>) throws -> Void
@@ -1421,6 +1422,7 @@ struct SwiftTagAppleScriptSessionBridge {
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
         sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
         editorWindowModified: (() -> Bool)? = nil,
+        trackModified: ((UUID) -> Bool)? = nil,
         addTracks: @escaping ([URL]) throws -> [UUID],
         deleteTracks: @escaping (Set<UUID>) throws -> Void = { _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
@@ -1451,6 +1453,7 @@ struct SwiftTagAppleScriptSessionBridge {
             documentSnapshot: documentSnapshot,
             sessionSnapshot: sessionSnapshot,
             editorWindowModified: editorWindowModified,
+            trackModified: trackModified,
             addTracksWithLock: { urls, _ in
                 try addTracks(urls)
             },
@@ -1473,6 +1476,7 @@ struct SwiftTagAppleScriptSessionBridge {
         documentSnapshot: @escaping () -> SwiftTagAppleScriptDocumentSnapshot,
         sessionSnapshot: @escaping () -> SwiftTagAppleScriptSessionSnapshot,
         editorWindowModified: (() -> Bool)? = nil,
+        trackModified: ((UUID) -> Bool)? = nil,
         addTracksWithLock: @escaping ([URL], Bool) throws -> [UUID],
         deleteTracks: @escaping (Set<UUID>) throws -> Void = { _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
@@ -1504,6 +1508,7 @@ struct SwiftTagAppleScriptSessionBridge {
         self.editorWindowModified = editorWindowModified ?? {
             documentSnapshot().modified
         }
+        self.trackModified = trackModified ?? { _ in false }
         self.addTracks = addTracksWithLock
         self.deleteTracks = deleteTracks
         self.selectTracks = selectTracks
@@ -3914,6 +3919,14 @@ final class SwiftTagScriptTrack: NSObject {
         }
     }
 
+    @objc(modified)
+    var modified: Bool {
+        SwiftTagAppleScriptController.shared.trackIsModified(
+            forSessionID: sessionIDValue,
+            trackID: trackIDValue
+        )
+    }
+
     @objc(tags)
     var tags: [SwiftTagScriptTag] {
         SwiftTagAppleScriptController.shared.tags(
@@ -6228,6 +6241,14 @@ final class SwiftTagAppleScriptController {
 
     func editorWindowIsModified(forSessionID sessionID: UUID) -> Bool {
         sessionBridgesBySessionID[sessionID]?.editorWindowModified() ?? false
+    }
+
+    func trackIsModified(forSessionID sessionID: UUID, trackID: UUID) -> Bool {
+        guard sessionSnapshot(forSessionID: sessionID)?.tracks.contains(where: { $0.id == trackID }) == true else {
+            return false
+        }
+
+        return sessionBridgesBySessionID[sessionID]?.trackModified(trackID) ?? false
     }
 
     func saveDocument(

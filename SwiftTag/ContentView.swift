@@ -2065,6 +2065,9 @@ struct ContentView: View {
                 editorWindowModified: {
                     appleScriptEditorWindowIsModified()
                 },
+                trackModified: { trackID in
+                    appleScriptTrackIsModified(trackID)
+                },
                 addTracksWithLock: { urls, locked in
                     try performAppleScriptAddTracks(urls, locked: locked)
                 },
@@ -2234,6 +2237,15 @@ struct ContentView: View {
 
     private func appleScriptEditorWindowIsModified() -> Bool {
         let editCounts = currentUnsavedEditCountsForLoadedTracks()
+        return editCounts.tagEdits > 0 || editCounts.pictureEdits > 0
+    }
+
+    private func appleScriptTrackIsModified(_ trackID: UUID) -> Bool {
+        let editCounts = viewModel.editorDifferenceCounts(
+            for: [trackID],
+            tagWriteOptions: saveSettingsSnapshot.tagWriteOptions,
+            albumArtPictures: currentAlbumArtPictures
+        )
         return editCounts.tagEdits > 0 || editCounts.pictureEdits > 0
     }
 
