@@ -34,25 +34,30 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Command</th>
+                            <th>Command (<strong>File</strong> &gt;)</th>
+                            <th>Shortcut</th>
                             <th>Result</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td><strong>Add FLAC files...</strong></td>
+                            <td>⌘O</td>
                             <td>Adds chosen files to the current track list.</td>
                         </tr>
                         <tr>
                             <td><strong>Add FLAC files (replace existing)...</strong></td>
+                            <td>⇧⌘O</td>
                             <td>Replaces the current track list after confirmation when needed.</td>
                         </tr>
                         <tr>
                             <td><strong>Add FLAC files (read-only)...</strong></td>
+                            <td>⌥⌘O</td>
                             <td>Adds files locked, so writeback commands skip them.</td>
                         </tr>
                         <tr>
                             <td><strong>Add FLAC files (read-only)(replace existing)...</strong></td>
+                            <td>⇧⌥⌘O</td>
                             <td>Replaces current tracks with locked imported tracks.</td>
                         </tr>
                     </tbody>
@@ -76,7 +81,8 @@
                 <p>
                     Read-only import sets tracks to locked state. Locked tracks can still be inspected,
                     selected, and compared, but metadata fields and save writeback are protected.
-                    Use <strong>Toggle Selected Tracks Lock</strong> to change selected tracks later.
+                    Use <strong>File</strong> &gt; <strong>Toggle Selected Tracks Lock</strong> (<kbd>⌃L</kbd>) (or via tracks table 
+                    context menu) to change selected tracks later.
                 </p>
             </section>
 
@@ -84,7 +90,8 @@
                 <h2 id="file-access">File Access</h2>
                 <p>
                     SwiftTag keeps source file references and security-scoped access when available.
-                    If a file is moved, renamed, deleted, or no longer accessible, status warnings
+                    If a file is moved, renamed, deleted, or no longer accessible, 
+                    <a href="status-and-diffs.html">status warnings</a>
                     appear and save may fail until the file is available again.
                 </p>
                 <p>
