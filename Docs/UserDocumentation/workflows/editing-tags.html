@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Tags - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="../automation/applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Workflow</p>
+            <h1>Edit tags</h1>
+            <p>
+                Select tracks first. The editor shows album fields, per-track table values,
+                core tags, and misc tags for current selection.
+            </p>
+
+            <section aria-labelledby="album-section">
+                <h2 id="album-section">Album Section</h2>
+                <p>
+                    <strong>Album</strong> and <strong>Album Artist</strong> sit above the track table.
+                    Editing these values updates selected track state. Mixed values are visually marked
+                    so you can decide whether to unify them.
+                </p>
+            </section>
+
+            <section aria-labelledby="track-table">
+                <h2 id="track-table">Track Table</h2>
+                <p>
+                    The table shows status, track number, title, optional duration, filename, and
+                    optional fingerprint. Edit <strong>Title</strong> directly in the table.
+                    Context menu commands can set track total, toggle selected locks, reload selected
+                    tracks, remove selected tracks, and show or hide optional columns.
+                </p>
+            </section>
+
+            <section aria-labelledby="core-tags">
+                <h2 id="core-tags">Core Tags</h2>
+                <p>
+                    Core fields include <strong>Number</strong>, <strong>Total Tracks</strong>,
+                    <strong>Disc</strong>, <strong>Total Discs</strong>, <strong>Compilation</strong>,
+                    <strong>Genre</strong>, <strong>Artist</strong>, <strong>Composer</strong>,
+                    <strong>Location</strong>, <strong>Date</strong>, and <strong>Description</strong>.
+                    Number fields accept positive integer-style input.
+                </p>
+                <p>
+                    <strong>Set Track Total</strong> writes the current track count into selected
+                    total-track fields. If <strong>Auto update Track Total</strong> is enabled in
+                    Tags settings, SwiftTag manages that total automatically.
+                </p>
+            </section>
+
+            <section aria-labelledby="misc-tags">
+                <h2 id="misc-tags">Misc Tags</h2>
+                <p>
+                    Use plus to add a custom key/value row and minus to delete selected rows.
+                    Keys are normalized for FLAC tag writing. Invalid or duplicate keys are marked.
+                </p>
+                <p>
+                    Empty values and deleted rows are different editing actions. Empty values are
+                    not written as non-empty FLAC comments during tag save. Deleting a misc row
+                    removes that key from the editor state for selected tracks.
+                </p>
+            </section>
+
+            <section aria-labelledby="multi-selection">
+                <h2 id="multi-selection">Multi-Selection</h2>
+                <p>
+                    Selection is the source of truth for batch edits. When selected tracks disagree,
+                    SwiftTag marks mixed or differing values. Entering a new value applies it to the
+                    selected editable tracks.
+                </p>
+                <aside class="callout">
+                    Locked tracks block editing and writeback. Unlock only files you intend to change.
+                </aside>
+                <p>
+                    Next: <a href="album-art.html">Manage Album Art</a>,
+                    <a href="saving.html">Save Changes</a>,
+                    <a href="../examples/batch-edit-tags.html">Batch Edit Tags example</a>.
+                </p>
+            </section>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="../automation/applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

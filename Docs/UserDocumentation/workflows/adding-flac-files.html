@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add FLAC Files - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="../automation/applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Workflow</p>
+            <h1>Add FLAC files</h1>
+            <p>
+                SwiftTag imports `.flac` files into the current editor window. Imported files remain
+                referenced source files; saving writes back to those files unless tracks are locked
+                or only a SwiftTag document is saved.
+            </p>
+
+            <section aria-labelledby="menu-commands">
+                <h2 id="menu-commands">Menu Commands</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Add FLAC files...</strong></td>
+                            <td>Adds chosen files to the current track list.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Add FLAC files (replace existing)...</strong></td>
+                            <td>Replaces the current track list after confirmation when needed.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Add FLAC files (read-only)...</strong></td>
+                            <td>Adds files locked, so writeback commands skip them.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Add FLAC files (read-only)(replace existing)...</strong></td>
+                            <td>Replaces current tracks with locked imported tracks.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    The file picker accepts FLAC files and folders. When a folder is chosen, SwiftTag
+                    imports supported FLAC files it finds for that selection.
+                </p>
+            </section>
+
+            <section aria-labelledby="drag-drop">
+                <h2 id="drag-drop">Drag And Drop</h2>
+                <p>
+                    Drop FLAC files into the track table to add them to the editor. Dropping files
+                    appends to the current list and keeps existing imported tracks.
+                </p>
+            </section>
+
+            <section aria-labelledby="read-only">
+                <h2 id="read-only">Read-Only Import</h2>
+                <p>
+                    Read-only import sets tracks to locked state. Locked tracks can still be inspected,
+                    selected, and compared, but metadata fields and save writeback are protected.
+                    Use <strong>Toggle Selected Tracks Lock</strong> to change selected tracks later.
+                </p>
+            </section>
+
+            <section aria-labelledby="file-access">
+                <h2 id="file-access">File Access</h2>
+                <p>
+                    SwiftTag keeps source file references and security-scoped access when available.
+                    If a file is moved, renamed, deleted, or no longer accessible, status warnings
+                    appear and save may fail until the file is available again.
+                </p>
+                <p>
+                    Next: <a href="editing-tags.html">Edit Tags</a>,
+                    <a href="../examples/clean-up-album.html">Clean Up Album example</a>.
+                </p>
+            </section>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="../automation/applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

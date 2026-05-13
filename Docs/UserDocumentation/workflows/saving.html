@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Save Changes - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="../automation/applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Workflow</p>
+            <h1>Save changes</h1>
+            <p>
+                SwiftTag has separate commands for FLAC metadata writeback and `.swifttag`
+                session documents. Pick the command by what you want changed on disk.
+            </p>
+
+            <section aria-labelledby="commands">
+                <h2 id="commands">Save Commands</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Writes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Save</strong></td>
+                            <td>Uses General settings for payload and scope. Defaults are Tags &amp; Pictures to All Tracks.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Save Tags</strong></td>
+                            <td>Writes tag payload only, using current save scope.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Save Pictures</strong></td>
+                            <td>Writes picture payload only, using current save scope.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Save SwiftTag Document...</strong></td>
+                            <td>Saves a `.swifttag` session package. It does not by itself rewrite FLAC metadata.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="scope-payload">
+                <h2 id="scope-payload">Scope And Payload</h2>
+                <p>
+                    Save scope is either <strong>Selected Tracks</strong> or <strong>All Tracks</strong>.
+                    Selected-track save uses the current table selection. All-track save applies to
+                    every loaded, imported, unlocked FLAC track with changes for the chosen payload.
+                </p>
+                <p>
+                    Save payload is <strong>Tags</strong>, <strong>Pictures</strong>, or
+                    <strong>Tags &amp; Pictures</strong>. The Save command reads these defaults from
+                    <a href="settings.html">General settings</a>. Save Tags and Save Pictures override
+                    only the payload; they still use current save scope.
+                </p>
+            </section>
+
+            <section aria-labelledby="preserve-replace-remove">
+                <h2 id="preserve-replace-remove">Preserve, Replace, Remove</h2>
+                <ul>
+                    <li>Tag-only save preserves existing FLAC pictures.</li>
+                    <li>Picture-only save preserves existing FLAC tags.</li>
+                    <li>Tags SwiftTag owns may be replaced or removed when saving tags.</li>
+                    <li>Pictures SwiftTag owns may be replaced or removed when saving pictures.</li>
+                    <li>Locked tracks are skipped by save commands.</li>
+                    <li>Files changed outside SwiftTag may show warning status before save.</li>
+                </ul>
+                <aside class="callout warning">
+                    Save commands can rewrite source FLAC files. Check status icons, selected tracks,
+                    lock state, and scope before saving.
+                </aside>
+            </section>
+
+            <section aria-labelledby="feedback">
+                <h2 id="feedback">Save Feedback</h2>
+                <p>
+                    SwiftTag shows save progress while writing. Feedback settings control save
+                    notifications: Always, When Not Frontmost, or Never.
+                </p>
+                <p>
+                    Next: <a href="swifttag-documents.html">SwiftTag Documents</a>,
+                    <a href="../examples/save-tags-only.html">Save Tags Only example</a>,
+                    <a href="../troubleshooting.html">Troubleshooting</a>.
+                </p>
+            </section>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="../automation/applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

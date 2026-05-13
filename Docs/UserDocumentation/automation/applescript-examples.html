@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Examples - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript examples</h1>
+            <p>Starter scripts for current SwiftTag terminology.</p>
+            <div class="code-label">AppleScript</div>
+            <pre><code>tell application "SwiftTag"
+    set addedTracks to add POSIX file "/path/to/track.flac" to front editor window with lock false
+end tell</code></pre>
+            <div class="code-label">AppleScript</div>
+            <pre><code>tell application "SwiftTag"
+    tell front editor window
+        set selected tracks to every track whose its file is POSIX file "/path/to/track.flac"
+        set selectedTrack to item 1 of selected tracks
+        set title of selectedTrack to "New Title"
+    end tell
+end tell</code></pre>
+            <p>
+                Caveats for full examples: <code>selected tracks</code> is a list, file filters use
+                <code>whose its file is POSIX file ...</code>, empty tag values differ from deleted
+                tags, and picture data import is most reliable through Base64-backed data.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

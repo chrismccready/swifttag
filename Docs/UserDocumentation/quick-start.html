@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quick Start - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="quick-start.html">Quick Start</a>
+                <a href="automation/applescript.html">AppleScript</a>
+                <a href="examples/clean-up-album.html">Examples</a>
+                <a href="troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Quick Start</p>
+            <h1>Basic SwiftTag workflow</h1>
+            <p>
+                This workflow is a quick start to the most common SwiftTag features. It is not a comprehensive guide to all features, but it should give you a sense of how SwiftTag works.
+                Essentially: add FLAC files, edit tags and pictures, and save changes.
+            </p>
+
+            <ol>
+                <li>
+                    Open SwiftTag. A new editor window is ready for files.
+                </li>
+                <li>
+                    Choose <strong>File &gt; Add FLAC files...</strong>, or drag FLAC files
+                    into the track table. See <a href="workflows/adding-flac-files.html">Adding FLAC Files</a>
+                    for optional replace and read-only (locked) usage.
+                </li>
+                <li>
+                    Select one or more tracks in the table. Track selection controls track-level edits
+                    and potentially save scope. See <a href="workflows/saving.html">Saving: Scope and Payload</a>.
+                </li>
+                <li>
+                    Edit <strong>Album</strong> and <strong>Album Artist</strong> in the album
+                    section. These fields apply through the selected track state.
+                </li>
+                <li>
+                    Edit table titles, <strong>Number</strong>, <strong>Disc</strong>,
+                    <strong>Genre</strong>, <strong>Artist</strong>, <strong>Composer</strong>,
+                    <strong>Location</strong>, <strong>Date</strong>, <strong>Description</strong>,
+                    and <strong>Misc Tags</strong>. See <a href="workflows/editing-tags.html">Edit Tags</a>.
+                </li>
+                <li>
+                    Double-click the front cover well, drag an image onto it, or choose
+                    <strong>Show Picture Browser</strong> for full picture records.
+                    See <a href="workflows/album-art.html">Manage Album Art</a>.
+                </li>
+                <li>
+                    Review the status icon column before saving. A lock means writeback is blocked;
+                    a warning means SwiftTag saw a missing file or external change.
+                    See <a href="workflows/status-and-diffs.html">Status And Diffs</a>.
+                </li>
+                <li>
+                    Choose a save command. <strong>Save</strong> uses General settings.
+                    <strong>Save Tags</strong> writes tag changes only.
+                    <strong>Save Pictures</strong> writes picture changes only.
+                    <strong>Save SwiftTag Document...</strong> saves a session package, not FLAC metadata.
+                    See <a href="workflows/saving.html">Save Changes</a> and
+                    <a href="workflows/swifttag-documents.html">SwiftTag Documents</a>.
+                </li>
+                <li>
+                    Confirm save feedback. SwiftTag shows save progress and can send notifications
+                    according to Feedback settings.
+                </li>
+                <li>
+                    Continue with <a href="examples/clean-up-album.html">Examples</a>,
+                    <a href="workflows/settings.html">Settings</a>,
+                    <a href="automation/applescript.html">AppleScript</a>, or
+                    <a href="troubleshooting.html">Troubleshooting</a>.
+                </li>
+            </ol>
+
+            <aside class="callout warning">
+                <strong>Writeback warning.</strong> Save, Save Tags, and Save Pictures can rewrite
+                source FLAC files. Locked tracks are skipped. Save SwiftTag Document stores session
+                data and references separately.
+            </aside>
+
+            <section aria-labelledby="quick-links">
+                <h2 id="quick-links">Required Links</h2>
+                <ul>
+                    <li><a href="workflows/adding-flac-files.html">Add FLAC Files</a></li>
+                    <li><a href="workflows/editing-tags.html">Edit Tags</a></li>
+                    <li><a href="workflows/album-art.html">Manage Album Art</a></li>
+                    <li><a href="workflows/saving.html">Save Changes</a></li>
+                    <li><a href="workflows/swifttag-documents.html">SwiftTag Documents</a></li>
+                    <li><a href="workflows/settings.html">Settings</a></li>
+                    <li><a href="automation/applescript.html">AppleScript</a></li>
+                    <li><a href="examples/clean-up-album.html">Examples</a></li>
+                    <li><a href="troubleshooting.html">Troubleshooting</a></li>
+                </ul>
+            </section>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="quick-start.html">Quick Start</a>
+                <a href="automation/applescript.html">AppleScript</a>
+                <a href="examples/clean-up-album.html">Examples</a>
+                <a href="troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
