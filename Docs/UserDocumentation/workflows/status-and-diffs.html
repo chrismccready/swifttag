@@ -54,8 +54,90 @@
                 Use <strong>Reload Selected Tracks</strong> to refresh source metadata, or
                 <strong>Remove Selected Tracks</strong> to remove rows from the editor.
             </p>
+
+            <h2 id="diff-formatting">Diff Formatting</h2>
+            <p>
+                SwiftTag formats specific differences in tag fields, total-count fields, and
+                picture browser rows. The color preferences live in
+                <a href="settings.html#feedback">Feedback settings</a>. The on/off switches
+                for each formatting class live in the Diff Tools window.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Recognized Difference</th>
+                        <th>Where It Appears</th>
+                        <th>Formatting And Example Text</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Track to File Diff</strong></td>
+                        <td>Album, title, core tag, and misc tag fields.</td>
+                        <td>
+                            Field value differs from the last file snapshot. Text uses
+                            <strong>Track to File Diff Color</strong> and bold formatting.
+                            Status hover can include lines like
+                            <code>TITLE: Original Title</code> or <code>GENRE: Rock</code>.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Track to Track Diff</strong></td>
+                        <td>Selected-track tag fields when selected tracks disagree.</td>
+                        <td>
+                            Text uses <strong>Track to Track Diff Color</strong> with a tinted
+                            background. Example: two selected tracks have different
+                            <code>ARTIST</code> values, so Artist is marked as a track-to-track diff.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Externally Modified Diff</strong></td>
+                        <td>Fields and status icon after the source FLAC changes outside SwiftTag.</td>
+                        <td>
+                            Text uses <strong>Externally Modified Diff Color</strong>, bold, and italic.
+                            Status hover can include <code>FILENAME: &lt;deleted&gt;</code>,
+                            <code>ALBUM: Live Set</code>, or <code>PICTURE: &lt;different&gt;</code>.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Track Total Mismatch</strong></td>
+                        <td>Total Tracks field.</td>
+                        <td>
+                            Text and background use <strong>Track/Disc Total Mismatch Color</strong>.
+                            Hover text: <code>Track count mismatch: one or more selected total-tracks
+                            values do not match the current loaded track count.</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Disc Total Mismatch</strong></td>
+                        <td>Total Discs field.</td>
+                        <td>
+                            Text and background use <strong>Track/Disc Total Mismatch Color</strong>.
+                            Hover text: <code>Disc count mismatch: loaded tracks disagree on total
+                            discs, or a disc number exceeds the maximum total discs value.</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Duplicate Picture</strong></td>
+                        <td>Picture Browser slot list and picture overlay.</td>
+                        <td>
+                            Picture slot text uses <strong>Picture Status Overlay Color</strong>
+                            and italic formatting. Overlay text can read
+                            <code>This picture is duplicated across types. Twin type(s): Back Cover.</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2 id="picture-status-text">Picture Status Text</h2>
+            <p>
+                Picture Browser can also show scope-related overlay text after selected-track
+                picture removal. Example:
+                <code>Removed from selected tracks. Still visible because other tracks reference this picture. Re-pin to add it back.</code>
+            </p>
             <p>
                 Related: <a href="saving.html">Save Changes</a>,
+                <a href="settings.html#feedback">Feedback settings</a>,
                 <a href="../examples/clean-up-album.html">Clean Up Album example</a>.
             </p>
         </article>

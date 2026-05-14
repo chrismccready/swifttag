@@ -25,7 +25,7 @@
             <h1>Manage album art</h1>
             <p>
                 SwiftTag works with FLAC picture records, not only one display image. Front cover
-                is the fast path; Picture Browser exposes other picture types and record metadata.
+                is the fast path; <strong>Picture Browser</strong> exposes other picture types and record metadata.
             </p>
 
             <section aria-labelledby="front-cover">
@@ -40,10 +40,32 @@
             <section aria-labelledby="picture-browser">
                 <h2 id="picture-browser">Picture Browser</h2>
                 <p>
-                    Choose <strong>Show Picture Browser</strong> or use the front cover context menu.
-                    The browser includes FLAC picture slots such as Front Cover, Back Cover, Leaflet,
-                    Media, Artist, Conductor, Composer, Band Logo, Publisher Logo, Illustration, and Other.
+                    Choose <strong>View</strong> &gt; <strong>Show Picture Browser</strong> (⌘1) or use the 
+                    front cover context menu. The browser supports all FLAC picture types:
                 </p>
+                <ul>
+                    <li>Front Cover</li>
+                    <li>Back Cover</li>
+                    <li>Leaflet or Liner Notes</li>
+                    <li>Media (e.g., CD, Vinyl, or Cassette label)</li>
+                    <li>Lead Artist, Lead Performer, or Soloist</li>
+                    <li>Artist or Performer</li>
+                    <li>Conductor</li>
+                    <li>Band or Orchestra</li>
+                    <li>Composer</li>
+                    <li>Lyricist or Text Writer</li>
+                    <li>Recording Studio or location</li>
+                    <li>Recording Session</li>
+                    <li>Performance</li>
+                    <li>Capture from Movie or Video</li>
+                    <li>Bright(ly) Colored Fish</li>
+                    <li>Illustration</li>
+                    <li>Band or Artist Logo</li>
+                    <li>Publisher or Studio Logo</li>
+                    <li>32x32 PNG Icon</li>
+                    <li>Other Icon</li>
+                    <li>Other</li>
+                </ul>
                 <p>
                     Use toolbar controls to import, remove, export, copy, paste, navigate among
                     pictures, pin track pictures, and choose picture scope.
@@ -54,25 +76,23 @@
                 <h2 id="metadata">Picture Metadata</h2>
                 <p>
                     Picture records keep type, MIME type, description, dimensions, color depth,
-                    color count, and binary data. SwiftTag can edit descriptions where the picture
-                    record can still fit in FLAC metadata storage.
+                    color count, and binary data. A picture's description can be edited in the browser
+                    via the picture's context menu.
                 </p>
             </section>
 
             <section aria-labelledby="per-track">
                 <h2 id="per-track">Per-Track Records</h2>
                 <p>
-                    Tracks can carry their own picture records. Shared album art can also be reused
-                    through SwiftTag picture identity. Replacing front cover changes the front-cover
-                    picture for current editable scope; adding or importing another slot creates or
-                    replaces that slot's picture record.
+                    Tracks carry their own picture records. Shared album art can also be reused
+                    through SwiftTag picture identity.
                 </p>
             </section>
 
             <section aria-labelledby="propagation">
                 <h2 id="propagation">Propagation Settings</h2>
                 <p>
-                    Tags settings include <strong>Save Front Cover to all Tracks</strong> and
+                    <a href="settings.html#tags">Tags settings</a> include <strong>Save Front Cover to all Tracks</strong> and
                     <strong>Save all Pictures to all Tracks</strong>. These settings can make one
                     album-level art change write to multiple tracks during picture save.
                 </p>
