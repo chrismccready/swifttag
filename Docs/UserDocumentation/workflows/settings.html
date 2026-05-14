@@ -32,7 +32,87 @@
             <h2 id="tags">Tags</h2>
             <p>
                 Tags controls number padding, total-count keys, automatic track total,
-                compilation propagation, and picture propagation.
+                compilation propagation, and picture propagation. These settings affect
+                FLAC writeback when saving tags, pictures, or both. See
+                <a href="saving.html#scope-payload">Scope And Payload</a> before changing
+                defaults for a large batch.
+            </p>
+            <h3 id="tags-value-preferences">Value Preferences</h3>
+            <ul>
+                <li>
+                    <strong>Zero pad Track Number/Total</strong> writes track numbers and
+                    total tracks with leading zeros when SwiftTag can read numeric values.
+                    Example: track <code>1</code> of <code>12</code> can write as
+                    <code>01</code> and <code>12</code>. Default: on.
+                </li>
+                <li>
+                    <strong>Zero pad Disc Number/Total</strong> applies the same padding
+                    behavior to disc number and total discs. Default: on.
+                </li>
+            </ul>
+            <h3 id="tags-key-preferences">Key Preferences</h3>
+            <p>
+                FLAC files in the wild use different total-count tag names. SwiftTag lets
+                you choose which keys to write for track totals and disc totals.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Keys</th>
+                        <th>Default</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Write Track Total key</strong></td>
+                        <td><code>TOTALTRACKS</code>, <code>TRACKTOTAL</code>, both, or neither.</td>
+                        <td><code>TOTALTRACKS</code> and <code>TRACKTOTAL</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Write Disc Total key</strong></td>
+                        <td><code>TOTALDISCS</code>, <code>DISCTOTAL</code>, both, or neither.</td>
+                        <td><code>TOTALDISCS</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>
+                When no total key is selected, SwiftTag does not write that total-count key.
+                Existing total-count keys can be replaced or removed by tag save if SwiftTag
+                owns the tag payload being written.
+            </p>
+            <h3 id="tags-track-total-compilation">Track Total And Compilation Management</h3>
+            <ul>
+                <li>
+                    <strong>Auto update Track Total</strong> keeps total tracks aligned with
+                    the loaded track count and disables manual total-track editing. Default: off.
+                </li>
+                <li>
+                    <strong>Apply Compilation to all Tracks</strong> makes compilation state
+                    propagate across the full loaded album instead of only the current selected
+                    track edit target. Default: off.
+                </li>
+            </ul>
+            <p>
+                Track and disc total mismatches use Feedback colors and Diff Tools formatting.
+                See <a href="status-and-diffs.html#diff-formatting">Diff Formatting</a>.
+            </p>
+            <h3 id="tags-picture-management">Picture Management</h3>
+            <ul>
+                <li>
+                    <strong>Save Front Cover to all Tracks</strong> writes the current front
+                    cover to every saved track when picture payload is saved. Default: off.
+                </li>
+                <li>
+                    <strong>Save all Pictures to all Tracks</strong> writes all current picture
+                    records to every saved track when picture payload is saved. Default: off.
+                </li>
+            </ul>
+            <p>
+                Picture propagation can make one album-art edit affect many files. Check
+                <a href="album-art.html#propagation">Album Art propagation</a> and save scope
+                before using <strong>Save Pictures</strong> or a Save payload that includes
+                pictures.
             </p>
             <h2 id="feedback">Feedback</h2>
             <p>
