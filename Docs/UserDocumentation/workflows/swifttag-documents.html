@@ -24,17 +24,57 @@
             <p class="section-label">Workflow</p>
             <h1>SwiftTag documents</h1>
             <p>
-                A `.swifttag` document stores a session package: track references, bookmark data
-                where available, edited tag state, picture state, and document metadata.
+                A <code>.swifttag</code> document stores a session package: track references,
+                bookmark data where available, edited tag state, picture state, and document
+                metadata.
             </p>
-            <h2 id="when-to-use">When To Use</h2>
+            <h2 id="when-to-use">Possible Use Cases</h2>
+            <ul>
+                <li>
+                    Save an editing session before/after writing FLAC files. This allows you to return to the session later, 
+                    review edits and write history, and write more changes (or an <strong>Undo</strong>) when ready.
+                </li>
+                <li>
+                    Keep edits when source FLAC files are unavailable, locked, or not ready for
+                    writeback.
+                </li>
+                <li>
+                    Save FLAC metadata state for archival or reference. Leverage the file system as an observable database (SwiftTag 
+                    does support Finder Quick Look) and not sacrifice cross-platform portability (the `.swifttag` document is a basic 
+                    folder with extension containing a single info.plist (xml) file and associated pictures).
+                </li>
+            </ul>
+
+            <h2 id="creating-saving">Creating And Saving</h2>
             <p>
-                Save a SwiftTag document when you want to return to an editing session later before
-                or after writing FLAC files.
+                Choose <strong>File &gt; Save SwiftTag Document...</strong> to create or update
+                a session package. The package records loaded tracks, referenced FLAC file URLs,
+                security-scoped bookmarks when available, audio details, normalized tags, picture
+                records, and picture assets.
             </p>
+            <p>
+                Saving a SwiftTag document is separate from FLAC metadata writeback. It does not
+                use the <a href="settings.html#general">General</a> save payload or save scope,
+                and it does not rewrite source FLAC files by itself.
+            </p>
+
+            <h2 id="settings">Settings</h2>
+            <p>
+                <a href="settings.html#general">General</a> settings control what
+                <strong>Save</strong> writes to FLAC files and whether Command-S (⌘S) follows a
+                FLAC save by saving the referenced SwiftTag document.
+            </p>
+            <p>
+                Turn on <strong>Save referenced document</strong> to update an already-associated
+                <code>.swifttag</code> document after the normal Save command completes. Turn on
+                <strong>Ask to save new document</strong> to be prompted for a new SwiftTag
+                document when no document is associated yet. See
+                <a href="settings.html#general">Settings: General</a>.
+            </p>
+
             <h2 id="not-flac-writeback">Not FLAC Writeback</h2>
             <p>
-                Saving a SwiftTag document is separate from Save, Save Tags, and Save Pictures.
+                Saving a SwiftTag document is separate from saving FLAC metadata.
                 Use <a href="saving.html">Save Changes</a> to write source FLAC metadata.
             </p>
             <p>
