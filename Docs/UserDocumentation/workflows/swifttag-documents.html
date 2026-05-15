@@ -46,17 +46,37 @@
             </ul>
 
             <h2 id="creating-saving">Creating And Saving</h2>
-            <p>
-                Choose <strong>File &gt; Save SwiftTag Document...</strong> to create or update
-                a session package. The package records loaded tracks, referenced FLAC file URLs,
-                security-scoped bookmarks when available, audio details, normalized tags, picture
-                records, and picture assets.
-            </p>
-            <p>
-                Saving a SwiftTag document is separate from FLAC metadata writeback. It does not
-                use the <a href="settings.html#general">General</a> save payload or save scope,
-                and it does not rewrite source FLAC files by itself.
-            </p>
+            <ol>
+                <li>
+                    Add FLAC files with <strong>File &gt; Add FLAC files...</strong>, drag files
+                    into the track table, or use a read-only import when you want inspection
+                    without writeback. See <a href="adding-flac-files.html">Adding FLAC Files</a>.
+                </li>
+                <li>
+                    Edit tags, misc tags, and album art as needed. See
+                    <a href="editing-tags.html">Edit Tags</a> and
+                    <a href="album-art.html">Manage Album Art</a>.
+                </li>
+                <li>
+                    Review track status and lock state before deciding whether FLAC writeback
+                    should happen now. See <a href="status-and-diffs.html">Status And Diffs</a>.
+                </li>
+                <li>
+                    Choose <strong>File &gt; Save SwiftTag Document...</strong>, then save the
+                    package where you want the session to live.
+                </li>
+                <li>
+                    Reopen it later with <strong>File &gt; Open SwiftTag Document...</strong>.
+                    SwiftTag restores saved tags, pictures, track references, and bookmark data
+                    when available.
+                </li>
+            </ol>
+
+            <aside class="callout warning">
+                <strong>Writeback note.</strong> Save SwiftTag Document does not rewrite source
+                FLAC files. Use <a href="saving.html">Save Changes</a> when you are
+                ready to write tags or pictures back to FLAC files.
+            </aside>
 
             <h2 id="settings">Settings</h2>
             <p>
@@ -72,13 +92,12 @@
                 <a href="settings.html#general">Settings: General</a>.
             </p>
 
-            <h2 id="not-flac-writeback">Not FLAC Writeback</h2>
+            <h2 id="stored-data">What Gets Stored</h2>
             <p>
-                Saving a SwiftTag document is separate from saving FLAC metadata.
-                Use <a href="saving.html">Save Changes</a> to write source FLAC metadata.
-            </p>
-            <p>
-                Related example: <a href="../examples/create-session-document.html">Create Session Document</a>.
+                The document stores track references, security-scoped bookmarks when available,
+                edited tags, picture records, picture assets, and document metadata. If source
+                FLAC files move or disappear, use the troubleshooting notes for
+                <a href="../troubleshooting.html#missing-files">missing files</a>.
             </p>
         </article>
     </main>
