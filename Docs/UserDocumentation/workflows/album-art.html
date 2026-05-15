@@ -70,6 +70,10 @@
                     Use toolbar controls to import, remove, export, copy, paste, navigate among
                     pictures, pin track pictures, and choose picture scope.
                 </p>
+                <p>
+                    Step-by-step example:
+                    <a href="../examples/manage-cover-art.html#open-browser">Manage Cover Art</a>.
+                </p>
             </section>
 
             <section aria-labelledby="metadata">
@@ -77,7 +81,17 @@
                 <p>
                     Picture records keep type, MIME type, description, dimensions, color depth,
                     color count, and binary data. A picture's description can be edited in the browser
-                    via the picture's context menu.
+                    via the picture's context menu. Total available space per picture for picture data 
+                    and metadata, including description, is 16 MiB.
+                </p>
+                <p>
+                    Aside from description, SwiftTag derives picture properties from the selected
+                    slot and imported image data. Picture type comes from the browser slot, MIME type
+                    is normalized from JPEG or PNG data, and width, height, color depth, and palette
+                    color count are calculated from image metadata before FLAC writeback.
+                </p>
+                <p>
+                    Example: <a href="../examples/manage-cover-art.html#description">Edit Picture Description</a>.
                 </p>
             </section>
 
@@ -86,6 +100,9 @@
                 <p>
                     Tracks carry their own picture records. Shared album art can also be reused
                     through SwiftTag picture identity.
+                </p>
+                <p>
+                    Example: <a href="../examples/manage-cover-art.html#pinning">Pin Pictures To Tracks And Slots</a>.
                 </p>
             </section>
 

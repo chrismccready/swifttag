@@ -22,8 +22,142 @@
         <article>
             <p class="section-label">Examples</p>
             <h1>Manage cover art</h1>
-            <p>Add front cover through the album well, then open Picture Browser for back cover or other records.</p>
-            <p>Reference: <a href="../workflows/album-art.html">Manage Album Art</a>.</p>
+            <p>
+                Use this workflow when an album needs front cover art, back cover art, liner notes,
+                or other embedded FLAC picture records. For reference concepts, see
+                <a href="../workflows/album-art.html">Manage Album Art</a>.
+            </p>
+
+            <section aria-labelledby="open-browser">
+                <h2 id="open-browser">Open Picture Browser</h2>
+                <ol>
+                    <li>
+                        Add FLAC files and select tracks that should receive the art. If no track is
+                        selected, Picture Browser works against all loaded tracks.
+                    </li>
+                    <li>
+                        Choose <strong>View</strong> &gt; <strong>Show Picture Browser</strong> (⌘1),
+                        or double-click the front cover well.
+                    </li>
+                    <li>
+                        Use the left list to pick a FLAC picture type/slot, such as
+                        <strong>Front Cover</strong>, <strong>Back Cover</strong>,
+                        <strong>Leaflet</strong>, <strong>Media</strong>, <strong>Illustration</strong>,
+                        <strong>Band Logo</strong>, or <strong>Other</strong>.
+                    </li>
+                </ol>
+                <p>
+                    The full slot list and picture-record model are covered in
+                    <a href="../workflows/album-art.html#picture-browser">Picture Browser</a>.
+                </p>
+            </section>
+
+            <section aria-labelledby="import-export">
+                <h2 id="import-export">Import And Export Pictures</h2>
+                <ol>
+                    <li>
+                        Select the target slot. Example: choose <strong>Front Cover</strong> for
+                        cover art, then <strong>Back Cover</strong> for a rear scan.
+                    </li>
+                    <li>
+                        Click <strong>Import Picture</strong>, click the image well, drag an image
+                        onto the image well, or use the context menu command for that slot.
+                    </li>
+                    <li>
+                        Use <strong>Copy</strong> and <strong>Paste</strong> from the image well
+                        context menu to reuse picture data between slots.
+                    </li>
+                    <li>
+                        Click <strong>Export Picture</strong> or use the context menu to save the
+                        current picture out as an image file.
+                    </li>
+                </ol>
+                <p>
+                    SwiftTag keeps picture type, MIME type, description, dimensions, color depth,
+                    color count, and binary data. Export uses the current picture's MIME type when
+                    choosing the default file extension.
+                </p>
+            </section>
+
+            <section aria-labelledby="description">
+                <h2 id="description">Edit Picture Description</h2>
+                <ol>
+                    <li>Select the picture slot and navigate to the picture record.</li>
+                    <li>Open the image well context menu and choose <strong>Edit Description...</strong>.</li>
+                    <li>Review <strong>Current Description</strong>, enter <strong>New Description</strong>, then click <strong>Done</strong>.</li>
+                </ol>
+                <p>
+                    Description text must fit inside the FLAC picture block after reserving space
+                    for image data, MIME type, fixed FLAC picture fields, and SwiftTag's safety
+                    buffer. Total available space for metadata and picture block is 16 MiB. If the 
+                    new description is too large, SwiftTag blocks the change.
+                    More detail: <a href="../workflows/album-art.html#metadata">Picture Metadata</a>.
+                </p>
+            </section>
+
+            <section aria-labelledby="pinning">
+                <h2 id="pinning">Pin Pictures To Tracks And Slots</h2>
+                <p>
+                    The <strong>Pin Track Pictures</strong> toolbar button pins the current picture
+                    for the current slot to the current picture scope. The segmented scope control
+                    switches between <strong>Selected Track Pictures</strong> and
+                    <strong>All Track Pictures</strong>.
+                </p>
+                <ol>
+                    <li>
+                        Select tracks in the main editor if only some tracks should receive the
+                        picture. Leave selection empty, or select all tracks, when the picture belongs
+                        to the whole album.
+                    </li>
+                    <li>
+                        In Picture Browser, choose the slot, such as <strong>Front Cover</strong>.
+                    </li>
+                    <li>
+                        Use the scope control to decide whether you are viewing selected-track
+                        pictures or all-track pictures.
+                    </li>
+                    <li>
+                        Turn on <strong>Pin Track Pictures</strong> to keep the current picture on
+                        the editable target tracks for that slot.
+                    </li>
+                    <li>
+                        To reuse the same image in another slot, switch to that slot, paste or import
+                        the image there, then pin that slot too.
+                    </li>
+                </ol>
+                <aside class="callout">
+                    Pinning is per slot and per track scope. It does not automatically copy one slot
+                    to every other slot. Tags settings can force front-cover or all-picture propagation
+                    during picture save.
+                </aside>
+                <p>
+                    Related settings: <a href="../workflows/settings.html#tags-picture-management">Picture Management</a>.
+                    Propagation behavior: <a href="../workflows/album-art.html#propagation">Album Art propagation</a>.
+                </p>
+            </section>
+
+            <section aria-labelledby="navigate-remove-save">
+                <h2 id="navigate-remove-save">Navigate, Remove, And Save</h2>
+                <ol>
+                    <li>
+                        Use <strong>First Picture</strong>, <strong>Previous Picture</strong>,
+                        <strong>Next Picture</strong>, and <strong>Last Picture</strong> when a slot
+                        has multiple records.
+                    </li>
+                    <li>
+                        Use <strong>Remove Picture</strong> to remove the current picture from the
+                        editable target tracks for that slot.
+                    </li>
+                    <li>
+                        Choose <strong>Save Pictures</strong> when only embedded images changed, or
+                        <strong>Save</strong> when current General settings include picture payload.
+                    </li>
+                </ol>
+                <p>
+                    Save behavior reference:
+                    <a href="../workflows/saving.html#preserve-replace-remove">Preserve, Replace, Remove</a>.
+                </p>
+            </section>
         </article>
     </main>
     <footer class="site-footer">
