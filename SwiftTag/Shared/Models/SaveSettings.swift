@@ -110,6 +110,8 @@ enum SaveSettingsKey {
     static let applyCompilationToAllTracks = "settings.applyCompilationToAllTracks"
     static let saveFrontCoverToAllTracks = "settings.saveFrontCoverToAllTracks"
     static let saveAllPicturesToAllTracks = "settings.saveAllPicturesToAllTracks"
+    static let sandboxPathBookmarks = "settings.sandboxPathBookmarks"
+    static let sandboxPathSortMode = "settings.sandboxPathSortMode"
 }
 
 enum SaveSettingsDefaults {
@@ -125,6 +127,8 @@ enum SaveSettingsDefaults {
     static let applyCompilationToAllTracks = false
     static let saveFrontCoverToAllTracks = false
     static let saveAllPicturesToAllTracks = false
+    static let sandboxPathBookmarks: [SandboxPathBookmarkRecord] = []
+    static let sandboxPathSortMode = SandboxPathSortMode.dateAdded
 }
 
 enum SwiftTagDocumentFollowOnSaveAction: Equatable {

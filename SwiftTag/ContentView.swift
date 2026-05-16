@@ -1508,6 +1508,15 @@ struct ContentView: View {
             destinationMode: destinationMode,
             destinationURL: normalizedDestinationURL
         ) else {
+            if let sandboxResult = try SandboxPathBookmarkAccess.withAccess(
+                to: normalizedDestinationURL,
+                { scopedDestinationURL in
+                    try body(scopedDestinationURL)
+                }
+            ) {
+                return sandboxResult
+            }
+
             return try body(normalizedDestinationURL)
         }
 

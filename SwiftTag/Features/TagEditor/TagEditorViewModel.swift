@@ -182,6 +182,11 @@ final class TagEditorViewModel {
         let refreshedBookmarkData: Data?
     }
 
+    private struct ImportedFlacTrackResult {
+        let track: Track
+        let picturesByType: [Int: Data]
+    }
+
     let mixedSelectionMarker: String = "*"
     var totalDiscs: String = ""
     var selectedTrackIDs: Set<UUID> = []
@@ -1155,50 +1160,13 @@ final class TagEditorViewModel {
         var importedPicturesByType: [Int: Data] = [:]
 
         for fileURL in flacFiles {
-            let metadata = try FlacMetadataService.readTags(for: fileURL)
-            let tags = metadata.tags
-            let trackPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
-            let trackPictureRecords = FlacImportMapper.mapWritablePictureRecords(
-                metadata.pictures,
-                normalizeImageMetadata: true
-            )
-            let bookmarkData = try fileURL.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
-            let initialValues = FlacImportMapper.initialValues(from: tags)
+            let importResult = try importFlacTrack(fileURL, locked: locked)
 
-            for (pictureType, pictureData) in trackPicturesByType where importedPicturesByType[pictureType] == nil {
+            for (pictureType, pictureData) in importResult.picturesByType where importedPicturesByType[pictureType] == nil {
                 importedPicturesByType[pictureType] = pictureData
             }
 
-            let trackTags = FlacImportMapper.mapTrackTags(
-                sourceTags: tags,
-                fileURL: fileURL,
-                defaultDate: .now
-            )
-            importedTracks.append(
-                Track(
-                    album: initialValues.album,
-                    albumArtist: initialValues.albumArtist,
-                    totalTracks: initialValues.totalTracks,
-                    tags: trackTags,
-                    flacPicturesByType: trackPicturesByType,
-                    flacPictureRecords: trackPictureRecords,
-                    sourceFileURL: fileURL,
-                    securityScopedBookmarkData: bookmarkData,
-                    latestFileSnapshot: makeFileSnapshot(
-                        tags: tags,
-                        picturesByType: trackPicturesByType,
-                        pictureRecords: trackPictureRecords,
-                        fingerprint: metadata.fingerprint
-                    ),
-                    fingerprint: metadata.fingerprint,
-                    duration: metadata.duration,
-                    sampleRate: metadata.sampleRate,
-                    totalSamples: metadata.totalSamples,
-                    bitsPerSample: metadata.bitsPerSample,
-                    channels: metadata.channels,
-                    isLocked: locked
-                )
-            )
+            importedTracks.append(importResult.track)
         }
 
         if append {
@@ -1213,6 +1181,77 @@ final class TagEditorViewModel {
             selectedTrackIDs.removeAll()
         }
         reloadMiscTagRowsFromSelection()
+    }
+
+    private func importFlacTrack(
+        _ fileURL: URL,
+        locked: Bool
+    ) throws -> ImportedFlacTrackResult {
+        let normalizedFileURL = fileURL.standardizedFileURL
+        do {
+            return try makeImportedFlacTrack(from: normalizedFileURL, locked: locked)
+        } catch {
+            if let sandboxResult = try SandboxPathBookmarkAccess.withAccess(
+                to: normalizedFileURL,
+                { scopedFileURL in
+                    try makeImportedFlacTrack(from: scopedFileURL, locked: locked)
+                }
+            ) {
+                return sandboxResult
+            }
+
+            throw error
+        }
+    }
+
+    private func makeImportedFlacTrack(
+        from fileURL: URL,
+        locked: Bool
+    ) throws -> ImportedFlacTrackResult {
+        let metadata = try FlacMetadataService.readTags(for: fileURL)
+        let tags = metadata.tags
+        let trackPicturesByType = FlacImportMapper.mapPicturesByType(metadata.pictures)
+        let trackPictureRecords = FlacImportMapper.mapWritablePictureRecords(
+            metadata.pictures,
+            normalizeImageMetadata: true
+        )
+        let bookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let initialValues = FlacImportMapper.initialValues(from: tags)
+        let trackTags = FlacImportMapper.mapTrackTags(
+            sourceTags: tags,
+            fileURL: fileURL,
+            defaultDate: .now
+        )
+
+        let track = Track(
+            album: initialValues.album,
+            albumArtist: initialValues.albumArtist,
+            totalTracks: initialValues.totalTracks,
+            tags: trackTags,
+            flacPicturesByType: trackPicturesByType,
+            flacPictureRecords: trackPictureRecords,
+            sourceFileURL: fileURL,
+            securityScopedBookmarkData: bookmarkData,
+            latestFileSnapshot: makeFileSnapshot(
+                tags: tags,
+                picturesByType: trackPicturesByType,
+                pictureRecords: trackPictureRecords,
+                fingerprint: metadata.fingerprint
+            ),
+            fingerprint: metadata.fingerprint,
+            duration: metadata.duration,
+            sampleRate: metadata.sampleRate,
+            totalSamples: metadata.totalSamples,
+            bitsPerSample: metadata.bitsPerSample,
+            channels: metadata.channels,
+            isLocked: locked
+        )
+
+        return ImportedFlacTrackResult(track: track, picturesByType: trackPicturesByType)
     }
 
     func setTrackTotal(_ total: Int) {
@@ -3221,7 +3260,7 @@ final class TagEditorViewModel {
         }
 
         let track = trackItems[index]
-        let currentFileURL: URL? = {
+        let currentPathURL: URL? = {
             guard let currentPath else {
                 return nil
             }
@@ -3231,7 +3270,14 @@ final class TagEditorViewModel {
                 return nil
             }
 
-            let candidateURL = URL(fileURLWithPath: trimmedCurrentPath).standardizedFileURL
+            return URL(fileURLWithPath: trimmedCurrentPath).standardizedFileURL
+        }()
+        let currentFileURL: URL? = {
+            guard let currentPathURL else {
+                return nil
+            }
+
+            let candidateURL = currentPathURL.standardizedFileURL
             guard FileManager.default.fileExists(atPath: candidateURL.path) else {
                 return nil
             }
@@ -3311,6 +3357,26 @@ final class TagEditorViewModel {
                     )
                 )
             )
+        }
+
+        let sandboxTargetURL = currentPathURL ?? track.sourceFileURL?.standardizedFileURL
+        if let sandboxTargetURL,
+           let scopedResult = try SandboxPathBookmarkAccess.withAccess(
+               to: sandboxTargetURL,
+               { scopedFileURL in
+                   try body(
+                       ResolvedTrackFileReference(
+                           fileURL: scopedFileURL,
+                           refreshedBookmarkData: try? scopedFileURL.bookmarkData(
+                               options: .withSecurityScope,
+                               includingResourceValuesForKeys: nil,
+                               relativeTo: nil
+                           )
+                       )
+                   )
+               }
+           ) {
+            return scopedResult
         }
 
         throw TagEditorSaveError.failedToResolveAccess(
