@@ -453,7 +453,7 @@ int flac_read_tags(const char *file_path, FlacTagResult *out_result, char **erro
     FLAC__StreamMetadata *metadata = NULL;
     FLAC__bool ok = FLAC__metadata_get_tags(file_path, &metadata);
     if (!ok || metadata == NULL) {
-        set_error(error_message, "FLAC__metadata_get_tags failed for file.");
+        set_error(error_message, "FLAC__metadata_get_tags failed for file. (Check file/app sandbox permissions.)");
         if (metadata != NULL) {
             FLAC__metadata_object_delete(metadata);
         }

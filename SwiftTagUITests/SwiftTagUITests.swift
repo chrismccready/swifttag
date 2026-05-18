@@ -1375,17 +1375,30 @@ class SwiftTagUITestCase: XCTestCase {
             """
             tell application id "\(Self.appBundleIdentifier)"
                 activate
+                set AppleScript's text item delimiters to linefeed
+                set outputLines to {}
                 set originalCount to count of editor windows
+                set originalWindowCount to count of windows
                 make new editor window
                 delay 1
                 set openedCount to count of editor windows
+                set openedWindowCount to count of windows
                 close front editor window saving no
                 repeat 50 times
-                    if (count of editor windows) is originalCount then exit repeat
+                    set editorCountReturned to (count of editor windows) is originalCount
+                    set windowCountReturned to (count of windows) is originalWindowCount
+                    if editorCountReturned and windowCountReturned then exit repeat
                     delay 0.1
                 end repeat
                 set closedCount to count of editor windows
-                return (originalCount as text) & linefeed & (openedCount as text) & linefeed & (closedCount as text)
+                set closedWindowCount to count of windows
+                set end of outputLines to originalCount as text
+                set end of outputLines to openedCount as text
+                set end of outputLines to closedCount as text
+                set end of outputLines to originalWindowCount as text
+                set end of outputLines to openedWindowCount as text
+                set end of outputLines to closedWindowCount as text
+                return outputLines as text
             end tell
             """,
             terminologyBundleIdentifier: Self.appBundleIdentifier,
@@ -1396,7 +1409,20 @@ class SwiftTagUITestCase: XCTestCase {
         let outputLines = normalizedAppleScriptTextOutput(output)
             .components(separatedBy: .newlines)
             .filter { !$0.isEmpty }
-        XCTAssertEqual(outputLines, ["1", "2", "1"])
+        XCTAssertEqual(outputLines.count, 6)
+
+        let originalEditorCount = try XCTUnwrap(Int(outputLines[0]))
+        let openedEditorCount = try XCTUnwrap(Int(outputLines[1]))
+        let closedEditorCount = try XCTUnwrap(Int(outputLines[2]))
+        let originalWindowCount = try XCTUnwrap(Int(outputLines[3]))
+        let openedWindowCount = try XCTUnwrap(Int(outputLines[4]))
+        let closedWindowCount = try XCTUnwrap(Int(outputLines[5]))
+
+        XCTAssertEqual(originalEditorCount, 1)
+        XCTAssertEqual(openedEditorCount, originalEditorCount + 1)
+        XCTAssertEqual(closedEditorCount, originalEditorCount)
+        XCTAssertEqual(openedWindowCount, originalWindowCount + 1)
+        XCTAssertEqual(closedWindowCount, originalWindowCount)
     }
 
     @MainActor

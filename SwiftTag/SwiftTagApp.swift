@@ -10,6 +10,34 @@ import AppKit
 import UserNotifications
 
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    @objc(orderedWindows)
+    var scriptableOrderedWindows: [NSWindow] {
+        Self.scriptableOrderedWindows(in: NSApp)
+    }
+
+    @objc(countOfOrderedWindows)
+    var countOfOrderedWindows: Int {
+        scriptableOrderedWindows.count
+    }
+
+    func application(_ sender: NSApplication, delegateHandlesKey key: String) -> Bool {
+        key == "orderedWindows"
+    }
+
+    @objc(objectInOrderedWindowsAtIndex:)
+    func objectInOrderedWindows(at index: Int) -> NSWindow {
+        scriptableOrderedWindows[index]
+    }
+
+    @objc(valueInOrderedWindowsWithUniqueID:)
+    func valueInOrderedWindows(withUniqueID uniqueID: Any) -> NSWindow? {
+        guard let targetWindowNumber = Self.windowNumber(from: uniqueID) else {
+            return nil
+        }
+
+        return scriptableOrderedWindows.first { $0.windowNumber == targetWindowNumber }
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
     }
@@ -122,6 +150,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             .appendingPathComponent("SwiftTagUITestFixtures", isDirectory: true)
         try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         return directoryURL
+    }
+
+    private static func scriptableOrderedWindows(in application: NSApplication) -> [NSWindow] {
+        var windows: [NSWindow] = []
+        application.enumerateWindows(options: .orderedFrontToBack) { window, _ in
+            guard isScriptableWindow(window) else {
+                return
+            }
+
+            windows.append(window)
+        }
+        return windows
+    }
+
+    private static func isScriptableWindow(_ window: NSWindow) -> Bool {
+        guard !(window is NSPanel) else {
+            return false
+        }
+
+        return window.isVisible || window.isMiniaturized
+    }
+
+    private static func windowNumber(from value: Any) -> Int? {
+        switch value {
+        case let number as NSNumber:
+            return number.intValue
+        case let string as NSString:
+            return Int(string as String)
+        case let string as String:
+            return Int(string)
+        default:
+            return nil
+        }
     }
 }
 
