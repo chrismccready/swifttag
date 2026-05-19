@@ -26,13 +26,58 @@
             <p>Settings (SwiftTag &gt; Settings... ⌘,) are grouped into <strong>General</strong>, <strong>Tags</strong>, and <strong>Feedback</strong> tabs.</p>
             <h2 id="general">General</h2>
             <p>
-                General controls <a href="saving.html#scope-payload">Save Scope and Payload</a>, (AppleScript: 
-                <a href="../automation/applescript-application.html#property-track-save-scope">track save scope</a>,
-                <a href="../automation/applescript-application.html#property-track-save-payload">track save payload</a>),
-                and whether Command-S (⌘S) also <a href="../automation/applescript-application.html#property-save-referenced-document">saves referenced</a>
-                <a href="swifttag-documents.html">SwiftTag documents</a>.
-                <a href="../automation/applescript-application.html#property-ask-to-save-new-document">Ask to save new document</a>
-                controls prompting when no document is associated yet.
+                General controls Command-S (⌘S) save behavior for FLAC files and
+                <a href="swifttag-documents.html">SwiftTag documents</a>. See
+                <a href="saving.html#scope-payload">Save Scope and Payload</a> before
+                changing defaults for batch saves.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Behavior</th>
+                        <th>Default</th>
+                        <th>AppleScript</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>FLAC File Save (⌘S): Write</strong></td>
+                        <td>Chooses whether the default save command writes tags, pictures, or both.</td>
+                        <td><code>Tags &amp; Pictures</code></td>
+                        <td><a href="../automation/applescript-application.html#property-track-save-payload"><code>track save payload</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>FLAC File Save (⌘S): To</strong></td>
+                        <td>Chooses whether the default save command writes all loaded tracks or only selected tracks.</td>
+                        <td><code>All Tracks</code></td>
+                        <td><a href="../automation/applescript-application.html#property-track-save-scope"><code>track save scope</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Save referenced document</strong></td>
+                        <td>Saves the current editor window's referenced SwiftTag document after the default save command.</td>
+                        <td>Off</td>
+                        <td><a href="../automation/applescript-application.html#property-save-referenced-document"><code>save referenced document</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ask to save new document</strong></td>
+                        <td>Prompts to save a new SwiftTag document after the default save command when no document is associated yet.</td>
+                        <td>Off</td>
+                        <td><a href="../automation/applescript-application.html#property-ask-to-save-new-document"><code>ask to save new document</code></a></td>
+                    </tr>
+                </tbody>
+            </table>
+            <h3 id="general-sandbox-paths">SwiftTag Sandbox Paths</h3>
+            <p>
+                SwiftTag Sandbox Paths stores security scoped bookmarked folder paths that 
+                the SwiftTag application can reuse when importing FLAC files, saving FLAC 
+                changes, or opening/saving SwiftTag documents inside those folders. Under
+                most use cases, like when using the standard open/save panels or drag & drop,
+                SwiftTag can automatically manage access and no additional folder access is 
+                needed. Primary use case is with AppleScript where access is not granted through
+                the standard open/save panels, drag & drop, etc. The path list shows stored paths,
+                use the <code>+</code>/<code>-</code> buttons or context menu to manage (including
+                sort).
             </p>
             <h2 id="tags">Tags</h2>
             <p>
@@ -43,20 +88,35 @@
                 defaults for a large batch.
             </p>
             <h3 id="tags-value-preferences">Value Preferences</h3>
-            <ul>
-                <li>
-                    <a href="../automation/applescript-application.html#property-zero-pad-track-numbers"><strong>Zero pad Track Number/Total</strong></a>
-                    writes track numbers and
-                    total tracks with leading zeros when SwiftTag can read numeric values.
-                    Example: track <code>1</code> of <code>12</code> can write as
-                    <code>01</code> and <code>12</code>. Default: on.
-                </li>
-                <li>
-                    <a href="../automation/applescript-application.html#property-zero-pad-disc-numbers"><strong>Zero pad Disc Number/Total</strong></a>
-                    applies the same padding
-                    behavior to disc number and total discs. Default: on.
-                </li>
-            </ul>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Behavior</th>
+                        <th>Default</th>
+                        <th>AppleScript</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Zero pad Track Number/Total</strong></td>
+                        <td>
+                            Writes track numbers and total tracks with leading zeros when
+                            SwiftTag can read numeric values. Example: track <code>1</code>
+                            of <code>12</code> can write as <code>01</code> and
+                            <code>12</code>.
+                        </td>
+                        <td>On</td>
+                        <td><a href="../automation/applescript-application.html#property-zero-pad-track-numbers"><code>zero pad track numbers</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Zero pad Disc Number/Total</strong></td>
+                        <td>Applies the same padding behavior to disc number and total discs.</td>
+                        <td>On</td>
+                        <td><a href="../automation/applescript-application.html#property-zero-pad-disc-numbers"><code>zero pad disc numbers</code></a></td>
+                    </tr>
+                </tbody>
+            </table>
             <h3 id="tags-key-preferences">Key Preferences</h3>
             <p>
                 FLAC files in the wild use different total-count tag names. SwiftTag lets
@@ -66,20 +126,23 @@
                 <thead>
                     <tr>
                         <th>Setting</th>
-                        <th>Keys</th>
+                        <th>Behavior</th>
                         <th>Default</th>
+                        <th>AppleScript</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><a href="../automation/applescript-application.html#property-track-total-key"><strong>Write Track Total key</strong></a></td>
-                        <td><code>TOTALTRACKS</code>, <code>TRACKTOTAL</code>, both, or neither.</td>
+                        <td><strong>Write Track Total key</strong></td>
+                        <td>Writes <code>TOTALTRACKS</code>, <code>TRACKTOTAL</code>, both, or neither.</td>
                         <td><code>TOTALTRACKS</code> and <code>TRACKTOTAL</code></td>
+                        <td><a href="../automation/applescript-application.html#property-track-total-key"><code>track total key</code></a></td>
                     </tr>
                     <tr>
-                        <td><a href="../automation/applescript-application.html#property-disc-total-key"><strong>Write Disc Total key</strong></a></td>
-                        <td><code>TOTALDISCS</code>, <code>DISCTOTAL</code>, both, or neither.</td>
+                        <td><strong>Write Disc Total key</strong></td>
+                        <td>Writes <code>TOTALDISCS</code>, <code>DISCTOTAL</code>, both, or neither.</td>
                         <td><code>TOTALDISCS</code></td>
+                        <td><a href="../automation/applescript-application.html#property-disc-total-key"><code>disc total key</code></a></td>
                     </tr>
                 </tbody>
             </table>
@@ -89,72 +152,144 @@
                 owns the tag payload being written.
             </p>
             <h3 id="tags-track-total-compilation">Track Total And Compilation Management</h3>
-            <ul>
-                <li>
-                    <a href="../automation/applescript-application.html#property-auto-update-track-total"><strong>Auto update Track Total</strong></a>
-                    keeps total tracks aligned with
-                    the loaded track count and disables manual total-track editing. Default: off.
-                </li>
-                <li>
-                    <a href="../automation/applescript-application.html#property-apply-compilation-to-all-tracks"><strong>Apply Compilation to all Tracks</strong></a>
-                    makes compilation state
-                    propagate across the full loaded album instead of only the current selected
-                    track edit target. Default: off.
-                </li>
-            </ul>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Behavior</th>
+                        <th>Default</th>
+                        <th>AppleScript</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Auto update Track Total</strong></td>
+                        <td>Keeps total tracks aligned with the loaded track count and disables manual total-track editing.</td>
+                        <td>Off</td>
+                        <td><a href="../automation/applescript-application.html#property-auto-update-track-total"><code>auto update track total</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Apply Compilation to all Tracks</strong></td>
+                        <td>Makes compilation state propagate across the full loaded album instead of only the current selected track edit target.</td>
+                        <td>Off</td>
+                        <td><a href="../automation/applescript-application.html#property-apply-compilation-to-all-tracks"><code>apply compilation to all tracks</code></a></td>
+                    </tr>
+                </tbody>
+            </table>
             <p>
                 Track and disc total mismatches use Feedback colors and Diff Tools formatting.
                 See <a href="status-and-diffs.html#diff-formatting">Diff Formatting</a>.
             </p>
             <h3 id="tags-picture-management">Picture Management</h3>
-            <ul>
-                <li>
-                    <a href="../automation/applescript-application.html#property-save-front-cover-to-all-tracks"><strong>Save Front Cover to all Tracks</strong></a>
-                    writes the current front
-                    cover to every saved track when picture payload is saved. Default: off.
-                </li>
-                <li>
-                    <a href="../automation/applescript-application.html#property-save-all-pictures-to-all-tracks"><strong>Save all Pictures to all Tracks</strong></a>
-                    writes all current picture
-                    records to every saved track when picture payload is saved. Default: off.
-                </li>
-            </ul>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Behavior</th>
+                        <th>Default</th>
+                        <th>AppleScript</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Save Front Cover to all Tracks</strong></td>
+                        <td>Writes the current front cover to every saved track when picture payload is saved.</td>
+                        <td>Off</td>
+                        <td><a href="../automation/applescript-application.html#property-save-front-cover-to-all-tracks"><code>save front cover to all tracks</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Save all Pictures to all Tracks</strong></td>
+                        <td>Writes all current picture records to every saved track when picture payload is saved.</td>
+                        <td>Off</td>
+                        <td><a href="../automation/applescript-application.html#property-save-all-pictures-to-all-tracks"><code>save all pictures to all tracks</code></a></td>
+                    </tr>
+                </tbody>
+            </table>
             <p>
-                Picture propagation can make one album-art edit affect many files. Check
-                <a href="album-art.html#propagation">Album Art propagation</a> and save scope
-                before using <strong>Save Pictures</strong> or a Save payload that includes
-                pictures.
+                Picture propagation can make one album-art edit affect many files. Confirm
+                <a href="saving.html#commands">Save command</a> considering
+                <a href="saving.html#scope-payload">Save scope</a> before using 
+                <strong>Save Pictures</strong> or a <a href="saving.html#scope-payload">Save payload</a> 
+                that includes pictures.
             </p>
             <h2 id="feedback">Feedback</h2>
             <p>
-                Feedback controls <a href="../automation/applescript-application.html#property-send-save-notifications">save notifications</a>,
-                <a href="../automation/applescript-application.html#property-theme">app theme</a>, and difference/status colors.
+                Feedback controls save notifications, app theme, and visual status cues
+                for differences, mismatches, duplicate pictures, and external changes.
             </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Behavior</th>
+                        <th>Default</th>
+                        <th>AppleScript</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Send Save Notifications</strong></td>
+                        <td>Controls whether SwiftTag sends save notifications always, only when not frontmost, or never.</td>
+                        <td><code>When Not Frontmost</code></td>
+                        <td><a href="../automation/applescript-application.html#property-send-save-notifications"><code>send save notifications</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Theme</strong></td>
+                        <td>Controls whether SwiftTag uses light, dark, or system appearance.</td>
+                        <td><code>System</code></td>
+                        <td><a href="../automation/applescript-application.html#property-theme"><code>theme</code></a></td>
+                    </tr>
+                </tbody>
+            </table>
             <h3 id="feedback-diff-colors">Diff Color Preferences</h3>
             <p>
                 The <strong>Tag Value Difference Colors</strong> group contains these color controls:
             </p>
-            <ul>
-                <li><a href="../automation/applescript-application.html#property-track-to-track-diff-color"><strong>Track to Track Diff Color</strong></a></li>
-                <li><a href="../automation/applescript-application.html#property-track-to-file-diff-color"><strong>Track to File Diff Color</strong></a></li>
-                <li><a href="../automation/applescript-application.html#property-externally-modified-diff-color"><strong>Externally Modified Diff Color</strong></a></li>
-                <li><a href="../automation/applescript-application.html#property-track-and-disc-total-mismatch-color"><strong>Track/Disc Total Mismatch Color</strong></a></li>
-                <li><a href="../automation/applescript-application.html#property-picture-status-overlay-color"><strong>Picture Status Overlay Color</strong></a></li>
-            </ul>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Behavior</th>
+                        <th>Default</th>
+                        <th>AppleScript</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Track to Track Diff Color</strong></td>
+                        <td>Colors tag values that differ between loaded tracks.</td>
+                        <td><code>orange</code></td>
+                        <td><a href="../automation/applescript-application.html#property-track-to-track-diff-color"><code>track to track diff color</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Track to File Diff Color</strong></td>
+                        <td>Colors tag values that differ between editor state and source file state.</td>
+                        <td><code>primary</code></td>
+                        <td><a href="../automation/applescript-application.html#property-track-to-file-diff-color"><code>track to file diff color</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Externally Modified Diff Color</strong></td>
+                        <td>Colors tag values when source files changed outside SwiftTag.</td>
+                        <td><code>red</code></td>
+                        <td><a href="../automation/applescript-application.html#property-externally-modified-diff-color"><code>externally modified diff color</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Track/Disc Total Mismatch Color</strong></td>
+                        <td>Colors track-total and disc-total mismatch warnings.</td>
+                        <td><code>red</code></td>
+                        <td><a href="../automation/applescript-application.html#property-track-and-disc-total-mismatch-color"><code>track and disc total mismatch color</code></a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Picture Status Overlay Color</strong></td>
+                        <td>Colors picture status overlays, including duplicate picture status.</td>
+                        <td><code>orange</code></td>
+                        <td><a href="../automation/applescript-application.html#property-picture-status-overlay-color"><code>picture status overlay color</code></a></td>
+                    </tr>
+                </tbody>
+            </table>
             <p>
-                These colors are used by tag-field diff formatting, mismatch warnings,
-                picture duplicate overlays, and external-change status. See
-                <a href="status-and-diffs.html#diff-formatting">Diff Formatting</a> for
-                recognized diff types and text examples.
-            </p>
-            <p>
-                Diff Tools can also be automated through
-                <a href="../automation/applescript-application.html#property-format-on-track-to-file-diff">format on track to file diff</a>,
-                <a href="../automation/applescript-application.html#property-format-on-track-to-track-diff">format on track to track diff</a>,
-                <a href="../automation/applescript-application.html#property-format-on-externally-modified-diff">format on externally modified diff</a>,
-                <a href="../automation/applescript-application.html#property-format-on-track-total-mismatch">format on track total mismatch</a>,
-                <a href="../automation/applescript-application.html#property-format-on-disc-total-mismatch">format on disc total mismatch</a>, and
-                <a href="../automation/applescript-application.html#property-format-on-duplicate-picture">format on duplicate picture</a>.
+                See <a href="status-and-diffs.html#diff-formatting">Diff Formatting</a> for
+                recognized diff types, text examples, enabled settings, and more.
             </p>
             <p>
                 Related: <a href="saving.html">Save Changes</a>,
