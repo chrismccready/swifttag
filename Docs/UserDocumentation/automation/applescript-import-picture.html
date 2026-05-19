@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AppleScript Save Command - SwiftTag Documentation</title>
+    <title>AppleScript Import Picture Command - SwiftTag Documentation</title>
     <link rel="stylesheet" href="../assets/swifttag-docs.css">
 </head>
 <body>
@@ -22,11 +22,11 @@
     <main class="shell">
         <article>
             <p class="section-label">Automation</p>
-            <h1>AppleScript save command</h1>
+            <h1>AppleScript import picture command</h1>
             <p>
-                The <code>save</code> command saves a document or editor window. Documents
-                save SwiftTag session data. Editor windows save FLAC metadata using optional
-                scope and payload overrides.
+                The <code>import picture</code> command imports image data as a track picture.
+                SwiftTag validates the image data, derives image dimensions, and prefers the
+                MIME type derived from the image data.
             </p>
 
             <section aria-labelledby="definition">
@@ -35,19 +35,23 @@
                     <tbody>
                         <tr>
                             <th>Name</th>
-                            <td><code>save</code></td>
+                            <td><code>import picture</code></td>
                         </tr>
                         <tr>
                             <th>Suite</th>
-                            <td>Standard Suite</td>
+                            <td>SwiftTag Suite</td>
                         </tr>
                         <tr>
                             <th>Code</th>
-                            <td><code>coresave</code></td>
+                            <td><code>SwTGimpt</code></td>
+                        </tr>
+                        <tr>
+                            <th>Cocoa Class</th>
+                            <td><code>SwiftTagImportPictureCommand</code></td>
                         </tr>
                         <tr>
                             <th>Description</th>
-                            <td>Save a document or editor window.</td>
+                            <td>Import image data as a track picture.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -64,19 +68,15 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><a href="applescript-document.html"><code>document</code></a></td>
-                            <td>Saves the SwiftTag session document. The <code>in</code> parameter can choose a destination file.</td>
+                            <td><a href="applescript-application.html"><code>application</code></a></td>
+                            <td>Imports into a track resolved from the command receiver or direct object.</td>
                         </tr>
                         <tr>
-                            <td><code>editor window</code></td>
-                            <td>Saves FLAC metadata for editable tracks. The <code>in</code> parameter is not supported.</td>
+                            <td><code>track</code></td>
+                            <td>Imports the picture into that track.</td>
                         </tr>
                     </tbody>
                 </table>
-                <aside class="callout warning">
-                    Saving an editor window can rewrite source FLAC files. Use explicit
-                    <code>with scope</code> and <code>with payload</code> when automating writes.
-                </aside>
             </section>
 
             <section aria-labelledby="parameters">
@@ -95,79 +95,58 @@
                         <tr>
                             <td>direct parameter</td>
                             <td></td>
-                            <td><code>specifier</code></td>
-                            <td>No</td>
-                            <td>Document(s) or window(s) to save.</td>
+                            <td><code>any</code></td>
+                            <td>Yes</td>
+                            <td>Image data to import.</td>
                         </tr>
                         <tr>
-                            <td><code>in</code></td>
-                            <td><code>kfil</code></td>
-                            <td><code>file</code></td>
+                            <td><code>with data</code></td>
+                            <td><code>pdat</code></td>
+                            <td><code>any</code></td>
                             <td>Yes</td>
-                            <td>File in which to save the document.</td>
+                            <td>Image data to import.</td>
                         </tr>
                         <tr>
-                            <td><code>with scope</code></td>
-                            <td><code>svso</code></td>
-                            <td><code>save scope options</code></td>
+                            <td><code>with picture type</code></td>
+                            <td><code>pcty</code></td>
+                            <td><code>flac picture type</code></td>
                             <td>Yes</td>
-                            <td>Track selection scope for editor-window FLAC save.</td>
+                            <td>FLAC picture type. Defaults to <code>front cover</code>.</td>
                         </tr>
                         <tr>
-                            <td><code>with payload</code></td>
-                            <td><code>svpo</code></td>
-                            <td><code>save payload options</code></td>
+                            <td><code>with description</code></td>
+                            <td><code>tdsc</code></td>
+                            <td><code>text</code></td>
                             <td>Yes</td>
-                            <td>Track payload for editor-window FLAC save.</td>
+                            <td>Picture description. If omitted, SwiftTag preserves a duplicate description or uses the default for the picture type.</td>
+                        </tr>
+                        <tr>
+                            <td><code>with MIME type</code></td>
+                            <td><code>mime</code></td>
+                            <td><code>text</code></td>
+                            <td>Yes</td>
+                            <td>Optional MIME type hint.</td>
                         </tr>
                     </tbody>
                 </table>
-            </section>
-
-            <section aria-labelledby="options">
-                <h2 id="options">Scope And Payload Options</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Enumeration</th>
-                            <th>Values</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>save scope options</code></td>
-                            <td><code>all</code>, <code>selected</code></td>
-                        </tr>
-                        <tr>
-                            <td><code>save payload options</code></td>
-                            <td><code>tags only</code>, <code>pictures only</code>, <code>tags and pictures</code></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <p>
-                    When scope or payload is omitted, SwiftTag uses current application save
-                    settings for the editor window.
-                </p>
+                <p>Result: <code>picture</code>.</p>
             </section>
 
             <section aria-labelledby="examples">
                 <h2 id="examples">Examples</h2>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
-    save document of front editor window in POSIX file "/path/to/session.swifttag"
-end tell</code></pre>
-                <div class="code-label">AppleScript</div>
-                <pre><code>tell application "SwiftTag"
-    save front editor window with scope selected with payload tags only
+    tell track 1 of front editor window
+        import picture with data imageData with picture type front cover with description "Cover"
+    end tell
 end tell</code></pre>
             </section>
 
             <p>
                 Related: <a href="applescript.html">AppleScript overview</a>,
                 <a href="applescript-application.html">application class</a>,
-                <a href="applescript-document.html">document class</a>,
-                <a href="applescript-close.html">close command</a>,
-                <a href="../workflows/saving.html">Save Changes</a>.
+                <a href="applescript-make.html">make command</a>,
+                <a href="../workflows/album-art.html">Manage Album Art</a>.
             </p>
         </article>
     </main>

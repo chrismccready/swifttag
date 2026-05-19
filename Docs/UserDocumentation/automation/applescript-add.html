@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AppleScript Save Command - SwiftTag Documentation</title>
+    <title>AppleScript Add Command - SwiftTag Documentation</title>
     <link rel="stylesheet" href="../assets/swifttag-docs.css">
 </head>
 <body>
@@ -22,11 +22,10 @@
     <main class="shell">
         <article>
             <p class="section-label">Automation</p>
-            <h1>AppleScript save command</h1>
+            <h1>AppleScript add command</h1>
             <p>
-                The <code>save</code> command saves a document or editor window. Documents
-                save SwiftTag session data. Editor windows save FLAC metadata using optional
-                scope and payload overrides.
+                The <code>add</code> command adds one or more FLAC files to an editor window.
+                It returns the added track or tracks.
             </p>
 
             <section aria-labelledby="definition">
@@ -35,19 +34,19 @@
                     <tbody>
                         <tr>
                             <th>Name</th>
-                            <td><code>save</code></td>
+                            <td><code>add</code></td>
                         </tr>
                         <tr>
                             <th>Suite</th>
-                            <td>Standard Suite</td>
+                            <td>SwiftTag Suite</td>
                         </tr>
                         <tr>
                             <th>Code</th>
-                            <td><code>coresave</code></td>
+                            <td><code>SwTGaddt</code></td>
                         </tr>
                         <tr>
                             <th>Description</th>
-                            <td>Save a document or editor window.</td>
+                            <td>Add one or more FLAC files to an editor window.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -64,19 +63,15 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><a href="applescript-document.html"><code>document</code></a></td>
-                            <td>Saves the SwiftTag session document. The <code>in</code> parameter can choose a destination file.</td>
+                            <td><a href="applescript-application.html"><code>application</code></a></td>
+                            <td>Adds to the <code>to</code> editor window, or the front editor window when <code>to</code> is omitted.</td>
                         </tr>
                         <tr>
                             <td><code>editor window</code></td>
-                            <td>Saves FLAC metadata for editable tracks. The <code>in</code> parameter is not supported.</td>
+                            <td>Adds directly to that editor window.</td>
                         </tr>
                     </tbody>
                 </table>
-                <aside class="callout warning">
-                    Saving an editor window can rewrite source FLAC files. Use explicit
-                    <code>with scope</code> and <code>with payload</code> when automating writes.
-                </aside>
             </section>
 
             <section aria-labelledby="parameters">
@@ -95,79 +90,47 @@
                         <tr>
                             <td>direct parameter</td>
                             <td></td>
-                            <td><code>specifier</code></td>
+                            <td><code>file</code> or list of <code>file</code></td>
                             <td>No</td>
-                            <td>Document(s) or window(s) to save.</td>
+                            <td>FLAC files to add.</td>
                         </tr>
                         <tr>
-                            <td><code>in</code></td>
-                            <td><code>kfil</code></td>
-                            <td><code>file</code></td>
+                            <td><code>to</code></td>
+                            <td><code>insh</code></td>
+                            <td><code>editor window</code></td>
                             <td>Yes</td>
-                            <td>File in which to save the document.</td>
+                            <td>Editor window that should receive added files.</td>
                         </tr>
                         <tr>
-                            <td><code>with scope</code></td>
-                            <td><code>svso</code></td>
-                            <td><code>save scope options</code></td>
+                            <td><code>with lock</code></td>
+                            <td><code>wlok</code></td>
+                            <td><code>boolean</code></td>
                             <td>Yes</td>
-                            <td>Track selection scope for editor-window FLAC save.</td>
-                        </tr>
-                        <tr>
-                            <td><code>with payload</code></td>
-                            <td><code>svpo</code></td>
-                            <td><code>save payload options</code></td>
-                            <td>Yes</td>
-                            <td>Track payload for editor-window FLAC save.</td>
+                            <td>Whether added tracks should be locked. Default: <code>false</code>.</td>
                         </tr>
                     </tbody>
                 </table>
-            </section>
-
-            <section aria-labelledby="options">
-                <h2 id="options">Scope And Payload Options</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Enumeration</th>
-                            <th>Values</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>save scope options</code></td>
-                            <td><code>all</code>, <code>selected</code></td>
-                        </tr>
-                        <tr>
-                            <td><code>save payload options</code></td>
-                            <td><code>tags only</code>, <code>pictures only</code>, <code>tags and pictures</code></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <p>
-                    When scope or payload is omitted, SwiftTag uses current application save
-                    settings for the editor window.
-                </p>
+                <p>Result: <code>track</code> or list of <code>track</code>.</p>
             </section>
 
             <section aria-labelledby="examples">
                 <h2 id="examples">Examples</h2>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
-    save document of front editor window in POSIX file "/path/to/session.swifttag"
+    add POSIX file "/path/to/track.flac" to front editor window with lock false
 end tell</code></pre>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
-    save front editor window with scope selected with payload tags only
+    tell front editor window
+        set addedTrack to add POSIX file "/path/to/track.flac" with lock true
+    end tell
 end tell</code></pre>
             </section>
 
             <p>
                 Related: <a href="applescript.html">AppleScript overview</a>,
                 <a href="applescript-application.html">application class</a>,
-                <a href="applescript-document.html">document class</a>,
-                <a href="applescript-close.html">close command</a>,
-                <a href="../workflows/saving.html">Save Changes</a>.
+                <a href="../workflows/adding-flac-files.html">Add FLAC Files</a>.
             </p>
         </article>
     </main>

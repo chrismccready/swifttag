@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Application Class - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript application class</h1>
+            <p>
+                The <code>application</code> class represents SwiftTag itself. It exposes
+                document, window, and track collections, plus read-write settings that mirror
+                SwiftTag Settings.
+            </p>
+
+            <section aria-labelledby="definition">
+                <h2 id="definition">Definition</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>application</code></td>
+                        </tr>
+                        <tr>
+                            <th>Plural</th>
+                            <td><code>applications</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>capp</code></td>
+                        </tr>
+                        <tr>
+                            <th>Cocoa Class</th>
+                            <td><code>NSApplication</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>Application program.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="elements">
+                <h2 id="elements">Elements</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Element</th>
+                            <th>Access</th>
+                            <th>Cocoa Key</th>
+                            <th>Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="applescript-document.html"><code>document</code></a></td>
+                            <td>read-write</td>
+                            <td><code>scriptDocuments</code></td>
+                            <td>Open SwiftTag session documents.</td>
+                        </tr>
+                        <tr>
+                            <td><code>window</code></td>
+                            <td>read-only</td>
+                            <td><code>orderedWindows</code></td>
+                            <td>Visible application windows ordered front to back.</td>
+                        </tr>
+                        <tr>
+                            <td><code>settings window</code></td>
+                            <td>read-only</td>
+                            <td><code>scriptSettingsWindows</code></td>
+                            <td>Current SwiftTag settings window, when open.</td>
+                        </tr>
+                        <tr>
+                            <td><code>editor window</code></td>
+                            <td>read-write</td>
+                            <td><code>scriptEditorWindows</code></td>
+                            <td>Open editor windows.</td>
+                        </tr>
+                        <tr>
+                            <td><code>track</code></td>
+                            <td>read-write</td>
+                            <td><code>scriptTracks</code></td>
+                            <td>Loaded FLAC tracks across editor windows.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="properties">
+                <h2 id="properties">Properties</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Access</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="property-track-save-scope">
+                            <td><code>track save scope</code></td>
+                            <td><code>svso</code></td>
+                            <td><code>save scope options</code></td>
+                            <td>read-write</td>
+                            <td>Track selection scope of a save operation. Values: <code>all</code>, <code>selected</code>.</td>
+                        </tr>
+                        <tr id="property-track-save-payload">
+                            <td><code>track save payload</code></td>
+                            <td><code>svpo</code></td>
+                            <td><code>save payload options</code></td>
+                            <td>read-write</td>
+                            <td>Track payload of a save operation. Values: <code>tags only</code>, <code>pictures only</code>, <code>tags and pictures</code>.</td>
+                        </tr>
+                        <tr id="property-save-referenced-document">
+                            <td><code>save referenced document</code></td>
+                            <td><code>svrd</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Save the editor window's referenced document after a save operation.</td>
+                        </tr>
+                        <tr id="property-ask-to-save-new-document">
+                            <td><code>ask to save new document</code></td>
+                            <td><code>asnd</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Ask to save a new document after a save operation when no document is associated.</td>
+                        </tr>
+                        <tr id="property-zero-pad-track-numbers">
+                            <td><code>zero pad track numbers</code></td>
+                            <td><code>zptn</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Zero-pad track number and total values on save.</td>
+                        </tr>
+                        <tr id="property-zero-pad-disc-numbers">
+                            <td><code>zero pad disc numbers</code></td>
+                            <td><code>zpdn</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Zero-pad disc number and total values on save.</td>
+                        </tr>
+                        <tr id="property-track-total-key">
+                            <td><code>track total key</code></td>
+                            <td><code>ttks</code></td>
+                            <td><code>track total key setting</code></td>
+                            <td>read-write</td>
+                            <td>Track total tag key preference. Values: <code>TOTALTRACKS</code>, <code>TRACKTOTAL</code>, <code>TOTALTRACKS and TRACKTOTAL</code>.</td>
+                        </tr>
+                        <tr id="property-disc-total-key">
+                            <td><code>disc total key</code></td>
+                            <td><code>dtks</code></td>
+                            <td><code>disc total key setting</code></td>
+                            <td>read-write</td>
+                            <td>Disc total tag key preference. Values: <code>TOTALDISCS</code>, <code>DISCTOTAL</code>, <code>TOTALDISCS and DISCTOTAL</code>.</td>
+                        </tr>
+                        <tr id="property-auto-update-track-total">
+                            <td><code>auto update track total</code></td>
+                            <td><code>autt</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Automatically update track total from the track table count.</td>
+                        </tr>
+                        <tr id="property-apply-compilation-to-all-tracks">
+                            <td><code>apply compilation to all tracks</code></td>
+                            <td><code>apct</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Apply compilation setting to all tracks.</td>
+                        </tr>
+                        <tr id="property-save-front-cover-to-all-tracks">
+                            <td><code>save front cover to all tracks</code></td>
+                            <td><code>sfct</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Save front cover pictures to all tracks.</td>
+                        </tr>
+                        <tr id="property-save-all-pictures-to-all-tracks">
+                            <td><code>save all pictures to all tracks</code></td>
+                            <td><code>sapt</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Save all picture records to all tracks.</td>
+                        </tr>
+                        <tr id="property-send-save-notifications">
+                            <td><code>send save notifications</code></td>
+                            <td><code>snse</code></td>
+                            <td><code>save notifications setting</code></td>
+                            <td>read-write</td>
+                            <td>Save notification preference. Values: <code>always</code>, <code>when not frontmost</code>, <code>never</code>.</td>
+                        </tr>
+                        <tr id="property-theme">
+                            <td><code>theme</code></td>
+                            <td><code>thse</code></td>
+                            <td><code>theme setting</code></td>
+                            <td>read-write</td>
+                            <td>App theme preference. Values: <code>light</code>, <code>dark</code>, <code>system</code>.</td>
+                        </tr>
+                        <tr id="property-track-to-track-diff-color">
+                            <td><code>track to track diff color</code></td>
+                            <td><code>ttdc</code></td>
+                            <td><code>color</code></td>
+                            <td>read-write</td>
+                            <td>Track-to-track diff color record.</td>
+                        </tr>
+                        <tr id="property-track-to-file-diff-color">
+                            <td><code>track to file diff color</code></td>
+                            <td><code>ttfd</code></td>
+                            <td><code>color</code></td>
+                            <td>read-write</td>
+                            <td>Track-to-file diff color record.</td>
+                        </tr>
+                        <tr id="property-externally-modified-diff-color">
+                            <td><code>externally modified diff color</code></td>
+                            <td><code>emdc</code></td>
+                            <td><code>color</code></td>
+                            <td>read-write</td>
+                            <td>Externally modified diff color record.</td>
+                        </tr>
+                        <tr id="property-track-and-disc-total-mismatch-color">
+                            <td><code>track and disc total mismatch color</code></td>
+                            <td><code>tddc</code></td>
+                            <td><code>color</code></td>
+                            <td>read-write</td>
+                            <td>Track and disc total mismatch color record.</td>
+                        </tr>
+                        <tr id="property-picture-status-overlay-color">
+                            <td><code>picture status overlay color</code></td>
+                            <td><code>psoc</code></td>
+                            <td><code>color</code></td>
+                            <td>read-write</td>
+                            <td>Picture status overlay color record.</td>
+                        </tr>
+                        <tr id="property-format-on-track-to-file-diff">
+                            <td><code>format on track to file diff</code></td>
+                            <td><code>ftfd</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Perform text formatting on track-to-file diffs.</td>
+                        </tr>
+                        <tr id="property-format-on-track-to-track-diff">
+                            <td><code>format on track to track diff</code></td>
+                            <td><code>fttd</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Perform text formatting on track-to-track diffs.</td>
+                        </tr>
+                        <tr id="property-format-on-externally-modified-diff">
+                            <td><code>format on externally modified diff</code></td>
+                            <td><code>ftem</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Perform text formatting on externally modified diffs.</td>
+                        </tr>
+                        <tr id="property-format-on-track-total-mismatch">
+                            <td><code>format on track total mismatch</code></td>
+                            <td><code>fttm</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Perform text formatting on track total mismatches.</td>
+                        </tr>
+                        <tr id="property-format-on-disc-total-mismatch">
+                            <td><code>format on disc total mismatch</code></td>
+                            <td><code>ftdm</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Perform text formatting on disc total mismatches.</td>
+                        </tr>
+                        <tr id="property-format-on-duplicate-picture">
+                            <td><code>format on duplicate picture</code></td>
+                            <td><code>fodp</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Show color overlay on duplicate pictures.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    Color properties use records with <code>red</code>, <code>green</code>,
+                    <code>blue</code>, and <code>alpha</code> values from <code>0</code> to <code>1.0</code>.
+                </p>
+            </section>
+
+            <section aria-labelledby="responds-to">
+                <h2 id="responds-to">Responds To</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Cocoa Method</th>
+                            <th>Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="applescript-add.html"><code>add</code></a></td>
+                            <td><code>handleAddTracksScriptCommand:</code></td>
+                            <td>Add FLAC files to an editor window.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-open.html"><code>open</code></a></td>
+                            <td><code>handleOpenScriptCommand:</code></td>
+                            <td>Open SwiftTag documents.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-open-settings-window.html"><code>open settings window</code></a></td>
+                            <td><code>handleOpenSettingsWindowScriptCommand:</code></td>
+                            <td>Open or reveal the settings window.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-make.html"><code>make</code></a></td>
+                            <td><code>handleMakeScriptCommand:</code></td>
+                            <td>Create scriptable objects such as tags and pictures.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-import-picture.html"><code>import picture</code></a></td>
+                            <td><code>handleImportPictureScriptCommand:</code></td>
+                            <td>Import image data as a track picture.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-quit.html"><code>quit</code></a></td>
+                            <td><code>handleQuitScriptCommand:</code></td>
+                            <td>Quit SwiftTag.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="examples">
+                <h2 id="examples">Examples</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    set track save scope to selected
+    set track save payload to tags only
+    set theme to system
+end tell</code></pre>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    set loadedTracks to tracks
+    open settings window
+end tell</code></pre>
+            </section>
+
+            <p>
+                Related: <a href="applescript.html">AppleScript overview</a>,
+                <a href="applescript-add.html">add command</a>,
+                <a href="applescript-open.html">open command</a>,
+                <a href="../workflows/settings.html">Settings</a>.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

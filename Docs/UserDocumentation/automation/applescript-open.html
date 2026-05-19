@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Open Command - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript open command</h1>
+            <p>
+                The <code>open</code> command opens SwiftTag session documents and returns
+                the opened document or documents. Use <a href="applescript-add.html"><code>add</code></a>
+                to add FLAC files to an editor window.
+            </p>
+
+            <section aria-labelledby="definition">
+                <h2 id="definition">Definition</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>open</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>Standard Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>aevtodoc</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>Open a document.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="target">
+                <h2 id="target">Target</h2>
+                <p>
+                    The <a href="applescript-application.html"><code>application</code></a>
+                    class responds to <code>open</code>. SwiftTag accepts <code>.swifttag</code>
+                    document files.
+                </p>
+            </section>
+
+            <section aria-labelledby="parameters">
+                <h2 id="parameters">Parameters</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Type</th>
+                            <th>Optional</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>direct parameter</td>
+                            <td><code>file</code> or list of <code>file</code></td>
+                            <td>No</td>
+                            <td>Document files to open.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Result: <a href="applescript-document.html"><code>document</code></a> or list of <code>document</code>.</p>
+            </section>
+
+            <section aria-labelledby="examples">
+                <h2 id="examples">Examples</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    set sessionDocument to open POSIX file "/path/to/session.swifttag"
+end tell</code></pre>
+            </section>
+
+            <p>
+                Related: <a href="applescript.html">AppleScript overview</a>,
+                <a href="applescript-application.html">application class</a>,
+                <a href="applescript-document.html">document class</a>,
+                <a href="../workflows/swifttag-documents.html">SwiftTag Documents</a>.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
