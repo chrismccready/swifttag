@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Document Class - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript document class</h1>
+            <p>
+                The <code>document</code> class represents a SwiftTag session document.
+                It exposes read-only document identity and save state, and it can be
+                saved or closed by AppleScript.
+            </p>
+
+            <section aria-labelledby="definition">
+                <h2 id="definition">Definition</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>document</code></td>
+                        </tr>
+                        <tr>
+                            <th>Plural</th>
+                            <td><code>documents</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>Standard Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>docu</code></td>
+                        </tr>
+                        <tr>
+                            <th>Cocoa Class</th>
+                            <td><code>SwiftTagScriptDocument</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>A SwiftTag document.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="access">
+                <h2 id="access">Access</h2>
+                <p>
+                    Documents are application elements. Editor windows also expose their
+                    session document through the read-only <code>document</code> property.
+                </p>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    set sessionDocument to document of front editor window
+    set documentName to name of sessionDocument
+end tell</code></pre>
+            </section>
+
+            <section aria-labelledby="properties">
+                <h2 id="properties">Properties</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Access</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>file</code></td>
+                            <td><code>file</code></td>
+                            <td><code>file</code></td>
+                            <td>read-only</td>
+                            <td>Document location on disk, if it has one.</td>
+                        </tr>
+                        <tr>
+                            <td><code>modified</code></td>
+                            <td><code>imod</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-only</td>
+                            <td>Whether document has changed since last save.</td>
+                        </tr>
+                        <tr>
+                            <td><code>name</code></td>
+                            <td><code>pnam</code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td>Document display name.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="responds-to">
+                <h2 id="responds-to">Responds To</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="applescript-save.html"><code>save</code></a></td>
+                            <td>Save the SwiftTag session document, optionally to a file.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-close.html"><code>close</code></a></td>
+                            <td>Close the document, optionally saving first.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="examples">
+                <h2 id="examples">Examples</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    set sessionDocument to document of front editor window
+    save sessionDocument in POSIX file "/path/to/session.swifttag"
+end tell</code></pre>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    close document of front editor window saving yes
+end tell</code></pre>
+            </section>
+
+            <p>
+                Related: <a href="applescript.html">AppleScript overview</a>,
+                <a href="applescript-save.html">save command</a>,
+                <a href="applescript-close.html">close command</a>,
+                <a href="../workflows/swifttag-documents.html">SwiftTag Documents</a>.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

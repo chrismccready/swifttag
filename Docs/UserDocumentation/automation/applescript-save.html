@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Save Command - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript save command</h1>
+            <p>
+                The <code>save</code> command saves a document or editor window. Documents
+                save SwiftTag session data. Editor windows save FLAC metadata using optional
+                scope and payload overrides.
+            </p>
+
+            <section aria-labelledby="definition">
+                <h2 id="definition">Definition</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>save</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>Standard Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>coresave</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>Save a document or editor window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="targets">
+                <h2 id="targets">Targets</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Target</th>
+                            <th>Behavior</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="applescript-document.html"><code>document</code></a></td>
+                            <td>Saves the SwiftTag session document. The <code>in</code> parameter can choose a destination file.</td>
+                        </tr>
+                        <tr>
+                            <td><code>editor window</code></td>
+                            <td>Saves FLAC metadata for editable tracks. The <code>in</code> parameter is not supported.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <aside class="callout warning">
+                    Saving an editor window can rewrite source FLAC files. Use explicit
+                    <code>with scope</code> and <code>with payload</code> when automating writes.
+                </aside>
+            </section>
+
+            <section aria-labelledby="parameters">
+                <h2 id="parameters">Parameters</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Optional</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>direct parameter</td>
+                            <td></td>
+                            <td><code>specifier</code></td>
+                            <td>No</td>
+                            <td>Document(s) or window(s) to save.</td>
+                        </tr>
+                        <tr>
+                            <td><code>in</code></td>
+                            <td><code>kfil</code></td>
+                            <td><code>file</code></td>
+                            <td>Yes</td>
+                            <td>File in which to save the document.</td>
+                        </tr>
+                        <tr>
+                            <td><code>with scope</code></td>
+                            <td><code>svso</code></td>
+                            <td><code>save scope options</code></td>
+                            <td>Yes</td>
+                            <td>Track selection scope for editor-window FLAC save.</td>
+                        </tr>
+                        <tr>
+                            <td><code>with payload</code></td>
+                            <td><code>svpo</code></td>
+                            <td><code>save payload options</code></td>
+                            <td>Yes</td>
+                            <td>Track payload for editor-window FLAC save.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="options">
+                <h2 id="options">Scope And Payload Options</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enumeration</th>
+                            <th>Values</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>save scope options</code></td>
+                            <td><code>all</code>, <code>selected</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>save payload options</code></td>
+                            <td><code>tags only</code>, <code>pictures only</code>, <code>tags and pictures</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    When scope or payload is omitted, SwiftTag uses current application save
+                    settings for the editor window.
+                </p>
+            </section>
+
+            <section aria-labelledby="examples">
+                <h2 id="examples">Examples</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    save document of front editor window in POSIX file "/path/to/session.swifttag"
+end tell</code></pre>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    save front editor window with scope selected with payload tags only
+end tell</code></pre>
+            </section>
+
+            <p>
+                Related: <a href="applescript.html">AppleScript overview</a>,
+                <a href="applescript-document.html">document class</a>,
+                <a href="applescript-close.html">close command</a>,
+                <a href="../workflows/saving.html">Save Changes</a>.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
