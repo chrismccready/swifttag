@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Window Classes - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript window classes</h1>
+            <p>
+                SwiftTag exposes visible windows through the base <code>window</code> class
+                and two concrete subclasses: <code>settings window</code> and
+                <code>editor window</code>.
+            </p>
+
+            <section aria-labelledby="window-definition">
+                <h2 id="window-definition">window</h2>
+                <p>
+                    The <code>window</code> class represents a visible application window.
+                    It provides common title, ordering, geometry, and window-state properties.
+                </p>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>window</code></td>
+                        </tr>
+                        <tr>
+                            <th>Plural</th>
+                            <td><code>windows</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>cwin</code></td>
+                        </tr>
+                        <tr>
+                            <th>Cocoa Class</th>
+                            <td><code>NSWindow</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>A window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="window-properties">
+                <h2 id="window-properties">window Properties</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Access</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>name</code></td>
+                            <td><code>pnam</code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td>The title of the window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>id</code></td>
+                            <td><code>ID  </code></td>
+                            <td><code>integer</code></td>
+                            <td>read-only</td>
+                            <td>The unique identifier of the window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>index</code></td>
+                            <td><code>pidx</code></td>
+                            <td><code>integer</code></td>
+                            <td>read-write</td>
+                            <td>The index of the window, ordered front to back.</td>
+                        </tr>
+                        <tr id="property-bounds">
+                            <td><code>bounds</code></td>
+                            <td><code>pbnd</code></td>
+                            <td><a href="applescript-record-types.html#record-type-rectangle"><code>rectangle</code></a></td>
+                            <td>read-write</td>
+                            <td>The bounding rectangle of the window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>closeable</code></td>
+                            <td><code>hclb</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-only</td>
+                            <td>Does the window have a close button?</td>
+                        </tr>
+                        <tr>
+                            <td><code>collapseable</code></td>
+                            <td><code>pWSh</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-only</td>
+                            <td>Does the window have a collapse button?</td>
+                        </tr>
+                        <tr>
+                            <td><code>collapsed</code></td>
+                            <td><code>wshd</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Is the window collapsed?</td>
+                        </tr>
+                        <tr>
+                            <td><code>full screen</code></td>
+                            <td><code>pFSc</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Is the window full screen?</td>
+                        </tr>
+                        <tr id="property-position">
+                            <td><code>position</code></td>
+                            <td><code>ppos</code></td>
+                            <td><a href="applescript-record-types.html#record-type-point"><code>point</code></a></td>
+                            <td>read-write</td>
+                            <td>The upper-left position of the window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>resizable</code></td>
+                            <td><code>prsz</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-only</td>
+                            <td>Can the window be resized?</td>
+                        </tr>
+                        <tr>
+                            <td><code>visible</code></td>
+                            <td><code>pvis</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Is the window visible right now?</td>
+                        </tr>
+                        <tr>
+                            <td><code>zoomable</code></td>
+                            <td><code>iszm</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-only</td>
+                            <td>Does the window have a zoom button?</td>
+                        </tr>
+                        <tr>
+                            <td><code>zoomed</code></td>
+                            <td><code>pzum</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Is the window zoomed right now?</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="settings-window-definition">
+                <h2 id="settings-window-definition">settings window</h2>
+                <p>
+                    The <code>settings window</code> class represents SwiftTag Settings.
+                    It inherits all <code>window</code> properties.
+                </p>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>settings window</code></td>
+                        </tr>
+                        <tr>
+                            <th>Plural</th>
+                            <td><code>settings windows</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>swin</code></td>
+                        </tr>
+                        <tr>
+                            <th>Inherits</th>
+                            <td><a href="#window-definition"><code>window</code></a></td>
+                        </tr>
+                        <tr>
+                            <th>Cocoa Class</th>
+                            <td><code>SwiftTagScriptSettingsWindow</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>The SwiftTag settings window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="settings-window-responds-to">
+                <h2 id="settings-window-responds-to">settings window Responds To</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Cocoa Method</th>
+                            <th>Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="applescript-close.html"><code>close</code></a></td>
+                            <td><code>handleCloseScriptCommand:</code></td>
+                            <td>Close the settings window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="editor-window-definition">
+                <h2 id="editor-window-definition">editor window</h2>
+                <p>
+                    The <code>editor window</code> class represents a SwiftTag editor
+                    window. It inherits all <code>window</code> properties and exposes
+                    tracks, selection state, modification state, and its session document.
+                </p>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>editor window</code></td>
+                        </tr>
+                        <tr>
+                            <th>Plural</th>
+                            <td><code>editor windows</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>edtw</code></td>
+                        </tr>
+                        <tr>
+                            <th>Inherits</th>
+                            <td><a href="#window-definition"><code>window</code></a></td>
+                        </tr>
+                        <tr>
+                            <th>Cocoa Class</th>
+                            <td><code>SwiftTagScriptEditorWindow</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>A SwiftTag editor window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="editor-window-elements">
+                <h2 id="editor-window-elements">editor window Elements</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Element</th>
+                            <th>Access</th>
+                            <th>Cocoa Key</th>
+                            <th>Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>track</code></td>
+                            <td>read-write</td>
+                            <td><code>tracks</code></td>
+                            <td>Loaded FLAC tracks in the editor window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="editor-window-properties">
+                <h2 id="editor-window-properties">editor window Properties</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Access</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>document</code></td>
+                            <td><code>docu</code></td>
+                            <td><a href="applescript-document.html"><code>document</code></a></td>
+                            <td>read-only</td>
+                            <td>Editor window document.</td>
+                        </tr>
+                        <tr>
+                            <td><code>modified</code></td>
+                            <td><code>imod</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-only</td>
+                            <td>Does the editor window contain any modified tracks since last save?</td>
+                        </tr>
+                        <tr>
+                            <td><code>selected tracks</code></td>
+                            <td><code>selt</code></td>
+                            <td><code>specifier</code> or <code>track</code> list</td>
+                            <td>read-write</td>
+                            <td>Currently selected tracks in editor window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>window id</code></td>
+                            <td><code>ewid</code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td>Window UUID.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="editor-window-responds-to">
+                <h2 id="editor-window-responds-to">editor window Responds To</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Cocoa Method</th>
+                            <th>Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="applescript-add.html"><code>add</code></a></td>
+                            <td><code>handleAddTracksScriptCommand:</code></td>
+                            <td>Add FLAC files to the editor window.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-save.html"><code>save</code></a></td>
+                            <td><code>handleSaveScriptCommand:</code></td>
+                            <td>Save the editor window.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-close.html"><code>close</code></a></td>
+                            <td><code>handleCloseScriptCommand:</code></td>
+                            <td>Close the editor window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="examples">
+                <h2 id="examples">Examples</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    set frontWindowName to name of front window
+    set editorModified to modified of front editor window
+end tell</code></pre>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    set settingsWindow to open settings window
+    close settingsWindow
+end tell</code></pre>
+            </section>
+
+            <p>
+                Related: <a href="applescript.html">AppleScript overview</a>,
+                <a href="applescript-application.html">application class</a>,
+                <a href="applescript-document.html">document class</a>,
+                <a href="applescript-add.html">add command</a>,
+                <a href="applescript-save.html">save command</a>,
+                <a href="applescript-close.html">close command</a>,
+                <a href="applescript-open-settings-window.html">open settings window command</a>.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
