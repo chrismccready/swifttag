@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Enumerations - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript enumerations</h1>
+            <p>
+                These enumerations define named AppleScript values accepted by SwiftTag
+                commands and settings.
+            </p>
+
+            <section aria-labelledby="enumeration-save-options">
+                <h2 id="enumeration-save-options">save options</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>Standard Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>savo</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enumerator</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>yes</code></td>
+                            <td><code>yes </code></td>
+                            <td>Save the file.</td>
+                        </tr>
+                        <tr>
+                            <td><code>no</code></td>
+                            <td><code>no  </code></td>
+                            <td>Do not save the file.</td>
+                        </tr>
+                        <tr>
+                            <td><code>ask</code></td>
+                            <td><code>ask </code></td>
+                            <td>Ask the user whether or not to save the file.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="enumeration-save-scope-options">
+                <h2 id="enumeration-save-scope-options">save scope options</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>Standard Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>svso</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enumerator</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>all</code></td>
+                            <td><code>altr</code></td>
+                            <td>Save all editable tracks in an editor window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>selected</code></td>
+                            <td><code>sltr</code></td>
+                            <td>Save selected editable tracks in an editor window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    Options for <a href="applescript-application.html#property-track-save-scope">track save scope</a> and
+                    <a href="applescript-application.html#property-track-save-payload">track save payload</a>. <br>
+                    See <a href="../workflows/saving.html#scope-payload">Scope and Payload</a> and 
+                    <a href="../workflows/settings.html#general">Save Settings</a> for more information.
+                </p>
+            </section>
+
+            <section aria-labelledby="enumeration-save-payload-options">
+                <h2 id="enumeration-save-payload-options">save payload options</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>Standard Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>svpo</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enumerator</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>tags only</code></td>
+                            <td><code>tgos</code></td>
+                            <td>Save editable track tags in an editor window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>pictures only</code></td>
+                            <td><code>pcos</code></td>
+                            <td>Save editable track pictures in an editor window.</td>
+                        </tr>
+                        <tr>
+                            <td><code>tags and pictures</code></td>
+                            <td><code>tpos</code></td>
+                            <td>Save editable track tags and pictures in an editor window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    Options for <a href="applescript-application.html#property-track-save-scope">track save scope</a> and
+                    <a href="applescript-application.html#property-track-save-payload">track save payload</a>. <br>
+                    See <a href="../workflows/saving.html#scope-payload">Scope and Payload</a> and 
+                    <a href="../workflows/settings.html#general">Save Settings</a> for more information.
+                </p>
+            </section>
+
+            <section aria-labelledby="enumeration-flac-picture-type">
+                <h2 id="enumeration-flac-picture-type">flac picture type</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>pcty</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enumerator</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>other</code></td>
+                            <td><code>othe</code></td>
+                            <td>A other image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>PNG icon</code></td>
+                            <td><code>pngi</code></td>
+                            <td>The 32x32 PNG icon image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>other icon</code></td>
+                            <td><code>othi</code></td>
+                            <td>The other icon image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>front cover</code></td>
+                            <td><code>frcv</code></td>
+                            <td>A front cover image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>back cover</code></td>
+                            <td><code>bckc</code></td>
+                            <td>A back cover image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>leaflet</code></td>
+                            <td><code>leaf</code></td>
+                            <td>A leaflet image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>media</code></td>
+                            <td><code>medi</code></td>
+                            <td>A media image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>lead artist</code></td>
+                            <td><code>lead</code></td>
+                            <td>A lead artist image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>artist</code></td>
+                            <td><code>arti</code></td>
+                            <td>An artist image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>conductor</code></td>
+                            <td><code>cond</code></td>
+                            <td>A conductor image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>band</code></td>
+                            <td><code>band</code></td>
+                            <td>A band image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>composer</code></td>
+                            <td><code>comp</code></td>
+                            <td>A composer image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>lyricist</code></td>
+                            <td><code>lyri</code></td>
+                            <td>A lyricist image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>location</code></td>
+                            <td><code>locn</code></td>
+                            <td>A recording studio or location image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>session</code></td>
+                            <td><code>sess</code></td>
+                            <td>A recording session image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>performance</code></td>
+                            <td><code>perf</code></td>
+                            <td>A performance image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>capture</code></td>
+                            <td><code>capt</code></td>
+                            <td>A capture from movie or video image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>brightly colored fish</code></td>
+                            <td><code>fish</code></td>
+                            <td>A brightly colored fish image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>illustration</code></td>
+                            <td><code>illu</code></td>
+                            <td>An illustration image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>band logo</code></td>
+                            <td><code>logo</code></td>
+                            <td>A band logo image of the track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>publisher logo</code></td>
+                            <td><code>pubo</code></td>
+                            <td>A publisher logo image of the track.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="enumeration-track-total-key-setting">
+                <h2 id="enumeration-track-total-key-setting">track total key setting</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>ttks</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enumerator</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>TOTALTRACKS</code></td>
+                            <td><code>tott</code></td>
+                            <td>Save track count with tag key TOTALTRACKS.</td>
+                        </tr>
+                        <tr>
+                            <td><code>TRACKTOTAL</code></td>
+                            <td><code>ttot</code></td>
+                            <td>Save track count with tag key TRACKTOTAL.</td>
+                        </tr>
+                        <tr>
+                            <td><code>TOTALTRACKS and TRACKTOTAL</code></td>
+                            <td><code>tatt</code></td>
+                            <td>Save track count with both tag keys TOTALTRACKS and TRACKTOTAL.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    Options for <a href="applescript-application.html#property-track-total-key">track total key</a>. <br>
+                    See <a href="../workflows/settings.html#tags-key-preferences">Key Preferences</a> for more information.
+                </p>
+            </section>
+
+            <section aria-labelledby="enumeration-disc-total-key-setting">
+                <h2 id="enumeration-disc-total-key-setting">disc total key setting</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>dtks</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enumerator</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>TOTALDISCS</code></td>
+                            <td><code>dott</code></td>
+                            <td>Save disc count with tag key TOTALDISCS.</td>
+                        </tr>
+                        <tr>
+                            <td><code>DISCTOTAL</code></td>
+                            <td><code>dtot</code></td>
+                            <td>Save disc count with tag key DISCTOTAL.</td>
+                        </tr>
+                        <tr>
+                            <td><code>TOTALDISCS and DISCTOTAL</code></td>
+                            <td><code>datt</code></td>
+                            <td>Save disc count with both tag keys TOTALDISCS and DISCTOTAL.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    Options for <a href="applescript-application.html#property-disc-total-key">disc total key</a>. <br>
+                    See <a href="../workflows/settings.html#tags-key-preferences">Key Preferences</a> for more information.
+                </p>
+            </section>
+
+            <section aria-labelledby="enumeration-save-notifications-setting">
+                <h2 id="enumeration-save-notifications-setting">save notifications setting</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>snse</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enumerator</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>always</code></td>
+                            <td><code>snda</code></td>
+                            <td>Send save notifications always.</td>
+                        </tr>
+                        <tr>
+                            <td><code>when not frontmost</code></td>
+                            <td><code>sndn</code></td>
+                            <td>Send save notifications when SwiftTag application is not frontmost.</td>
+                        </tr>
+                        <tr>
+                            <td><code>never</code></td>
+                            <td><code>sndv</code></td>
+                            <td>Never send save notifications.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    Options for <a href="applescript-application.html#property-send-save-notifications">send save notifications</a>. <br>
+                    See <a href="../workflows/settings.html#feedback">Send Save Notifications</a> for more information.
+                </p>
+            </section>
+
+            <section aria-labelledby="enumeration-theme-setting">
+                <h2 id="enumeration-theme-setting">theme setting</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>thse</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enumerator</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>light</code></td>
+                            <td><code>lght</code></td>
+                            <td>Use light theme.</td>
+                        </tr>
+                        <tr>
+                            <td><code>dark</code></td>
+                            <td><code>dark</code></td>
+                            <td>Use dark theme.</td>
+                        </tr>
+                        <tr>
+                            <td><code>system</code></td>
+                            <td><code>sysp</code></td>
+                            <td>Use system theme.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    Options for <a href="applescript-application.html#property-theme">theme</a>. <br>
+                    See <a href="../workflows/settings.html#feedback">Theme</a> for more information.
+            </section>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
