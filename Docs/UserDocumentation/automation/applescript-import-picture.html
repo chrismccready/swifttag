@@ -135,11 +135,39 @@
             <section aria-labelledby="examples">
                 <h2 id="examples">Examples</h2>
                 <div class="code-label">AppleScript</div>
-                <pre><code>tell application "SwiftTag"
+                <pre><code>use framework "Foundation"
+use scripting additions
+
+tell application "SwiftTag"
     tell track 1 of front editor window
+        -- given imageData is in memory binary/base64-encoded image data --
         import picture with data imageData with picture type front cover with description "Cover"
+
+        -- move a picture from one type to another --
+        set leafletPicture to first picture whose picture type is leaflet
+        set leafletPictureData to data of leafletPicture
+        set mediaPicture to import picture leafletPictureData with picture type media with description "Leaflet Media"
+        delete leafletPicture
+
+        -- import from a file path --
+        set filePath to "/path/to/image.jpg"
+        set newLeafletPicture to import picture (my getBase64EncodedData from filePath) with picture type leaflet with description "New Leaflet"
     end tell
-end tell</code></pre>
+end tell
+
+-- Base64 encode file data for AppleScript friendly binary data conversion
+on getBase64EncodedData from filePath
+    try
+        set fileURL to current application's |NSURL|'s fileURLWithPath:filePath
+        set fileData to current application's NSData's dataWithContentsOfURL:fileURL
+        if fileData is missing value then
+            error "ERROR: Could not read data from file. Check the path."
+        end if
+        return (fileData's base64EncodedStringWithOptions:0) as text
+    on error errorMessage number errorNumber
+        error "ERROR: Failed to get byte data. " & errorMessage & " (" & errorNumber & ")"
+    end try
+end getBase64EncodedData</code></pre>
             </section>
 
             <p>

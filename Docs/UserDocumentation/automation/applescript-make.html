@@ -129,15 +129,28 @@
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
     tell track 1 of front editor window
-        make new tag at end of tags with properties {key:"COMMENT", value:"Reviewed"}
+        -- Create a new custom tag --
+        set newTag to make new tag with properties {key:"TEST", value:"This is a test"}
+        
+        -- Create a tag that matches a defined track property --
+        make new tag with properties {key:"COMMENT", value:"Reviewed"}
+        -- Which is the same as --
+        set comment to "Reviewed"
     end tell
 end tell</code></pre>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
-    tell track 1 of front editor window
-        make new picture at end of pictures with data imageData with properties {picture type:front cover}
+    set newWindow to make new editor window
+    tell newWindow
+        set newWindowBounds to bounds
+        set bounds to {x: (x of newWindowBounds) + 100, y: (y of newWindowBounds), width: 1100, height: 900}
     end tell
 end tell</code></pre>
+                <aside class="callout">
+                    Due to AppleScript's binary data typing limitations, use 
+                    <a href="applescript-import-picture.html"><code>import picture</code></a> 
+                    command instead of <code>make with data</code> for pictures.
+                </aside>
             </section>
 
             <p>
