@@ -181,6 +181,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessMakesTrackPicturesFromBase64Data() throws {
+        try scenarioAppleScriptHarnessMakesTrackPicturesFromBase64Data()
+    }
+
+    @MainActor
     func testAppleScriptHarnessRestoresTrackStatusAfterBase64PictureImport() throws {
         try scenarioAppleScriptHarnessRestoresTrackStatusAfterBase64PictureImport()
     }

@@ -1256,6 +1256,52 @@ class SwiftTagUITestCase: XCTestCase {
         ])
     }
 
+    @MainActor
+    func scenarioAppleScriptHarnessMakesTrackPicturesFromBase64Data() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let testPNGData =
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO3ZbZ0AAAAASUVORK5CYII="
+        let app = try launchApp(importFixture: true)
+        defer {
+            app.terminate()
+        }
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell first track of front editor window
+                    set testPNGData to "\(testPNGData)"
+                    set pictureCountBeforeMake to count of pictures
+                    set propertyDataPicture to make new picture with properties {data:testPNGData, picture type:leaflet, description:"Property Data Leaflet"}
+                    set contentsDataPicture to make new picture with data testPNGData with properties {picture type:illustration, description:"Contents Data Illustration"}
+                    return (((count of pictures) - pictureCountBeforeMake) as text) & linefeed & (picture type of propertyDataPicture as text) & linefeed & (description of propertyDataPicture) & linefeed & (MIME type of propertyDataPicture) & linefeed & (((id of propertyDataPicture) is missing value) as text) & linefeed & (picture type of contentsDataPicture as text) & linefeed & (description of contentsDataPicture) & linefeed & (MIME type of contentsDataPicture) & linefeed & (((id of contentsDataPicture) is missing value) as text)
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, [
+            "2",
+            "leaflet",
+            "Property Data Leaflet",
+            "image/png",
+            "false",
+            "illustration",
+            "Contents Data Illustration",
+            "image/png",
+            "false"
+        ])
+    }
+
     func scenarioAppleScriptHarnessRestoresTrackStatusAfterBase64PictureImport() throws {
         try requireAppleScriptHarnessEnabled()
 

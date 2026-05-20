@@ -1993,6 +1993,12 @@ final class SwiftTagAppleScriptDataCoercions: NSObject {
             toConvertFrom: NSAppleEventDescriptor.self,
             to: NSData.self
         )
+        NSScriptCoercionHandler.shared().registerCoercer(
+            self,
+            selector: #selector(coerceString(_:toClass:)),
+            toConvertFrom: NSString.self,
+            to: NSData.self
+        )
     }
 
     @objc(coerceAppleEventDescriptor:toClass:)
@@ -2001,7 +2007,46 @@ final class SwiftTagAppleScriptDataCoercions: NSObject {
             return nil
         }
 
+        if let stringValue = descriptor.stringValue,
+           let decodedData = base64DecodedData(from: stringValue) {
+            return decodedData as NSData
+        }
+
+        if let stringValue = String(data: descriptor.data, encoding: .utf8),
+           let decodedData = base64DecodedData(from: stringValue) {
+            return decodedData as NSData
+        }
+
         return descriptor.data as NSData
+    }
+
+    @objc(coerceString:toClass:)
+    static func coerceString(_ value: Any, toClass: AnyClass) -> Any? {
+        guard let string = value as? NSString,
+              let data = base64DecodedData(from: string as String) else {
+            return nil
+        }
+
+        return data as NSData
+    }
+
+    private static func base64DecodedData(from rawValue: String) -> Data? {
+        let compactValue = rawValue
+            .components(separatedBy: .whitespacesAndNewlines)
+            .joined()
+        guard !compactValue.isEmpty,
+              compactValue.count.isMultiple(of: 4) else {
+            return nil
+        }
+
+        let allowedCharacters = CharacterSet(
+            charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+        )
+        guard compactValue.rangeOfCharacter(from: allowedCharacters.inverted) == nil else {
+            return nil
+        }
+
+        return Data(base64Encoded: compactValue)
     }
 }
 
@@ -2049,7 +2094,7 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
     static func fromImportPictureCommand(data rawData: Any?, arguments: [AnyHashable: Any]) throws -> Self {
         let namedDataValue = value(
             in: arguments,
-            matching: ["picture", "picturedata", "data", "pdat", "pcda", "tdta"]
+            matching: ["picture", "picturedata", "data", "contents", "objectdata", "pdat", "pcda", "tdta"]
         )
         let rawDataCandidates = (rawData as? [Any?]) ?? [rawData]
         let rawDataValue = firstCoercibleDataValue(in: [namedDataValue] + rawDataCandidates)
@@ -2064,7 +2109,7 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
         )
         let descriptionEntry = entry(
             in: arguments,
-            matching: ["description", "withdescription", "picturedescription", "tdsc"]
+            matching: ["description", "withdescription", "picturedescription", "objectdescription", "tdsc"]
         )
 
         return try make(
@@ -2103,7 +2148,7 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
         )
         let rawDataValue = value(
             in: dictionary,
-            matching: ["data", "picturedata", "pdat", "pcda", "tdta"]
+            matching: ["data", "picturedata", "contents", "objectdata", "pdat", "pcda", "tdta"]
         ) ?? contentsValue
         let mimeTypeValue = value(
             in: dictionary,
@@ -2111,7 +2156,7 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
         )
         let descriptionEntry = entry(
             in: dictionary,
-            matching: ["description", "picturedescription", "tdsc"]
+            matching: ["description", "picturedescription", "objectdescription", "tdsc"]
         )
 
         return try make(
@@ -2242,32 +2287,49 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
         }
     }
 
-    private static func coercedDataValue(from rawValue: Any?) -> Data? {
+    fileprivate static func coercedDataValue(from rawValue: Any?) -> Data? {
         switch rawValue {
         case let value as Data:
-            return value
+            return imageDataOrDecodedBase64Data(from: value)
         case let value as NSData:
-            return value as Data
+            return imageDataOrDecodedBase64Data(from: value as Data)
         case let value as String:
             return base64DecodedData(from: value)
         case let value as NSString:
             return base64DecodedData(from: value as String)
         case let descriptor as NSAppleEventDescriptor:
             if descriptor.descriptorType == SwiftTagAppleScriptDescriptorType.data {
-                return descriptor.data as Data
+                return imageDataOrDecodedBase64Data(from: descriptor.data as Data)
             }
             if let stringValue = descriptor.stringValue,
                let data = base64DecodedData(from: stringValue) {
                 return data
             }
-            return descriptor
+            guard let coercedData = descriptor
                 .coerce(toDescriptorType: SwiftTagAppleScriptDescriptorType.data)?
-                .data as Data?
+                .data as Data? else {
+                return nil
+            }
+            return imageDataOrDecodedBase64Data(from: coercedData)
         case nil:
             return nil
         default:
             return nil
         }
+    }
+
+    private static func imageDataOrDecodedBase64Data(from data: Data) -> Data {
+        let specifications = PictureDataUtilities.computedSpecifications(from: data)
+        guard specifications.width <= 0 || specifications.height <= 0 else {
+            return data
+        }
+
+        guard let stringValue = String(data: data, encoding: .utf8),
+              let decodedData = base64DecodedData(from: stringValue) else {
+            return data
+        }
+
+        return decodedData
     }
 
     private static func base64DecodedData(from rawValue: String) -> Data? {
@@ -2763,9 +2825,9 @@ final class SwiftTagScriptPicture: NSObject {
                 try setDetachedPictureType(value)
             case "mimeType":
                 try setDetachedMimeType(value)
-            case "pictureDescription":
+            case "pictureDescription", "objectDescription", "description":
                 try updateDescription(scriptString(from: value) ?? "")
-            case "data":
+            case "data", "contents":
                 try updateData(value)
             case "width", "height", "colorDepth", "colors":
                 return
@@ -2848,18 +2910,7 @@ final class SwiftTagScriptPicture: NSObject {
     }
 
     private func scriptData(from rawValue: Any?) -> Data? {
-        switch rawValue {
-        case let value as Data:
-            return value
-        case let value as NSData:
-            return value as Data
-        case let descriptor as NSAppleEventDescriptor:
-            return descriptor.data as Data
-        case nil:
-            return nil
-        default:
-            return nil
-        }
+        SwiftTagAppleScriptPicturePayload.coercedDataValue(from: rawValue)
     }
 
     @objc(width)
@@ -2912,6 +2963,11 @@ final class SwiftTagScriptPicture: NSObject {
                 _ = NSScriptCommand.current()?.fail(error)
             }
         }
+    }
+
+    @objc(scriptingSpecifierDescriptor)
+    var scriptingSpecifierDescriptor: NSAppleEventDescriptor? {
+        objectSpecifier?.descriptor
     }
 
     override func scriptingValue(for objectSpecifier: NSScriptObjectSpecifier) -> Any? {
@@ -4165,7 +4221,7 @@ final class SwiftTagScriptTrack: NSObject {
             forSessionID: sessionIDValue,
             trackID: trackIDValue
         )
-        return pictures[safe: pictureIndex]
+        return SwiftTagScriptPicture(sessionID: sessionIDValue, trackID: trackIDValue, pictureIndex: pictureIndex)
     }
 
     fileprivate func importPicture(using command: NSScriptCommand) throws -> SwiftTagScriptPicture? {
@@ -4178,7 +4234,7 @@ final class SwiftTagScriptTrack: NSObject {
             forSessionID: sessionIDValue,
             trackID: trackIDValue
         )
-        return pictures[safe: pictureIndex]
+        return SwiftTagScriptPicture(sessionID: sessionIDValue, trackID: trackIDValue, pictureIndex: pictureIndex)
     }
 
     fileprivate func makeTag(using command: NSCreateCommand) throws -> SwiftTagScriptTag? {
@@ -4201,21 +4257,34 @@ final class SwiftTagScriptTrack: NSObject {
             return rawDictionary
         }
 
+        if let rawDictionary = command.evaluatedArguments?["KeyDictionary"] as? NSDictionary {
+            return rawDictionary
+        }
+
         if let descriptor = command.arguments?["KeyDictionary"] as? NSAppleEventDescriptor,
            descriptor.isRecordDescriptor {
-            var dictionary: [AnyHashable: Any] = [:]
-            for index in 1...descriptor.numberOfItems {
-                let keyword = descriptor.keywordForDescriptor(at: index)
-                guard keyword != 0,
-                      let value = descriptor.atIndex(index) else {
-                    continue
-                }
-                dictionary[NSNumber(value: keyword)] = value
-            }
-            return dictionary as NSDictionary
+            return creationProperties(from: descriptor)
+        }
+
+        if let descriptor = command.evaluatedArguments?["KeyDictionary"] as? NSAppleEventDescriptor,
+           descriptor.isRecordDescriptor {
+            return creationProperties(from: descriptor)
         }
 
         return command.resolvedKeyDictionary as NSDictionary
+    }
+
+    private func creationProperties(from descriptor: NSAppleEventDescriptor) -> NSDictionary {
+        var dictionary: [AnyHashable: Any] = [:]
+        for index in 1...descriptor.numberOfItems {
+            let keyword = descriptor.keywordForDescriptor(at: index)
+            guard keyword != 0,
+                  let value = descriptor.atIndex(index) else {
+                continue
+            }
+            dictionary[NSNumber(value: keyword)] = value
+        }
+        return dictionary as NSDictionary
     }
 
     private func importPictureArguments(from command: NSScriptCommand) -> [AnyHashable: Any] {

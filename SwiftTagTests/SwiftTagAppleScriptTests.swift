@@ -1904,6 +1904,87 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func pictureMakePayloadAcceptsBase64TextDataDescriptor() throws {
+        let pictureData = try #require(Self.singlePixelPNGData())
+        let base64Data = try #require(pictureData.base64EncodedString().data(using: .utf8))
+        let dataDescriptor = try #require(
+            NSAppleEventDescriptor(
+                descriptorType: Self.fourCharCode("tdta").uint32Value,
+                data: base64Data
+            )
+        )
+        let typeDescriptor = NSAppleEventDescriptor(
+            enumCode: Self.fourCharCode("leaf").uint32Value
+        )
+
+        let payload = try SwiftTagAppleScriptPicturePayload.from(
+            properties: [
+                Self.fourCharCode("pcda"): dataDescriptor,
+                Self.fourCharCode("pcty"): typeDescriptor,
+                Self.fourCharCode("tdsc"): "New Leaflet"
+            ] as NSDictionary,
+            contentsValue: nil
+        )
+
+        #expect(payload.data == pictureData)
+        #expect(payload.type == 5)
+        #expect(payload.description == "New Leaflet")
+        #expect(payload.mimeType == "image/png")
+    }
+
+    @MainActor
+    @Test
+    func pictureMakePayloadAcceptsCocoaScriptingContentsProperties() throws {
+        let pictureData = try #require(Self.singlePixelPNGData())
+        let base64Data = try #require(pictureData.base64EncodedString().data(using: .utf8))
+        let dataDescriptor = try #require(
+            NSAppleEventDescriptor(
+                descriptorType: Self.fourCharCode("tdta").uint32Value,
+                data: base64Data
+            )
+        )
+
+        let payload = try SwiftTagAppleScriptPicturePayload.from(
+            properties: [
+                "contents": dataDescriptor,
+                "pictureType": Self.fourCharCode("leaf"),
+                "objectDescription": "New Leaflet"
+            ] as NSDictionary,
+            contentsValue: nil
+        )
+
+        #expect(payload.data == pictureData)
+        #expect(payload.type == 5)
+        #expect(payload.description == "New Leaflet")
+        #expect(payload.mimeType == "image/png")
+    }
+
+    @MainActor
+    @Test
+    func detachedPictureAcceptsCocoaScriptingPropertyAliases() throws {
+        let pictureData = try #require(Self.singlePixelPNGData())
+        let base64Data = try #require(pictureData.base64EncodedString().data(using: .utf8))
+        let dataDescriptor = try #require(
+            NSAppleEventDescriptor(
+                descriptorType: Self.fourCharCode("tdta").uint32Value,
+                data: base64Data
+            )
+        )
+        let picture = SwiftTagScriptPicture()
+
+        picture.setValue(Self.fourCharCode("leaf"), forKey: "pictureType")
+        picture.setValue("New Leaflet", forKey: "objectDescription")
+        picture.setValue(dataDescriptor, forKey: "contents")
+
+        let payload = try #require(picture.insertionPayload)
+        #expect(payload.data == pictureData)
+        #expect(payload.type == 5)
+        #expect(payload.description == "New Leaflet")
+        #expect(payload.mimeType == "image/png")
+    }
+
+    @MainActor
+    @Test
     func pictureImportPayloadDefaultsToFrontCoverDedupesAndAppends() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()

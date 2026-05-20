@@ -737,7 +737,7 @@
             <property name="MIME type" code="mime" type="text" access="r" in-properties="yes" description="The format of the image data. Accepted when making or importing a new picture as a hint, but SwiftTag uses the value derived from image data when it can be determined.">
                 <cocoa key="mimeType"/>
             </property>
-            <property name="description" code="tdsc" type="text" access="rw" description="A UTF-8 text string describing the image.">
+            <property name="description" code="tdsc" type="text" access="rw" in-properties="yes" description="A UTF-8 text string describing the image. Accepted when making or importing a new picture.">
                 <cocoa key="pictureDescription"/>
             </property>
             <property name="width" code="widt" access="r" in-properties="yes" description="The image width dimension in pixels. SwiftTag derives this value from image data when making or importing a picture.">
@@ -760,7 +760,7 @@
                 <type type="missing value"/>
                 <cocoa key="colors"/>
             </property>
-            <property name="data" code="pcda" type="data" access="rw" in-properties="yes" description="The raw image data in bytes. Accepted when making or importing a new picture; changing it derives MIME type and dimensions from the new data.">
+            <property name="data" code="pcda" type="any" access="rw" in-properties="yes" description="The raw image data in bytes, or a base64 encoded text string when making or updating a picture. Changing it derives MIME type and dimensions from the new data.">
                 <cocoa key="data"/>
             </property>
         </class>
