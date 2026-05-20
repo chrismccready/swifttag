@@ -146,18 +146,32 @@ end tell</code></pre>
         set bounds to {x: (x of newWindowBounds) + 100, y: (y of newWindowBounds), width: 1100, height: 900}
     end tell
 end tell</code></pre>
-                <aside class="callout">
-                    Due to AppleScript's binary data typing limitations, use 
-                    <a href="applescript-import-picture.html"><code>import picture</code></a> 
-                    command instead of <code>make with data</code> for pictures.
-                </aside>
+                <div class="code-label">AppleScript</div>
+                <pre><code>use framework "Foundation"
+use scripting additions
+
+tell application "SwiftTag"
+    tell track 1 of front editor window
+        set filePath to "/path/to/image.jpg"
+        set imageData to my getBase64EncodedData from filePath
+        set newCover to make new picture with properties {data:imageData, picture type:front cover, description:"Cover"}
+    end tell
+end tell
+
+on getBase64EncodedData from filePath
+    set fileURL to current application's |NSURL|'s fileURLWithPath:filePath
+    set fileData to current application's NSData's dataWithContentsOfURL:fileURL
+    if fileData is missing value then
+        error "Could not read data from file."
+    end if
+    return (fileData's base64EncodedStringWithOptions:0) as text
+end getBase64EncodedData</code></pre>
             </section>
 
             <p>
                 Related: <a href="applescript.html">AppleScript overview</a>,
                 <a href="applescript-application.html">application class</a>,
                 <a href="applescript-track.html">track class</a>,
-                <a href="applescript-import-picture.html">import picture command</a>,
                 <a href="../workflows/editing-tags.html">Edit Tags</a>,
                 <a href="../workflows/album-art.html">Manage Album Art</a>.
             </p>

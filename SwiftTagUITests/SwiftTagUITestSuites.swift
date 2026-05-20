@@ -161,8 +161,8 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessImportsTrackPictureFromExistingData() throws {
-        try scenarioAppleScriptHarnessImportsTrackPictureFromExistingData()
+    func testAppleScriptHarnessMakesTrackPictureFromExistingData() throws {
+        try scenarioAppleScriptHarnessMakesTrackPictureFromExistingData()
     }
 
     @MainActor
@@ -176,8 +176,8 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data() throws {
-        try scenarioAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data()
+    func testAppleScriptHarnessMakesTrackPictureFromFoundationBase64Data() throws {
+        try scenarioAppleScriptHarnessMakesTrackPictureFromFoundationBase64Data()
     }
 
     @MainActor
@@ -186,8 +186,8 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
-    func testAppleScriptHarnessRestoresTrackStatusAfterBase64PictureImport() throws {
-        try scenarioAppleScriptHarnessRestoresTrackStatusAfterBase64PictureImport()
+    func testAppleScriptHarnessRestoresTrackStatusAfterBase64PictureMake() throws {
+        try scenarioAppleScriptHarnessRestoresTrackStatusAfterBase64PictureMake()
     }
 
     @MainActor

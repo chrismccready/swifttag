@@ -252,24 +252,6 @@
             </result>
         </command>
 
-        <command name="import picture" code="SwTGimpt" description="Import image data as a track picture.">
-            <cocoa class="SwiftTagImportPictureCommand"/>
-            <direct-parameter type="any" optional="yes" description="The image data to import. SwiftTag validates that it resolves to binary image data."/>
-            <parameter name="with data" code="pdat" type="any" optional="yes" description="The image data to import. SwiftTag validates that it resolves to binary image data.">
-                <cocoa key="PictureData"/>
-            </parameter>
-            <parameter name="with picture type" code="pcty" type="flac picture type" optional="yes" description="The FLAC picture type. Defaults to front cover when omitted.">
-                <cocoa key="PictureType"/>
-            </parameter>
-            <parameter name="with description" code="tdsc" type="text" optional="yes" description="The picture description. If omitted, SwiftTag preserves an existing duplicate description or uses the default description for the picture type.">
-                <cocoa key="Description"/>
-            </parameter>
-            <parameter name="with MIME type" code="mime" type="text" optional="yes" description="An optional MIME type hint. SwiftTag prefers the MIME type derived from the image data when it can be determined.">
-                <cocoa key="MimeType"/>
-            </parameter>
-            <result type="picture" description="The imported or matched track picture."/>
-        </command>
-
         <command name="open settings window" code="SwTGoswn" description="Open the SwiftTag settings window, or bring it frontmost if it is already open.">
             <result type="settings window" description="The SwiftTag settings window."/>
         </command>
@@ -377,9 +359,6 @@
             </responds-to>
             <responds-to command="make">
                 <cocoa method="handleMakeScriptCommand:"/>
-            </responds-to>
-            <responds-to command="import picture">
-                <cocoa method="handleImportPictureScriptCommand:"/>
             </responds-to>
             <responds-to command="quit">
                 <cocoa method="handleQuitScriptCommand:"/>
@@ -711,9 +690,6 @@
             </property>
             <responds-to command="make">
                 <cocoa method="handleMakeScriptCommand:"/>
-            </responds-to>
-            <responds-to command="import picture">
-                <cocoa method="handleImportPictureScriptCommand:"/>
             </responds-to>
             <responds-to command="delete">
                 <cocoa method="handleDeleteScriptCommand:"/>

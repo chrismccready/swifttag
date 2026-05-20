@@ -1889,11 +1889,11 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
-    func pictureImportPayloadAcceptsBase64TextData() throws {
+    func pictureMakePayloadAcceptsBase64TextData() throws {
         let pictureData = try #require(Self.singlePixelPNGData())
-        let payload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
-            data: pictureData.base64EncodedString(),
-            arguments: ["Description": "Base64 Picture"]
+        let payload = try SwiftTagAppleScriptPicturePayload.from(
+            properties: ["Description": "Base64 Picture"] as NSDictionary,
+            contentsValue: pictureData.base64EncodedString()
         )
 
         #expect(payload.data == pictureData)
@@ -1985,7 +1985,7 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
-    func pictureImportPayloadDefaultsToFrontCoverDedupesAndAppends() throws {
+    func pictureMakePayloadDefaultsToFrontCoverDedupesAndAppends() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()
         defer {
@@ -2008,7 +2008,7 @@ struct SwiftTagAppleScriptTests {
                         data: firstPictureData
                     ).withComputedPictureMetadata()
                 ],
-                sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-import-picture.flac")
+                sourceFileURL: URL(fileURLWithPath: "/tmp/SwiftTagAppleScriptTests-make-picture.flac")
             )
         ]
 
@@ -2061,9 +2061,9 @@ struct SwiftTagAppleScriptTests {
         let firstPicture = try #require(scriptTrack.pictures.first)
         let firstPictureDataFromScript = try #require(firstPicture.data)
 
-        let duplicateWithoutDescriptionPayload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
-            data: firstPictureDataFromScript,
-            arguments: [:]
+        let duplicateWithoutDescriptionPayload = try SwiftTagAppleScriptPicturePayload.from(
+            properties: [:] as NSDictionary,
+            contentsValue: firstPictureDataFromScript
         )
         let duplicateWithoutDescriptionIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
             duplicateWithoutDescriptionPayload,
@@ -2083,9 +2083,9 @@ struct SwiftTagAppleScriptTests {
         #expect(duplicateWithoutDescription.pictureDescription == "Original")
         #expect(duplicateWithoutDescription.objectSpecifier != nil)
 
-        let duplicateWithDescriptionPayload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
-            data: firstPictureDataFromScript,
-            arguments: ["Description": "Edited from import picture"]
+        let duplicateWithDescriptionPayload = try SwiftTagAppleScriptPicturePayload.from(
+            properties: ["Description": "Edited from make picture"] as NSDictionary,
+            contentsValue: firstPictureDataFromScript
         )
         let duplicateWithDescriptionIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
             duplicateWithDescriptionPayload,
@@ -2100,15 +2100,16 @@ struct SwiftTagAppleScriptTests {
         )
 
         #expect(scriptTrack.countOfPictures == 1)
-        #expect(viewModel.trackItems.first?.flacPictureRecords.first?.description == "Edited from import picture")
-        #expect(duplicateWithDescription.pictureDescription == "Edited from import picture")
+        #expect(viewModel.trackItems.first?.flacPictureRecords.first?.description == "Edited from make picture")
+        #expect(duplicateWithDescription.pictureDescription == "Edited from make picture")
 
-        let appendedPayload = try SwiftTagAppleScriptPicturePayload.fromImportPictureCommand(
-            data: secondPictureData as NSData,
-            arguments: [
+        let appendedPayload = try SwiftTagAppleScriptPicturePayload.from(
+            properties: [
+                "data": secondPictureData as NSData,
                 "MimeType": "image/jpeg",
                 "Description": "Second front"
-            ]
+            ] as NSDictionary,
+            contentsValue: nil
         )
         let appendedIndex = try SwiftTagAppleScriptController.shared.upsertPicture(
             appendedPayload,
@@ -2124,7 +2125,7 @@ struct SwiftTagAppleScriptTests {
 
         #expect(scriptTrack.countOfPictures == 2)
         #expect(viewModel.trackItems.first?.flacPictureRecords.map(\.description) == [
-            "Edited from import picture",
+            "Edited from make picture",
             "Second front"
         ])
         #expect(viewModel.trackItems.first?.flacPictureRecords.last?.mimeType == "image/png")
@@ -2138,8 +2139,17 @@ struct SwiftTagAppleScriptTests {
     func scriptClassDescriptionsSupportPictureMakeDataPath() throws {
         let track = SwiftTagScriptTrack(sessionID: UUID(), trackID: UUID())
         let makeSelector = NSSelectorFromString("handleMakeScriptCommand:")
+        let importPictureSelector = NSSelectorFromString("handleImportPictureScriptCommand:")
 
         #expect(track.responds(to: makeSelector))
+        #expect(!track.responds(to: importPictureSelector))
+        #expect(!NSApplication.shared.responds(to: importPictureSelector))
+        #expect(
+            NSScriptSuiteRegistry.shared().commandDescription(
+                withAppleEventClass: Self.fourCharCode("SwTG").uint32Value,
+                andAppleEventCode: Self.fourCharCode("impt").uint32Value
+            ) == nil
+        )
 
         let commandDescription = try #require(
             NSScriptSuiteRegistry.shared().commandDescription(

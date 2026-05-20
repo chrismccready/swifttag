@@ -988,7 +988,7 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
-    func scenarioAppleScriptHarnessImportsTrackPictureFromExistingData() throws {
+    func scenarioAppleScriptHarnessMakesTrackPictureFromExistingData() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(
@@ -1015,11 +1015,11 @@ class SwiftTagUITestCase: XCTestCase {
                         end repeat
                         set firstCover to item 1 of (every picture whose picture type is front cover)
                         set frontCoverPictureData to data of firstCover
-                        set testPicture to import picture frontCoverPictureData with picture type front cover
-                        set countAfterDuplicateImport to count of pictures
+                        set testPicture to make new picture with properties {data:frontCoverPictureData, picture type:front cover}
+                        set countAfterDuplicateMake to count of pictures
                         set testPictureDescriptionBeforeEdit to description of testPicture
-                        set editedPicture to import picture with data frontCoverPictureData with picture type front cover with description "AppleScript Edited Front"
-                        return (countAfterDuplicateImport as text) & linefeed & ((count of pictures) as text) & linefeed & testPictureDescriptionBeforeEdit & linefeed & (description of editedPicture) & linefeed & (MIME type of editedPicture)
+                        set editedPicture to make new picture with properties {data:frontCoverPictureData, picture type:front cover, description:"AppleScript Edited Front"}
+                        return (countAfterDuplicateMake as text) & linefeed & ((count of pictures) as text) & linefeed & testPictureDescriptionBeforeEdit & linefeed & (description of editedPicture) & linefeed & (MIME type of editedPicture)
                     end tell
                 end tell
             end tell
@@ -1070,8 +1070,8 @@ class SwiftTagUITestCase: XCTestCase {
                             delay 0.1
                         end repeat
                         set deletePictureData to "\(deletePictureDataBase64)"
-                        import picture deletePictureData with picture type back cover with description "delete me"
-                        import picture deletePictureData with picture type front cover with description "delete me"
+                        make new picture with properties {data:deletePictureData, picture type:back cover, description:"delete me"}
+                        make new picture with properties {data:deletePictureData, picture type:front cover, description:"delete me"}
                         set countBeforeDelete to count of pictures
                         set firstCover to item 1 of (every picture whose picture type is front cover)
                         set firstCoverDescription to description of firstCover
@@ -1148,8 +1148,8 @@ class SwiftTagUITestCase: XCTestCase {
                                 if (count of pictures) > 0 then exit repeat
                                 delay 0.1
                             end repeat
-                            import picture (my getByteDataFrom("\(keepImageURL.path)")) with picture type front cover with description "keep front"
-                            import picture (my getByteDataFrom("\(deleteImageURL.path)")) with picture type front cover with description "delete front"
+                            make new picture with properties {data:(my getByteDataFrom("\(keepImageURL.path)")), picture type:front cover, description:"keep front"}
+                            make new picture with properties {data:(my getByteDataFrom("\(deleteImageURL.path)")), picture type:front cover, description:"delete front"}
                             set originalBefore to id of first picture whose description is "UI Test Single Front Cover"
                             set keepBefore to id of first picture whose description is "keep front"
                             delete (first picture whose description is "delete front")
@@ -1185,7 +1185,7 @@ class SwiftTagUITestCase: XCTestCase {
         XCTAssertEqual(outputLines[4], "2")
     }
 
-    func scenarioAppleScriptHarnessImportsTrackPictureFromFoundationBase64Data() throws {
+    func scenarioAppleScriptHarnessMakesTrackPictureFromFoundationBase64Data() throws {
         try requireAppleScriptHarnessEnabled()
 
         let imageURL = FileManager.default.temporaryDirectory
@@ -1225,7 +1225,7 @@ class SwiftTagUITestCase: XCTestCase {
                         tell first track
                             set imagePath to "\(imageURL.path)"
                             set newPictureData to my getByteDataFrom(imagePath)
-                            set newPicture to import picture newPictureData with picture type front cover with description "New Picture"
+                            set newPicture to make new picture with properties {data:newPictureData, picture type:front cover, description:"New Picture"}
                             return ((count of pictures) as text) & linefeed & (picture type of newPicture as text) & linefeed & (description of newPicture) & linefeed & (MIME type of newPicture)
                         end tell
                     end tell
@@ -1302,7 +1302,7 @@ class SwiftTagUITestCase: XCTestCase {
         ])
     }
 
-    func scenarioAppleScriptHarnessRestoresTrackStatusAfterBase64PictureImport() throws {
+    func scenarioAppleScriptHarnessRestoresTrackStatusAfterBase64PictureMake() throws {
         try requireAppleScriptHarnessEnabled()
 
         let app = try launchApp(
@@ -1336,7 +1336,7 @@ class SwiftTagUITestCase: XCTestCase {
                         copy pool id of originalPicture to originalPicturePoolId
                         copy description of originalPicture to originalPictureDescription
 
-                        set reimportedAsBackCoverPicture to import picture originalPictureData with picture type back cover with description "Reimported Original Picture As Back"
+                        set reimportedAsBackCoverPicture to make new picture with properties {data:originalPictureData, picture type:back cover, description:"Reimported Original Picture As Back"}
                         if (pool id of reimportedAsBackCoverPicture) is not equal to originalPicturePoolId then
                             error "Reimported picture as different type has different pool ID."
                         end if
@@ -1346,7 +1346,7 @@ class SwiftTagUITestCase: XCTestCase {
                         set exportFilePath to (POSIX path of (path to temporary items)) & "SwiftTagUITestBase64RestoreFrontCover.png"
                         my saveBinaryData to exportFilePath given binaryData:originalPictureData
                         set exportedPictureData to my getBinaryData from exportFilePath
-                        set reimportedExportedPicture to import picture exportedPictureData with picture type front cover with description originalPictureDescription
+                        set reimportedExportedPicture to make new picture with properties {data:exportedPictureData, picture type:front cover, description:originalPictureDescription}
                         if (pool id of reimportedExportedPicture) is not equal to originalPicturePoolId then
                             error "Reimported exported picture has different pool ID."
                         end if

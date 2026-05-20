@@ -77,7 +77,7 @@ The documentation should help a new user answer:
   - UI tests cover app workflows, settings, save flow, album art, document behavior, and AppleScript harness flows.
 - Transcripts reviewed:
   - AppleScript support transcripts in `Docs/Plans/Transcripts` were inspected because this task explicitly asked for transcript review.
-  - Key findings came from transcripts around selected tracks, picture IDs, settings windows, `whose its file is ...`, Base64 picture import, empty tag values, and sandbox-limited external `osascript`.
+  - Key findings came from transcripts around selected tracks, picture IDs, settings windows, `whose its file is ...`, Base64 picture creation, empty tag values, and sandbox-limited external `osascript`.
 - Apple documentation lookup:
   - Xcode Documentation Search found Bundle Resources keys `CFBundleHelpBookName`, `CFBundleHelpBookFolder`, `CFAppleHelpAnchor`.
   - Xcode Documentation Search found `NSHelpManager` as AppKit help-display API.
@@ -178,7 +178,6 @@ Current SDEF exposes:
 - Picture elements with IDs, pool IDs, type, MIME type, description, dimensions, colors, and data.
 - Commands:
   - `add`
-  - `import picture`
   - `open settings window`
   - standard `save`, `delete`, `make`, `close`, and related commands
 - Enumerations for:
@@ -198,8 +197,8 @@ Docs should treat `SwiftTag/SwiftTag.sdef` as the AppleScript source of truth.
 - AppleScript transcripts contain user-facing knowledge that should be distilled into stable docs:
   - `selected tracks` returns a list; scripts often need `item 1 of selected tracks`.
   - File comparisons in `whose` filters need syntax like `whose its file is POSIX file ...`.
-  - Importing picture data is most reliable when using Base64 text converted through Foundation data.
-  - `make new picture` is less practical than the custom `import picture` command.
+  - Creating picture data is most reliable when using Base64 text converted through Foundation data.
+  - `make new picture with properties {data:...}` is the supported picture creation path.
   - Setting a tag value to empty string is different from deleting the tag.
   - Picture IDs and pool IDs should be described separately.
   - Settings window can be opened and closed by AppleScript.
@@ -415,7 +414,6 @@ Overview page:
   - `save`
   - `make`
   - `delete`
-  - `import picture`
   - `open settings window`
 - Important properties:
   - `selected tracks`
@@ -441,7 +439,7 @@ Examples page:
 - Create, update, empty, and delete misc tags.
 - Save selected tracks with tags only.
 - Save all tracks with tags and pictures.
-- Import front cover art from Base64 data.
+- Create front cover art from Base64 data.
 - List pictures and read picture IDs/pool IDs.
 - Delete pictures by type or ID.
 - Open and close settings window.
@@ -452,7 +450,7 @@ AppleScript caveats:
 - `selected tracks` is a list.
 - Use `item 1 of selected tracks` before reading scalar track properties from a selection.
 - Use `whose its file is POSIX file "/path/to/file.flac"` for file filters.
-- Use `import picture` for image data import examples.
+- Use `make new picture with properties {data:...}` for image data examples.
 - Prefer Base64 text to pass binary picture data across AppleScript.
 - Empty tag values and deleted tags are different operations.
 - Save commands can write FLAC files; examples must make scope and payload explicit.
@@ -497,7 +495,7 @@ Add use cases that combine app UI steps with links to reference pages:
 - Use read-only import to inspect metadata without writeback.
 - Save a `.swifttag` session before changing source FLAC files.
 - Script a repeatable metadata cleanup through AppleScript.
-- Script picture import through AppleScript.
+- Script picture creation through AppleScript.
 - Recover after source files were moved or externally edited.
 
 ## Dependencies And Constraints
@@ -646,7 +644,7 @@ The save documentation must explicitly state:
 - Check AppleScript docs include:
   - `selected tracks` list caveat
   - `whose its file is ...` file filter caveat
-  - Base64 picture import guidance
+  - Base64 picture creation guidance
   - empty tag versus delete guidance
   - writeback warning on save examples
 

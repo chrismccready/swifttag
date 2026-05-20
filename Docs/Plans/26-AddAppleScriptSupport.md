@@ -27,8 +27,7 @@ In scope:
   - standard `set`
   - standard `quit`
   - custom `add`
-  - custom `import picture`
-  - custom `delete picture`
+  - standard picture creation through `make`
 - Define how script getters/setters map onto the existing SwiftUI session, `TagEditorViewModel`, FLAC import/save flows, and `.swifttag` package metadata.
 - Add targeted automation coverage for terminology shape, command routing, and scriptable value coercion.
 
@@ -108,10 +107,7 @@ Out of scope:
   - `SwiftTagAppleScriptSupport.swift` provides ObjC-visible wrappers and command routing.
   - `SwiftTagScriptPicture` exposes read/query access to track pictures plus writable picture
     descriptions and picture data.
-  - `track` picture import uses a custom `import picture <data> ...` command, with
-    `import picture with data ...` also accepted, because real `osascript` still rejects binary
-    `data` in the Standard Suite `make new picture ... with properties` path before SwiftTag
-    receives the command, even after `picture.data` is writable.
+  - Track picture creation uses Standard Suite `make new picture with properties {data:...}`.
 
 ## Confirmed Decisions
 - Standard terminology should use a pruned copy of Cocoa's Standard Suite rather than relying on an in-bundle `xi:include` at runtime.
@@ -135,20 +131,19 @@ Out of scope:
 - Scripted picture `description` mutations also refresh album-art references so `AlbumArtPictureMetadata.descriptionText()` and `metadataForSlot` reflect the updated value.
 - Picture `data` is exposed as a writable SDEF `data` value type backed by `NSData` plus a
   `scriptingDataDescriptor`, avoiding Swift `Data` Apple event coercion failures.
-- Track picture creation uses:
+- Track picture creation uses Standard Suite `make`:
 
 ```applescript
-import picture <data> with picture type <flac picture type> with description <text>
-import picture with data <data> with picture type <flac picture type> with description <text>
+make new picture with properties {data:<data>, picture type:<flac picture type>, description:<text>}
 ```
 
-- Direct data and `with data` are declared as `any` so SwiftTag receives the raw binary descriptor
-  and performs image validation itself.
+- Picture `data` is declared as `any` so SwiftTag receives Base64 text or a data descriptor and
+  performs image validation itself.
 - `with picture type` is optional and defaults to `front cover`.
 - `with description` is optional.
 - `with MIME type` is optional as a hint; MIME type, dimensions, color depth, and colors derived
   from image data override provided values.
-- Duplicate import of same track + picture type + image data returns the matching picture without
+- Duplicate creation of same track + picture type + image data returns the matching picture without
   adding another record; explicit changed description updates that matching target-track record.
 
 ## Apple Documentation Review Update
@@ -223,8 +218,8 @@ import picture with data <data> with picture type <flac picture type> with descr
   - or it should be read-only despite the current prototype text
 - `swift tag` currently implies a generic document metadata collection, but the current manifest only has `Author`.
 - Many requested typed track properties are currently free-form text tags, so naive coercion could lose original formatting or make empty values impossible.
-- Custom `import picture ...` behavior must stay distinct from Standard Suite `make`,
-  which remains unreliable for binary picture data in real AppleScript execution.
+- Picture creation must continue to route through Standard Suite `make` so app terminology stays
+  aligned with Cocoa scripting.
 - Picture-slot list properties are unresolved beyond `front cover`, and write behavior for those lists is not yet specified.
 - `add` without an explicit target window needs deterministic routing behavior when no editor window is frontmost.
 
@@ -241,10 +236,8 @@ import picture with data <data> with picture type <flac picture type> with descr
 - Decide whether `track URL` is writable.
 - Decide whether `swift tag` remains `Author`-only in v1 or expands the `.swifttag` manifest schema.
 - Decide which settings belong in the initial scripting surface.
-- Use finalized `import picture <data> with picture type <type> with description <text>` syntax for
-  scripted picture import. Keep `import picture with data <data> ...` supported for explicit named
-  data scripts.
-- Decide exact payload syntax for `delete picture`.
+- Use finalized `make new picture with properties {data:..., picture type:..., description:...}`
+  syntax for scripted picture creation.
 - Decide which picture-slot list properties ship in v1 beyond `front cover`.
 
 2. Build scriptable wrapper layer
@@ -283,7 +276,7 @@ import picture with data <data> with picture type <flac picture type> with descr
 - Add picture collection tests for count, properties, `whose picture type is front cover`, and description mutation.
 - Add album-art refresh regression tests so scripted picture description edits update current metadata and preserve duplicate picture references.
 - Add raw picture data tests for descriptor type/bytes and real `/usr/bin/osascript` access to `data of firstCover`.
-- Add `import picture` tests for default front-cover type, duplicate detection, explicit
+- Add `make new picture` tests for default front-cover type, duplicate detection, explicit
   description update, and data-derived MIME/dimensions.
 - Add targeted command-routing tests for `add`, `save`, `close`, and `quit`.
 - Add at least one `osascript`-driven integration test that opens SwiftTag, adds a fixture FLAC, reads a few properties, mutates a tag, and saves.
@@ -315,9 +308,9 @@ import picture with data <data> with picture type <flac picture type> with descr
 - `editor window`, `document`, `track`, `tag`, `picture`, and `swift tag` objects can be queried from AppleScript.
 - `track` exposes `picture` elements with type, MIME type, description, dimensions, color depth, colors, and data.
 - AppleScript can count pictures and filter pictures by properties such as `picture type is front cover`.
-- AppleScript can import picture bytes with `import picture <data>` or `import picture with data
-  <data>`, default omitted picture type to `front cover`, derive image metadata from bytes, dedupe
-  matching records, and update an explicit duplicate description.
+- AppleScript can create picture records with `make new picture with properties {data:...}`,
+  default omitted picture type to `front cover`, derive image metadata from bytes, dedupe matching
+  records, and update an explicit duplicate description.
 - `add` can append one or more FLAC files to a targeted/default editor window and returns the added track object(s).
 - Requested read-only properties work with the finalized fingerprint semantics.
 - Requested writable properties update in-memory editor state and participate in existing dirty/save flows.
