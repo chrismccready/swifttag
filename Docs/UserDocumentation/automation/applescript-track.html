@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Track Class - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript track class</h1>
+            <p>
+                The <code>track</code> class represents a loaded FLAC file. It exposes
+                editable FLAC tag fields, read-only audio properties, and child
+                <code>tag</code> and <code>picture</code> objects.
+            </p>
+
+            <section aria-labelledby="definition">
+                <h2 id="definition">Definition</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>track</code></td>
+                        </tr>
+                        <tr>
+                            <th>Plural</th>
+                            <td><code>tracks</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>trck</code></td>
+                        </tr>
+                        <tr>
+                            <th>Cocoa Class</th>
+                            <td><code>SwiftTagScriptTrack</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>A FLAC track file.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="access">
+                <h2 id="access">Access</h2>
+                <p>
+                    Tracks are elements of the <a href="applescript-application.html">application</a>
+                    and <a href="applescript-windows.html#editor-window-definition">editor window</a>
+                    classes. Use <a href="applescript-add.html"><code>add</code></a> to load FLAC
+                    files into an editor window.
+                </p>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    set firstTrack to track 1 of front editor window
+    set trackTitle to title of firstTrack
+end tell</code></pre>
+            </section>
+
+            <section aria-labelledby="elements">
+                <h2 id="elements">Elements</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Element</th>
+                            <th>Access</th>
+                            <th>Cocoa Key</th>
+                            <th>Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>tag</code></td>
+                            <td>read-write</td>
+                            <td><code>tags</code></td>
+                            <td>FLAC metadata tag objects for this track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>picture</code></td>
+                            <td>read-write</td>
+                            <td><code>pictures</code></td>
+                            <td>FLAC picture objects for this track.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="properties">
+                <h2 id="properties">Properties</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Access</th>
+                            <th>Cocoa Key</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="property-album">
+                            <td><code>album</code></td>
+                            <td><code>albm</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>album</code></td>
+                            <td>The album name of the track.</td>
+                        </tr>
+                        <tr id="property-album-artist">
+                            <td><code>album artist</code></td>
+                            <td><code>aart</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>albumArtist</code></td>
+                            <td>The album artist of the track.</td>
+                        </tr>
+                        <tr id="property-artist">
+                            <td><code>artist</code></td>
+                            <td><code>arts</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>artist</code></td>
+                            <td>The artist/source of the track.</td>
+                        </tr>
+                        <tr id="property-bits-per-sample">
+                            <td><code>bits per sample</code></td>
+                            <td><code>btps</code></td>
+                            <td><code>integer</code></td>
+                            <td>read-only</td>
+                            <td><code>bitsPerSample</code></td>
+                            <td>The bits per sample of the track.</td>
+                        </tr>
+                        <tr id="property-channels">
+                            <td><code>channels</code></td>
+                            <td><code>chnl</code></td>
+                            <td><code>integer</code></td>
+                            <td>read-only</td>
+                            <td><code>channels</code></td>
+                            <td>The number of sound channels of the track.</td>
+                        </tr>
+                        <tr id="property-comment">
+                            <td><code>comment</code></td>
+                            <td><code>cmnt</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>comment</code></td>
+                            <td>Notes about the track.</td>
+                        </tr>
+                        <tr id="property-compilation">
+                            <td><code>compilation</code></td>
+                            <td><code>cpil</code></td>
+                            <td><code>boolean</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>compilation</code></td>
+                            <td>Is this track from a compilation album?</td>
+                        </tr>
+                        <tr id="property-composer">
+                            <td><code>composer</code></td>
+                            <td><code>cmps</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>composer</code></td>
+                            <td>The composer of the track.</td>
+                        </tr>
+                        <tr id="property-conductor">
+                            <td><code>conductor</code></td>
+                            <td><code>cndr</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>conductor</code></td>
+                            <td>The conductor of the track.</td>
+                        </tr>
+                        <tr id="property-copyright">
+                            <td><code>copyright</code></td>
+                            <td><code>cprt</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>copyright</code></td>
+                            <td>The copyright of the track.</td>
+                        </tr>
+                        <tr id="property-release-date">
+                            <td><code>release date</code></td>
+                            <td><code>rdat</code></td>
+                            <td><code>date</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>releaseDate</code></td>
+                            <td>The release date of track.</td>
+                        </tr>
+                        <tr id="property-description">
+                            <td><code>description</code></td>
+                            <td><code>tdsc</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>trackDescription</code></td>
+                            <td>The description of the track.</td>
+                        </tr>
+                        <tr id="property-director">
+                            <td><code>director</code></td>
+                            <td><code>drct</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>director</code></td>
+                            <td>The director(s) of the track.</td>
+                        </tr>
+                        <tr id="property-disc-count">
+                            <td><code>disc count</code></td>
+                            <td><code>dcnt</code></td>
+                            <td><code>integer</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>discCount</code></td>
+                            <td>The total number of discs in the source album.</td>
+                        </tr>
+                        <tr id="property-disc-number">
+                            <td><code>disc number</code></td>
+                            <td><code>dnbr</code></td>
+                            <td><code>integer</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>discNumber</code></td>
+                            <td>The index of the disc containing this track on the source album.</td>
+                        </tr>
+                        <tr id="property-duration">
+                            <td><code>duration</code></td>
+                            <td><code>dura</code></td>
+                            <td><code>real</code></td>
+                            <td>read-only</td>
+                            <td><code>duration</code></td>
+                            <td>The length of the track in seconds.</td>
+                        </tr>
+                        <tr id="property-encoded-by">
+                            <td><code>encoded by</code></td>
+                            <td><code>encb</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>encodedBy</code></td>
+                            <td>Track audio encoded by.</td>
+                        </tr>
+                        <tr id="property-encoded-using">
+                            <td><code>encoded using</code></td>
+                            <td><code>encu</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>encodedUsing</code></td>
+                            <td>Track audio encoded using.</td>
+                        </tr>
+                        <tr id="property-encoder">
+                            <td><code>encoder</code></td>
+                            <td><code>encr</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>encoder</code></td>
+                            <td>Track audio encoder.</td>
+                        </tr>
+                        <tr id="property-encoder-options">
+                            <td><code>encoder options</code></td>
+                            <td><code>enco</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>encoderOptions</code></td>
+                            <td>Track audio encoder options used.</td>
+                        </tr>
+                        <tr id="property-file">
+                            <td><code>file</code></td>
+                            <td><code>file</code></td>
+                            <td><code>file</code></td>
+                            <td>read-only</td>
+                            <td><code>fileURL</code></td>
+                            <td>FLAC file location on disk.</td>
+                        </tr>
+                        <tr id="property-fingerprint">
+                            <td><code>fingerprint</code></td>
+                            <td><code>fgpr</code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td><code>fingerprint</code></td>
+                            <td>The track tags and pictures SHA256 hash.</td>
+                        </tr>
+                        <tr id="property-flac-fingerprint">
+                            <td><code>FLAC fingerprint</code></td>
+                            <td><code>ffpr</code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td><code>flacFingerprint</code></td>
+                            <td>The track audio MD5 hash.</td>
+                        </tr>
+                        <tr id="property-genre">
+                            <td><code>genre</code></td>
+                            <td><code>genr</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>genre</code></td>
+                            <td>The music/audio genre (category) of the track.</td>
+                        </tr>
+                        <tr id="property-isrc">
+                            <td><code>ISRC</code></td>
+                            <td><code>isrc</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>isrc</code></td>
+                            <td>The ISRC number of the track.</td>
+                        </tr>
+                        <tr id="property-license">
+                            <td><code>license</code></td>
+                            <td><code>lice</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>license</code></td>
+                            <td>License information for track.</td>
+                        </tr>
+                        <tr id="property-lineage">
+                            <td><code>lineage</code></td>
+                            <td><code>ling</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>lineage</code></td>
+                            <td>The lineage of the track.</td>
+                        </tr>
+                        <tr id="property-locked">
+                            <td><code>locked</code></td>
+                            <td><code>tlok</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td><code>trackLocked</code></td>
+                            <td>Whether the track is locked (read-only in editor window).</td>
+                        </tr>
+                        <tr id="property-location">
+                            <td><code>location</code></td>
+                            <td><code>locn</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>location</code></td>
+                            <td>Recording/performance location/venue of the track.</td>
+                        </tr>
+                        <tr id="property-modified">
+                            <td><code>modified</code></td>
+                            <td><code>imod</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-only</td>
+                            <td><code>modified</code></td>
+                            <td>Has the track been modified since last save?</td>
+                        </tr>
+                        <tr id="property-narrator">
+                            <td><code>narrator</code></td>
+                            <td><code>narr</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>narrator</code></td>
+                            <td>The narrator(s) of the track.</td>
+                        </tr>
+                        <tr id="property-performer">
+                            <td><code>performer</code></td>
+                            <td><code>perf</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>performer</code></td>
+                            <td>The performer(s) of the track.</td>
+                        </tr>
+                        <tr id="property-producer">
+                            <td><code>producer</code></td>
+                            <td><code>prod</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>producer</code></td>
+                            <td>The producer(s) of the track.</td>
+                        </tr>
+                        <tr id="property-rating">
+                            <td><code>rating</code></td>
+                            <td><code>rate</code></td>
+                            <td><code>integer</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>rating</code></td>
+                            <td>The rating of the track.</td>
+                        </tr>
+                        <tr id="property-replay-album-gain">
+                            <td><code>replay album gain</code></td>
+                            <td><code>ragn</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>replayAlbumGain</code></td>
+                            <td>Adjusts gain of all tracks on entire album.</td>
+                        </tr>
+                        <tr id="property-replay-album-peak">
+                            <td><code>replay album peak</code></td>
+                            <td><code>rapk</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>replayAlbumPeak</code></td>
+                            <td>Adjusts maximum peak of all tracks on entire album.</td>
+                        </tr>
+                        <tr id="property-replay-track-gain">
+                            <td><code>replay track gain</code></td>
+                            <td><code>rtgn</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>replayTrackGain</code></td>
+                            <td>Adjusts individual track volume.</td>
+                        </tr>
+                        <tr id="property-replay-track-peak">
+                            <td><code>replay track peak</code></td>
+                            <td><code>rtpk</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>replayTrackPeak</code></td>
+                            <td>Adjusts individual track volume to prevent clipping.</td>
+                        </tr>
+                        <tr id="property-sample-rate">
+                            <td><code>sample rate</code></td>
+                            <td><code>srat</code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td><code>sampleRate</code></td>
+                            <td>The sample rate of the track.</td>
+                        </tr>
+                        <tr id="property-sort-album">
+                            <td><code>sort album</code></td>
+                            <td><code>salb</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>sortAlbum</code></td>
+                            <td>Override string to use for the track when sorting by album.</td>
+                        </tr>
+                        <tr id="property-sort-album-artist">
+                            <td><code>sort album artist</code></td>
+                            <td><code>saar</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>sortAlbumArtist</code></td>
+                            <td>Override string to use for the track when sorting by album artist.</td>
+                        </tr>
+                        <tr id="property-sort-artist">
+                            <td><code>sort artist</code></td>
+                            <td><code>sart</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>sortArtist</code></td>
+                            <td>Override string to use for the track when sorting by artist.</td>
+                        </tr>
+                        <tr id="property-sort-composer">
+                            <td><code>sort composer</code></td>
+                            <td><code>scmp</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>sortComposer</code></td>
+                            <td>Override string to use for the track when sorting by composer.</td>
+                        </tr>
+                        <tr id="property-sort-title">
+                            <td><code>sort title</code></td>
+                            <td><code>sttl</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>sortTitle</code></td>
+                            <td>Override string to use for the track when sorting by title/name.</td>
+                        </tr>
+                        <tr id="property-source">
+                            <td><code>source</code></td>
+                            <td><code>srce</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>source</code></td>
+                            <td>The source of the track (CD, SBD, etc.).</td>
+                        </tr>
+                        <tr id="property-title">
+                            <td><code>title</code></td>
+                            <td><code>titl</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>title</code></td>
+                            <td>The title/name of the track.</td>
+                        </tr>
+                        <tr id="property-total-samples">
+                            <td><code>total samples</code></td>
+                            <td><code>tsmp</code></td>
+                            <td><code>real</code></td>
+                            <td>read-only</td>
+                            <td><code>totalSamples</code></td>
+                            <td>The total number of samples for a single channel of the track.</td>
+                        </tr>
+                        <tr id="property-track-count">
+                            <td><code>track count</code></td>
+                            <td><code>tcnt</code></td>
+                            <td><code>integer</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>trackCount</code></td>
+                            <td>The total number of tracks on the source album.</td>
+                        </tr>
+                        <tr id="property-track-number">
+                            <td><code>track number</code></td>
+                            <td><code>tnbr</code></td>
+                            <td><code>integer</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>trackNumber</code></td>
+                            <td>The index of the track on the source album.</td>
+                        </tr>
+                        <tr id="property-vendor">
+                            <td><code>vendor</code></td>
+                            <td><code>vend</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>vendor</code></td>
+                            <td>The vendor of the track.</td>
+                        </tr>
+                        <tr id="property-version">
+                            <td><code>version</code></td>
+                            <td><code>tver</code></td>
+                            <td><code>text</code> or <code>missing value</code></td>
+                            <td>read-write</td>
+                            <td><code>trackVersion</code></td>
+                            <td>The version of the track.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="responds-to">
+                <h2 id="responds-to">Responds To</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Cocoa Method</th>
+                            <th>Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="applescript-make.html"><code>make</code></a></td>
+                            <td><code>handleMakeScriptCommand:</code></td>
+                            <td>Create <code>tag</code> or <code>picture</code> objects in the track.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-import-picture.html"><code>import picture</code></a></td>
+                            <td><code>handleImportPictureScriptCommand:</code></td>
+                            <td>Import image data as a track picture.</td>
+                        </tr>
+                        <tr>
+                            <td><code>delete</code></td>
+                            <td><code>handleDeleteScriptCommand:</code></td>
+                            <td>Delete the track from its editor window.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="examples">
+                <h2 id="examples">Examples</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    tell track 1 of front editor window
+        set title to "New Title"
+        set track number to 1
+        set locked to false
+    end tell
+end tell</code></pre>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    tell track 1 of front editor window
+        set tagCount to count of tags
+        set pictureCount to count of pictures
+        set audioHash to FLAC fingerprint
+    end tell
+end tell</code></pre>
+            </section>
+
+            <p>
+                Related: <a href="applescript.html">AppleScript overview</a>,
+                <a href="applescript-application.html">application class</a>,
+                <a href="applescript-windows.html#editor-window-definition">editor window class</a>,
+                <a href="applescript-add.html">add command</a>,
+                <a href="applescript-make.html">make command</a>,
+                <a href="applescript-import-picture.html">import picture command</a>.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
