@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Record Types - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript record types</h1>
+            <p>
+                These record types define structured AppleScript values used by SwiftTag
+                windows, geometry, and color settings.
+            </p>
+
+            <section aria-labelledby="record-type-point">
+                <h2 id="record-type-point">point</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>poin</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>A point value in 2D space.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>x</code></td>
+                            <td><code>xpos</code></td>
+                            <td><code>integer</code></td>
+                            <td>The x coordinate value.</td>
+                        </tr>
+                        <tr>
+                            <td><code>y</code></td>
+                            <td><code>ypos</code></td>
+                            <td><code>integer</code></td>
+                            <td>The y coordinate value.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="record-type-rectangle">
+                <h2 id="record-type-rectangle">rectangle</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>rect</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>A rectangle value in 2D space.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>x</code></td>
+                            <td><code>xpos</code></td>
+                            <td><code>integer</code></td>
+                            <td>The x coordinate value.</td>
+                        </tr>
+                        <tr>
+                            <td><code>y</code></td>
+                            <td><code>ypos</code></td>
+                            <td><code>integer</code></td>
+                            <td>The y coordinate value.</td>
+                        </tr>
+                        <tr>
+                            <td><code>width</code></td>
+                            <td><code>widt</code></td>
+                            <td><code>integer</code></td>
+                            <td>The width coordinate value.</td>
+                        </tr>
+                        <tr>
+                            <td><code>height</code></td>
+                            <td><code>heig</code></td>
+                            <td><code>integer</code></td>
+                            <td>The height coordinate value.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="record-type-color">
+                <h2 id="record-type-color">color</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Plural</th>
+                            <td><code>color records</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>colr</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>A color value in RGBA color space (values 0-1.0).</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>red</code></td>
+                            <td><code>redc</code></td>
+                            <td><code>real</code></td>
+                            <td>The red component value (0-1.0).</td>
+                        </tr>
+                        <tr>
+                            <td><code>green</code></td>
+                            <td><code>grec</code></td>
+                            <td><code>real</code></td>
+                            <td>The green component value (0-1.0).</td>
+                        </tr>
+                        <tr>
+                            <td><code>blue</code></td>
+                            <td><code>bluc</code></td>
+                            <td><code>real</code></td>
+                            <td>The blue component value (0-1.0).</td>
+                        </tr>
+                        <tr>
+                            <td><code>alpha</code></td>
+                            <td><code>alph</code></td>
+                            <td><code>real</code></td>
+                            <td>The alpha component value (0-1.0).</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    Color Type for <a href="applescript-application.html#property-track-to-track-diff-color">track to track diff color</a>,
+                    <a href="applescript-application.html#property-track-to-file-diff-color">track to file diff color</a>,
+                    <a href="applescript-application.html#property-externally-modified-diff-color">externally modified diff color</a>,
+                    <a href="applescript-application.html#property-track-and-disc-total-mismatch-color">track and disc total mismatch color</a>,
+                    <a href="applescript-application.html#property-picture-status-overlay-color">picture status overlay color</a>. <br>
+                    See <a href="../workflows/settings.html#feedback-diff-colors">Diff Color Preferences</a> and 
+                    <a href="../workflows/status-and-diffs.html">Diff Formatting</a> for more information.
+                </p>
+            </section>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
