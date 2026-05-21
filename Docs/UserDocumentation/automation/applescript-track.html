@@ -26,7 +26,7 @@
             <p>
                 The <code>track</code> class represents a loaded FLAC file. It exposes
                 editable FLAC tag fields, read-only audio properties, and child
-                <code>tag</code> and <code>picture</code> objects.
+                <a href="applescript-tag.html"><code>tag</code></a> and <code>picture</code> objects.
             </p>
 
             <section aria-labelledby="definition">
@@ -73,6 +73,7 @@
                 <pre><code>tell application "SwiftTag"
     set firstTrack to track 1 of front editor window
     set trackTitle to title of firstTrack
+    set albumTracks to every track of front editor window whose album is "Test Album"
 end tell</code></pre>
             </section>
 
@@ -89,7 +90,7 @@ end tell</code></pre>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>tag</code></td>
+                            <td><a href="applescript-tag.html"><code>tag</code></a></td>
                             <td>read-write</td>
                             <td><code>tags</code></td>
                             <td>FLAC metadata tag objects for this track.</td>
@@ -544,7 +545,7 @@ end tell</code></pre>
                         <tr>
                             <td><a href="applescript-make.html"><code>make</code></a></td>
                             <td><code>handleMakeScriptCommand:</code></td>
-                            <td>Create <code>tag</code> or <code>picture</code> objects in the track.</td>
+                            <td>Create <a href="applescript-tag.html"><code>tag</code></a> or <code>picture</code> objects in the track.</td>
                         </tr>
                         <tr>
                             <td><a href="applescript-delete.html"><code>delete</code></a></td>
@@ -579,6 +580,7 @@ end tell</code></pre>
                 Related: <a href="applescript.html">AppleScript overview</a>,
                 <a href="applescript-application.html">application class</a>,
                 <a href="applescript-windows.html#editor-window-definition">editor window class</a>,
+                <a href="applescript-tag.html">tag class</a>,
                 <a href="applescript-add.html">add command</a>,
                 <a href="applescript-make.html">make command</a>,
                 <a href="applescript-delete.html">delete command</a>.

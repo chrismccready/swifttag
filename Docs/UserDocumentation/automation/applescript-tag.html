@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Tag Class - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript tag class</h1>
+            <p>
+                The <code>tag</code> class represents one FLAC metadata key/value pair
+                on a <a href="applescript-track.html"><code>track</code></a>. Use tags
+                for custom metadata keys and for direct access to stored FLAC tag values.
+            </p>
+
+            <section aria-labelledby="definition">
+                <h2 id="definition">Definition</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>tag</code></td>
+                        </tr>
+                        <tr>
+                            <th>Plural</th>
+                            <td><code>tags</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>ftag</code></td>
+                        </tr>
+                        <tr>
+                            <th>Cocoa Class</th>
+                            <td><code>SwiftTagScriptTag</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>A FLAC track metadata tag.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="access">
+                <h2 id="access">Access</h2>
+                <p>
+                    Tags are read-write elements of the <a href="applescript-track.html"><code>track</code></a>
+                    class. Use <a href="applescript-make.html"><code>make</code></a> to create
+                    a tag and <a href="applescript-delete.html"><code>delete</code></a> to remove one.
+                </p>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    tell track 1 of front editor window
+        set albumTag to first tag whose key is "ALBUM"
+        set albumName to value of albumTag
+    end tell
+end tell</code></pre>
+            </section>
+
+            <section aria-labelledby="properties">
+                <h2 id="properties">Properties</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Access</th>
+                            <th>Cocoa Key</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="property-id">
+                            <td><code>id</code></td>
+                            <td><code>ID  </code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td><code>id</code></td>
+                            <td>The unique identifier of the tag, equal to its normalized key.</td>
+                        </tr>
+                        <tr id="property-key">
+                            <td><code>key</code></td>
+                            <td><code>pkey</code></td>
+                            <td><code>text</code></td>
+                            <td>read-write</td>
+                            <td><code>key</code></td>
+                            <td>A FLAC track metadata tag name.</td>
+                        </tr>
+                        <tr id="property-value">
+                            <td><code>value</code></td>
+                            <td><code>pval</code></td>
+                            <td><code>text</code></td>
+                            <td>read-write</td>
+                            <td><code>value</code></td>
+                            <td>The value associated with a FLAC track metadata key.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="examples">
+                <h2 id="examples">Examples</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    tell track 1 of front editor window
+        set newTag to make new tag with properties {key:"TEST", value:"This is a test"}
+        set value of newTag to "Reviewed"
+    end tell
+end tell</code></pre>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    tell track 1 of front editor window
+        set artistTag to first tag whose key is "ARTIST"
+        delete first tag whose key is "COMMENT"
+    end tell
+end tell</code></pre>
+            <aside class="callout">
+                For convenience, common FLAC metadata keys have been defined as
+                <a href="applescript-track.html"><code>track</code></a> properties.
+            </aside>
+            </section>
+
+            <p>
+                Related: <a href="applescript.html">AppleScript overview</a>,
+                <a href="applescript-track.html">track class</a>,
+                <a href="applescript-make.html">make command</a>,
+                <a href="applescript-delete.html">delete command</a>,
+                <a href="../workflows/editing-tags.html">Edit Tags</a>.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
