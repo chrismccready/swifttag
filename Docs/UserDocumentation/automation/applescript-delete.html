@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AppleScript Make Command - SwiftTag Documentation</title>
+    <title>AppleScript Delete Command - SwiftTag Documentation</title>
     <link rel="stylesheet" href="../assets/swifttag-docs.css">
 </head>
 <body>
@@ -22,10 +22,11 @@
     <main class="shell">
         <article>
             <p class="section-label">Automation</p>
-            <h1>AppleScript make command</h1>
+            <h1>AppleScript delete command</h1>
             <p>
-                The <code>make</code> command creates scriptable objects. SwiftTag uses it
-                for creating track <code>tag</code> and <code>picture</code> objects.
+                The <code>delete</code> command removes scriptable objects from the
+                current editor state. SwiftTag uses it for tracks, tags, pictures, and
+                track properties backed by FLAC tags.
             </p>
 
             <section aria-labelledby="definition">
@@ -34,7 +35,7 @@
                     <tbody>
                         <tr>
                             <th>Name</th>
-                            <td><code>make</code></td>
+                            <td><code>delete</code></td>
                         </tr>
                         <tr>
                             <th>Suite</th>
@@ -42,15 +43,15 @@
                         </tr>
                         <tr>
                             <th>Code</th>
-                            <td><code>corecrel</code></td>
+                            <td><code>coredelo</code></td>
                         </tr>
                         <tr>
                             <th>Cocoa Class</th>
-                            <td><code>SwiftTagCreateCommand</code></td>
+                            <td><code>SwiftTagDeleteCommand</code></td>
                         </tr>
                         <tr>
                             <th>Description</th>
-                            <td>Create new object.</td>
+                            <td>Delete object.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -67,12 +68,20 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><a href="applescript-application.html"><code>application</code></a></td>
-                            <td>Creates a supported object when the insertion location or receiver resolves to a track.</td>
+                            <td><a href="applescript-track.html"><code>track</code></a></td>
+                            <td>Removes the track from its editor window. This does not delete the FLAC file from disk.</td>
                         </tr>
                         <tr>
-                            <td><a href="applescript-track.html"><code>track</code></a></td>
-                            <td>Creates <code>tag</code> or <code>picture</code> objects in that track.</td>
+                            <td><code>tag</code></td>
+                            <td>Deletes the FLAC metadata tag from its track.</td>
+                        </tr>
+                        <tr>
+                            <td><code>picture</code></td>
+                            <td>Deletes the FLAC picture from its track.</td>
+                        </tr>
+                        <tr>
+                            <td><a href="applescript-track.html"><code>track</code></a> property</td>
+                            <td>Deletes the corresponding FLAC tag value so the property becomes <code>missing value</code>.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -92,36 +101,15 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>new</code></td>
-                            <td><code>kocl</code></td>
-                            <td><code>type</code></td>
+                            <td>direct parameter</td>
+                            <td></td>
+                            <td><code>specifier</code></td>
                             <td>No</td>
-                            <td>Class of new object. SwiftTag supports <code>tag</code> and <code>picture</code> for tracks.</td>
-                        </tr>
-                        <tr>
-                            <td><code>at</code></td>
-                            <td><code>insh</code></td>
-                            <td><code>location specifier</code></td>
-                            <td>Yes</td>
-                            <td>Location at which to insert the object.</td>
-                        </tr>
-                        <tr>
-                            <td><code>with data</code></td>
-                            <td><code>data</code></td>
-                            <td><code>any</code></td>
-                            <td>Yes</td>
-                            <td>Initial contents of the object. For pictures, accepted as image data.</td>
-                        </tr>
-                        <tr>
-                            <td><code>with properties</code></td>
-                            <td><code>prdt</code></td>
-                            <td><code>record</code></td>
-                            <td>Yes</td>
-                            <td>Initial property values.</td>
+                            <td>Object or objects to delete.</td>
                         </tr>
                     </tbody>
                 </table>
-                <p>Result: object specifier for the new object.</p>
+                <p>Result: none.</p>
             </section>
 
             <section aria-labelledby="examples">
@@ -129,50 +117,30 @@
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
     tell track 1 of front editor window
-        -- Create a new custom tag --
-        set newTag to make new tag with properties {key:"TEST", value:"This is a test"}
-        
-        -- Create a tag that matches a defined track property --
-        make new tag with properties {key:"COMMENT", value:"Reviewed"}
-        -- Which is the same as --
-        set comment to "Reviewed"
+        delete comment
+        delete first tag whose key is "ALBUM"
     end tell
 end tell</code></pre>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
-    set newWindow to make new editor window
-    tell newWindow
-        set newWindowBounds to bounds
-        set bounds to {x: (x of newWindowBounds) + 100, y: (y of newWindowBounds), width: 1100, height: 900}
+    tell track 1 of front editor window
+        delete first picture whose picture type is front cover
+        delete every picture whose description is "delete me"
     end tell
 end tell</code></pre>
                 <div class="code-label">AppleScript</div>
-                <pre><code>use framework "Foundation"
-use scripting additions
-
-tell application "SwiftTag"
-    tell track 1 of front editor window
-        set filePath to "/path/to/image.jpg"
-        set imageData to my getBase64EncodedData from filePath
-        set newCover to make new picture with properties {data:imageData, picture type:front cover, description:"Cover"}
+                <pre><code>tell application "SwiftTag"
+    tell front editor window
+        delete every track whose title is "Scratch Take"
     end tell
-end tell
-
-on getBase64EncodedData from filePath
-    set fileURL to current application's |NSURL|'s fileURLWithPath:filePath
-    set fileData to current application's NSData's dataWithContentsOfURL:fileURL
-    if fileData is missing value then
-        error "Could not read data from file."
-    end if
-    return (fileData's base64EncodedStringWithOptions:0) as text
-end getBase64EncodedData</code></pre>
+end tell</code></pre>
             </section>
 
             <p>
                 Related: <a href="applescript.html">AppleScript overview</a>,
-                <a href="applescript-application.html">application class</a>,
                 <a href="applescript-track.html">track class</a>,
-                <a href="applescript-delete.html">delete command</a>,
+                <a href="applescript-make.html">make command</a>,
+                <a href="applescript-save.html">save command</a>,
                 <a href="../workflows/editing-tags.html">Edit Tags</a>,
                 <a href="../workflows/album-art.html">Manage Album Art</a>.
             </p>

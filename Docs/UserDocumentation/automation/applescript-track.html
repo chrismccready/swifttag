@@ -547,7 +547,7 @@ end tell</code></pre>
                             <td>Create <code>tag</code> or <code>picture</code> objects in the track.</td>
                         </tr>
                         <tr>
-                            <td><code>delete</code></td>
+                            <td><a href="applescript-delete.html"><code>delete</code></a></td>
                             <td><code>handleDeleteScriptCommand:</code></td>
                             <td>Delete the track from its editor window.</td>
                         </tr>
@@ -560,14 +560,14 @@ end tell</code></pre>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
     tell track 1 of front editor window
+        set locked to false
         set title to "New Title"
         set track number to 1
-        set locked to false
     end tell
 end tell</code></pre>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
-    tell track 1 of front editor window
+    tell first track of front editor window
         set tagCount to count of tags
         set pictureCount to count of pictures
         set audioHash to FLAC fingerprint
@@ -580,7 +580,8 @@ end tell</code></pre>
                 <a href="applescript-application.html">application class</a>,
                 <a href="applescript-windows.html#editor-window-definition">editor window class</a>,
                 <a href="applescript-add.html">add command</a>,
-                <a href="applescript-make.html">make command</a>.
+                <a href="applescript-make.html">make command</a>,
+                <a href="applescript-delete.html">delete command</a>.
             </p>
         </article>
     </main>
