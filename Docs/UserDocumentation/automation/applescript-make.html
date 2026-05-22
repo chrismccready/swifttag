@@ -25,7 +25,8 @@
             <h1>AppleScript make command</h1>
             <p>
                 The <code>make</code> command creates scriptable objects. SwiftTag uses it
-                for creating track <a href="applescript-tag.html"><code>tag</code></a> and <code>picture</code> objects.
+                for creating track <a href="applescript-tag.html"><code>tag</code></a> and
+                <a href="applescript-picture.html"><code>picture</code></a> objects.
             </p>
 
             <section aria-labelledby="definition">
@@ -72,7 +73,7 @@
                         </tr>
                         <tr>
                             <td><a href="applescript-track.html"><code>track</code></a></td>
-                            <td>Creates <a href="applescript-tag.html"><code>tag</code></a> or <code>picture</code> objects in that track.</td>
+                            <td>Creates <a href="applescript-tag.html"><code>tag</code></a> or <a href="applescript-picture.html"><code>picture</code></a> objects in that track.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -96,7 +97,7 @@
                             <td><code>kocl</code></td>
                             <td><code>type</code></td>
                             <td>No</td>
-                            <td>Class of new object. SwiftTag supports <a href="applescript-tag.html"><code>tag</code></a> and <code>picture</code> for tracks.</td>
+                            <td>Class of new object. SwiftTag supports <a href="applescript-tag.html"><code>tag</code></a> and <a href="applescript-picture.html"><code>picture</code></a> for tracks.</td>
                         </tr>
                         <tr>
                             <td><code>at</code></td>
@@ -129,12 +130,12 @@
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
     tell track 1 of front editor window
-        -- Create a new custom tag --
+        -- create a new custom tag --
         set newTag to make new tag with properties {key:"TEST", value:"This is a test"}
         
-        -- Create a tag that matches a defined track property --
+        -- create a tag that matches a defined track property --
         make new tag with properties {key:"COMMENT", value:"Reviewed"}
-        -- Which is the same as --
+        -- which is the same as --
         set comment to "Reviewed"
     end tell
 end tell</code></pre>
@@ -146,26 +147,10 @@ end tell</code></pre>
         set bounds to {x: (x of newWindowBounds) + 100, y: (y of newWindowBounds), width: 1100, height: 900}
     end tell
 end tell</code></pre>
-                <div class="code-label">AppleScript</div>
-                <pre><code>use framework "Foundation"
-use scripting additions
-
-tell application "SwiftTag"
-    tell track 1 of front editor window
-        set filePath to "/path/to/image.jpg"
-        set imageData to my getBase64EncodedData from filePath
-        set newCover to make new picture with properties {data:imageData, picture type:front cover, description:"Cover"}
-    end tell
-end tell
-
-on getBase64EncodedData from filePath
-    set fileURL to current application's |NSURL|'s fileURLWithPath:filePath
-    set fileData to current application's NSData's dataWithContentsOfURL:fileURL
-    if fileData is missing value then
-        error "Could not read data from file."
-    end if
-    return (fileData's base64EncodedStringWithOptions:0) as text
-end getBase64EncodedData</code></pre>
+                <aside class="callout">
+                    See <a href="applescript-picture.html#examples">picture class
+                    examples</a> on using <code>make</code> command to create pictures.
+                </aside>
             </section>
 
             <p>
@@ -173,6 +158,7 @@ end getBase64EncodedData</code></pre>
                 <a href="applescript-application.html">application class</a>,
                 <a href="applescript-track.html">track class</a>,
                 <a href="applescript-tag.html">tag class</a>,
+                <a href="applescript-picture.html">picture class</a>,
                 <a href="applescript-delete.html">delete command</a>,
                 <a href="../workflows/editing-tags.html">Edit Tags</a>,
                 <a href="../workflows/album-art.html">Manage Album Art</a>.

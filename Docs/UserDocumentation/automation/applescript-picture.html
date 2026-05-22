@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AppleScript Picture Class - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="../assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="../index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Automation</p>
+            <h1>AppleScript picture class</h1>
+            <p>
+                The <code>picture</code> class represents one FLAC picture block on a
+                <a href="applescript-track.html"><code>track</code></a>. It exposes
+                picture type, description, image data, derived dimensions, and SwiftTag
+                identifiers.
+            </p>
+
+            <section aria-labelledby="definition">
+                <h2 id="definition">Definition</h2>
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td><code>picture</code></td>
+                        </tr>
+                        <tr>
+                            <th>Plural</th>
+                            <td><code>pictures</code></td>
+                        </tr>
+                        <tr>
+                            <th>Suite</th>
+                            <td>SwiftTag Suite</td>
+                        </tr>
+                        <tr>
+                            <th>Code</th>
+                            <td><code>fpic</code></td>
+                        </tr>
+                        <tr>
+                            <th>Cocoa Class</th>
+                            <td><code>SwiftTagScriptPicture</code></td>
+                        </tr>
+                        <tr>
+                            <th>Description</th>
+                            <td>A FLAC track picture.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="access">
+                <h2 id="access">Access</h2>
+                <p>
+                    Pictures are read-write elements of the <a href="applescript-track.html"><code>track</code></a>
+                    class. Use <a href="applescript-make.html"><code>make</code></a> to create
+                    a picture and <a href="applescript-delete.html"><code>delete</code></a> to remove one.
+                </p>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    tell track 1 of front editor window
+        set coverPicture to first picture whose picture type is front cover
+        set coverDescription to description of coverPicture
+    end tell
+end tell</code></pre>
+            </section>
+
+            <section aria-labelledby="contents">
+                <h2 id="contents">Contents</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Cocoa Key</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>data</code></td>
+                            <td><code>data</code></td>
+                            <td>The raw image data in bytes. Accepted as picture data when making or importing a new picture.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="properties">
+                <h2 id="properties">Properties</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Access</th>
+                            <th>Cocoa Key</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="property-id">
+                            <td><code>id</code></td>
+                            <td><code>ID  </code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td><code>id</code></td>
+                            <td>The unique identifier of the picture.</td>
+                        </tr>
+                        <tr id="property-pool-id">
+                            <td><code>pool id</code></td>
+                            <td><code>poid</code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td><code>poolId</code></td>
+                            <td>The unique SwiftTag picture pool identifier of the picture.</td>
+                        </tr>
+                        <tr id="property-picture-type">
+                            <td><code>picture type</code></td>
+                            <td><code>pcty</code></td>
+                            <td><a href="applescript-enumerations.html#enumeration-flac-picture-type"><code>flac picture type</code></a></td>
+                            <td>read-write</td>
+                            <td><code>pictureType</code></td>
+                            <td>The FLAC track file picture type. Accepted when making or importing a new picture; defaults to <code>front cover</code> when omitted.</td>
+                        </tr>
+                        <tr id="property-mime-type">
+                            <td><code>MIME type</code></td>
+                            <td><code>mime</code></td>
+                            <td><code>text</code></td>
+                            <td>read-only</td>
+                            <td><code>mimeType</code></td>
+                            <td>The format of the image data. Accepted when making or importing a new picture as a hint, but SwiftTag uses the value derived from image data when it can be determined.</td>
+                        </tr>
+                        <tr id="property-description">
+                            <td><code>description</code></td>
+                            <td><code>tdsc</code></td>
+                            <td><code>text</code></td>
+                            <td>read-write</td>
+                            <td><code>pictureDescription</code></td>
+                            <td>A UTF-8 text string describing the image. Accepted when making or importing a new picture.</td>
+                        </tr>
+                        <tr id="property-width">
+                            <td><code>width</code></td>
+                            <td><code>widt</code></td>
+                            <td><code>integer</code> or <code>missing value</code></td>
+                            <td>read-only</td>
+                            <td><code>width</code></td>
+                            <td>The image width dimension in pixels. SwiftTag derives this value from image data when making or importing a picture.</td>
+                        </tr>
+                        <tr id="property-height">
+                            <td><code>height</code></td>
+                            <td><code>heig</code></td>
+                            <td><code>integer</code> or <code>missing value</code></td>
+                            <td>read-only</td>
+                            <td><code>height</code></td>
+                            <td>The image height dimension in pixels. SwiftTag derives this value from image data when making or importing a picture.</td>
+                        </tr>
+                        <tr id="property-color-depth">
+                            <td><code>color depth</code></td>
+                            <td><code>cdpt</code></td>
+                            <td><code>integer</code> or <code>missing value</code></td>
+                            <td>read-only</td>
+                            <td><code>colorDepth</code></td>
+                            <td>The image color depth in bits per pixel. SwiftTag derives this value from image data when making or importing a picture.</td>
+                        </tr>
+                        <tr id="property-colors">
+                            <td><code>colors</code></td>
+                            <td><code>cols</code></td>
+                            <td><code>integer</code> or <code>missing value</code></td>
+                            <td>read-only</td>
+                            <td><code>colors</code></td>
+                            <td>The number of colors for indexed palettes (0 for non-indexed). SwiftTag derives this value from image data when making or importing a picture.</td>
+                        </tr>
+                        <tr id="property-data">
+                            <td><code>data</code></td>
+                            <td><code>pcda</code></td>
+                            <td><code>any</code></td>
+                            <td>read-write</td>
+                            <td><code>data</code></td>
+                            <td>The raw image data in bytes, or a base64 encoded text string when making or updating a picture. Changing it derives MIME type and dimensions from the new data.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section aria-labelledby="examples">
+                <h2 id="examples">Examples</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    tell track 1 of front editor window
+        set coverPicture to first picture whose picture type is front cover
+        set coverSize to {width of coverPicture, height of coverPicture}
+        set description of coverPicture to "Front cover"
+    end tell
+end tell</code></pre>
+                <div class="code-label">AppleScript</div>
+                <pre><code>use framework "Foundation"
+use scripting additions
+
+tell application "SwiftTag"
+     tell track 1 of front editor window
+        -- create picture from memory (binary/base64-encoded image data) --
+        make new picture with properties {data:imageData, picture type:performance, description:"center stage close-up"}
+
+        -- move a picture from one FLAC picture type to another --
+        set leafletPicture to first picture whose picture type is leaflet
+        set leafletPictureData to data of leafletPicture
+        make new picture with data leafletPictureData with properties {picture type:media, description:"Leaflet/Media"}
+        log "Moved picture with pool id " & pool id of result & " from leaflet to media with description " & quote & description of result & quote & "."
+        delete leafletPicture
+
+        -- create picture from file --
+        set pictureFilePath to "/path/to/image.jpg"
+        set newLeafletPictureData to my getBase64EncodedData from pictureFilePath
+        set newLeafletPicture to make new picture with properties {data:newLeafletPictureData, picture type:leaflet, description:"Leaflet"}
+    end tell
+end tell
+
+-- Base64 encode file data for AppleScript/NSData friendly binary data handling --
+on getBase64EncodedData from filePath
+    try
+        set fileURL to current application's |NSURL|'s fileURLWithPath:filePath
+        set fileData to current application's NSData's dataWithContentsOfURL:fileURL
+        if fileData is missing value then
+            error "ERROR: Could not read data from file. Check the path."
+        end if
+        return (fileData's base64EncodedStringWithOptions:0) as text
+    on error errorMessage number errorNumber
+        error "ERROR: Failed to get byte data. " & errorMessage & " (" & errorNumber & ")"
+    end try
+end getBase64EncodedData</code></pre>
+            </section>
+
+            <p>
+                Related: <a href="applescript.html">AppleScript overview</a>,
+                <a href="applescript-track.html">track class</a>,
+                <a href="applescript-enumerations.html#enumeration-flac-picture-type">flac picture type</a>,
+                <a href="applescript-make.html">make command</a>,
+                <a href="applescript-delete.html">delete command</a>,
+                <a href="../workflows/album-art.html">Manage Album Art</a>.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="../quick-start.html">Quick Start</a>
+                <a href="applescript.html">AppleScript</a>
+                <a href="../examples/clean-up-album.html">Examples</a>
+                <a href="../troubleshooting.html">Troubleshooting</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
