@@ -26,13 +26,21 @@
             <h2 id="missing-files">FLAC file missing, renamed, or moved</h2>
             <p>Restore the file path, reopen the files, or reopen a SwiftTag document that can resolve bookmarks.</p>
             <h2 id="locked-tracks">Cannot save due to lock state</h2>
-            <p>Locked tracks are skipped. Select intended tracks and use Toggle Selected Tracks Lock.</p>
+            <p>Locked (<a href="workflows/adding-flac-files.html#read-only">read-only</a>) tracks are skipped. Select intended tracks and use Toggle Selected Tracks Lock.</p>
             <h2 id="scope-surprise">Save affected more or fewer tracks than expected</h2>
-            <p>Check General settings for save scope, then verify current table selection.</p>
+            <p>Check <a href="workflows/settings.html#general">General settings</a> for save scope, then verify current table selection.</p>
             <h2 id="art-propagation">Album art did not propagate as expected</h2>
-            <p>Check Tags settings for front-cover and all-picture propagation before Save Pictures.</p>
+            <p>Check <strong>Tags</strong> settings <a href="workflows/settings.html#tags-picture-management">Picture Management</a>: 
+                <strong>Save Front Cover to all Tracks</strong> and <strong>Save all Pictures to all Tracks</strong> before 
+                <a href="workflows/saving.html#commands">Save Pictures</a>.
+            </p>
             <h2 id="automation-permission">AppleScript automation prompts</h2>
             <p>macOS may ask for automation permission when another app controls SwiftTag.</p>
+            <h2 id="automation-sandbox">AppleScript and app sandboxing</h2>
+            <p>Telling SwiftTag to read and write files (FLAC or `.swifttag` documents) through AppleScript may be restricted by macOS app sandboxing.
+                Add permissioned sandbox paths via <a href="workflows/settings.html#general-sandbox-paths">General settings: SwiftTag Sandbox Paths</a> 
+                to give SwiftTag read-write access to specified folders.
+            </p>
             <p>Related: <a href="workflows/saving.html">Save Changes</a>, <a href="automation/applescript.html">AppleScript</a>.</p>
         </article>
     </main>

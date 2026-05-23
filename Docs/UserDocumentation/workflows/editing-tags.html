@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Edit Tags - SwiftTag Documentation</title>
+    <title>Tags - SwiftTag Documentation</title>
     <link rel="stylesheet" href="../assets/swifttag-docs.css">
 </head>
 <body>
@@ -22,18 +22,33 @@
     <main class="shell">
         <article>
             <p class="section-label">Workflow</p>
-            <h1>Edit tags</h1>
+            <h1>Tags</h1>
             <p>
-                Select tracks first. The editor shows album fields, per-track table values,
-                core tags, and misc tags for current selection.
+                SwiftTag supports any/all FLAC/Ogg Vorbis tags. The editor window shows common tag 
+                fields as well as a misc section for custom keys. Edit tags directly in the editor 
+                or via <a href="../automation/applescript.html">AppleScript</a>. Track table selection 
+                is the source of truth for batch edits. When selected tracks differ, SwiftTag 
+                <a href="status-and-diffs.html#diff-formatting">marks</a> mixed or differing values. 
+                Entering a new value applies it to the selected editable tracks.
             </p>
 
             <section aria-labelledby="album-section">
                 <h2 id="album-section">Album Section</h2>
                 <p>
-                    <strong>Album</strong> and <strong>Album Artist</strong> sit above the track table.
-                    Editing these values updates selected track state. Mixed values are visually marked
-                    so you can decide whether to unify them.
+                    SwiftTag does not interfere with individual track tag/picture edits, allowinging for 
+                    mixed album/collection editing workflows; however, various features/settings have been 
+                    provided to manage an album centric workflow. For example, the <strong>Album</strong> 
+                    and <strong>Album Artist</strong> fields are located above the track table as they are 
+                    often shared across tracks and visually noteworthy, particularly for multi-track 
+                    selection edits. Other album-centric features include:
+                    <ul>
+                        <li><strong>File</strong> &gt; <strong>Set Track Total</strong> menu command.</li>
+                        <li><a href="settings.html#tags-track-total-compilation"><strong>Auto update Track Total</strong></a> setting to manage total track counts.</li>
+                        <li><a href="settings.html#tags-track-total-compilation"><strong>Auto update Compilation</strong></a> setting to manage compilation status.</li>
+                        <li><a href="settings.html#tags-picture-management"><strong>Save Front Cover to all Tracks</strong></a> setting to manage cover art presence.</li>
+                        <li><a href="settings.html#tags-picture-management"><strong>Save all Pictures to all Tracks</strong></a> setting to manage album art presence.</li>
+                        <li><a href="status-and-diffs.html#diff-formatting">Formatting</a> specific tag/picture differences.</li>
+                    </ul>
                 </p>
             </section>
 
@@ -60,7 +75,8 @@
                 <p>
                     <strong>Set Track Total</strong> writes the current track count into selected
                     total-track fields. If <strong>Auto update Track Total</strong> is enabled in
-                    <a href="settings.html#feedback">Tags settings</a>, SwiftTag manages that total automatically.
+                    <a href="settings.html#tags-track-total-compilation">Tags: Track Total and Compilation Management</a> 
+                    settings, SwiftTag manages that total automatically.
                 </p>
             </section>
 
@@ -80,15 +96,21 @@
             <section aria-labelledby="multi-selection">
                 <h2 id="multi-selection">Multi-Selection</h2>
                 <p>
-                    Selection is the source of truth for batch edits. When selected tracks disagree,
-                    SwiftTag marks mixed or differing values. Entering a new value applies it to the
-                    selected editable tracks.
+                    Selection is the source of truth for batch edits. When selected track values differ,
+                    SwiftTag <a href="status-and-diffs.html#diff-formatting">marks/formats</a> mixed or 
+                    differing values/fields. Entering a new value applies it to the selected editable tracks.
                 </p>
                 <aside class="callout">
-                    Locked tracks block editing and writeback. Unlock only files you intend to change.
+                    Locked (<a href="adding-flac-files.html#read-only">read-only</a>) tracks block editing and
+                    writeback. Unlock only files you intend to change.
+                </aside>
+                <aside class="callout warning">
+                    Tag save can replace or remove tag records for saved tracks.
+                    Review <a href="settings.html#general">save scope</a> and 
+                    <a href="settings.html#tags">propagation</a> settings before writing tags.
                 </aside>
                 <p>
-                    Next: <a href="album-art.html">Manage Album Art</a>,
+                    Next: <a href="album-art.html">Pictures/Album Art</a>,
                     <a href="saving.html">Save Changes</a>,
                     <a href="../examples/batch-edit-tags.html">Batch Edit Tags example</a>.
                 </p>

@@ -22,8 +22,54 @@
         <article>
             <p class="section-label">Examples</p>
             <h1>Batch edit tags</h1>
-            <p>Select target tracks, edit shared fields such as Artist or Genre, then save tags.</p>
-            <p>Reference: <a href="../workflows/editing-tags.html">Edit Tags</a>.</p>
+
+            <h2 id="steps">Multi-track edit via UI</h2>
+            <p>
+                Select one or more target tracks, edit <a href="../workflows/editing-tags.html">tag</a> fields and 
+                <a href="../workflows/album-art.html">pictures</a> (<a href="../workflows/status-and-diffs.html#diff-formatting">changes</a> 
+                apply to all selected tracks), then <a href="../workflows/saving.html">save</a> changes.
+            </p>
+
+            <h2 id="steps-apple-script">Multi-track edit via AppleScript</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>set parentFolder to POSIX path of ((path to me as text) & "::")
+set testFLACPath_1 to parentFolder & "path_to_your_flac/test_1.flac"
+set testFLACPath_2 to parentFolder & "path_to_your_flac/test_2.flac"
+
+tell application "SwiftTag"
+    -- add tracks to editor window --
+    set frontWindow to front editor window
+    set addedTracks to (add POSIX file testFLACPath_1 to frontWindow) as list
+    set end of addedTracks to (add POSIX file testFLACPath_2 to frontWindow)
+
+    -- edit tags on all added tracks --
+    repeat with thisTrack in addedTracks
+        tell thisTrack
+            set album to "Test Album"
+            set album artist to "Test Artist"
+            set sort album artist to "Artist, Test"
+            set artist to "Test Artist"
+            set sort artist to "Artist, Test"
+        end tell
+    end repeat
+
+    -- save only tag changes to all and only added tracks --
+    set selected tracks of frontWindow to addedTracks
+    save frontWindow with scope selected with payload tags only
+end tell</code></pre>
+
+            <p>
+                Reference: <a href="../workflows/editing-tags.html">Edit Tags</a>,
+                <a href="../workflows/album-art.html">Album Art</a>,
+                <a href="../workflows/status-and-diffs.html">Status and Diffs</a>,
+                <a href="../workflows/saving.html">Saving</a>,
+                <a href="../automation/applescript.html">AppleScript overview</a>,
+                <a href="../automation/applescript-application.html">application class</a>,
+                <a href="../automation/applescript-windows.html#editor-window-definition">editor window class</a>,
+                <a href="../automation/applescript-track.html">track class</a>,
+                <a href="../automation/applescript-tag.html">tag class</a>,
+                <a href="../automation/applescript-save.html">save command</a>.
+            </p>
         </article>
     </main>
     <footer class="site-footer">
