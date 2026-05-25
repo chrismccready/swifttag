@@ -22,7 +22,121 @@
         <article>
             <p class="section-label">Examples</p>
             <h1>Save tags only</h1>
-            <p>Use Save Tags when text metadata changed and embedded pictures should stay untouched.</p>
+
+            <h2 id="steps">Save tags only via UI</h2>
+            <p>
+                Use Save Tags when text metadata changed and embedded pictures should stay untouched.
+            </p>
+
+            <h2 id="steps-apple-script">Multi-track edit via AppleScript</h2>
+                <div class="code-label">AppleScript</div>
+                <pre><code>on run
+    -- this test folder path (or any other paths that SwiftTag does not have explicit permission to)
+    -- will need to be added to SwiftTag's Sandbox Paths in General settings (not needed when going
+    -- through open/save panels as Swiftag uses security-scoped bookmarks for those)
+    set testFolder to POSIX path of ((path to me as text) & "::") & "../test-io/"
+    set testPNGData to "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO3ZbZ0AAAAASUVORK5CYII="
+
+    tell application "SwiftTag"
+        -- load some tracks into a new editor window --
+        set editorWindow to make new editor window
+        set editorWindowShortID to (do shell script "date +%Y%m%d%H%M%S") & "-" & (my shortUUID from (window id of editorWindow as text))
+        set trackPaths to {testFolder & "test_1.flac", testFolder & "test_2.flac", testFolder & "test_3.flac"}
+        tell editorWindow
+            -- add tracks --
+            set addedTracks to add trackPaths
+
+            -- before making track changes, save a backup document --
+            set backupDocumentPath to testFolder & editorWindowShortID & "-backup.swifttag"
+            save its document in backupDocumentPath
+            log "Saved backup document at " & backupDocumentPath & return & ¬
+                " for editor window index: " & index & ", name: " & name & ", window id: " & window id
+
+            -- make some track changes --
+            -- repeat in reverse order as deleting existing tags may reorder tracks due to loss of track number --
+            repeat with i from (count addedTracks) to 1 by -1
+                set thisTrack to item i of addedTracks
+                log "Deleting tags and pictures for track: " & file of thisTrack & ", locked: " & locked of thisTrack
+                tell thisTrack
+                    -- clear existing tags and pictures --
+                    my deleteMetadata for thisTrack with deleteTags, deletePictures
+                end tell
+            end repeat
+
+            -- add new tags and pictures --
+            -- repeat in forward order as adding new tags (with track number) will reorder tracks founded on file name order --
+            repeat with i from 1 to (count addedTracks)
+                set thisTrack to item i of addedTracks
+                tell thisTrack
+                    -- update tags --
+                    set album to "Test Album"
+                    set album artist to "Test Artist"
+                    set sort album artist to "Artist, Test"
+                    set artist to "Test Artist"
+                    set sort artist to "Artist, Test"
+                    set title to "Test Title " & i
+                    set track number to i
+                    set track count to count addedTracks
+
+                    -- update pictures --
+                    make new picture with properties {data:testPNGData, picture type:front cover, description:"Test PNG Cover"}
+
+                    -- log some track properties --
+                    log "Updated track: " & return & ¬ 
+                        "  • File: " & its file & return & ¬
+                        "  • Track Number: " & track number & return & ¬
+                        "  • Title: " & title & return & ¬
+                        "  • Album: " & album & return & ¬
+                        "  • Artist: " & artist & return & ¬
+                        "  • Cover Description: " & (description of first picture whose picture type is front cover)
+                end tell
+            end repeat
+
+            -- save all FLAC files with all changes --
+            save with scope all with payload tags and pictures
+
+            -- save latest changes to a new document --
+            set changesDocumentPath to testFolder & editorWindowShortID & "-changes.swifttag"
+            save its document in changesDocumentPath
+            log "Saved document at " & changesDocumentPath & return & ¬
+                " for editor window index: " & index & ", name: " & name & ", window id: " & window id
+        end tell
+    end tell
+end run
+
+on deleteMetadata for theTrack given deleteTags:deleteTags, deletePictures:deletePictures
+    tell application "SwiftTag"
+        if deleteTags then
+            try
+                delete tags of theTrack
+            on error errMsg number errNum
+                if errNum is not -1728 then -- ignore "can't delete missing value" error which can happen if there are no tags to delete
+                    "Error deleting tags: " & errMsg & " (error number: " & errNum & ")"
+                end if
+            end try
+        end if
+        if deletePictures then
+            try
+                delete pictures of theTrack
+            on error errMsg number errNum
+                if errNum is not -1728 then -- ignore "can't delete missing value" error which can happen if there are no pictures to delete
+                    "Error deleting pictures: " & errMsg & " (error number: " & errNum & ")"
+                end if
+            end try
+        end if
+    end tell
+end deleteMetadata
+
+on shortUUID from theUUID
+    return text 1 thru 8 of theUUID
+end shortUUID </code></pre>
+
+            <aside class="callout note">
+               This example used a local variable for <code>testPNGData</code>, but you can also load image data from a file
+               see <a href="../automation/applescript-picture.html#examples">picture class</a> for example using NSData and 
+               Base64 encoded data.
+            </aside>
+
             <p>Reference: <a href="../workflows/saving.html">Save Changes</a>.</p>
         </article>
     </main>

@@ -71,7 +71,14 @@
                 <pre><code>tell application "SwiftTag"
     set sessionDocument to document of front editor window
     set documentName to name of sessionDocument
+    tell front editor window
+        set documentFile to file of its document
+    end tell
 end tell</code></pre>
+                <aside class="callout note">
+                    To clarify a <code>document</code> object specifier inside a <code>tell editor window</code> block, use
+                    <code>its document</code> or <code>document of it</code> to refer to the <code>editor window's document</code>.
+                </aside>
             </section>
 
             <section aria-labelledby="properties">
@@ -140,6 +147,12 @@ end tell</code></pre>
                 <pre><code>tell application "SwiftTag"
     set sessionDocument to document of front editor window
     save sessionDocument in POSIX file "/path/to/session.swifttag"
+end tell</code></pre>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    tell front editor window
+        save its document in POSIX file "/path/to/session.swifttag"
+    end tell
 end tell</code></pre>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"

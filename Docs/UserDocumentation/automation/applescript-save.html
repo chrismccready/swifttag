@@ -77,6 +77,10 @@
                     Saving an editor window can rewrite source FLAC files. Use explicit
                     <code>with scope</code> and <code>with payload</code> when automating writes.
                 </aside>
+                <aside class="callout note">
+                    To clarify a <code>document</code> object specifier inside a <code>tell front editor window</code> block, use
+                    <code>save its document in ...</code> or <code>save document of it in ...</code> to save the SwiftTag document.
+                </aside>
             </section>
 
             <section aria-labelledby="parameters">
@@ -155,6 +159,12 @@
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"
     save document of front editor window in POSIX file "/path/to/session.swifttag"
+end tell</code></pre>
+                <div class="code-label">AppleScript</div>
+                <pre><code>tell application "SwiftTag"
+    tell front editor window
+        save its document in POSIX file "/path/to/session.swifttag"
+    end tell
 end tell</code></pre>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"

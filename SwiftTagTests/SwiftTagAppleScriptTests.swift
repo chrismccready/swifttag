@@ -93,7 +93,7 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
-    func savingScriptEditorWindowWritesEmptySwiftTagDocument() throws {
+    func savingScriptEditorWindowDocumentPropertyWritesEmptySwiftTagDocument() throws {
         SwiftTagAppleScriptController.shared.resetForTesting()
         EditorWindowCoordinator.shared.resetForTesting()
         defer {
@@ -145,7 +145,7 @@ struct SwiftTagAppleScriptTests {
         )
 
         let destinationURL = try Self.tempPackageURL(name: "applescript-empty-save")
-        let savedDocument = try scriptWindow.saveSwiftTagDocument(to: destinationURL)
+        let savedDocument = try scriptWindow.document.saveSwiftTagDocument(to: destinationURL)
         let loadedDocument = try SwiftTagDocumentPackageReader.read(from: destinationURL)
 
         #expect(savedDocument.fileURL == destinationURL.standardizedFileURL)

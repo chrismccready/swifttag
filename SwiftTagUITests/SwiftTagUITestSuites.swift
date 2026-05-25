@@ -141,6 +141,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessSavesDocumentPropertyFromEditorWindowTell() throws {
+        try scenarioAppleScriptHarnessSavesDocumentPropertyFromEditorWindowTell()
+    }
+
+    @MainActor
     func testAppleScriptHarnessAddsLockedTrackWithOptionalParameter() throws {
         try scenarioAppleScriptHarnessAddsLockedTrackWithOptionalParameter()
     }

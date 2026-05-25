@@ -75,7 +75,14 @@
     set firstTrack to track 1 of front editor window
     set trackTitle to title of firstTrack
     set albumTracks to every track of front editor window whose album is "Test Album"
+    tell first track of front editor window
+        log "File path of first track: " & its file
+    end tell
 end tell</code></pre>
+                <aside class="callout note">
+                    To clarify a <code>file</code> object specifier inside a <code>tell track</code> block, use
+                    <code>its track</code> or <code>track of it</code> to refer to the <code>track's file</code>.
+                </aside>
             </section>
 
             <section aria-labelledby="elements">
@@ -565,6 +572,7 @@ end tell</code></pre>
         set locked to false
         set title to "New Title"
         set track number to 1
+        set locked to true
     end tell
 end tell</code></pre>
                 <div class="code-label">AppleScript</div>
@@ -573,6 +581,7 @@ end tell</code></pre>
         set tagCount to count of tags
         set pictureCount to count of pictures
         set audioHash to FLAC fingerprint
+        set flacFile to its file
     end tell
 end tell</code></pre>
             </section>

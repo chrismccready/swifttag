@@ -775,6 +775,50 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessSavesDocumentPropertyFromEditorWindowTell() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let destinationURL = swiftTagAppContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("swifttag-applescript-window-document-\(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        try? FileManager.default.removeItem(at: destinationURL)
+        let app = try launchApp()
+        defer {
+            app.terminate()
+            try? FileManager.default.removeItem(at: destinationURL)
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let output = try runAppleScript(
+            """
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                set backupDocumentPath to "\(destinationURL.path)"
+                tell front editor window
+                    set targetDocument to its document
+                    save targetDocument in backupDocumentPath
+                    return ((class of targetDocument) as text) & linefeed & (name of targetDocument as text)
+                end tell
+            end tell
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, ["document", destinationURL.lastPathComponent])
+        XCTAssertTrue(FileManager.default.fileExists(atPath: destinationURL.path))
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: destinationURL.appendingPathComponent("Info.plist").path
+            )
+        )
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessAddsLockedTrackWithOptionalParameter() throws {
         try requireAppleScriptHarnessEnabled()
 
@@ -5145,6 +5189,20 @@ class SwiftTagUITestCase: XCTestCase {
 
     private func appContainerUITestFixturesDirectoryURL() -> URL {
         let directoryURL = appContainerCachesDirectoryURL()
+            .appendingPathComponent("SwiftTagUITestFixtures", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        return directoryURL
+    }
+
+    private func swiftTagAppContainerUITestFixturesDirectoryURL() -> URL {
+        let directoryURL = URL(fileURLWithPath: "/Users", isDirectory: true)
+            .appendingPathComponent(NSUserName(), isDirectory: true)
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Containers", isDirectory: true)
+            .appendingPathComponent("com.toowalks.swifttag", isDirectory: true)
+            .appendingPathComponent("Data", isDirectory: true)
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Caches", isDirectory: true)
             .appendingPathComponent("SwiftTagUITestFixtures", isDirectory: true)
         try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         return directoryURL
