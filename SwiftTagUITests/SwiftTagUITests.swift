@@ -1301,6 +1301,66 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessMakesTrackPicturesFromAppleScriptImageData() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let jpegURL = try temporaryJPEGFixtureURL(name: "applescript-jpeg-picture", color: .systemYellow)
+        let pngURL = try temporaryPNGFixtureURL(name: "applescript-pngf-picture", color: .systemPurple)
+        defer {
+            try? FileManager.default.removeItem(at: jpegURL)
+            try? FileManager.default.removeItem(at: pngURL)
+        }
+
+        let app = try launchApp(importFixture: true)
+        defer {
+            app.terminate()
+        }
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+
+        let output = try runAppleScript(
+            """
+            use scripting additions
+
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell first track of front editor window
+                    set pictureCountBeforeMake to count of pictures
+                    set jpegData to my getJPEGData("\(jpegURL.path)")
+                    set pngData to my getPNGData("\(pngURL.path)")
+                    set jpegPicture to make new picture with properties {data:jpegData, picture type:back cover, description:"JPEG Back Cover"}
+                    set pngPicture to make new picture with properties {data:pngData, picture type:leaflet, description:"PNGf Leaflet"}
+                    return (((count of pictures) - pictureCountBeforeMake) as text) & linefeed & (picture type of jpegPicture as text) & linefeed & (description of jpegPicture) & linefeed & (MIME type of jpegPicture) & linefeed & (picture type of pngPicture as text) & linefeed & (description of pngPicture) & linefeed & (MIME type of pngPicture)
+                end tell
+            end tell
+
+            on getJPEGData(imagePath)
+                return read (POSIX file imagePath) as JPEG picture
+            end getJPEGData
+
+            on getPNGData(imagePath)
+                return read (POSIX file imagePath) as «class PNGf»
+            end getPNGData
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 20.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines, [
+            "2",
+            "back cover",
+            "JPEG Back Cover",
+            "image/jpeg",
+            "leaflet",
+            "PNGf Leaflet",
+            "image/png"
+        ])
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessMakesTrackPicturesFromBase64Data() throws {
         try requireAppleScriptHarnessEnabled()
 
@@ -4412,6 +4472,28 @@ class SwiftTagUITestCase: XCTestCase {
         let bitmapRepresentation = try XCTUnwrap(NSBitmapImageRep(data: tiffData))
         let pngData = try XCTUnwrap(bitmapRepresentation.representation(using: .png, properties: [:]))
         try pngData.write(to: imageURL)
+        return imageURL
+    }
+
+    private func temporaryJPEGFixtureURL(name: String, color: NSColor) throws -> URL {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftTagUITestImages", isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+
+        let imageURL = directoryURL.appendingPathComponent(name).appendingPathExtension("jpg")
+        try? FileManager.default.removeItem(at: imageURL)
+
+        let imageSize = NSSize(width: 24, height: 24)
+        let image = NSImage(size: imageSize)
+        image.lockFocus()
+        color.setFill()
+        NSBezierPath(rect: NSRect(origin: .zero, size: imageSize)).fill()
+        image.unlockFocus()
+
+        let tiffData = try XCTUnwrap(image.tiffRepresentation)
+        let bitmapRepresentation = try XCTUnwrap(NSBitmapImageRep(data: tiffData))
+        let jpegData = try XCTUnwrap(bitmapRepresentation.representation(using: .jpeg, properties: [:]))
+        try jpegData.write(to: imageURL)
         return imageURL
     }
 

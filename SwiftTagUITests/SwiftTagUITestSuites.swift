@@ -186,6 +186,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessMakesTrackPicturesFromAppleScriptImageData() throws {
+        try scenarioAppleScriptHarnessMakesTrackPicturesFromAppleScriptImageData()
+    }
+
+    @MainActor
     func testAppleScriptHarnessMakesTrackPicturesFromBase64Data() throws {
         try scenarioAppleScriptHarnessMakesTrackPicturesFromBase64Data()
     }

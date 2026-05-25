@@ -2179,12 +2179,16 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
         case let value as NSString:
             return base64DecodedData(from: value as String)
         case let descriptor as NSAppleEventDescriptor:
+            let descriptorData = descriptor.data as Data
             if descriptor.descriptorType == SwiftTagAppleScriptDescriptorType.data {
-                return imageDataOrDecodedBase64Data(from: descriptor.data as Data)
+                return imageDataOrDecodedBase64Data(from: descriptorData)
             }
             if let stringValue = descriptor.stringValue,
                let data = base64DecodedData(from: stringValue) {
                 return data
+            }
+            if let imageData = imageData(from: descriptorData) {
+                return imageData
             }
             guard let coercedData = descriptor
                 .coerce(toDescriptorType: SwiftTagAppleScriptDescriptorType.data)?
@@ -2200,9 +2204,8 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
     }
 
     private static func imageDataOrDecodedBase64Data(from data: Data) -> Data {
-        let specifications = PictureDataUtilities.computedSpecifications(from: data)
-        guard specifications.width <= 0 || specifications.height <= 0 else {
-            return data
+        if let imageData = imageData(from: data) {
+            return imageData
         }
 
         guard let stringValue = String(data: data, encoding: .utf8),
@@ -2211,6 +2214,15 @@ struct SwiftTagAppleScriptPicturePayload: Equatable {
         }
 
         return decodedData
+    }
+
+    private static func imageData(from data: Data) -> Data? {
+        let specifications = PictureDataUtilities.computedSpecifications(from: data)
+        guard specifications.width > 0, specifications.height > 0 else {
+            return nil
+        }
+
+        return data
     }
 
     private static func base64DecodedData(from rawValue: String) -> Data? {

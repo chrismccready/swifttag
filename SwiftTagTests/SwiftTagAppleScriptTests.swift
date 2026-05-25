@@ -1934,6 +1934,60 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func pictureMakePayloadAcceptsJPEGPictureDescriptorData() throws {
+        let pictureData = try Self.jpegData(color: .systemYellow)
+        let imageDescriptor = try #require(
+            NSAppleEventDescriptor(
+                descriptorType: Self.fourCharCode("JPEG").uint32Value,
+                data: pictureData
+            )
+        )
+        let typeDescriptor = NSAppleEventDescriptor(
+            enumCode: Self.fourCharCode("bckc").uint32Value
+        )
+
+        let payload = try SwiftTagAppleScriptPicturePayload.from(
+            properties: [
+                Self.fourCharCode("pcda"): imageDescriptor,
+                Self.fourCharCode("pcty"): typeDescriptor,
+                Self.fourCharCode("tdsc"): "JPEG Back Cover"
+            ] as NSDictionary,
+            contentsValue: nil
+        )
+
+        #expect(payload.data == pictureData)
+        #expect(payload.type == 4)
+        #expect(payload.description == "JPEG Back Cover")
+        #expect(payload.mimeType == "image/jpeg")
+    }
+
+    @MainActor
+    @Test
+    func pictureMakePayloadAcceptsPNGfDescriptorData() throws {
+        let pictureData = try #require(Self.singlePixelPNGData())
+        let imageDescriptor = try #require(
+            NSAppleEventDescriptor(
+                descriptorType: Self.fourCharCode("PNGf").uint32Value,
+                data: pictureData
+            )
+        )
+
+        let payload = try SwiftTagAppleScriptPicturePayload.from(
+            properties: [
+                "pictureType": Self.fourCharCode("leaf"),
+                "objectDescription": "PNGf Leaflet"
+            ] as NSDictionary,
+            contentsValue: imageDescriptor
+        )
+
+        #expect(payload.data == pictureData)
+        #expect(payload.type == 5)
+        #expect(payload.description == "PNGf Leaflet")
+        #expect(payload.mimeType == "image/png")
+    }
+
+    @MainActor
+    @Test
     func pictureMakePayloadAcceptsCocoaScriptingContentsProperties() throws {
         let pictureData = try #require(Self.singlePixelPNGData())
         let base64Data = try #require(pictureData.base64EncodedString().data(using: .utf8))
@@ -3058,6 +3112,22 @@ private extension SwiftTagAppleScriptTests {
         }
 
         return pngData
+    }
+
+    static func jpegData(color: NSColor) throws -> Data {
+        let image = NSImage(size: NSSize(width: 1, height: 1))
+        image.lockFocus()
+        color.setFill()
+        NSRect(x: 0, y: 0, width: 1, height: 1).fill()
+        image.unlockFocus()
+
+        guard let tiffData = image.tiffRepresentation,
+              let bitmapRepresentation = NSBitmapImageRep(data: tiffData),
+              let jpegData = bitmapRepresentation.representation(using: .jpeg, properties: [:]) else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+
+        return jpegData
     }
 
     static func tempPackageURL(name: String) throws -> URL {
