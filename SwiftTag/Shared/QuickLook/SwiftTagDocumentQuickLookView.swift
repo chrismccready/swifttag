@@ -48,6 +48,23 @@ struct SwiftTagDocumentQuickLookView: View {
                 }
 
                 Spacer(minLength: 0)
+
+                if let audioSummary = snapshot.audioSummary {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8, style: .circular)
+                            .fill(Color.primary.opacity(0.08))
+                        HStack(spacing: 0) {
+                            metadataText(audioSummary.formatText)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Spacer(minLength: 8)
+                            metadataText(audioSummary.durationText)
+                                .monospacedDigit()
+                                .frame(minWidth: layout.durationColumnMinWidth, alignment: .trailing)
+                        }
+                        .padding(.horizontal, 8)
+                    }
+                    .frame(height: 32)
+                }
             }
             .padding(.top, layout.topPadding)
             .padding(.bottom, layout.bottomPadding)

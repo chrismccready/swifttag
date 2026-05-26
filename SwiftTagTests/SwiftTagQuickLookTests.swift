@@ -47,6 +47,9 @@ struct SwiftTagQuickLookTests {
         albumArtist: String = "Album Artist",
         artist: String = "Album Artist",
         trackNumber: String? = nil,
+        sampleRate: UInt32? = nil,
+        bitsPerSample: UInt32? = nil,
+        channels: UInt32? = nil,
         duration: TimeInterval? = nil,
         pictures: [FlacWritablePictureRecord] = []
     ) -> SwiftTagDocumentImportTrack {
@@ -65,6 +68,9 @@ struct SwiftTagQuickLookTests {
             sourceFileURL: nil,
             securityScopedBookmarkData: nil,
             flacFingerprint: nil,
+            sampleRate: sampleRate,
+            bitsPerSample: bitsPerSample,
+            channels: channels,
             duration: duration,
             tags: tags,
             pictures: pictures
@@ -125,6 +131,7 @@ struct SwiftTagQuickLookTests {
             trackSectionSpacing: 28,
             trackRowSpacing: 6,
             durationColumnMinWidth: 72,
+            audioSummaryHeight: 32,
             backgroundBlurRadius: 28,
             backgroundOverlayOpacity: 0.42,
             textShadowRadius: 4
@@ -230,7 +237,7 @@ struct SwiftTagQuickLookTests {
 
         let snapshot = SwiftTagDocumentQuickLookSnapshot.make(
             from: document,
-            layout: Self.layoutWithHeight(386)
+            layout: Self.layoutWithHeight(418)
         )
 
         #expect(snapshot.sharedArtist == "Different Artist")
@@ -266,6 +273,72 @@ struct SwiftTagQuickLookTests {
     }
 
     @Test
+    func quickLookSnapshotSummarizesSharedAudioPropertiesAndTotalDuration() {
+        let stereoDocument = Self.importResult(tracks: [
+            Self.importTrack(
+                title: "First",
+                trackNumber: "01",
+                sampleRate: 44_100,
+                bitsPerSample: 16,
+                channels: 2,
+                duration: 3_600
+            ),
+            Self.importTrack(
+                title: "Second",
+                trackNumber: "02",
+                sampleRate: 44_100,
+                bitsPerSample: 16,
+                channels: 2,
+                duration: 722
+            ),
+        ])
+        let monoDocument = Self.importResult(tracks: [
+            Self.importTrack(
+                title: "Mono",
+                trackNumber: "01",
+                sampleRate: 48_000,
+                bitsPerSample: 24,
+                channels: 1,
+                duration: 60
+            ),
+        ])
+
+        let stereoSnapshot = SwiftTagDocumentQuickLookSnapshot.make(from: stereoDocument)
+        let monoSnapshot = SwiftTagDocumentQuickLookSnapshot.make(from: monoDocument)
+
+        #expect(stereoSnapshot.audioSummary?.formatText == "16 bit @ 44.1 kHz (stereo)")
+        #expect(stereoSnapshot.audioSummary?.durationText == "1:12:02")
+        #expect(monoSnapshot.audioSummary?.formatText == "24 bit @ 48 kHz (mono)")
+    }
+
+    @Test
+    func quickLookSnapshotUsesMixedAudioSummaryValuesWhenTrackPropertiesDiffer() {
+        let document = Self.importResult(tracks: [
+            Self.importTrack(
+                title: "First",
+                trackNumber: "01",
+                sampleRate: 44_100,
+                bitsPerSample: 16,
+                channels: 1,
+                duration: 60.6
+            ),
+            Self.importTrack(
+                title: "Second",
+                trackNumber: "02",
+                sampleRate: 48_000,
+                bitsPerSample: 24,
+                channels: 2,
+                duration: 65.6
+            ),
+        ])
+
+        let snapshot = SwiftTagDocumentQuickLookSnapshot.make(from: document)
+
+        #expect(snapshot.audioSummary?.formatText == "mixed @ mixed (mixed)")
+        #expect(snapshot.audioSummary?.durationText == "2:06")
+    }
+
+    @Test
     func quickLookViewSourceUsesSpacerBeforeTrailingDurationText() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -278,6 +351,8 @@ struct SwiftTagQuickLookTests {
 
         #expect(source.contains("Spacer(minLength: 4)"))
         #expect(source.contains("metadataText(row.durationText)"))
+        #expect(source.contains("metadataText(audioSummary.formatText)"))
+        #expect(source.contains("metadataText(audioSummary.durationText)"))
     }
 
     @MainActor

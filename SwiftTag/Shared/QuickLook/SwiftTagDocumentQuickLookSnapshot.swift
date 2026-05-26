@@ -14,6 +14,7 @@ struct SwiftTagDocumentQuickLookLayout: Equatable {
     let trackSectionSpacing: CGFloat
     let trackRowSpacing: CGFloat
     let durationColumnMinWidth: CGFloat
+    let audioSummaryHeight: CGFloat
     let backgroundBlurRadius: CGFloat
     let backgroundOverlayOpacity: Double
     let textShadowRadius: CGFloat
@@ -31,6 +32,7 @@ struct SwiftTagDocumentQuickLookLayout: Equatable {
         trackSectionSpacing: 20,
         trackRowSpacing: 4,
         durationColumnMinWidth: 58,
+        audioSummaryHeight: 32,
         backgroundBlurRadius: 14,
         backgroundOverlayOpacity: 0.42,
         textShadowRadius: 3
@@ -48,7 +50,13 @@ struct SwiftTagDocumentQuickLookLayout: Equatable {
         let additionalMetadataCount = max(metadataLineCount - 1, 0)
         let metadataHeight = CGFloat(additionalMetadataCount) * bodyLineHeight
         let metadataSpacingHeight = CGFloat(additionalMetadataCount) * metadataLineSpacing
-        let consumedHeight = topPadding + bottomPadding + titleLineHeight + metadataHeight + metadataSpacingHeight + trackSectionSpacing
+        let consumedHeight = topPadding
+            + bottomPadding
+            + titleLineHeight
+            + metadataHeight
+            + metadataSpacingHeight
+            + trackSectionSpacing
+            + audioSummaryHeight
         let availableTrackHeight = canvasSize.height - consumedHeight
         guard availableTrackHeight > 0 else {
             return 0
@@ -79,6 +87,7 @@ struct SwiftTagDocumentQuickLookSnapshot: Equatable {
     let sharedArtist: String?
     let trackRows: [TrackRow]
     let usesEllipsisRow: Bool
+    let audioSummary: AudioSummary?
     let background: Background
 
     static func make(
@@ -108,6 +117,7 @@ struct SwiftTagDocumentQuickLookSnapshot: Equatable {
             sharedArtist: sharedArtist,
             trackRows: trackRows,
             usesEllipsisRow: usesEllipsisRow,
+            audioSummary: AudioSummary.make(from: document.tracks),
             background: firstFrontCoverBackground(in: document.tracks)
         )
     }
@@ -219,6 +229,73 @@ struct SwiftTagDocumentQuickLookSnapshot: Equatable {
 
         let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmedValue.isEmpty ? nil : trimmedValue
+    }
+}
+
+extension SwiftTagDocumentQuickLookSnapshot {
+    struct AudioSummary: Equatable {
+        let formatText: String
+        let durationText: String
+
+        static func make(from tracks: [SwiftTagDocumentImportTrack]) -> Self? {
+            guard !tracks.isEmpty else {
+                return nil
+            }
+
+            let bitsPerSampleText = sharedDisplayValue(
+                in: tracks,
+                value: \.bitsPerSample
+            ) { "\($0) bit" }
+            let sampleRateText = sharedDisplayValue(
+                in: tracks,
+                value: \.sampleRate
+            ) { TrackSampleRateFormatter.string(from: $0) }
+            let channelsText = sharedDisplayValue(
+                in: tracks,
+                value: \.channels
+            ) { channelDisplayValue($0) }
+            let totalDuration = tracks.reduce(TimeInterval.zero) { partialResult, track in
+                guard let duration = track.duration,
+                      duration.isFinite,
+                      duration >= 0 else {
+                    return partialResult
+                }
+
+                return partialResult + duration
+            }
+
+            return AudioSummary(
+                formatText: "\(bitsPerSampleText) @ \(sampleRateText) (\(channelsText))",
+                durationText: TrackDurationFormatter.string(from: totalDuration)
+            )
+        }
+
+        private static func sharedDisplayValue<Value: Hashable>(
+            in tracks: [SwiftTagDocumentImportTrack],
+            value keyPath: KeyPath<SwiftTagDocumentImportTrack, Value?>,
+            formatter: (Value) -> String?
+        ) -> String {
+            let values = tracks.map { $0[keyPath: keyPath] }
+            guard let firstValue = values.first,
+                  let unwrappedFirstValue = firstValue,
+                  values.allSatisfy({ $0 == firstValue }),
+                  let displayValue = formatter(unwrappedFirstValue) else {
+                return "mixed"
+            }
+
+            return displayValue
+        }
+
+        private static func channelDisplayValue(_ channels: UInt32) -> String {
+            switch channels {
+            case 1:
+                return "mono"
+            case 2:
+                return "stereo"
+            default:
+                return "\(channels) channels"
+            }
+        }
     }
 }
 
