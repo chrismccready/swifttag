@@ -14,6 +14,7 @@
 		7279BF502F622E6E003BC32B /* test-with_padding.flac in Resources */ = {isa = PBXBuildFile; fileRef = 7279BF4D2F622E6E003BC32B /* test-with_padding.flac */; };
 		7279BF512F622E88003BC32B /* test.flac in Resources */ = {isa = PBXBuildFile; fileRef = 72294DE42F5AA04100840CFE /* test.flac */; };
 		7279BF522F622E88003BC32B /* test.flac in Resources */ = {isa = PBXBuildFile; fileRef = 72294DE42F5AA04100840CFE /* test.flac */; };
+		72C0FFEE2F9A000100000001 /* UserDocumentation in Resources */ = {isa = PBXBuildFile; fileRef = 72C0FFEE2F9A000100000002 /* UserDocumentation */; };
 		73A0B0000000000000000040 /* Models/FlacPictureModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A0B0000000000000000030 /* Models/FlacPictureModels.swift */; };
 		73A0B0000000000000000041 /* Utilities/SwiftTagDocumentSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A0B0000000000000000031 /* Utilities/SwiftTagDocumentSupport.swift */; };
 		73A0B0000000000000000042 /* Utilities/SwiftTagDocumentPackageManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A0B0000000000000000032 /* Utilities/SwiftTagDocumentPackageManifest.swift */; };
@@ -75,6 +76,7 @@
 		7275A2332F521874001AE708 /* build-libflac.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-libflac.sh"; sourceTree = "<group>"; };
 		7275A3202F521E70001AE708 /* SwiftTag-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SwiftTag-Bridging-Header.h"; sourceTree = "<group>"; };
 		7279BF4D2F622E6E003BC32B /* test-with_padding.flac */ = {isa = PBXFileReference; lastKnownFileType = file; path = "test-with_padding.flac"; sourceTree = "<group>"; };
+		72C0FFEE2F9A000100000002 /* UserDocumentation */ = {isa = PBXFileReference; lastKnownFileType = folder; path = UserDocumentation; sourceTree = "<group>"; };
 		73A0B0000000000000000030 /* Models/FlacPictureModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/FlacPictureModels.swift; sourceTree = "<group>"; };
 		73A0B0000000000000000031 /* Utilities/SwiftTagDocumentSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/SwiftTagDocumentSupport.swift; sourceTree = "<group>"; };
 		73A0B0000000000000000032 /* Utilities/SwiftTagDocumentPackageManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/SwiftTagDocumentPackageManifest.swift; sourceTree = "<group>"; };
@@ -204,6 +206,7 @@
 			children = (
 				7268E7E02F58B69F009A1E37 /* Guides */,
 				7268E7DF2F58B67F009A1E37 /* Plans */,
+				72C0FFEE2F9A000100000002 /* UserDocumentation */,
 				7268E8252F58C537009A1E37 /* README.md */,
 				725742B12F660DA200393914 /* testing-tools-review.md */,
 			);
@@ -403,6 +406,7 @@
 			files = (
 				72294DEE2F5AA04100840CFE /* test.flac in Resources */,
 				7279BF4F2F622E6E003BC32B /* test-with_padding.flac in Resources */,
+				72C0FFEE2F9A000100000001 /* UserDocumentation in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

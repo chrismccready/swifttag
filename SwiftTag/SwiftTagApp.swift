@@ -318,6 +318,13 @@ private struct AppCommands: Commands {
             Divider()
         }
 
+        CommandGroup(replacing: .help) {
+            Button("SwiftTag Help") {
+                SwiftTagHelpDocumentation.open()
+            }
+            .keyboardShortcut("?", modifiers: [.command])
+        }
+
         CommandGroup(replacing: .saveItem) {
             Button("Save") {
                 performDefaultSave?()
