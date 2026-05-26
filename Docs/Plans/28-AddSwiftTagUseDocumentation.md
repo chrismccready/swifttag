@@ -238,7 +238,7 @@ Docs/UserDocumentation/
   workflows/
     adding-flac-files.html
     tags.html
-    album-art.html
+    pictures.html
     saving.html
     swifttag-documents.html
     settings.html
