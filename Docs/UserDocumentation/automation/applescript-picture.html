@@ -222,10 +222,13 @@ tell application "SwiftTag"
         log "Moved picture with pool id " & pool id of result & " from leaflet to media with description " & quote & description of result & quote & "."
         delete leafletPicture
 
-        -- create picture from file --
+        -- create picture from file using NSData and Base64 encoded data --
         set pictureFilePath to "/path/to/image.jpg"
         set newLeafletPictureData to my getBase64EncodedData from pictureFilePath
         set newLeafletPicture to make new picture with properties {data:newLeafletPictureData, picture type:leaflet, description:"Leaflet"}
+
+        -- create picture from file using AppleScript data --
+        make new picture with properties {data:(my getData from "/path/to/another-image.png"), picture type:back cover, description:"Back Cover"}
     end tell
 end tell
 
@@ -241,7 +244,36 @@ on getBase64EncodedData from filePath
     on error errorMessage number errorNumber
         error "ERROR: Failed to get byte data. " & errorMessage & " (" & errorNumber & ")"
     end try
-end getBase64EncodedData</code></pre>
+end getBase64EncodedData
+
+-- Get file data as AppleScript data for direct assignment to picture data property (not base64 encoded) --
+on getData from filePath
+    try
+        set fileAlias to POSIX file filePath as alias
+    on error
+         error "ERROR: Could not get file alias. Check the path."
+    end try
+
+    set fileHandle to open for access fileAlias
+    try
+        set fileData to read fileAlias to eof as data
+        close access fileHandle
+        return fileData
+    on error errMsg number errNum
+        try
+            close access fileHandle
+        end try
+        error errMsg number errNum
+    end try
+end getData</code></pre>
+                <aside class="callout note">
+                    The <code>getData</code> handler in the above example does not require <code>use framework "Foundation"</code> 
+                    or <code>use scripting additions</code>.
+                </aside>
+                <aside class="callout note">
+                    SwiftTag will accept any macOS supported image type and will convert images that are not JPEG or PNG to PNG upon 
+                    saving to FLAC file.
+                </aside>
             </section>
 
             <p>

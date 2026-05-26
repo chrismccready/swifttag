@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Save Tags Only - SwiftTag Documentation</title>
+    <title>Re-tag with AppleScript - SwiftTag Documentation</title>
     <link rel="stylesheet" href="../assets/swifttag-docs.css">
 </head>
 <body>
@@ -21,14 +21,11 @@
     <main class="shell">
         <article>
             <p class="section-label">Examples</p>
-            <h1>Save tags only</h1>
-
-            <h2 id="steps">Save tags only via UI</h2>
+            <h1>Re-tag with AppleScript</h1>
             <p>
-                Use Save Tags when text metadata changed and embedded pictures should stay untouched.
+                Use AppleScript to remove existing tags and pictures, then re-tag and add new front cover.
             </p>
 
-            <h2 id="steps-apple-script">Multi-track edit via AppleScript</h2>
                 <div class="code-label">AppleScript</div>
                 <pre><code>on run
     -- this test folder path (or any other paths that SwiftTag does not have explicit permission to)
@@ -132,12 +129,18 @@ on shortUUID from theUUID
 end shortUUID </code></pre>
 
             <aside class="callout note">
-               This example used a local variable for <code>testPNGData</code>, but you can also load image data from a file
-               see <a href="../automation/applescript-picture.html#examples">picture class</a> for example using NSData and 
-               Base64 encoded data.
+               The example above used a local variable for <code>testPNGData</code>; however, image data can also be loaded from file,
+               see <a href="../automation/applescript-picture.html#examples">picture class</a> for examples using NSData with 
+               Base64 encoded data and AppleScript native data.
             </aside>
 
-            <p>Reference: <a href="../workflows/saving.html">Save Changes</a>.</p>
+            <p>
+                Reference: <a href="../automation/applescript-save.html">save command</a>,
+                <a href="../automation/applescript-windows.html#editor-window-definition">editor window class</a>,
+                <a href="../automation/applescript-document.html">document class</a>,
+                <a href="../automation/applescript-track.html#properties">track class properties</a>,
+                <a href="../automation/applescript-picture.html#examples">picture class examples</a>.
+            </p>
         </article>
     </main>
     <footer class="site-footer">
