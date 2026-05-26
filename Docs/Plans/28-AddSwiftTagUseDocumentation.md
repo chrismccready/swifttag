@@ -237,7 +237,7 @@ Docs/UserDocumentation/
   quick-start.html
   workflows/
     adding-flac-files.html
-    editing-tags.html
+    tags.html
     album-art.html
     saving.html
     swifttag-documents.html
