@@ -250,7 +250,7 @@ Docs/UserDocumentation/
     clean-up-album.html
     batch-edit-tags.html
     manage-cover-art.html
-    save-tags-only.html
+    re-tag-with-applescript.html
     create-session-document.html
   troubleshooting.html
   assets/
