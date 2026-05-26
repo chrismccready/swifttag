@@ -1103,46 +1103,6 @@ final class TagEditorViewModel {
         )
     }
 
-    func tomlText() -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-
-        var lines: [String] = [
-            "album = '''\(sharedDisplayValue(for: trackItems.map(\.album)))'''",
-            "album_artist = '''\(sharedDisplayValue(for: trackItems.map(\.albumArtist)))'''",
-            ""
-        ]
-
-        let sortedTracks = trackItems.sorted {
-            let lhs = Int($0.tags[TagKey.trackNumber] ?? "") ?? 0
-            let rhs = Int($1.tags[TagKey.trackNumber] ?? "") ?? 0
-            if lhs == rhs {
-                return ($0.tags[TagKey.title] ?? "") < ($1.tags[TagKey.title] ?? "")
-            }
-            return lhs < rhs
-        }
-
-        for track in sortedTracks {
-            lines.append("[[tracks]]")
-            lines.append("number = \(track.tags[TagKey.trackNumber] ?? "0")")
-            lines.append("title = '''\(track.tags[TagKey.title] ?? "")'''")
-            lines.append("filename = '''\(track.tags[TagKey.filename] ?? "")'''")
-            lines.append("artist = '''\(track.tags[TagKey.artist] ?? "")'''")
-            lines.append("composer = '''\(track.tags[TagKey.composer] ?? "")'''")
-            lines.append("location = '''\(track.tags[TagKey.location] ?? "")'''")
-            lines.append("date = \(track.tags[TagKey.date] ?? dateFormatter.string(from: .now))")
-            lines.append("description = '''\(track.tags[TagKey.description] ?? "")'''")
-            lines.append("")
-        }
-
-        if lines.last?.isEmpty == true {
-            lines.removeLast()
-        }
-
-        return lines.joined(separator: "\n")
-    }
-
     func importFlacFiles(_ flacFiles: [URL], locked: Bool = false, append: Bool = false) async throws {
         try importFlacFilesSynchronously(flacFiles, locked: locked, append: append)
     }

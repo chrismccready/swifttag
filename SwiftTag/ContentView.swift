@@ -85,7 +85,6 @@ struct ContentView: View {
         AlbumArtType(flacPictureType: 0, flacDescription: "Other", navigationLinkName: "Other", slot: .other)
     ]
 
-    @State private var isTomlSheetPresented: Bool = false
     @State private var isFlacImporterPresented: Bool = false
     @State private var pendingImporterLockedState: Bool = false
     @State private var pendingImporterAddsFiles: Bool = false
@@ -950,9 +949,6 @@ struct ContentView: View {
 
     private var commandFocusedContent: some View {
         observedContent
-            .focusedSceneValue(\.showTomlSheet) {
-                isTomlSheetPresented = true
-            }
             .focusedSceneValue(\.showFlacImporter) {
                 showWritableImporter()
             }
@@ -1030,9 +1026,6 @@ struct ContentView: View {
                 allowsMultipleSelection: true,
                 onCompletion: handleFlacImportResult
             )
-            .sheet(isPresented: $isTomlSheetPresented) {
-                TOMLUtilityView(tomlText: tomlText())
-            }
             .sheet(isPresented: $isAlbumArtSheetPresented) {
                 albumArtSheetView
             }
@@ -1111,10 +1104,6 @@ struct ContentView: View {
 
     private func positiveIntegerStringBinding(_ source: Binding<String>) -> Binding<String> {
         viewModel.positiveIntegerStringBinding(source)
-    }
-
-    private func tomlText() -> String {
-        viewModel.tomlText()
     }
 
     private func handleFlacImportResult(_ result: Result<[URL], Error>) {
@@ -2231,7 +2220,6 @@ struct ContentView: View {
         saveStatusState = nil
         isSaveStatusVisible = false
         isSaveOperationRunning = false
-        isTomlSheetPresented = false
         isFlacImporterPresented = false
         pendingImporterLockedState = false
         pendingImporterAddsFiles = false
@@ -3054,7 +3042,6 @@ struct ContentView: View {
 }
 
 extension FocusedValues {
-    @Entry var showTomlSheet: (() -> Void)?
     @Entry var showFlacImporter: (() -> Void)?
     @Entry var showReadOnlyFlacImporter: (() -> Void)?
     @Entry var showAddFlacImporter: (() -> Void)?

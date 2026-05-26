@@ -10,7 +10,6 @@ The app is currently centered on direct FLAC metadata workflows:
 - Manage misc tags with validation for invalid or duplicate keys.
 - Inspect and update embedded album art across multiple FLAC picture types.
 - Save tags only, pictures only, or both, using configurable write defaults.
-- Generate a TOML view of the current metadata state.
 
 ## What SwiftTag Does Today
 
@@ -36,7 +35,6 @@ SwiftTag is designed around a single editor window with a few supporting sheets 
 4. Edit album metadata, selected-track core tags, and misc tags in the main window.
 5. Click the front cover image or open the album art sheet to manage embedded pictures.
 6. Use `Save`, `Save Tags...`, or `Save Pictures...` depending on the write operation you want.
-7. Use `Show TOML...` if you want a generated TOML representation of the current metadata state.
 
 ## Main App Areas
 
@@ -87,4 +85,3 @@ This section is intentionally reserved for high-signal project context that shou
 - If plan files are renamed, renumbered, or moved, this README should be updated in the same change.
 - This README should describe current app behavior, not planned behavior.
 - When adding future AI context here, prefer concise operational facts over long narrative descriptions.
-

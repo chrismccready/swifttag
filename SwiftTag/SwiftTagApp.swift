@@ -189,7 +189,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 private struct AppCommands: Commands {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
-    @FocusedValue(\.showTomlSheet) private var showTomlSheet
     @FocusedValue(\.showFlacImporter) private var showFlacImporter
     @FocusedValue(\.showReadOnlyFlacImporter) private var showReadOnlyFlacImporter
     @FocusedValue(\.showAddFlacImporter) private var showAddFlacImporter
@@ -300,12 +299,6 @@ private struct AppCommands: Commands {
             }
             .disabled(!(canPerformRemoveSelectedTracks ?? false))
 
-            Divider()
-
-            Button("Show TOML...") {
-                showTomlSheet?()
-            }
-            .disabled(showTomlSheet == nil)
         }
 
         CommandGroup(before: .toolbar) {
