@@ -1,12 +1,38 @@
 # SwiftTag
 
-SwiftTag is a macOS SwiftUI app for editing FLAC metadata. It is built as a
-focused desktop utility, not a media library manager: load FLAC files, edit tags
-and embedded pictures across one or more tracks, inspect differences, then write
-chosen changes back to source files or save the editor state as a `.swifttag`
-session document.
+SwiftTag is a macOS SwiftUI app for editing [FLAC](https://xiph.org/flac/) 
+metadata. It is built as a focused scriptable desktop tagging utility, not a 
+media library manager: load FLAC files, edit tags and embedded pictures across 
+one or more tracks, inspect differences, then write chosen changes back to 
+source files or save the editor state as a `.swifttag` session document. 
+[User documentation](UserDocumentation/index.html) is also available in built 
+SwiftTag app via Help menu.
 
 Current project target: macOS 26.2 or later.
+
+## Developed by Human guiding AI (Spring 2026: GPT-5.3, 5.4, 5.5)
+One of the primary goals of this project was to use AI to develop a SwiftUI
+application that has at least a moderate level of complexity: UI, internal and 
+external file/document state management, Quick Look, User Notifications, 
+AppleScript scriptability, documentation and of course actual usefulness.  
+
+Initial development was done using Xcode Assistant in a pre-release of Xcode 
+26.3. Some initial Assistant exchange transcripts were lost due to early Xcode 
+release limitations and my learning curve. However, the loses were few and 
+essentially all human/agent interactions for the project are available at
+[Docs/Plans/Transcripts](Docs/Plans/Transcripts). Since late march, the 
+[Codex App](https://developers.openai.com/codex/app) has been used for most
+development and occasionally Copilot in VSCode. The AI models used were GPT-5.3
+(Codex 5.3), GPT-5.4, and GPT-5.5 with reasoning set to High or Very High
+usually the latter.   
+
+The development process usually follows prompting the agent to create a
+[plan](Docs/Plans), reviewing the plan and tweaking as needed, and then 
+implementation. Almost no code was written by a human, but as can be seen in 
+the transcripts, there is continuous guidance, review, and yet more guidance. 
+The [Guides](Docs/Guides) folder contains AI agent guides/rules beyond 
+AGENTS.md. There are some transcripts there as well - getting the basic dev 
+cycle (including tests) was/is an ongoing thing.
 
 ## Current App Surface
 
@@ -116,7 +142,7 @@ front-cover background when present.
 ## User Documentation
 
 Bundled user docs live under `Docs/UserDocumentation/` and are copied into the
-app bundle.
+app bundle and are available in the built app via the Help menu.
 
 Important entry points:
 
@@ -183,6 +209,19 @@ Open `SwiftTag.xcodeproj` in Xcode.
 - Build: Product > Build
 - Run app: Product > Run
 - Run tests: Product > Test
+
+Project dependencies are vendored in `ThirdParty/`:
+
+- [`ThirdParty/flac/`](https://github.com/xiph/flac)
+  Xiph.Org FLAC reference implementation. SwiftTag uses libFLAC through its
+  local FLAC bridge to read and write tags, pictures, stream info,
+  fingerprints, and durations.
+- [`ThirdParty/ViewInspector/`](https://github.com/nalexn/ViewInspector)
+  SwiftUI inspection library used by SwiftTag tests for view hierarchy, state,
+  and interaction assertions.
+
+No separate package fetch is required for normal Xcode build/test use; the
+checked-in `ThirdParty/` sources are the project dependency source of truth.
 
 The active test plan includes:
 
