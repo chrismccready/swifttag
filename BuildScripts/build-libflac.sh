@@ -46,11 +46,24 @@ filter_ranlib_warnings() {
   done
 }
 
-# Resolve primary arch for single-config local builds.
-PRIMARY_ARCH="${CURRENT_ARCH:-arm64}"
-if [[ -z "${PRIMARY_ARCH}" || "${PRIMARY_ARCH}" == "undefined_arch" ]]; then
-  PRIMARY_ARCH="arm64"
+# Resolve architectures requested by Xcode. Archive builds commonly ask the
+# app target for both arm64 and x86_64 slices, so libFLAC must match.
+REQUESTED_ARCHS="${ARCHS:-}"
+if [[ -z "${REQUESTED_ARCHS}" ]]; then
+  REQUESTED_ARCHS="${CURRENT_ARCH:-arm64}"
 fi
+if [[ -z "${REQUESTED_ARCHS}" || "${REQUESTED_ARCHS}" == "undefined_arch" ]]; then
+  REQUESTED_ARCHS="arm64"
+fi
+
+CMAKE_ARCHS=""
+for arch in ${REQUESTED_ARCHS}; do
+  if [[ -z "${CMAKE_ARCHS}" ]]; then
+    CMAKE_ARCHS="${arch}"
+  else
+    CMAKE_ARCHS="${CMAKE_ARCHS};${arch}"
+  fi
+done
 
 # Map Xcode config to CMake config.
 CMAKE_CONFIG="Release"
@@ -62,7 +75,7 @@ CMAKE_OSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-13.0}"
 
 "${CMAKE_BIN}" -S "${FLAC_SOURCE_DIR}" -B "${BUILD_ROOT}" \
   -DCMAKE_BUILD_TYPE="${CMAKE_CONFIG}" \
-  -DCMAKE_OSX_ARCHITECTURES="${PRIMARY_ARCH}" \
+  -DCMAKE_OSX_ARCHITECTURES="${CMAKE_ARCHS}" \
   -DCMAKE_OSX_DEPLOYMENT_TARGET="${CMAKE_OSX_DEPLOYMENT_TARGET}" \
   -DBUILD_PROGRAMS=OFF \
   -DBUILD_CXXLIBS=OFF \
