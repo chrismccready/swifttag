@@ -734,6 +734,10 @@ struct ContentView: View {
             }
 
             if uiTestLaunchFlagEnabled("UITEST_EXPOSE_DIFF_METADATA") {
+                Text(uiTestSelectedTrackFilename)
+                    .accessibilityIdentifier("uiTest.selection.filename")
+                Text(hasAlbumExternalDifference ? "trackToFile" : "none")
+                    .accessibilityIdentifier("uiTest.diff.album.trackToFileState")
                 Text(hasAlbumExternallyModifiedDifference ? "external" : "none")
                     .accessibilityIdentifier("uiTest.diff.album.externalState")
                 Text(viewModel.selectedExternalFileValue(forAnyOf: [TagKey.album]) ?? "absent")
@@ -747,6 +751,15 @@ struct ContentView: View {
         .opacity(0.01)
         .allowsHitTesting(false)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+    }
+
+    private var uiTestSelectedTrackFilename: String {
+        let selectedTracks = viewModel.trackItems.filter { selectedTrackIDs.contains($0.id) }
+        guard selectedTracks.count == 1 else {
+            return selectedTracks.isEmpty ? "none" : "multiple"
+        }
+
+        return selectedTracks[0].displayFileName
     }
 
     private var albumArtSheetView: some View {

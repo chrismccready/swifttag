@@ -5364,6 +5364,48 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func tagEditorViewModelRefreshAfterSavedAlbumEditKeepsUnsavedAlbumEditInternal() async throws {
+        let firstFileURL = try Self.tempFixtureCopyURL(name: "saved-edit-refresh-first.flac")
+        let secondFileURL = try Self.tempFixtureCopyURL(name: "saved-edit-refresh-second.flac")
+        let viewModel = TagEditorViewModel()
+
+        try await viewModel.importFlacFiles([firstFileURL, secondFileURL])
+        let firstTrack = try #require(viewModel.trackItems.first)
+        let secondTrack = try #require(viewModel.trackItems.dropFirst().first)
+        viewModel.selectedTrackIDs = [firstTrack.id]
+
+        let albumBinding = try #require(viewModel.selectedAlbumBinding())
+        albumBinding.wrappedValue = "Saved Album Before Refresh"
+        _ = try await viewModel.save(
+            payload: .writeTags,
+            scope: .selectedTracks,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: [],
+            editorSessionID: UUID()
+        )
+
+        albumBinding.wrappedValue = "Unsaved Album After Save"
+        #expect(viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.album], in: [firstTrack.id]))
+        #expect(!viewModel.hasExternalDifference(forAnyOf: [TagKey.album], in: [firstTrack.id]))
+
+        viewModel.selectedTrackIDs = [secondTrack.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+        viewModel.trackItems[0].fingerprint = "stale"
+        viewModel.refreshTrackFileState(
+            for: firstTrack.id,
+            currentPath: firstFileURL.path,
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        viewModel.selectedTrackIDs = [firstTrack.id]
+        #expect(viewModel.trackItems[0].fingerprint != "stale")
+        #expect(viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.album], in: [firstTrack.id]))
+        #expect(!viewModel.hasExternalDifference(forAnyOf: [TagKey.album], in: [firstTrack.id]))
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelSaveAllTracksWritesToAllImportedTracks() async throws {
         let firstFileURL = try Self.tempFixtureCopyURL(name: "save-all-first.flac")
         let secondFileURL = try Self.tempFixtureCopyURL(name: "save-all-second.flac")

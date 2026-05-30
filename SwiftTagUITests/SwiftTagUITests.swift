@@ -45,6 +45,8 @@ class SwiftTagUITestCase: XCTestCase {
         static let navigationSubtitleProbe = "uiTest.navigation.subtitle"
         static let navigationDocumentURLProbe = "uiTest.navigation.documentURL"
         static let saveNewSwiftTagDocumentPromptProbe = "uiTest.saveNewSwiftTagDocumentPrompt"
+        static let selectedTrackFilenameProbe = "uiTest.selection.filename"
+        static let albumTrackToFileStateProbe = "uiTest.diff.album.trackToFileState"
         static let albumExternalStateProbe = "uiTest.diff.album.externalState"
         static let albumExternalFileValueProbe = "uiTest.diff.album.externalFileValue"
         static let frontCoverPictureExternalStateProbe = "uiTest.diff.picture.frontCover.externalState"
@@ -2932,6 +2934,146 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioSavedAlbumEditDoesNotBecomeExternallyModifiedAfterSelectionChange() throws {
+        let addFixturePath = fixtureFlacPath(fileName: Self.fixtureFileName)
+        let savedAlbum = "Saved Album \(UUID().uuidString)"
+        let unsavedAlbum = "Unsaved Album \(UUID().uuidString)"
+        let firstFilename = "SwiftTagUITestFixture.flac"
+        let secondFilename = "SwiftTagUITestMenuFixture.flac"
+        let app = try launchApp(
+            importFixture: true,
+            menuImportFixturePath: addFixturePath,
+            exposeDiffMetadata: true
+        )
+
+        selectTrackRowForEditing(
+            in: app,
+            expectedTitle: "Test Title",
+            occurrence: 0,
+            expectedFilename: firstFilename,
+            timeout: 20.0
+        )
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Add FLAC files...")
+        selectTrackRowForEditing(
+            in: app,
+            expectedTitle: "Test Title",
+            occurrence: 1,
+            expectedFilename: secondFilename,
+            timeout: 20.0
+        )
+
+        selectTrackRowForEditing(
+            in: app,
+            expectedTitle: "Test Title",
+            occurrence: 0,
+            expectedFilename: firstFilename,
+            timeout: 20.0
+        )
+        clearAndType(in: app, element: editableAlbumField(in: app), text: savedAlbum)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save")
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: app,
+                identifier: UIID.albumTextField,
+                expectedValue: savedAlbum,
+                timeout: 5.0
+            )
+        )
+
+        clearAndType(in: app, element: editableAlbumField(in: app), text: unsavedAlbum)
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: app,
+                identifier: UIID.albumTextField,
+                expectedValue: unsavedAlbum,
+                timeout: 5.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: app,
+                identifier: UIID.albumTrackToFileStateProbe,
+                expectedValue: "trackToFile",
+                timeout: 5.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: app,
+                identifier: UIID.albumExternalStateProbe,
+                expectedValue: "none",
+                timeout: 5.0
+            )
+        )
+
+        selectTrackRowForEditing(
+            in: app,
+            expectedTitle: "Test Title",
+            occurrence: 1,
+            expectedFilename: secondFilename,
+            timeout: 20.0
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: app,
+                identifier: UIID.albumTextField,
+                expectedValue: "Test Album",
+                timeout: 5.0
+            )
+        )
+        RunLoop.current.run(until: Date().addingTimeInterval(3.0))
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: app,
+                identifier: UIID.selectedTrackFilenameProbe,
+                expectedValue: secondFilename,
+                timeout: 5.0
+            )
+        )
+        selectTrackRowForEditing(
+            in: app,
+            expectedTitle: "Test Title",
+            occurrence: 0,
+            expectedFilename: firstFilename,
+            timeout: 20.0
+        )
+        XCTAssertTrue(
+            waitForTextFieldValue(
+                in: app,
+                identifier: UIID.albumTextField,
+                expectedValue: unsavedAlbum,
+                timeout: 5.0
+            )
+        )
+
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: app,
+                identifier: UIID.albumTrackToFileStateProbe,
+                expectedValue: "trackToFile",
+                timeout: 5.0
+            )
+        )
+        XCTAssertFalse(
+            waitForStaticTextValue(
+                in: app,
+                identifier: UIID.albumExternalStateProbe,
+                expectedValue: "external",
+                timeout: 2.0
+            )
+        )
+        XCTAssertTrue(
+            waitForStaticTextValue(
+                in: app,
+                identifier: UIID.albumExternalStateProbe,
+                expectedValue: "none",
+                timeout: 1.0
+            )
+        )
+    }
+
+    @MainActor
     func scenarioCompilationCheckboxRetainsOnStateWhenSelectedTrackIsLocked() throws {
         let app = try launchApp(importFixture: true)
 
@@ -4526,6 +4668,46 @@ class SwiftTagUITestCase: XCTestCase {
             waitForEnabledState(of: editableAlbumField(in: window), expectedValue: true, timeout: timeout),
             "Album field did not become editable after selecting imported track '\(expectedTitle)' in the target window."
         )
+    }
+
+    private func selectTrackRowForEditing(
+        in app: XCUIApplication,
+        expectedTitle: String,
+        occurrence: Int,
+        expectedFilename: String,
+        timeout: TimeInterval = 10.0
+    ) {
+        let deadline = Date().addingTimeInterval(timeout)
+        let predicate = NSPredicate(format: "value == %@", expectedTitle)
+
+        repeat {
+            let titleFields = app.textFields.matching(predicate).allElementsBoundByIndex
+                .filter { element in
+                    element.exists && element.frame.width > 0 && element.frame.height > 0
+                }
+
+            if titleFields.indices.contains(occurrence) {
+                let titleField = titleFields[occurrence]
+                titleField.coordinate(withNormalizedOffset: CGVector(dx: -0.18, dy: 0.5)).click()
+
+                if waitForStaticTextValue(
+                    in: app,
+                    identifier: UIID.selectedTrackFilenameProbe,
+                    expectedValue: expectedFilename,
+                    timeout: 1.0
+                ) {
+                    XCTAssertTrue(
+                        waitForEnabledState(of: editableAlbumField(in: app), expectedValue: true, timeout: timeout),
+                        "Album field did not become editable after selecting track file '\(expectedFilename)'."
+                    )
+                    return
+                }
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        XCTFail("Expected imported track file '\(expectedFilename)' to become selected.")
     }
 
     private func editableAlbumField(in app: XCUIApplication) -> XCUIElement {

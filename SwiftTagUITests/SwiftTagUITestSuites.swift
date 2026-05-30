@@ -357,6 +357,11 @@ final class SwiftTagEditingStateUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testSavedAlbumEditDoesNotBecomeExternallyModifiedAfterSelectionChange() throws {
+        try scenarioSavedAlbumEditDoesNotBecomeExternallyModifiedAfterSelectionChange()
+    }
+
+    @MainActor
     func testCompilationCheckboxRetainsOnStateWhenSelectedTrackIsLocked() throws {
         try scenarioCompilationCheckboxRetainsOnStateWhenSelectedTrackIsLocked()
     }

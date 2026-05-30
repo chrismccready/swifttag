@@ -2572,6 +2572,14 @@ final class TagEditorViewModel {
         tagWriteOptions: TagWriteOptions,
         albumArtPictures: [FlacWritablePictureRecord]
     ) -> TrackExternalDifferences? {
+        let existingExternallyModifiedTagKeys = Set(
+            trackItems[index].externalDifferences?.fileValuesByTag.keys.map(normalizedTagKey) ?? []
+        )
+        let externallyModifiedTagKeys = externallyModifiedTagKeys(
+            previousSnapshot: previousFileSnapshot,
+            currentSnapshot: fileSnapshot,
+            existingKeys: existingExternallyModifiedTagKeys
+        )
         let differences = differingFileValues(
             expectedTags: currentEditorTagsForExternalComparison(
                 at: index,
@@ -2579,7 +2587,9 @@ final class TagEditorViewModel {
             ),
             fileTags: fileSnapshot.tags,
             ignoreMissingFileValues: true
-        )
+        ).filter { key, _ in
+            externallyModifiedTagKeys.contains(normalizedTagKey(key))
+        }
         let picturesForTrack = picturesForTrack(at: index, fallback: albumArtPictures)
         let hasPictureDifference = pictureRecordsDiffer(currentPictures: picturesForTrack, snapshot: fileSnapshot)
         let existingExternallyModifiedPictureTypes = trackItems[index].externalDifferences?.externallyModifiedPictureTypes ?? []
@@ -2605,6 +2615,43 @@ final class TagEditorViewModel {
             externallyModifiedPictureTypes: currentDifferingPictureTypes
         )
         return result.hasDifferences ? result : nil
+    }
+
+    private func externallyModifiedTagKeys(
+        previousSnapshot: TrackFileSnapshot?,
+        currentSnapshot: TrackFileSnapshot,
+        existingKeys: Set<String>
+    ) -> Set<String> {
+        var keys = Set(existingKeys.map(normalizedTagKey))
+        let currentTags = normalizedSnapshotTags(currentSnapshot.tags)
+        guard let previousSnapshot else {
+            return keys
+        }
+
+        let previousTags = normalizedSnapshotTags(previousSnapshot.tags)
+        let allKeys = Set(previousTags.keys).union(currentTags.keys)
+        for key in allKeys {
+            let previousValue = previousTags[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let currentValue = currentTags[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if previousValue != currentValue {
+                keys.insert(key)
+            }
+        }
+
+        return keys
+    }
+
+    private func normalizedSnapshotTags(_ tags: [String: String]) -> [String: String] {
+        var normalizedTags: [String: String] = [:]
+        for (key, value) in tags {
+            let normalizedKey = normalizedTagKey(key)
+            guard !normalizedKey.isEmpty else {
+                continue
+            }
+            normalizedTags[normalizedKey] = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        return normalizedTags
     }
 
     private func externallyModifiedPictureTypes(
