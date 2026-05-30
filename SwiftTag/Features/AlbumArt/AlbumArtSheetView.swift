@@ -287,12 +287,6 @@ struct AlbumArtSheetView: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityIdentifier("albumArt.sheet.imageWell")
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    guard isEditingEnabled, !isSaveOperationRunning else {
-                        return
-                    }
-                    onOpenPicker(albumArtSlot)
-                }
                 .contextMenu {
                     let navigationLinkName = albumArtType(for: albumArtSlot)?.navigationLinkName ?? "Album Art"
                     Button("Import \(navigationLinkName)...") {
@@ -319,7 +313,7 @@ struct AlbumArtSheetView: View {
                     .disabled(!isEditingEnabled || isSaveOperationRunning || !canEditDescriptionForSlot(albumArtSlot))
                 }
                 .allowsHitTesting(isEditingEnabled && !isSaveOperationRunning)
-                .help("Click to select or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
+                .help("Use context menu/button controls for editing options or drag and drop album \(albumArtType(for: albumArtSlot)?.navigationLinkName ?? "art") image.")
 
                 let infoOverlayState = infoOverlayStateForSlot(albumArtSlot)
                 let overlayMessages = filteredInfoOverlayMessages(from: infoOverlayState)

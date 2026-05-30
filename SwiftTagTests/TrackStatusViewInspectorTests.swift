@@ -305,6 +305,38 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func albumArtSheetViewDoesNotOpenPickerOnSingleImageWellClick() throws {
+        var openedSlots: [AlbumArtSlot] = []
+        let sut = makeAlbumArtSheetView(
+            isSaveOperationRunning: false,
+            saveStatusPresentation: nil,
+            onOpenPicker: { slot in
+                openedSlots.append(slot)
+            }
+        )
+
+        let imageWell = try sut.inspect()
+            .find(viewWithAccessibilityIdentifier: "albumArt.sheet.imageWell")
+        #expect(throws: Error.self) {
+            try imageWell.callOnTapGesture()
+        }
+        #expect(openedSlots.isEmpty)
+
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("AlbumArt")
+            .appendingPathComponent("AlbumArtSheetView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        let pickerRequestCount = source.components(separatedBy: "onOpenPicker(albumArtSlot)").count - 1
+        #expect(pickerRequestCount == 2)
+        #expect(source.contains("Button(\"Import \\(navigationLinkName)...\")"))
+        #expect(source.contains("Button(\"Import Picture\", systemImage: \"plus\")"))
+    }
+
+    @Test
     func albumArtSheetViewDisablesWellAndShowsSaveOverlayWhenSaveIsRunning() throws {
         let sut = makeAlbumArtSheetView(
             isSaveOperationRunning: true,
@@ -940,7 +972,8 @@ struct TrackStatusViewInspectorTests {
         canEditDescription: Bool = true,
         hasInternalPictureDifference: Bool = false,
         isPictureImportAlertPresented: Bool = false,
-        pictureImportAlertMessage: String = ""
+        pictureImportAlertMessage: String = "",
+        onOpenPicker: @escaping (AlbumArtSlot) -> Void = { _ in }
     ) -> AlbumArtSheetView {
         AlbumArtSheetView(
             isSaveOperationRunning: isSaveOperationRunning,
@@ -964,7 +997,7 @@ struct TrackStatusViewInspectorTests {
             exportDefaultFileName: "cover",
             imageForSlot: { _ in Image(systemName: "photo") },
             hasImageForSlot: { _ in true },
-            onOpenPicker: { _ in },
+            onOpenPicker: onOpenPicker,
             onPrepareExport: { _ in },
             onDropForSlot: { _, _ in false },
             onFileImportResult: { _ in },
@@ -1006,7 +1039,7 @@ struct TrackStatusViewInspectorTests {
     private func hostedCompilationCheckbox<Content: View>(for rootView: Content) throws -> NSButton {
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.frame = NSRect(origin: .zero, size: hostingView.fittingSize)
-        hostingView.layoutSubtreeIfNeeded()
+//        hostingView.layoutSubtreeIfNeeded()
         return try #require(findFirstButton(in: hostingView))
     }
 
