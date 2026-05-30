@@ -13,7 +13,7 @@ enum FlacImportMapper {
         let albumArtistValue = tags[TagKey.albumArtist]
             .flatMap { $0.isEmpty ? nil : $0 }
 
-        let rawTotalDiscs = tags["TOTALDISCS"] ?? ""
+        let rawTotalDiscs = tags["TOTALDISCS"] ?? tags["DISCTOTAL"] ?? ""
         let normalizedTotalDiscs = Int(rawTotalDiscs).map(String.init) ?? rawTotalDiscs
         let totalDiscsValue = normalizedTotalDiscs.isEmpty ? nil : normalizedTotalDiscs
 

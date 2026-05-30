@@ -203,6 +203,8 @@ struct SwiftTagTests {
         #expect(TagNormalization.normalizeTagKey("  track total  ").isEmpty)
         #expect(TagNormalization.isExplicitTagKey("title"))
         #expect(TagNormalization.isExplicitTagKey("ALBUMARTIST"))
+        #expect(TagNormalization.isExplicitTagKey("TRACKTOTAL"))
+        #expect(TagNormalization.isExplicitTagKey("DISCTOTAL"))
         #expect(TagNormalization.hasInvalidWhitespace("album artist"))
         #expect(!TagNormalization.isExplicitTagKey("album artist"))
         #expect(TagNormalization.isExplicitTagKey("compilation"))
@@ -756,7 +758,7 @@ struct SwiftTagTests {
             "TRACKNUMBER": "01",
             "TOTALTRACKS": "01",
             "DISCNUMBER": "01",
-            "TOTALDISCS": "01",
+            "DISCTOTAL": "01",
             "GENRE": "Test Genre",
             "LOCATION": "Test Location",
             "DATE": "2026-03-01",
@@ -787,7 +789,7 @@ struct SwiftTagTests {
         #expect(mapped[TagKey.trackNumber] == "1")
         #expect(mapped[TagKey.discNumber] == "1")
         #expect(mapped["TOTALTRACKS"] == "01")
-        #expect(mapped["TOTALDISCS"] == "01")
+        #expect(mapped["DISCTOTAL"] == "01")
         #expect(mapped["ENCODED_BY"] == "Test Encoded_By")
         #expect(mapped[TagKey.filename] == "test.flac")
     }
@@ -3222,6 +3224,160 @@ struct SwiftTagTests {
         viewModel.selectedTrackIDs = Set([track.id])
 
         #expect(!viewModel.hasInternalDifference(forAnyOf: [TagKey.album]))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelDoesNotDirtyTotalCountTagAliasStrategyChanges() {
+        let track = Track(
+            tags: [
+                TagKey.title: "Title",
+                TagKey.trackNumber: "1",
+                TagKey.discNumber: "1",
+                "TOTALTRACKS": "7",
+                "TOTALDISCS": "2"
+            ],
+            latestFileSnapshot: TrackFileSnapshot(
+                tags: [
+                    TagKey.title: "Title",
+                    TagKey.trackNumber: "1",
+                    TagKey.discNumber: "1",
+                    "TRACKTOTAL": "7",
+                    "DISCTOTAL": "2"
+                ],
+                picturesByType: [:]
+            )
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        let tagWriteOptions = TagWriteOptions(
+            zeroPadTrackNumber: false,
+            trackCountKeyStrategy: .both,
+            zeroPadDiscNumber: false,
+            discCountKeyStrategy: .both
+        )
+
+        let differences = viewModel.editorDifferenceCounts(
+            for: [track.id],
+            tagWriteOptions: tagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(differences.tagEdits == 0)
+        #expect(!viewModel.hasDifferences(
+            in: [track.id],
+            tagWriteOptions: tagWriteOptions,
+            albumArtPictures: []
+        ))
+        #expect(!viewModel.hasTrackToFileDifference(forAnyOf: ["TOTALTRACKS", "TRACKTOTAL"], in: [track.id]))
+        #expect(!viewModel.hasTrackToFileDifference(forAnyOf: ["TOTALDISCS", "DISCTOTAL"], in: [track.id]))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelDirtiesTotalCountGroupsOnlyForValueOrPresenceChanges() {
+        let changedValueTrack = Track(
+            totalTracks: "8",
+            tags: [
+                TagKey.title: "Changed Value",
+                "TOTALTRACKS": "7",
+                "TOTALDISCS": "2"
+            ],
+            latestFileSnapshot: TrackFileSnapshot(
+                tags: [
+                    TagKey.title: "Changed Value",
+                    "TOTALTRACKS": "7",
+                    "TOTALDISCS": "2"
+                ],
+                picturesByType: [:]
+            )
+        )
+        let missingInFileTrack = Track(
+            totalTracks: "7",
+            tags: [
+                TagKey.title: "Missing In File",
+                "TOTALTRACKS": "7"
+            ],
+            latestFileSnapshot: TrackFileSnapshot(
+                tags: [
+                    TagKey.title: "Missing In File"
+                ],
+                picturesByType: [:]
+            )
+        )
+        let removedOnSaveTrack = Track(
+            totalTracks: "7",
+            tags: [
+                TagKey.title: "Removed On Save",
+                "TOTALTRACKS": "7",
+                "TOTALDISCS": "2"
+            ],
+            latestFileSnapshot: TrackFileSnapshot(
+                tags: [
+                    TagKey.title: "Removed On Save",
+                    "TRACKTOTAL": "7",
+                    "DISCTOTAL": "2"
+                ],
+                picturesByType: [:]
+            )
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [changedValueTrack, missingInFileTrack, removedOnSaveTrack]
+        let writeCountsOptions = TagWriteOptions(
+            zeroPadTrackNumber: false,
+            trackCountKeyStrategy: .totalTracks,
+            zeroPadDiscNumber: false,
+            discCountKeyStrategy: .totalDiscs
+        )
+        let removeCountsOptions = TagWriteOptions(
+            zeroPadTrackNumber: false,
+            trackCountKeyStrategy: .none,
+            zeroPadDiscNumber: false,
+            discCountKeyStrategy: .none
+        )
+
+        #expect(viewModel.editorDifferenceCounts(
+            for: [changedValueTrack.id],
+            tagWriteOptions: writeCountsOptions,
+            albumArtPictures: []
+        ).tagEdits == 1)
+        #expect(viewModel.editorDifferenceCounts(
+            for: [missingInFileTrack.id],
+            tagWriteOptions: writeCountsOptions,
+            albumArtPictures: []
+        ).tagEdits == 1)
+        #expect(viewModel.editorDifferenceCounts(
+            for: [removedOnSaveTrack.id],
+            tagWriteOptions: removeCountsOptions,
+            albumArtPictures: []
+        ).tagEdits == 1)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelExcludesTotalCountAliasesFromMiscTags() {
+        let track = Track(tags: [
+            TagKey.title: "Title",
+            "TRACKTOTAL": "7",
+            "TOTALTRACKS": "7",
+            "DISCTOTAL": "2",
+            "TOTALDISCS": "2",
+            "CUSTOM": "Value"
+        ])
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        let miscKeys = Set(viewModel.miscTagRows.map { viewModel.normalizedTagKey($0.key) })
+        #expect(miscKeys.contains("CUSTOM"))
+        #expect(!miscKeys.contains("TRACKTOTAL"))
+        #expect(!miscKeys.contains("TOTALTRACKS"))
+        #expect(!miscKeys.contains("DISCTOTAL"))
+        #expect(!miscKeys.contains("TOTALDISCS"))
     }
 
     @Test

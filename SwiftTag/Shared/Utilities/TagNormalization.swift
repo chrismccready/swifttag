@@ -1,6 +1,10 @@
 import Foundation
 
 enum TagNormalization {
+    static let totalTrackTagKeys = ["TOTALTRACKS", "TRACKTOTAL"]
+    static let totalDiscTagKeys = ["TOTALDISCS", "DISCTOTAL"]
+    static let equivalentTagKeyGroups = [totalTrackTagKeys, totalDiscTagKeys]
+
     static let explicitTagKeys: Set<String> = [
         TagKey.album,
         TagKey.albumArtist,
@@ -20,7 +24,8 @@ enum TagNormalization {
         "TOTALTRACKS",
         "TRACKTOTAL",
         "DISCNUMBER",
-        "TOTALDISCS"
+        "TOTALDISCS",
+        "DISCTOTAL"
     ]
 
     static func normalizeTagKey(_ value: String) -> String {

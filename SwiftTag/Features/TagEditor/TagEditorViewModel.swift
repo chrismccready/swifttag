@@ -203,8 +203,8 @@ final class TagEditorViewModel {
     }
     var importedFlacPicturesByType: [Int: Data] = [:]
 
-    private let totalTrackTagKeys: [String] = ["TOTALTRACKS", "TRACKTOTAL"]
-    private let totalDiscTagKeys: [String] = ["TOTALDISCS", "DISCTOTAL"]
+    private let totalTrackTagKeys: [String] = TagNormalization.totalTrackTagKeys
+    private let totalDiscTagKeys: [String] = TagNormalization.totalDiscTagKeys
     private var pendingMissingRefreshTasks: [UUID: Task<Void, Never>] = [:]
     private var pendingSwiftTagDocumentMissingRefreshTask: Task<Void, Never>?
     private var pendingAlbumValue: String = ""
@@ -2548,12 +2548,16 @@ final class TagEditorViewModel {
         fileTags: [String: String],
         ignoreMissingFileValues: Bool = false
     ) -> [String: String] {
-        let allKeys = Set(expectedTags.keys).union(fileTags.keys)
+        let equivalentGroups = TagNormalization.equivalentTagKeyGroups.map { group in
+            group.map(normalizedTagKey).filter { !$0.isEmpty }
+        }
+        let equivalentKeys = Set(equivalentGroups.flatMap { $0 })
+        let allKeys = Set(expectedTags.keys.map(normalizedTagKey)).union(fileTags.keys.map(normalizedTagKey))
         var differences: [String: String] = [:]
 
-        for key in allKeys {
-            let expectedValue = expectedTags[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            let fileValue = fileTags[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        for key in allKeys where !equivalentKeys.contains(key) {
+            let expectedValue = tagValue(in: expectedTags, for: key)
+            let fileValue = tagValue(in: fileTags, for: key)
             if ignoreMissingFileValues, fileValue.isEmpty {
                 continue
             }
@@ -2562,7 +2566,96 @@ final class TagEditorViewModel {
             }
         }
 
+        for group in equivalentGroups {
+            if let groupDifference = differingEquivalentTagGroup(
+                expectedTags: expectedTags,
+                fileTags: fileTags,
+                keys: group,
+                ignoreMissingFileValues: ignoreMissingFileValues
+            ) {
+                differences[groupDifference.key] = groupDifference.fileValue
+            }
+        }
+
         return differences
+    }
+
+    private func differingEquivalentTagGroup(
+        expectedTags: [String: String],
+        fileTags: [String: String],
+        keys: [String],
+        ignoreMissingFileValues: Bool
+    ) -> (key: String, fileValue: String)? {
+        let expectedValues = nonEmptyTagValues(in: expectedTags, forAnyOf: keys)
+        let fileValues = nonEmptyTagValues(in: fileTags, forAnyOf: keys)
+
+        if ignoreMissingFileValues, fileValues.isEmpty {
+            return nil
+        }
+        if expectedValues.isEmpty, fileValues.isEmpty {
+            return nil
+        }
+        if expectedValues.isEmpty || fileValues.isEmpty {
+            return (
+                key: firstStoredKey(in: fileTags, forAnyOf: keys) ?? keys.first ?? "",
+                fileValue: fileValues.first ?? "<missing>"
+            )
+        }
+        if Set(expectedValues) == Set(fileValues) {
+            return nil
+        }
+
+        return (
+            key: firstStoredKey(in: fileTags, forAnyOf: keys) ?? keys.first ?? "",
+            fileValue: fileValues.joined(separator: ", ")
+        )
+    }
+
+    private func tagValue(in tags: [String: String], for key: String) -> String {
+        let normalizedKey = normalizedTagKey(key)
+        guard !normalizedKey.isEmpty else {
+            return ""
+        }
+
+        if let value = tags[normalizedKey] {
+            return value.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        return tags.first { rawKey, _ in
+            normalizedTagKey(rawKey) == normalizedKey
+        }?.value.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    private func nonEmptyTagValues(in tags: [String: String], forAnyOf keys: [String]) -> [String] {
+        let normalizedKeys = Set(keys.map(normalizedTagKey).filter { !$0.isEmpty })
+        guard !normalizedKeys.isEmpty else {
+            return []
+        }
+
+        return tags.compactMap { rawKey, rawValue in
+            let normalizedKey = normalizedTagKey(rawKey)
+            guard normalizedKeys.contains(normalizedKey) else {
+                return nil
+            }
+
+            let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            return value.isEmpty ? nil : value
+        }
+    }
+
+    private func firstStoredKey(in tags: [String: String], forAnyOf keys: [String]) -> String? {
+        let normalizedKeys = Set(keys.map(normalizedTagKey).filter { !$0.isEmpty })
+        guard !normalizedKeys.isEmpty else {
+            return nil
+        }
+
+        return keys.first { key in
+            let normalizedKey = normalizedTagKey(key)
+            return tags.contains { rawKey, rawValue in
+                normalizedTagKey(rawKey) == normalizedKey &&
+                    !rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }
+        }
     }
 
     private func externalDifferences(
