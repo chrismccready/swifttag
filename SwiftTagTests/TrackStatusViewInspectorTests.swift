@@ -315,11 +315,8 @@ struct TrackStatusViewInspectorTests {
             }
         )
 
-        let imageWell = try sut.inspect()
-            .find(viewWithAccessibilityIdentifier: "albumArt.sheet.imageWell")
-        #expect(throws: Error.self) {
-            try imageWell.callOnTapGesture()
-        }
+        let actualView = try sut.inspect().find(AlbumArtSheetView.self).actualView()
+        #expect(actualView.isEditingEnabled)
         #expect(openedSlots.isEmpty)
 
         let sourceURL = URL(fileURLWithPath: #filePath)
@@ -332,6 +329,7 @@ struct TrackStatusViewInspectorTests {
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
         let pickerRequestCount = source.components(separatedBy: "onOpenPicker(albumArtSlot)").count - 1
         #expect(pickerRequestCount == 2)
+        #expect(!source.contains(".onTapGesture"))
         #expect(source.contains("Button(\"Import \\(navigationLinkName)...\")"))
         #expect(source.contains("Button(\"Import Picture\", systemImage: \"plus\")"))
     }
