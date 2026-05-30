@@ -228,10 +228,10 @@ struct SwiftTagTests {
     func saveSettingsDefaultsMatchPlan() {
         #expect(SaveSettingsDefaults.defaultSavePayload == .writeTagsAndPictures)
         #expect(SaveSettingsDefaults.defaultSaveScope == .allTracks)
-        #expect(SaveSettingsDefaults.zeroPadTrackNumber)
+        #expect(!SaveSettingsDefaults.zeroPadTrackNumber)
         #expect(SaveSettingsDefaults.trackCountKeyStrategy == .both)
-        #expect(SaveSettingsDefaults.zeroPadDiscNumber)
-        #expect(SaveSettingsDefaults.discCountKeyStrategy == .totalDiscs)
+        #expect(!SaveSettingsDefaults.zeroPadDiscNumber)
+        #expect(SaveSettingsDefaults.discCountKeyStrategy == .both)
         #expect(!SaveSettingsDefaults.autoUpdateTrackTotal)
         #expect(!SaveSettingsDefaults.applyCompilationToAllTracks)
         #expect(!SaveSettingsDefaults.saveFrontCoverToAllTracks)
@@ -3273,28 +3273,34 @@ struct SwiftTagTests {
         let expandedYearTrack = Self.trackWithSnapshot(
             tags: [
                 TagKey.title: "Expanded Year",
-                TagKey.date: "2026"
+                TagKey.date: "2026-01-01"
             ],
             fileTags: [
                 TagKey.title: "Expanded Year",
-                TagKey.date: "2026-01-01"
+                TagKey.date: "2026"
             ]
         )
 
         let viewModel = TagEditorViewModel()
         viewModel.trackItems = [sameYearTrack, expandedYearTrack]
+        let dateOnlyTagWriteOptions = TagWriteOptions(
+            zeroPadTrackNumber: false,
+            trackCountKeyStrategy: .none,
+            zeroPadDiscNumber: false,
+            discCountKeyStrategy: .none
+        )
 
         #expect(!viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.date], in: [sameYearTrack.id]))
         #expect(viewModel.editorDifferenceCounts(
             for: [sameYearTrack.id],
-            tagWriteOptions: Self.defaultTagWriteOptions,
+            tagWriteOptions: dateOnlyTagWriteOptions,
             albumArtPictures: []
         ).tagEdits == 0)
 
         #expect(viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.date], in: [expandedYearTrack.id]))
         #expect(viewModel.editorDifferenceCounts(
             for: [expandedYearTrack.id],
-            tagWriteOptions: Self.defaultTagWriteOptions,
+            tagWriteOptions: dateOnlyTagWriteOptions,
             albumArtPictures: []
         ).tagEdits == 1)
         #expect(viewModel.hasTrackToTrackDifference(

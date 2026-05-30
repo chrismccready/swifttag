@@ -1039,7 +1039,7 @@ struct TrackStatusViewInspectorTests {
     private func hostedCompilationCheckbox<Content: View>(for rootView: Content) throws -> NSButton {
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.frame = NSRect(origin: .zero, size: hostingView.fittingSize)
-//        hostingView.layoutSubtreeIfNeeded()
+        hostingView.layoutSubtreeIfNeeded()
         return try #require(findFirstButton(in: hostingView))
     }
 
