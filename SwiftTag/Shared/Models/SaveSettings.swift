@@ -119,10 +119,10 @@ enum SaveSettingsDefaults {
     static let defaultSaveScope = SaveScopeOption.allTracks
     static let saveReferencedSwiftTagDocument = false
     static let askToSaveNewSwiftTagDocument = false
-    static let zeroPadTrackNumber = true
+    static let zeroPadTrackNumber = false
     static let trackCountKeyStrategy = TrackCountKeyStrategy.both
-    static let zeroPadDiscNumber = true
-    static let discCountKeyStrategy = DiscCountKeyStrategy.totalDiscs
+    static let zeroPadDiscNumber = false
+    static let discCountKeyStrategy = DiscCountKeyStrategy.both
     static let autoUpdateTrackTotal = false
     static let applyCompilationToAllTracks = false
     static let saveFrontCoverToAllTracks = false
