@@ -197,6 +197,19 @@ struct SwiftTagTests {
     }
 
     @Test
+    func dateTagFormatterPreservesEditableDateText() {
+        let defaultDate = DateTagFormatter.parse("2020-05-06")!
+
+        #expect(DateTagFormatter.tagText("2026-03-01", defaultDate: defaultDate) == "2026-03-01")
+        #expect(DateTagFormatter.tagText("2026-03", defaultDate: defaultDate) == "2026-03")
+        #expect(DateTagFormatter.tagText("2026", defaultDate: defaultDate) == "2026")
+        #expect(DateTagFormatter.tagText("2026/03/01", defaultDate: defaultDate) == "2026-03-01")
+        #expect(DateTagFormatter.tagText(nil, defaultDate: defaultDate) == "2020-05-06")
+        #expect(DateTagFormatter.tagText("", defaultDate: defaultDate) == "2020-05-06")
+        #expect(DateTagFormatter.tagText("2026-13", defaultDate: defaultDate) == "2020-05-06")
+    }
+
+    @Test
     func tagNormalizationHandlesExpectedKeys() {
         #expect(TagNormalization.normalizeTagKey("  encoded_by  ") == "ENCODED_BY")
         #expect(TagNormalization.normalizeTagKey("  album artist  ").isEmpty)
@@ -792,6 +805,24 @@ struct SwiftTagTests {
         #expect(mapped["DISCTOTAL"] == "01")
         #expect(mapped["ENCODED_BY"] == "Test Encoded_By")
         #expect(mapped[TagKey.filename] == "test.flac")
+    }
+
+    @Test
+    func flacImportMapperPreservesPartialDateTagText() {
+        let defaultDate = DateTagFormatter.parse("2020-05-06")!
+        let yearMapped = FlacImportMapper.mapTrackTags(
+            sourceTags: [TagKey.date: "2026"],
+            fileURL: URL(fileURLWithPath: "/tmp/year.flac"),
+            defaultDate: defaultDate
+        )
+        let monthMapped = FlacImportMapper.mapTrackTags(
+            sourceTags: [TagKey.date: "2026-03"],
+            fileURL: URL(fileURLWithPath: "/tmp/month.flac"),
+            defaultDate: defaultDate
+        )
+
+        #expect(yearMapped[TagKey.date] == "2026")
+        #expect(monthMapped[TagKey.date] == "2026-03")
     }
 
     @Test
@@ -3228,6 +3259,52 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func tagEditorViewModelDateDifferencesUseLiteralText() {
+        let sameYearTrack = Self.trackWithSnapshot(
+            tags: [
+                TagKey.title: "Same Year",
+                TagKey.date: "2026"
+            ],
+            fileTags: [
+                TagKey.title: "Same Year",
+                TagKey.date: "2026"
+            ]
+        )
+        let expandedYearTrack = Self.trackWithSnapshot(
+            tags: [
+                TagKey.title: "Expanded Year",
+                TagKey.date: "2026"
+            ],
+            fileTags: [
+                TagKey.title: "Expanded Year",
+                TagKey.date: "2026-01-01"
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [sameYearTrack, expandedYearTrack]
+
+        #expect(!viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.date], in: [sameYearTrack.id]))
+        #expect(viewModel.editorDifferenceCounts(
+            for: [sameYearTrack.id],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        ).tagEdits == 0)
+
+        #expect(viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.date], in: [expandedYearTrack.id]))
+        #expect(viewModel.editorDifferenceCounts(
+            for: [expandedYearTrack.id],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        ).tagEdits == 1)
+        #expect(viewModel.hasTrackToTrackDifference(
+            forAnyOf: [TagKey.date],
+            in: [sameYearTrack.id, expandedYearTrack.id]
+        ))
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelDoesNotDirtyTotalCountTagAliasStrategyChanges() {
         let track = Track(
             tags: [
@@ -3520,7 +3597,7 @@ struct SwiftTagTests {
                 TagKey.title: "Locked Title",
                 TagKey.trackNumber: "1",
                 TagKey.discNumber: "1",
-                TagKey.date: "2026-03-10",
+                TagKey.date: "2026-03",
                 TagKey.filename: "locked.flac",
                 "ENCODED_BY": "Tester"
             ],
@@ -3537,8 +3614,8 @@ struct SwiftTagTests {
         let selectedTitleBinding = viewModel.selectedTagBinding(tagName: TagKey.title)
         #expect(selectedTitleBinding?.wrappedValue == "Locked Title")
 
-        let selectedDateBinding = try #require(viewModel.selectedDateBinding())
-        #expect(DateTagFormatter.format(selectedDateBinding.wrappedValue) == "2026-03-10")
+        let selectedDateBinding = try #require(viewModel.selectedDateTextBinding())
+        #expect(selectedDateBinding.wrappedValue == "2026-03")
 
         let miscRowID = try #require(viewModel.miscTagRows.first(where: { $0.key == "ENCODED_BY" })?.id)
         let miscKeyBinding = viewModel.miscTagKeyBinding(for: miscRowID)

@@ -55,7 +55,7 @@ enum FlacImportMapper {
         trackTags[TagKey.artist] = sourceTags[TagKey.artist] ?? ""
         trackTags[TagKey.composer] = sourceTags[TagKey.composer] ?? ""
         trackTags[TagKey.location] = location
-        trackTags[TagKey.date] = DateTagFormatter.format(DateTagFormatter.parse(sourceTags[TagKey.date]) ?? defaultDate)
+        trackTags[TagKey.date] = DateTagFormatter.tagText(sourceTags[TagKey.date], defaultDate: defaultDate)
         trackTags[TagKey.description] = description
 
         return trackTags

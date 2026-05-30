@@ -816,7 +816,7 @@ final class TagEditorViewModel {
         }
 
         let normalizedKey = normalizedTagKey(key)
-        let currentValue = normalizedTagValue(currentValue(for: track, key: normalizedKey))
+        let currentValue = comparisonTagValue(currentValue(for: track, key: normalizedKey), for: normalizedKey)
         guard let snapshotValue = snapshotValue(for: track, key: normalizedKey) else {
             return false
         }
@@ -833,7 +833,7 @@ final class TagEditorViewModel {
 
         let normalizedKeys = keys.map(normalizedTagKey)
         return normalizedKeys.contains { key in
-            let currentValues = selectedTracks.map { normalizedTagValue(currentValue(for: $0, key: key)) }
+            let currentValues = selectedTracks.map { comparisonTagValue(currentValue(for: $0, key: key), for: key) }
             return Set(currentValues).count > 1
         }
     }
@@ -849,7 +849,7 @@ final class TagEditorViewModel {
 
         for key in normalizedKeys {
             for track in selectedTracks {
-                let currentValue = normalizedTagValue(currentValue(for: track, key: key))
+                let currentValue = comparisonTagValue(currentValue(for: track, key: key), for: key)
                 guard let snapshotValue = snapshotValue(for: track, key: key) else {
                     continue
                 }
@@ -2299,8 +2299,7 @@ final class TagEditorViewModel {
         trackTags[TagKey.location] = trackTags[TagKey.location] ?? ""
         trackTags[TagKey.description] = trackTags[TagKey.description] ?? ""
 
-        let defaultDate = DateTagFormatter.parse(trackTags[TagKey.date]) ?? .now
-        trackTags[TagKey.date] = DateTagFormatter.format(defaultDate)
+        trackTags[TagKey.date] = DateTagFormatter.tagText(trackTags[TagKey.date], defaultDate: .now)
 
         return trackTags
     }
@@ -3145,11 +3144,20 @@ final class TagEditorViewModel {
             return nil
         }
 
-        return normalizedTagValue(rawValue)
+        return comparisonTagValue(rawValue, for: key)
     }
 
     private func normalizedTagValue(_ value: String) -> String {
         let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return Int(trimmedValue).map(String.init) ?? trimmedValue
+    }
+
+    private func comparisonTagValue(_ value: String, for key: String) -> String {
+        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalizedTagKey(key) != TagKey.date else {
+            return trimmedValue
+        }
+
         return Int(trimmedValue).map(String.init) ?? trimmedValue
     }
 
