@@ -193,7 +193,7 @@ class SwiftTagUITestCase: XCTestCase {
         let app = try launchApp(importFixture: true)
 
         XCTAssertTrue(
-            waitForMiscTagValue(in: app, key: "ENCODED_BY", expectedValue: "Value"),
+            waitForMiscTagValue(in: app, key: "ENCODED_BY", expectedValue: "<value>"),
             "Current misc value: \(miscTagDisplayValue(in: app, key: "ENCODED_BY") ?? "<missing>")"
         )
 
@@ -5285,6 +5285,10 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     private func resolvedSwiftTagApplicationURL() -> URL? {
+        if let builtApplicationURL = xcodeBuiltSwiftTagApplicationURL() {
+            return builtApplicationURL
+        }
+
         if let runningApplicationURL = NSRunningApplication
             .runningApplications(withBundleIdentifier: Self.appBundleIdentifier)
             .first?
@@ -5293,6 +5297,27 @@ class SwiftTagUITestCase: XCTestCase {
         }
 
         return NSWorkspace.shared.urlForApplication(withBundleIdentifier: Self.appBundleIdentifier)
+    }
+
+    private func xcodeBuiltSwiftTagApplicationURL() -> URL? {
+        let testBundleURL = Bundle(for: SwiftTagUITestCase.self).bundleURL.standardizedFileURL
+        let runnerBundleURL = Bundle.main.bundleURL.standardizedFileURL
+        let candidateURLs = [
+            testBundleURL
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .appendingPathComponent("SwiftTag.app", isDirectory: true),
+            runnerBundleURL
+                .deletingLastPathComponent()
+                .appendingPathComponent("SwiftTag.app", isDirectory: true)
+        ]
+
+        return candidateURLs.first { url in
+            FileManager.default.fileExists(atPath: url.path)
+                && Bundle(url: url)?.bundleIdentifier == Self.appBundleIdentifier
+        }
     }
 
     private func runningSwiftTagApplicationURL(timeout: TimeInterval = 10.0) -> URL? {

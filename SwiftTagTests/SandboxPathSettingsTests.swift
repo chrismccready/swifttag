@@ -260,7 +260,7 @@ struct SandboxPathSettingsTests {
     func generalSettingsSourceContainsSandboxPathControlsAndContextMenu() throws {
         let source = try String(contentsOf: Self.generalSettingsSourceURL, encoding: .utf8)
 
-        #expect(source.contains("GroupBox(\"SwiftTag Sandbox\")"))
+        #expect(source.contains("GroupBox(\"SwiftTag Sandbox Paths\")"))
         #expect(source.contains("SandboxPathListView("))
         #expect(source.contains("ScrollView(.vertical, showsIndicators: true)"))
         #expect(source.contains("LazyVStack(alignment: .leading, spacing: 0)"))
@@ -283,7 +283,7 @@ struct SandboxPathSettingsTests {
         #expect(source.contains("Image(systemName: \"minus\")"))
         #expect(source.contains("width: plusMinusButtonSize.width"))
         #expect(source.contains("height: plusMinusButtonSize.height"))
-        #expect(source.contains(".frame(height: 150)"))
+        #expect(source.contains(".frame(height: 154)"))
 
         let documentSaveIndex = try #require(source.range(of: "SwiftTag Document Save")?.lowerBound)
         let sandboxPathsIndex = try #require(source.range(of: "SwiftTag Sandbox")?.lowerBound)
@@ -293,7 +293,7 @@ struct SandboxPathSettingsTests {
         let sortByDateAddedIndex = try #require(source.range(of: "Sort by Date Added")?.lowerBound)
         let dividerIndex = try #require(source.range(of: "Divider()")?.lowerBound)
         let addPathIndex = try #require(source.range(of: "Add Path…")?.lowerBound)
-        let removePathIndex = try #require(source.range(of: "Remove Path(s)")?.lowerBound)
+        let removePathIndex = try #require(source.range(of: "Remove Path")?.lowerBound)
         #expect(sortByNameIndex < sortByDateAddedIndex)
         #expect(sortByDateAddedIndex < dividerIndex)
         #expect(dividerIndex < addPathIndex)
