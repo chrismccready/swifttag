@@ -682,7 +682,7 @@
 					"$(inherited)",
 					"$(DERIVED_FILE_DIR)/flac-build/install/lib",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lFLAC",
@@ -750,7 +750,7 @@
 					"$(inherited)",
 					"$(DERIVED_FILE_DIR)/flac-build/install/lib",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lFLAC",
