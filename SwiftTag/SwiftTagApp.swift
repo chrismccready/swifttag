@@ -200,6 +200,7 @@ private struct AppCommands: Commands {
     @FocusedValue(\.performSaveTagsOnly) private var performSaveTagsOnly
     @FocusedValue(\.performSavePicturesOnly) private var performSavePicturesOnly
     @FocusedValue(\.performSaveSwiftTagDocument) private var performSaveSwiftTagDocument
+    @FocusedValue(\.performSaveSwiftTagDocumentAs) private var performSaveSwiftTagDocumentAs
     @FocusedValue(\.performToggleSelectedTrackLocks) private var performToggleSelectedTrackLocks
     @FocusedValue(\.performSetTrackTotal) private var performSetTrackTotal
     @FocusedValue(\.performReloadSelectedTracks) private var performReloadSelectedTracks
@@ -212,6 +213,7 @@ private struct AppCommands: Commands {
     @FocusedValue(\.canPerformSaveTagsOnly) private var canPerformSaveTagsOnly
     @FocusedValue(\.canPerformSavePicturesOnly) private var canPerformSavePicturesOnly
     @FocusedValue(\.canPerformSaveSwiftTagDocument) private var canPerformSaveSwiftTagDocument
+    @FocusedValue(\.canPerformSaveSwiftTagDocumentAs) private var canPerformSaveSwiftTagDocumentAs
     @FocusedValue(\.canPerformToggleSelectedTrackLocks) private var canPerformToggleSelectedTrackLocks
     @FocusedValue(\.canPerformSetTrackTotal) private var canPerformSetTrackTotal
     @FocusedValue(\.canPerformReloadSelectedTracks) private var canPerformReloadSelectedTracks
@@ -344,6 +346,12 @@ private struct AppCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: [.control])
             .disabled(!(canPerformSaveSwiftTagDocument ?? false))
+            .modifierKeyAlternate(.shift) {
+                Button("Save SwiftTag Document as...") {
+                    performSaveSwiftTagDocumentAs?()
+                }
+                .disabled(!(canPerformSaveSwiftTagDocumentAs ?? false))
+            }
         }
     }
 

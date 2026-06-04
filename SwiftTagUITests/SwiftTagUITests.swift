@@ -118,6 +118,22 @@ class SwiftTagUITestCase: XCTestCase {
         let swiftTagMenuItem = app.menuItems["Save SwiftTag Document..."].firstMatch
         XCTAssertTrue(swiftTagMenuItem.waitForExistence(timeout: 2.0))
         XCTAssertTrue(swiftTagMenuItem.isEnabled)
+
+        let swiftTagSaveAsMenuItem = app.menuItems["Save SwiftTag Document as..."].firstMatch
+        XCTAssertTrue(swiftTagSaveAsMenuItem.waitForExistence(timeout: 2.0))
+        XCTAssertFalse(swiftTagSaveAsMenuItem.isEnabled)
+    }
+
+    @MainActor
+    func scenarioFileMenuContainsSwiftTagDocumentAsCommandAndStartsDisabled() throws {
+        let app = try launchApp()
+        let fileMenu = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
+        fileMenu.click()
+
+        let swiftTagMenuItem = app.menuItems["Save SwiftTag Document as..."].firstMatch
+        XCTAssertTrue(swiftTagMenuItem.waitForExistence(timeout: 2.0))
+        XCTAssertFalse(swiftTagMenuItem.isEnabled)
     }
 
     @MainActor
@@ -2703,6 +2719,90 @@ class SwiftTagUITestCase: XCTestCase {
             )
         )
         XCTAssertFalse(FileManager.default.fileExists(atPath: originalDocumentURL.path))
+    }
+
+    @MainActor
+    func scenarioFileMenuSaveSwiftTagDocumentAsCreatesNewAssociatedDocument() throws {
+        let firstSaveAsAlbum = "Save As Album \(UUID().uuidString)"
+        let secondSaveAsAlbum = "Save As Follow Up \(UUID().uuidString)"
+        let originalDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Save As Original \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        let newDocumentURL = appContainerUITestFixturesDirectoryURL()
+            .appendingPathComponent("Save As New \(UUID().uuidString)")
+            .appendingPathExtension("swifttag")
+        try? FileManager.default.removeItem(at: originalDocumentURL)
+        try? FileManager.default.removeItem(at: newDocumentURL)
+
+        let app = try launchApp(
+            importFixture: true,
+            exposeNavigationMetadata: true
+        )
+        let window = app.windows.firstMatch
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title", timeout: 20.0)
+        clickMenuItem(in: app, menuBarItem: "File", menuItem: "Save SwiftTag Document...")
+        saveFileInSavePanel(in: app, destinationURL: originalDocumentURL)
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: originalDocumentURL, timeout: 10.0))
+
+        clearAndType(in: app, element: editableAlbumField(in: app), text: firstSaveAsAlbum)
+        let fileMenu = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 2.0))
+        fileMenu.click()
+        let saveAsMenuItem = app.menuItems["Save SwiftTag Document as..."].firstMatch
+        XCTAssertTrue(saveAsMenuItem.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(saveAsMenuItem.isEnabled)
+        saveAsMenuItem.click()
+        saveFileInSavePanel(in: app, destinationURL: newDocumentURL)
+
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        XCTAssertTrue(waitForFileExistence(at: newDocumentURL, timeout: 10.0))
+        XCTAssertTrue(
+            waitForSwiftTagDocumentTagValue(
+                in: newDocumentURL,
+                key: "ALBUM",
+                expectedValue: firstSaveAsAlbum,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForSwiftTagDocumentTagValue(
+                in: originalDocumentURL,
+                key: "ALBUM",
+                expectedValue: "Test Album",
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(waitForNavigationTitle(in: window, expectedValue: newDocumentURL.lastPathComponent, timeout: 10.0))
+        XCTAssertTrue(
+            waitForNavigationDocumentURL(
+                in: window,
+                expectedValue: newDocumentURL.standardizedFileURL.path,
+                timeout: 10.0
+            )
+        )
+
+        clearAndType(in: app, element: editableAlbumField(in: app), text: secondSaveAsAlbum)
+        performSaveSwiftTagDocumentShortcut(in: app)
+
+        XCTAssertNil(waitForSaveErrorPresentation(in: app, timeout: 1.0))
+        XCTAssertTrue(
+            waitForSwiftTagDocumentTagValue(
+                in: newDocumentURL,
+                key: "ALBUM",
+                expectedValue: secondSaveAsAlbum,
+                timeout: 10.0
+            )
+        )
+        XCTAssertTrue(
+            waitForSwiftTagDocumentTagValue(
+                in: originalDocumentURL,
+                key: "ALBUM",
+                expectedValue: "Test Album",
+                timeout: 10.0
+            )
+        )
     }
 
     @MainActor

@@ -323,7 +323,7 @@ enum SwiftTagDocumentPackageWriter {
             return existingDocumentID
         }
 
-        return state.documentID ?? UUID()
+        return UUID()
     }
 
     private static func existingDocumentID(at destinationURL: URL, fileManager: FileManager) -> UUID? {

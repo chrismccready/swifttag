@@ -29,6 +29,11 @@ final class SwiftTagCoreUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testFileMenuContainsSwiftTagDocumentAsCommandAndStartsDisabled() throws {
+        try scenarioFileMenuContainsSwiftTagDocumentAsCommandAndStartsDisabled()
+    }
+
+    @MainActor
     func testFileMenuContainsOpenSwiftTagDocumentCommand() throws {
         try scenarioFileMenuContainsOpenSwiftTagDocumentCommand()
     }
@@ -312,6 +317,11 @@ final class SwiftTagSaveFlowUITests: SwiftTagUITestCase {
     @MainActor
     func testControlSSavesMovedReferencedSwiftTagDocumentAfterExternalMove() throws {
         try scenarioControlSSavesMovedReferencedSwiftTagDocumentAfterExternalMove()
+    }
+
+    @MainActor
+    func testFileMenuSaveSwiftTagDocumentAsCreatesNewAssociatedDocument() throws {
+        try scenarioFileMenuSaveSwiftTagDocumentAsCreatesNewAssociatedDocument()
     }
 
     @MainActor

@@ -392,6 +392,10 @@ struct ContentView: View {
         !isSaveOperationRunning && viewModel.canSaveSwiftTagDocument()
     }
 
+    private var canSaveSwiftTagDocumentAs: Bool {
+        canSaveSwiftTagDocument && viewModel.swiftTagDocumentSaveState().hasReferencedDocument
+    }
+
     private var reloadSelectedTracksTitle: String {
         selectedTrackIDs.count == 1 ? "Reload Selected Track" : "Reload Selected Tracks"
     }
@@ -991,6 +995,9 @@ struct ContentView: View {
             .focusedSceneValue(\.performSaveSwiftTagDocument) {
                 saveSwiftTagDocument()
             }
+            .focusedSceneValue(\.performSaveSwiftTagDocumentAs) {
+                saveSwiftTagDocumentAs()
+            }
             .focusedSceneValue(\.toggleSelectedTrackLocksTitle, lockMenuTitle)
             .focusedSceneValue(\.performToggleSelectedTrackLocks) {
                 toggleSelectedTrackLocks()
@@ -1015,6 +1022,7 @@ struct ContentView: View {
             .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
             .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
             .focusedSceneValue(\.canPerformSaveSwiftTagDocument, canSaveSwiftTagDocument)
+            .focusedSceneValue(\.canPerformSaveSwiftTagDocumentAs, canSaveSwiftTagDocumentAs)
     }
 
     private var presentedContent: some View {
@@ -1405,6 +1413,26 @@ struct ContentView: View {
 
             do {
                 _ = try performSwiftTagDocumentSave(using: .rememberedOrPrompt)
+            } catch {
+                presentSaveError(error)
+            }
+        }
+    }
+
+    private func saveSwiftTagDocumentAs() {
+        guard !isSaveOperationRunning, canSaveSwiftTagDocumentAs else {
+            return
+        }
+        syncTrackPictureRecordsFromAlbumArt()
+
+        isSaveOperationRunning = true
+        Task { @MainActor in
+            defer {
+                isSaveOperationRunning = false
+            }
+
+            do {
+                _ = try performSwiftTagDocumentSave(using: .promptForNewDocument)
             } catch {
                 presentSaveError(error)
             }
@@ -3066,6 +3094,7 @@ extension FocusedValues {
     @Entry var performSaveTagsOnly: (() -> Void)?
     @Entry var performSavePicturesOnly: (() -> Void)?
     @Entry var performSaveSwiftTagDocument: (() -> Void)?
+    @Entry var performSaveSwiftTagDocumentAs: (() -> Void)?
     @Entry var performToggleSelectedTrackLocks: (() -> Void)?
     @Entry var toggleSelectedTrackLocksTitle: String?
     @Entry var performSetTrackTotal: (() -> Void)?
@@ -3081,6 +3110,7 @@ extension FocusedValues {
     @Entry var canPerformSaveTagsOnly: Bool?
     @Entry var canPerformSavePicturesOnly: Bool?
     @Entry var canPerformSaveSwiftTagDocument: Bool?
+    @Entry var canPerformSaveSwiftTagDocumentAs: Bool?
     @Entry var canPerformToggleSelectedTrackLocks: Bool?
 }
 

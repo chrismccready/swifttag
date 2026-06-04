@@ -611,6 +611,38 @@ struct SwiftTagDocumentTests {
     }
 
     @Test
+    func swiftTagDocumentWriterCreatesDocumentIDForNewDestination() throws {
+        let originalDestinationURL = try Self.tempPackageURL(name: "new-id-original")
+        let newDestinationURL = try Self.tempPackageURL(name: "new-id-copy")
+        let track = SwiftTagDocumentExportTrack(
+            sortKey: "/tmp/one.flac",
+            tags: [TagKey.title: "One"],
+            pictures: [],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/one.flac"),
+            securityScopedBookmarkData: nil,
+            flacFingerprint: "fingerprint-1"
+        )
+
+        let firstResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [track],
+            state: .init(),
+            to: originalDestinationURL
+        )
+
+        let secondResult = try SwiftTagDocumentPackageWriter.save(
+            tracks: [track],
+            state: SwiftTagDocumentSaveState(
+                destinationURL: originalDestinationURL,
+                documentID: firstResult.documentID,
+                securityScopedBookmarkData: nil
+            ),
+            to: newDestinationURL
+        )
+
+        #expect(secondResult.documentID != firstResult.documentID)
+    }
+
+    @Test
     func swiftTagDocumentWriterUsesStableFingerprintForReorderedTracks() throws {
         let firstDestinationURL = try Self.tempPackageURL(name: "fingerprint-a")
         let secondDestinationURL = try Self.tempPackageURL(name: "fingerprint-b")
