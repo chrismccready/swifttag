@@ -154,6 +154,59 @@ struct ReferencedSwiftTagDocumentTrackList: Equatable {
     }
 }
 
+@MainActor
+struct ReferencedSwiftTagDocumentEditState: Equatable {
+    struct Entry: Equatable {
+        let trackListEntry: ReferencedSwiftTagDocumentTrackList.Entry
+        let tags: [String: String]
+        let pictures: [FlacWritablePictureRecord]
+
+        init(track: Track, exportTrack: SwiftTagDocumentExportTrack) {
+            trackListEntry = ReferencedSwiftTagDocumentTrackList.Entry(track: track)
+            tags = exportTrack.tags
+            pictures = exportTrack.pictures
+        }
+
+        fileprivate var comparableValue: ComparableEntry {
+            ComparableEntry(
+                identity: trackListEntry.resolvedIdentity(),
+                tags: tags,
+                pictures: pictures
+            )
+        }
+    }
+
+    fileprivate struct ComparableEntry: Equatable {
+        let identity: ReferencedSwiftTagDocumentTrackList.Identity
+        let tags: [String: String]
+        let pictures: [FlacWritablePictureRecord]
+    }
+
+    let entries: [Entry]
+
+    static func make(
+        tracks: [Track],
+        exportTracks: [SwiftTagDocumentExportTrack]
+    ) -> Self {
+        Self(
+            entries: zip(tracks, exportTracks).map { track, exportTrack in
+                Entry(track: track, exportTrack: exportTrack)
+            }
+        )
+    }
+
+    static func differs(
+        current: Self,
+        baseline: Self?
+    ) -> Bool {
+        guard let baseline else {
+            return false
+        }
+
+        return current.entries.map(\.comparableValue) != baseline.entries.map(\.comparableValue)
+    }
+}
+
 enum TagEditorSaveError: LocalizedError {
     case noTracksToSave
     case failedToResolveAccess(path: String)
@@ -211,6 +264,7 @@ final class TagEditorViewModel {
     private var pendingAlbumArtistValue: String = ""
     private var rememberedSwiftTagDocumentSaveState: SwiftTagDocumentSaveState = .init()
     private var referencedSwiftTagDocumentTrackListBaseline: ReferencedSwiftTagDocumentTrackList?
+    private var referencedSwiftTagDocumentEditStateBaseline: ReferencedSwiftTagDocumentEditState?
 
     init() {
         trackItems = []
@@ -386,7 +440,7 @@ final class TagEditorViewModel {
             availability: .available
         )
         cancelPendingSwiftTagDocumentMissingRefresh()
-        acceptCurrentTrackListAsReferencedSwiftTagDocumentBaseline()
+        acceptCurrentEditStateAsReferencedSwiftTagDocumentBaseline()
     }
 
     func loadSwiftTagDocument(
@@ -441,7 +495,7 @@ final class TagEditorViewModel {
 
         importedFlacPicturesByType = importedPicturesByType
         trackItems = loadedTracks
-        acceptCurrentTrackListAsReferencedSwiftTagDocumentBaseline()
+        acceptCurrentEditStateAsReferencedSwiftTagDocumentBaseline()
         syncCurrentStateAsSaved(tagWriteOptions: tagWriteOptions, albumArtPictures: [])
         reloadMiscTagRowsFromSelection()
     }
@@ -454,6 +508,17 @@ final class TagEditorViewModel {
         return ReferencedSwiftTagDocumentTrackList.differs(
             current: ReferencedSwiftTagDocumentTrackList.make(from: trackItems),
             baseline: referencedSwiftTagDocumentTrackListBaseline
+        )
+    }
+
+    func hasReferencedSwiftTagDocumentEditStateDifference() -> Bool {
+        guard rememberedSwiftTagDocumentSaveState.hasReferencedDocument else {
+            return false
+        }
+
+        return ReferencedSwiftTagDocumentEditState.differs(
+            current: currentReferencedSwiftTagDocumentEditState(),
+            baseline: referencedSwiftTagDocumentEditStateBaseline
         )
     }
 
@@ -691,7 +756,7 @@ final class TagEditorViewModel {
         return EditorNavigationMetadata(
             title: editorNavigationTitle(
                 documentState: documentState,
-                hasReferencedSwiftTagDocumentTrackListDifference: hasReferencedSwiftTagDocumentTrackListDifference()
+                hasReferencedSwiftTagDocumentEditStateDifference: hasReferencedSwiftTagDocumentEditStateDifference()
             ),
             subtitle: [
                 "Tracks: \(trackItems.count) (\(selectedTrackCount))",
@@ -3029,22 +3094,31 @@ final class TagEditorViewModel {
         pendingSwiftTagDocumentMissingRefreshTask = nil
     }
 
-    private func acceptCurrentTrackListAsReferencedSwiftTagDocumentBaseline() {
+    private func currentReferencedSwiftTagDocumentEditState() -> ReferencedSwiftTagDocumentEditState {
+        ReferencedSwiftTagDocumentEditState.make(
+            tracks: trackItems,
+            exportTracks: swiftTagDocumentExportTracks()
+        )
+    }
+
+    private func acceptCurrentEditStateAsReferencedSwiftTagDocumentBaseline() {
         guard rememberedSwiftTagDocumentSaveState.hasReferencedDocument else {
             referencedSwiftTagDocumentTrackListBaseline = nil
+            referencedSwiftTagDocumentEditStateBaseline = nil
             return
         }
 
         referencedSwiftTagDocumentTrackListBaseline = ReferencedSwiftTagDocumentTrackList.make(from: trackItems)
+        referencedSwiftTagDocumentEditStateBaseline = currentReferencedSwiftTagDocumentEditState()
     }
 
     private func editorNavigationTitle(
         documentState: SwiftTagDocumentSaveState,
-        hasReferencedSwiftTagDocumentTrackListDifference: Bool
+        hasReferencedSwiftTagDocumentEditStateDifference: Bool
     ) -> String {
         if let documentDisplayName = documentState.documentDisplayName,
            !documentDisplayName.isEmpty {
-            let markedDocumentDisplayName = hasReferencedSwiftTagDocumentTrackListDifference
+            let markedDocumentDisplayName = hasReferencedSwiftTagDocumentEditStateDifference
                 ? "\(documentDisplayName)*"
                 : documentDisplayName
             return documentState.isDeleted

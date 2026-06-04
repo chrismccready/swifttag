@@ -2709,7 +2709,7 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
-    func tagEditorViewModelNavigationMetadataDoesNotAppendMarkerForTagOnlyReferencedDocumentDifferences() throws {
+    func tagEditorViewModelNavigationMetadataAppendsMarkerForTagOnlyReferencedDocumentDifferences() throws {
         let fileURL = try Self.tempFixtureCopyURL(name: "navigation-tag-only.flac")
         let track = try Self.bookmarkBackedTrack(
             fileURL: fileURL,
@@ -2733,7 +2733,118 @@ struct SwiftTagTests {
         )
 
         #expect(!viewModel.hasReferencedSwiftTagDocumentTrackListDifference())
+        #expect(viewModel.hasReferencedSwiftTagDocumentEditStateDifference())
+        #expect(metadata.title == "Session.swifttag*")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelNavigationMetadataAppendsMarkerForPictureOnlyReferencedDocumentDifferences() throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "navigation-picture-only.flac")
+        let originalPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Original",
+            data: try Self.pngData(color: .systemPink)
+        )
+        let changedPicture = FlacWritablePictureRecord(
+            type: 3,
+            mimeType: "image/png",
+            description: "Changed",
+            data: try Self.pngData(color: .systemBlue)
+        )
+        let bookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let track = Track(
+            tags: [TagKey.title: "Track", TagKey.filename: fileURL.lastPathComponent],
+            flacPictureRecords: [originalPicture],
+            sourceFileURL: fileURL,
+            securityScopedBookmarkData: bookmarkData,
+            fingerprint: Self.fixtureFingerprint
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: URL(fileURLWithPath: "/tmp/Session.swifttag"),
+                documentID: UUID(),
+                fingerprint: "document-fingerprint"
+            )
+        )
+
+        viewModel.trackItems[0].flacPictureRecords = [changedPicture]
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(!viewModel.hasReferencedSwiftTagDocumentTrackListDifference())
+        #expect(viewModel.hasReferencedSwiftTagDocumentEditStateDifference())
+        #expect(metadata.title == "Session.swifttag*")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelRememberSwiftTagDocumentSaveClearsEditStateMarkerWithoutClearingFlacDirtyState() throws {
+        let fileURL = try Self.tempFixtureCopyURL(name: "navigation-save-document-clears-marker.flac")
+        let latestSnapshot = TrackFileSnapshot(
+            tags: [TagKey.title: "Original Title"],
+            picturesByType: [:],
+            pictureRecords: [],
+            fingerprint: Self.fixtureFingerprint
+        )
+        let bookmarkData = try fileURL.bookmarkData(
+            options: .withSecurityScope,
+            includingResourceValuesForKeys: nil,
+            relativeTo: nil
+        )
+        let track = Track(
+            tags: [TagKey.title: "Original Title", TagKey.filename: fileURL.lastPathComponent],
+            sourceFileURL: fileURL,
+            securityScopedBookmarkData: bookmarkData,
+            latestFileSnapshot: latestSnapshot,
+            fingerprint: Self.fixtureFingerprint
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: URL(fileURLWithPath: "/tmp/Session.swifttag"),
+                documentID: UUID(),
+                fingerprint: "document-fingerprint-a"
+            )
+        )
+
+        viewModel.trackItems[0].tags[TagKey.title] = "Changed Title"
+        #expect(viewModel.hasReferencedSwiftTagDocumentEditStateDifference())
+        #expect(viewModel.editorDifferenceCounts(
+            for: Set(viewModel.trackItems.map(\.id)),
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        ).tagEdits == 1)
+
+        viewModel.rememberSwiftTagDocumentSave(
+            SwiftTagDocumentSaveResult(
+                destinationURL: URL(fileURLWithPath: "/tmp/Session.swifttag"),
+                documentID: UUID(),
+                fingerprint: "document-fingerprint-b"
+            )
+        )
+        let metadata = viewModel.editorNavigationMetadata(
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        )
+
+        #expect(!viewModel.hasReferencedSwiftTagDocumentEditStateDifference())
         #expect(metadata.title == "Session.swifttag")
+        #expect(viewModel.editorDifferenceCounts(
+            for: Set(viewModel.trackItems.map(\.id)),
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: []
+        ).tagEdits == 1)
     }
 
     @Test
