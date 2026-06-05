@@ -201,6 +201,12 @@ on setFeedBackSettingsTest given logging:logging
             error "ERROR: theme is NOT set to system"
         end if
 
+        -- Quit App on Last Window Close --
+        set quit app on last window close to true
+        if quit app on last window close is not true then
+            error "ERROR: quit app on last window close is NOT set to true"
+        end if
+
         -- Tag Value Difference Colors --
         set track to track diff color to defaultPowderBlueColor
         set appTrackToTrackDiffColor to track to track diff color
@@ -242,6 +248,10 @@ on setFeedbackSettingsDefaults given logging:logging
         set theme to dark
         if theme is not dark then
             error "ERROR: theme is NOT set to dark"
+        end if
+        set quit app on last window close to false
+        if quit app on last window close is not false then
+            error "ERROR: quit app on last window close is NOT set to false"
         end if
         set track to track diff color to defaultTrackToTrackDiffColor
         if track to track diff color is not defaultTrackToTrackDiffColor then

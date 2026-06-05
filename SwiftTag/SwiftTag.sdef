@@ -315,6 +315,9 @@
             <property name="theme" code="thse" type="theme setting" access="rw" description="Theme preference (aka: Theme).">
                 <cocoa key="ThemeSetting"/>
             </property>
+            <property name="quit app on last window close" code="qalw" type="boolean" access="rw" description="Should SwiftTag app quit when it's last open window is closed (aka: Window Management: Quit app on last window close)?">
+                <cocoa key="QuitAppOnLastWindowCloseSetting"/>
+            </property>
             <property name="track to track diff color" code="ttdc" type="color" access="rw" description="Track to track diff color preference (aka: Tag Value Difference Colors: Track to Track Diff Color).">
                 <cocoa key="TrackToTrackDiffColorSetting"/>
             </property>

@@ -218,6 +218,13 @@
                             <td>read-write</td>
                             <td>App theme preference. Values: <code>light</code>, <code>dark</code>, <code>system</code>.</td>
                         </tr>
+                        <tr id="property-quit-app-on-last-window-close">
+                            <td><code>quit app on last window close</code></td>
+                            <td><code>qalw</code></td>
+                            <td><code>boolean</code></td>
+                            <td>read-write</td>
+                            <td>Quit SwiftTag when the last open window closes.</td>
+                        </tr>
                         <tr id="property-track-to-track-diff-color">
                             <td><code>track to track diff color</code></td>
                             <td><code>ttdc</code></td>
@@ -350,6 +357,7 @@
     set track save scope to selected
     set track save payload to tags only
     set theme to system
+    set quit app on last window close to false
 end tell</code></pre>
                 <div class="code-label">AppleScript</div>
                 <pre><code>tell application "SwiftTag"

@@ -6613,6 +6613,19 @@ extension NSApplication {
         }
     }
 
+    @objc(QuitAppOnLastWindowCloseSetting)
+    var quitAppOnLastWindowCloseSetting: Bool {
+        get {
+            boolSetting(
+                key: FeedbackSettingsKey.quitAppOnLastWindowClose,
+                defaultValue: FeedbackSettingsDefaults.quitAppOnLastWindowClose
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: FeedbackSettingsKey.quitAppOnLastWindowClose)
+        }
+    }
+
     @objc(TrackToTrackDiffColorSetting)
     var trackToTrackDiffColorSetting: Any {
         get {

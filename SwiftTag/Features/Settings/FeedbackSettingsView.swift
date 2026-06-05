@@ -91,6 +91,19 @@ struct FeedbackSettingsView: View {
             }
 
             Section {
+                GroupBox("Window Management") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Toggle("Quit app on last window close", isOn: $quitAppOnLastWindowClose)
+                            .padding(.horizontal, 2)
+                            .accessibilityIdentifier("settings.feedback.quitAppOnLastWindowClose")
+                            .accessibilityValue(quitAppOnLastWindowClose ? "On" : "Off")
+                    }
+                    .padding(.vertical, 4)
+                }
+                .controlSize(.mini)
+            }
+            
+            Section {
                 GroupBox("Tag Value Difference Colors") {
                     ColorPicker("Track to Track Diff Color", selection: trackToTrackDiffColor)
                         .padding(.top, 6)
@@ -109,19 +122,6 @@ struct FeedbackSettingsView: View {
                         .accessibilityIdentifier("settings.feedback.pictureStatusOverlayColor")
                 }
                 .controlSize(.small)
-            }
-
-            Section {
-                GroupBox("Window Management") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Toggle("Quit app on last window close", isOn: $quitAppOnLastWindowClose)
-                            .padding(.horizontal, 2)
-                            .accessibilityIdentifier("settings.feedback.quitAppOnLastWindowClose")
-                            .accessibilityValue(quitAppOnLastWindowClose ? "On" : "Off")
-                    }
-                    .padding(.vertical, 4)
-                }
-                .controlSize(.mini)
             }
         }
         .formStyle(.grouped)

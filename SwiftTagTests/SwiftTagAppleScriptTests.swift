@@ -231,10 +231,16 @@ struct SwiftTagAppleScriptTests {
     @Test
     func applicationClassDescriptionExposesWindowsAndEditorWindows() throws {
         let classDescription = try #require(NSScriptClassDescription(for: NSApplication.self))
+        let quitOnLastWindowCloseCode = Self.fourCharCode("qalw").uint32Value
 
         #expect(classDescription.type(forKey: "orderedWindows") == "window")
         #expect(classDescription.type(forKey: "scriptSettingsWindows") == "settings window")
         #expect(classDescription.type(forKey: "scriptEditorWindows") == "editor window")
+        #expect(classDescription.key(withAppleEventCode: quitOnLastWindowCloseCode) == "QuitAppOnLastWindowCloseSetting")
+        #expect(classDescription.appleEventCode(forKey: "QuitAppOnLastWindowCloseSetting") == quitOnLastWindowCloseCode)
+        #expect(classDescription.type(forKey: "QuitAppOnLastWindowCloseSetting") == "boolean")
+        #expect(classDescription.hasReadableProperty(forKey: "QuitAppOnLastWindowCloseSetting"))
+        #expect(classDescription.hasWritableProperty(forKey: "QuitAppOnLastWindowCloseSetting"))
     }
 
     @MainActor
@@ -735,6 +741,7 @@ struct SwiftTagAppleScriptTests {
             SaveSettingsKey.saveAllPicturesToAllTracks,
             FeedbackSettingsKey.saveNotificationMode,
             FeedbackSettingsKey.themePreference,
+            FeedbackSettingsKey.quitAppOnLastWindowClose,
             FeedbackSettingsKey.trackToTrackDiffColor,
             FeedbackSettingsKey.formatOnTrackToFileDiff,
             FeedbackSettingsKey.formatOnTrackToTrackDiff,
@@ -776,6 +783,7 @@ struct SwiftTagAppleScriptTests {
             ("ApplyCompilationToAllTracksSetting", SaveSettingsKey.applyCompilationToAllTracks, true),
             ("SaveFrontCoverToAllTracksSetting", SaveSettingsKey.saveFrontCoverToAllTracks, true),
             ("SaveAllPicturesToAllTracksSetting", SaveSettingsKey.saveAllPicturesToAllTracks, true),
+            ("QuitAppOnLastWindowCloseSetting", FeedbackSettingsKey.quitAppOnLastWindowClose, true),
             ("FormatOnTrackToFileDiffSetting", FeedbackSettingsKey.formatOnTrackToFileDiff, false),
             ("FormatOnTrackToTrackDiffSetting", FeedbackSettingsKey.formatOnTrackToTrackDiff, false),
             ("FormatOnExternallyModifiedDiffSetting", FeedbackSettingsKey.formatOnExternallyModifiedDiff, false),
