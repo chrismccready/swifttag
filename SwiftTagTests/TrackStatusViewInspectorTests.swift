@@ -899,6 +899,9 @@ struct TrackStatusViewInspectorTests {
         #expect(source.contains("settings.feedback.externallyModifiedDiffColor"))
         #expect(source.contains("settings.feedback.trackDiscTotalMismatchColor"))
         #expect(source.contains("settings.feedback.pictureStatusOverlayColor"))
+        #expect(source.contains("settings.feedback.quitAppOnLastWindowClose"))
+        #expect(source.contains("@AppStorage(FeedbackSettingsKey.quitAppOnLastWindowClose)"))
+        #expect(source.contains("FeedbackSettingsDefaults.quitAppOnLastWindowClose"))
 
         let _ = try sut.inspect().find(ViewType.Form.self)
     }

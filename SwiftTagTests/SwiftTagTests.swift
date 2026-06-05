@@ -24,6 +24,13 @@ struct SwiftTagTests {
 
     private static let fixtureFingerprint = "ad98344c162662ceeb88f25aa552af60"
 
+    private static func isolatedUserDefaults(prefix: String) throws -> (UserDefaults, String) {
+        let suiteName = "\(prefix).\(UUID().uuidString)"
+        let userDefaults = try #require(UserDefaults(suiteName: suiteName))
+        userDefaults.removePersistentDomain(forName: suiteName)
+        return (userDefaults, suiteName)
+    }
+
     private static func pngData(color: NSColor) throws -> Data {
         let imageSize = NSSize(width: 2, height: 2)
         let image = NSImage(size: imageSize)
@@ -676,6 +683,7 @@ struct SwiftTagTests {
         #expect(FeedbackSettingsDefaults.saveNotificationMode == .whenNotFrontmost)
         #expect(FeedbackSettingsDefaults.themePreference == .system)
         #expect(FeedbackSettingsDefaults.showTrackFingerprintColumn)
+        #expect(!FeedbackSettingsDefaults.quitAppOnLastWindowClose)
         #expect(FeedbackSettingsDefaults.formatOnTrackToFileDiff)
         #expect(FeedbackSettingsDefaults.formatOnTrackToTrackDiff)
         #expect(FeedbackSettingsDefaults.formatOnExternallyModifiedDiff)
@@ -684,6 +692,34 @@ struct SwiftTagTests {
         #expect(FeedbackSettingsDefaults.formatOnDuplicatePicture)
         #expect(!FeedbackSettingsDefaults.trackDiscTotalMismatchColor.isEmpty)
         #expect(!FeedbackSettingsDefaults.pictureStatusOverlayColor.isEmpty)
+    }
+
+    @Test
+    func appDelegateDefaultsToKeepingAppOpenAfterLastWindowClose() throws {
+        let (userDefaults, suiteName) = try Self.isolatedUserDefaults(
+            prefix: "SwiftTagTests.WindowManagement"
+        )
+        defer {
+            userDefaults.removePersistentDomain(forName: suiteName)
+        }
+
+        #expect(!AppDelegate.shouldTerminateAfterLastWindowClosed(userDefaults: userDefaults))
+    }
+
+    @Test
+    func appDelegateReadsQuitAppOnLastWindowClosePreference() throws {
+        let (userDefaults, suiteName) = try Self.isolatedUserDefaults(
+            prefix: "SwiftTagTests.WindowManagement"
+        )
+        defer {
+            userDefaults.removePersistentDomain(forName: suiteName)
+        }
+
+        userDefaults.set(true, forKey: FeedbackSettingsKey.quitAppOnLastWindowClose)
+        #expect(AppDelegate.shouldTerminateAfterLastWindowClosed(userDefaults: userDefaults))
+
+        userDefaults.set(false, forKey: FeedbackSettingsKey.quitAppOnLastWindowClose)
+        #expect(!AppDelegate.shouldTerminateAfterLastWindowClosed(userDefaults: userDefaults))
     }
 
     @Test

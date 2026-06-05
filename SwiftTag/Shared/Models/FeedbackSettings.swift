@@ -110,6 +110,7 @@ enum FeedbackSettingsKey {
     static let themePreference = "settings.feedback.themePreference"
     static let showTrackFingerprintColumn = "settings.feedback.showTrackFingerprintColumn"
     static let showTrackDurationColumn = "settings.feedback.showTrackDurationColumn"
+    static let quitAppOnLastWindowClose = "settings.feedback.quitAppOnLastWindowClose"
     static let trackToTrackDiffColor = "settings.feedback.trackToTrackDiffColor"
     static let trackToFileDiffColor = "settings.feedback.trackToFileDiffColor"
     static let externallyModifiedDiffColor = "settings.feedback.externallyModifiedDiffColor"
@@ -128,6 +129,7 @@ enum FeedbackSettingsDefaults {
     static let themePreference = AppThemePreference.system
     static let showTrackFingerprintColumn = true
     static let showTrackDurationColumn = true
+    static let quitAppOnLastWindowClose = false
     static let trackToTrackDiffColor = AppColorStorage.archive(Color.orange, fallback: .systemOrange)
     static let trackToFileDiffColor = AppColorStorage.archive(Color.primary, fallback: .labelColor)
     static let externallyModifiedDiffColor = AppColorStorage.archive(Color.red, fallback: .systemRed)
@@ -139,6 +141,16 @@ enum FeedbackSettingsDefaults {
     static let formatOnTrackTotalMismatch = true
     static let formatOnDiscTotalMismatch = true
     static let formatOnDuplicatePicture = true
+}
+
+enum FeedbackSettingsStore {
+    static func quitAppOnLastWindowClose(userDefaults: UserDefaults = .standard) -> Bool {
+        guard userDefaults.object(forKey: FeedbackSettingsKey.quitAppOnLastWindowClose) != nil else {
+            return FeedbackSettingsDefaults.quitAppOnLastWindowClose
+        }
+
+        return userDefaults.bool(forKey: FeedbackSettingsKey.quitAppOnLastWindowClose)
+    }
 }
 
 enum AppColorStorage {

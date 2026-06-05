@@ -39,7 +39,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
+        Self.shouldTerminateAfterLastWindowClosed()
+    }
+
+    static func shouldTerminateAfterLastWindowClosed(userDefaults: UserDefaults = .standard) -> Bool {
+        FeedbackSettingsStore.quitAppOnLastWindowClose(userDefaults: userDefaults)
     }
 
     func applicationWillFinishLaunching(_ notification: Notification) {

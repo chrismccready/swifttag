@@ -23,6 +23,9 @@ struct FeedbackSettingsView: View {
     @AppStorage(FeedbackSettingsKey.pictureStatusOverlayColor)
     private var pictureStatusOverlayColorRawValue: String = FeedbackSettingsDefaults.pictureStatusOverlayColor
 
+    @AppStorage(FeedbackSettingsKey.quitAppOnLastWindowClose)
+    private var quitAppOnLastWindowClose: Bool = FeedbackSettingsDefaults.quitAppOnLastWindowClose
+
     private var saveNotificationMode: Binding<SaveNotificationMode> {
         Binding(
             get: { SaveNotificationMode(rawValue: saveNotificationModeRawValue) ?? FeedbackSettingsDefaults.saveNotificationMode },
@@ -106,6 +109,19 @@ struct FeedbackSettingsView: View {
                         .accessibilityIdentifier("settings.feedback.pictureStatusOverlayColor")
                 }
                 .controlSize(.small)
+            }
+
+            Section {
+                GroupBox("Window Management") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Toggle("Quit app on last window close", isOn: $quitAppOnLastWindowClose)
+                            .padding(.horizontal, 2)
+                            .accessibilityIdentifier("settings.feedback.quitAppOnLastWindowClose")
+                            .accessibilityValue(quitAppOnLastWindowClose ? "On" : "Off")
+                    }
+                    .padding(.vertical, 4)
+                }
+                .controlSize(.mini)
             }
         }
         .formStyle(.grouped)
