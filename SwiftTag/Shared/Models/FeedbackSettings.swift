@@ -65,6 +65,7 @@ enum DiffTagIdentifier: String, CaseIterable, Identifiable, Codable {
     case location
     case date
     case description
+    case comment
     case misc
 
     var id: String { rawValue }
@@ -99,6 +100,8 @@ enum DiffTagIdentifier: String, CaseIterable, Identifiable, Codable {
             return "Date"
         case .description:
             return "Description"
+        case .comment:
+            return "Comment"
         case .misc:
             return "Misc"
         }

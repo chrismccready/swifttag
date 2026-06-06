@@ -86,6 +86,6 @@ struct TagEditorMiscTagsView: View {
             .frame(minHeight: 80, maxHeight: 176)
             .accessibilityIdentifier("miscTags.table")
         }
-        .padding(.top, 22)
+        .padding(.top, 0)
     }
 }

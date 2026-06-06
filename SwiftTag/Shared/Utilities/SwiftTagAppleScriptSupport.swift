@@ -3317,7 +3317,7 @@ final class SwiftTagScriptTrack: NSObject {
         "album": TagKey.album,
         "albumArtist": TagKey.albumArtist,
         "artist": TagKey.artist,
-        "comment": "COMMENT",
+        "comment": TagKey.comment,
         "compilation": TagKey.compilation,
         "composer": TagKey.composer,
         "conductor": "CONDUCTOR",
@@ -3417,10 +3417,10 @@ final class SwiftTagScriptTrack: NSObject {
     @objc(comment)
     var comment: String? {
         get {
-            currentTextValue(for: ["COMMENT"])
+            currentTextValue(for: [TagKey.comment])
         }
         set {
-            updateTagValue("COMMENT", to: newValue)
+            updateTagValue(TagKey.comment, to: newValue)
         }
     }
 

@@ -841,6 +841,23 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func tagEditorCoreTagsViewSourceDeclaresCommentSplitEditor() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("TagEditor")
+            .appendingPathComponent("TagEditorCoreTagsView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        #expect(source.contains("HSplitView"))
+        #expect(source.contains("title: \"Description\""))
+        #expect(source.contains("title: \"Comment\""))
+        #expect(source.contains("tag: .comment"))
+    }
+
+    @Test
     func tagWriteSettingsViewSourceReplacesLockedTrackTotalToggleWithCompilationScopeToggle() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -1090,6 +1107,7 @@ struct TrackStatusViewInspectorTests {
             selectedLocationBinding: .constant("Location"),
             selectedDateBinding: .constant("2026-03-19"),
             selectedDescriptionsBinding: .constant("Description"),
+            selectedCommentsBinding: .constant("Comment"),
             hasTrackNumberInternalDifference: false,
             hasTrackNumberExternalDifference: false,
             hasTrackNumberExternallyModifiedDifference: false,
@@ -1117,6 +1135,9 @@ struct TrackStatusViewInspectorTests {
             hasDescriptionInternalDifference: false,
             hasDescriptionExternalDifference: false,
             hasDescriptionExternallyModifiedDifference: false,
+            hasCommentInternalDifference: false,
+            hasCommentExternalDifference: false,
+            hasCommentExternallyModifiedDifference: false,
             onSetTrackTotalToCount: {},
             setTrackTotalMenuTitle: "Set Track Total (2)",
             canSetTrackTotal: true,

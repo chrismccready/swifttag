@@ -29,6 +29,7 @@ struct TagEditorCoreTagsView: View {
     let selectedLocationBinding: Binding<String>?
     let selectedDateBinding: Binding<String>?
     let selectedDescriptionsBinding: Binding<String>?
+    let selectedCommentsBinding: Binding<String>?
     let hasTrackNumberInternalDifference: Bool
     let hasTrackNumberExternalDifference: Bool
     let hasTrackNumberExternallyModifiedDifference: Bool
@@ -56,6 +57,9 @@ struct TagEditorCoreTagsView: View {
     let hasDescriptionInternalDifference: Bool
     let hasDescriptionExternalDifference: Bool
     let hasDescriptionExternallyModifiedDifference: Bool
+    let hasCommentInternalDifference: Bool
+    let hasCommentExternalDifference: Bool
+    let hasCommentExternallyModifiedDifference: Bool
     let onSetTrackTotalToCount: () -> Void
     let setTrackTotalMenuTitle: String
     let canSetTrackTotal: Bool
@@ -257,28 +261,60 @@ struct TagEditorCoreTagsView: View {
                 }
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Description")
-                if let selectedDescriptionsBinding {
-                    TextEditor(text: selectedDescriptionsBinding)
-                        .tagDiffStyle(
-                            tag: .description,
-                            hasTrackToTrackDifference: hasDescriptionInternalDifference,
-                            hasTrackToFileDifference: hasDescriptionExternalDifference,
-                            hasExternallyModifiedDifference: hasDescriptionExternallyModifiedDifference
-                        )
-                        .frame(minHeight: 60, idealHeight: 60)
-                        .disabled(!isSelectionEditable)
-                        .opacity(!isSelectionEditable ? 0.20 : 1)
-                } else {
-                    TextEditor(text: .constant("Select track(s) to edit description."))
-                        .frame(minHeight: 60, idealHeight: 60)
-                        .disabled(true)
-                        .opacity(0.20)
-                }
+            HSplitView {
+                textEditorSection(
+                    title: "Description",
+                    placeholder: "Select track(s) to edit description.",
+                    text: selectedDescriptionsBinding,
+                    tag: .description,
+                    hasInternalDifference: hasDescriptionInternalDifference,
+                    hasExternalDifference: hasDescriptionExternalDifference,
+                    hasExternallyModifiedDifference: hasDescriptionExternallyModifiedDifference
+                )
+                .frame(minWidth: 90, maxWidth: .infinity, minHeight: 60, idealHeight: 60)
+
+                textEditorSection(
+                    title: "Comment",
+                    placeholder: "Select track(s) to edit comment.",
+                    text: selectedCommentsBinding,
+                    tag: .comment,
+                    hasInternalDifference: hasCommentInternalDifference,
+                    hasExternalDifference: hasCommentExternalDifference,
+                    hasExternallyModifiedDifference: hasCommentExternallyModifiedDifference
+                )
+                .frame(minWidth: 90, maxWidth: .infinity, minHeight: 60, idealHeight: 60)
             }
-            .padding(.top, 22)
-            .frame(height: 60)
+            .padding(.top, 5)
+        }
+    }
+
+    @ViewBuilder
+    private func textEditorSection(
+        title: String,
+        placeholder: String,
+        text: Binding<String>?,
+        tag: DiffTagIdentifier,
+        hasInternalDifference: Bool,
+        hasExternalDifference: Bool,
+        hasExternallyModifiedDifference: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+            if let text {
+                TextEditor(text: text)
+                    .tagDiffStyle(
+                        tag: tag,
+                        hasTrackToTrackDifference: hasInternalDifference,
+                        hasTrackToFileDifference: hasExternalDifference,
+                        hasExternallyModifiedDifference: hasExternallyModifiedDifference
+                    )
+                    .disabled(!isSelectionEditable)
+                    .opacity(!isSelectionEditable ? 0.20 : 1)
+            } else {
+                TextEditor(text: .constant(placeholder))
+                    .disabled(true)
+                    .opacity(0.20)
+            }
         }
     }
 }

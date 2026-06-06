@@ -19,6 +19,7 @@ enum TagNormalization {
         TagKey.location,
         TagKey.date,
         TagKey.description,
+        TagKey.comment,
         "TRACK",
         "TRACKNUMBER",
         "TOTALTRACKS",

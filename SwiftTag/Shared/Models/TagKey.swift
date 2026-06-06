@@ -14,4 +14,5 @@ enum TagKey {
     static let location = "LOCATION"
     static let date = "DATE"
     static let description = "DESCRIPTION"
+    static let comment = "COMMENT"
 }

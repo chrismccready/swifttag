@@ -1065,6 +1065,7 @@ struct SwiftTagAppleScriptTests {
                 "COMMENT": "Live broadcast",
                 TagKey.compilation: "1",
                 TagKey.date: "2024-03-14",
+                TagKey.description: "Program note",
                 "DISCTOTAL": "2",
                 "DISC": "1",
                 "RATING": "5",
@@ -1131,6 +1132,7 @@ struct SwiftTagAppleScriptTests {
         #expect(scriptTrack.bitsPerSample?.intValue == 24)
         #expect(scriptTrack.channels?.intValue == 2)
         #expect(scriptTrack.comment == "Live broadcast")
+        #expect(scriptTrack.trackDescription == "Program note")
         #expect(scriptTrack.compilation?.boolValue == true)
         #expect(scriptTrack.discCount?.intValue == 2)
         #expect(scriptTrack.discNumber?.intValue == 1)

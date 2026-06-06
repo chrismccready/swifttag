@@ -72,6 +72,7 @@ struct TagEditorView: View {
     let selectedLocationBinding: Binding<String>?
     let selectedDateBinding: Binding<String>?
     let selectedDescriptionsBinding: Binding<String>?
+    let selectedCommentsBinding: Binding<String>?
     let hasTrackNumberInternalDifference: Bool
     let hasTrackNumberExternalDifference: Bool
     let hasTrackNumberExternallyModifiedDifference: Bool
@@ -99,6 +100,9 @@ struct TagEditorView: View {
     let hasDescriptionInternalDifference: Bool
     let hasDescriptionExternalDifference: Bool
     let hasDescriptionExternallyModifiedDifference: Bool
+    let hasCommentInternalDifference: Bool
+    let hasCommentExternalDifference: Bool
+    let hasCommentExternallyModifiedDifference: Bool
     let isTrackTotalAutoUpdateEnabled: Bool
     let positiveIntegerTransform: (Binding<String>) -> Binding<String>
 
@@ -194,6 +198,7 @@ struct TagEditorView: View {
                 selectedLocationBinding: selectedLocationBinding,
                 selectedDateBinding: selectedDateBinding,
                 selectedDescriptionsBinding: selectedDescriptionsBinding,
+                selectedCommentsBinding: selectedCommentsBinding,
                 hasTrackNumberInternalDifference: hasTrackNumberInternalDifference,
                 hasTrackNumberExternalDifference: hasTrackNumberExternalDifference,
                 hasTrackNumberExternallyModifiedDifference: hasTrackNumberExternallyModifiedDifference,
@@ -221,6 +226,9 @@ struct TagEditorView: View {
                 hasDescriptionInternalDifference: hasDescriptionInternalDifference,
                 hasDescriptionExternalDifference: hasDescriptionExternalDifference,
                 hasDescriptionExternallyModifiedDifference: hasDescriptionExternallyModifiedDifference,
+                hasCommentInternalDifference: hasCommentInternalDifference,
+                hasCommentExternalDifference: hasCommentExternalDifference,
+                hasCommentExternallyModifiedDifference: hasCommentExternallyModifiedDifference,
                 onSetTrackTotalToCount: onSetTrackTotalToCount,
                 setTrackTotalMenuTitle: setTrackTotalMenuTitle,
                 canSetTrackTotal: canSetTrackTotal,

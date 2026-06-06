@@ -37,7 +37,7 @@ enum FlacImportMapper {
         let fileTitle = fileURL.deletingPathExtension().lastPathComponent
         let title = sourceTags[TagKey.title]?.isEmpty == false ? sourceTags[TagKey.title]! : fileTitle
 
-        let description = sourceTags[TagKey.description] ?? sourceTags["COMMENT"] ?? ""
+        let description = sourceTags[TagKey.description] ?? ""
         let location = sourceTags[TagKey.location] ?? sourceTags["VENUE"] ?? ""
         let genre = sourceTags[TagKey.genre] ?? ""
 
@@ -57,6 +57,7 @@ enum FlacImportMapper {
         trackTags[TagKey.location] = location
         trackTags[TagKey.date] = DateTagFormatter.tagText(sourceTags[TagKey.date], defaultDate: defaultDate)
         trackTags[TagKey.description] = description
+        trackTags[TagKey.comment] = sourceTags[TagKey.comment] ?? ""
 
         return trackTags
     }

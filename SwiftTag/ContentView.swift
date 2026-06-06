@@ -246,6 +246,10 @@ struct ContentView: View {
         selectedTagBinding(tagName: TagKey.description)
     }
 
+    private var selectedCommentsBinding: Binding<String>? {
+        selectedTagBinding(tagName: TagKey.comment)
+    }
+
     private var selectedNumberBinding: Binding<String>? {
         selectedTagBinding(tagName: TagKey.trackNumber)
     }
@@ -527,6 +531,18 @@ struct ContentView: View {
         viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.description])
     }
 
+    private var hasCommentExternalDifference: Bool {
+        viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.comment])
+    }
+
+    private var hasCommentExternallyModifiedDifference: Bool {
+        viewModel.hasExternalDifference(forAnyOf: [TagKey.comment])
+    }
+
+    private var hasCommentInternalDifference: Bool {
+        viewModel.hasTrackToTrackDifference(forAnyOf: [TagKey.comment])
+    }
+
     private var trackStatusPresentationLookup: (UUID) -> TrackStatusPresentation? {
         { trackID in
             viewModel.trackStatusPresentation(
@@ -655,6 +671,7 @@ struct ContentView: View {
             selectedLocationBinding: selectedLocationBinding,
             selectedDateBinding: selectedDateBinding,
             selectedDescriptionsBinding: selectedDescriptionsBinding,
+            selectedCommentsBinding: selectedCommentsBinding,
             hasTrackNumberInternalDifference: hasTrackNumberInternalDifference,
             hasTrackNumberExternalDifference: hasTrackNumberExternalDifference,
             hasTrackNumberExternallyModifiedDifference: hasTrackNumberExternallyModifiedDifference,
@@ -682,6 +699,9 @@ struct ContentView: View {
             hasDescriptionInternalDifference: hasDescriptionInternalDifference,
             hasDescriptionExternalDifference: hasDescriptionExternalDifference,
             hasDescriptionExternallyModifiedDifference: hasDescriptionExternallyModifiedDifference,
+            hasCommentInternalDifference: hasCommentInternalDifference,
+            hasCommentExternalDifference: hasCommentExternalDifference,
+            hasCommentExternallyModifiedDifference: hasCommentExternallyModifiedDifference,
             isTrackTotalAutoUpdateEnabled: autoUpdateTrackTotal,
             positiveIntegerTransform: positiveIntegerStringBinding(_:),
             miscTagRowsBinding: miscTagRowsBinding,

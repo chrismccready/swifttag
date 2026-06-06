@@ -813,6 +813,7 @@ struct SwiftTagTests {
             "DATE": "2026-03-01",
             "COMPOSER": "Test Composer",
             "DESCRIPTION": "Test Description",
+            "COMMENT": "Test Comment",
             "ENCODED_BY": "Test Encoded_By"
         ]
 
@@ -835,12 +836,25 @@ struct SwiftTagTests {
         #expect(mapped[TagKey.location] == "Test Location")
         #expect(mapped[TagKey.date] == "2026-03-01")
         #expect(mapped[TagKey.description] == "Test Description")
+        #expect(mapped[TagKey.comment] == "Test Comment")
         #expect(mapped[TagKey.trackNumber] == "1")
         #expect(mapped[TagKey.discNumber] == "1")
         #expect(mapped["TOTALTRACKS"] == "01")
         #expect(mapped["DISCTOTAL"] == "01")
         #expect(mapped["ENCODED_BY"] == "Test Encoded_By")
         #expect(mapped[TagKey.filename] == "test.flac")
+    }
+
+    @Test
+    func flacImportMapperKeepsCommentSeparateFromDescription() {
+        let mapped = FlacImportMapper.mapTrackTags(
+            sourceTags: [TagKey.comment: "Legacy Misc Comment"],
+            fileURL: URL(fileURLWithPath: "/tmp/comment-only.flac"),
+            defaultDate: Date(timeIntervalSince1970: 0)
+        )
+
+        #expect(mapped[TagKey.comment] == "Legacy Misc Comment")
+        #expect(mapped[TagKey.description] == "")
     }
 
     @Test
@@ -3174,6 +3188,35 @@ struct SwiftTagTests {
         #expect(viewModel.miscTagRows.count == initialCount)
         #expect(!viewModel.miscTagRows.contains(where: { viewModel.normalizedTagKey($0.key) == "CUSTOM_ROW_A" }))
         #expect(viewModel.trackItems[0].tags["CUSTOM_ROW_A"] == nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelTreatsCommentAsExplicitCoreTag() throws {
+        let track = Track(
+            tags: [
+                TagKey.title: "One",
+                TagKey.filename: "one.flac",
+                TagKey.comment: "Legacy Misc Comment",
+                "ENCODED_BY": "Tester"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+        viewModel.selectedTrackIDs = [track.id]
+        viewModel.reloadMiscTagRowsFromSelection()
+
+        let miscKeys = Set(viewModel.miscTagRows.map { viewModel.normalizedTagKey($0.key) })
+        #expect(viewModel.isExplicitTagKey(TagKey.comment))
+        #expect(!miscKeys.contains(TagKey.comment))
+        #expect(miscKeys.contains("ENCODED_BY"))
+
+        let commentBinding = try #require(viewModel.selectedTagBinding(tagName: TagKey.comment))
+        #expect(commentBinding.wrappedValue == "Legacy Misc Comment")
+
+        commentBinding.wrappedValue = "Edited Comment"
+
+        #expect(viewModel.trackItems[0].tags[TagKey.comment] == "Edited Comment")
     }
 
     @Test
