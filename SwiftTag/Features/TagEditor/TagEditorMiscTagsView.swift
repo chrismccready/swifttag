@@ -50,41 +50,54 @@ struct TagEditorMiscTagsView: View {
                 .accessibilityIdentifier("miscTags.deleteButton")
             }
 
-            Table(rows, selection: $selectedRowIDs) {
-                TableColumn("Key") { row in
-                    if let keyBinding = keyBindingForRow(row.id) {
-                        TextField("Key", text: keyBinding)
-                            .tagDiffStyle(
-                                tag: .misc,
-                                hasTrackToTrackDifference: false,
-                                hasTrackToFileDifference: hasExternalDifferenceForRow(row),
-                                hasExternallyModifiedDifference: hasExternallyModifiedDifferenceForRow(row),
-                                isInvalid: isInvalidKeyInput(row.key, row.id)
-                            )
-                            .focused(focusedRowID, equals: row.id)
-                            .disabled(!isEditingEnabled)
-                            .accessibilityIdentifier("miscTags.keyField.\(row.id.uuidString)")
+            ScrollViewReader { proxy in
+                Table(rows, selection: $selectedRowIDs) {
+                    TableColumn("Key") { row in
+                        if let keyBinding = keyBindingForRow(row.id) {
+                            TextField("Key", text: keyBinding)
+                                .tagDiffStyle(
+                                    tag: .misc,
+                                    hasTrackToTrackDifference: false,
+                                    hasTrackToFileDifference: hasExternalDifferenceForRow(row),
+                                    hasExternallyModifiedDifference: hasExternallyModifiedDifferenceForRow(row),
+                                    isInvalid: isInvalidKeyInput(row.key, row.id)
+                                )
+                                .focused(focusedRowID, equals: row.id)
+                                .disabled(!isEditingEnabled)
+                                .accessibilityIdentifier("miscTags.keyField.\(row.id.uuidString)")
+                                .id(row.id)
+                        }
                     }
-                }
-                .width(min: 120)
+                    .width(min: 120)
 
-                TableColumn("Value") { row in
-                    if let valueBinding = valueBindingForRow(row.id) {
-                        TextField("<value>", text: valueBinding)
-                            .tagDiffStyle(
-                                tag: .misc,
-                                hasTrackToTrackDifference: hasInternalDifferenceForRow(row),
-                                hasTrackToFileDifference: hasExternalDifferenceForRow(row),
-                                hasExternallyModifiedDifference: hasExternallyModifiedDifferenceForRow(row)
-                            )
-                            .disabled(!isEditingEnabled)
-                            .accessibilityIdentifier("miscTags.valueField.\(row.id.uuidString)")
+                    TableColumn("Value") { row in
+                        if let valueBinding = valueBindingForRow(row.id) {
+                            TextField("<value>", text: valueBinding)
+                                .tagDiffStyle(
+                                    tag: .misc,
+                                    hasTrackToTrackDifference: hasInternalDifferenceForRow(row),
+                                    hasTrackToFileDifference: hasExternalDifferenceForRow(row),
+                                    hasExternallyModifiedDifference: hasExternallyModifiedDifferenceForRow(row)
+                                )
+                                .disabled(!isEditingEnabled)
+                                .accessibilityIdentifier("miscTags.valueField.\(row.id.uuidString)")
+                        }
+                    }
+                    .width(min: 160)
+                }
+                .frame(minHeight: 80, maxHeight: 176)
+                .onChange(of: selectedRowIDs) { _, newSelection in
+                    guard newSelection.count == 1,
+                          let selectedRowID = newSelection.first else {
+                        return
+                    }
+
+                    DispatchQueue.main.async {
+                        proxy.scrollTo(selectedRowID)
                     }
                 }
-                .width(min: 160)
+                .accessibilityIdentifier("miscTags.table")
             }
-            .frame(minHeight: 80, maxHeight: 176)
-            .accessibilityIdentifier("miscTags.table")
         }
         .padding(.top, 0)
     }

@@ -247,6 +247,48 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAddingMiscTagScrollsNewRowFullyVisible() throws {
+        let app = try launchApp(importFixture: true)
+
+        selectImportedTrackForEditing(in: app, expectedTitle: "Test Title")
+
+        let table = app.outlines[UIID.miscTagTable].firstMatch
+        XCTAssertTrue(table.waitForExistence(timeout: 5.0))
+
+        let addButton = app.buttons[UIID.addMiscTagButton]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5.0))
+
+        var latestKey = ""
+        for rowIndex in 0..<10 {
+            addButton.click()
+
+            let keyField = try XCTUnwrap(
+                waitForVisibleEmptyMiscTagKeyField(in: app, table: table, timeout: 5.0),
+                "Expected newly added misc tag key field to become visible."
+            )
+            XCTAssertTrue(keyField.isHittable)
+            XCTAssertTrue(
+                isVerticallyContained(keyField.frame, in: table.frame),
+                "Expected new misc tag row to be fully visible in misc tag table."
+            )
+
+            keyField.click()
+            latestKey = String(format: "SCROLL_TEST_%02d", rowIndex)
+            app.typeText(latestKey)
+            app.typeKey(XCUIKeyboardKey.return.rawValue, modifierFlags: [])
+            XCTAssertTrue(miscTagKeyField(in: app, key: latestKey).waitForExistence(timeout: 5.0))
+        }
+
+        let latestKeyField = miscTagKeyField(in: app, key: latestKey)
+        XCTAssertTrue(latestKeyField.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(latestKeyField.isHittable)
+        XCTAssertTrue(
+            isVerticallyContained(latestKeyField.frame, in: table.frame),
+            "Expected latest misc tag row to remain fully visible after scroll."
+        )
+    }
+
+    @MainActor
     func scenarioMixedAlbumSelectionUpdatesWindowTitleBetweenAlbumAndUntitled() throws {
         let addFixturePath = fixtureFlacPath(fileName: Self.fixtureFileName)
         let app = try launchApp(
@@ -4896,6 +4938,50 @@ class SwiftTagUITestCase: XCTestCase {
             .matching(identifier: UIID.miscTagValueFieldPrefix + rowID)
             .firstMatch
         return valueField.exists ? valueField : nil
+    }
+
+    private func waitForVisibleEmptyMiscTagKeyField(
+        in scope: XCUIElement,
+        table: XCUIElement,
+        timeout: TimeInterval
+    ) -> XCUIElement? {
+        let deadline = Date().addingTimeInterval(timeout)
+        repeat {
+            let keyFields = scope.descendants(matching: .textField)
+                .matching(NSPredicate(format: "identifier BEGINSWITH %@", UIID.miscTagKeyFieldPrefix))
+                .allElementsBoundByIndex
+
+            if let emptyKeyField = keyFields.first(where: { element in
+                guard element.exists else {
+                    return false
+                }
+
+                let rawValue = textFieldRawValue(element)
+                let isEmptyKeyField = rawValue.isEmpty || rawValue == element.placeholderValue
+                return isEmptyKeyField
+                    && element.isHittable
+                    && isVerticallyContained(element.frame, in: table.frame)
+            }) {
+                return emptyKeyField
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        } while Date() < deadline
+
+        return nil
+    }
+
+    private func textFieldRawValue(_ element: XCUIElement) -> String {
+        element.value as? String ?? ""
+    }
+
+    private func isVerticallyContained(
+        _ childFrame: CGRect,
+        in parentFrame: CGRect,
+        tolerance: CGFloat = 1.0
+    ) -> Bool {
+        childFrame.minY >= parentFrame.minY - tolerance
+            && childFrame.maxY <= parentFrame.maxY + tolerance
     }
 
     private func waitForMiscTagValue(

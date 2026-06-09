@@ -74,6 +74,11 @@ final class SwiftTagCoreUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAddingMiscTagScrollsNewRowFullyVisible() throws {
+        try scenarioAddingMiscTagScrollsNewRowFullyVisible()
+    }
+
+    @MainActor
     func testMixedAlbumSelectionUpdatesWindowTitleBetweenAlbumAndUntitled() throws {
         try scenarioMixedAlbumSelectionUpdatesWindowTitleBetweenAlbumAndUntitled()
     }
