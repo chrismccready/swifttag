@@ -12,9 +12,11 @@ struct SwiftTagDocumentQuickLookView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(snapshot.album)
-                    .font(.system(size: layout.albumFontSize, weight: .semibold))
+                    .font(.system(size: layout.albumFontSize, weight: .bold))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.45), radius: layout.textShadowRadius, x: 0, y: 1)
                     .lineLimit(1)
-                    .truncationMode(.tail)
+                    .truncationMode(.middle)
 
                 if let albumArtist = snapshot.albumArtist {
                     metadataText(albumArtist)
