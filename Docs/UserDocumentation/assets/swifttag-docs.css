@@ -197,6 +197,23 @@ th {
     background: color-mix(in srgb, var(--line) 42%, transparent);
 }
 
+.wrap-table {
+    table-layout: fixed;
+}
+
+.wrap-table th {
+    width: 11rem;
+}
+
+.wrap-table td,
+.wrap-table code {
+    overflow-wrap: anywhere;
+}
+
+.wrap-table code {
+    white-space: normal;
+}
+
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));

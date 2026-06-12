@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Release Information - SwiftTag Documentation</title>
+    <link rel="stylesheet" href="assets/swifttag-docs.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="shell">
+            <a class="site-title" href="index.html">SwiftTag Documentation</a>
+            <nav class="top-nav" aria-label="Documentation">
+                <a href="quick-start.html">Quick Start</a>
+                <a href="automation/applescript.html">AppleScript</a>
+                <a href="examples/clean-up-album.html">Examples</a>
+                <a href="troubleshooting.html">Troubleshooting</a>
+                <a href="release-information.html">Release Information</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="shell">
+        <article>
+            <p class="section-label">Release Information</p>
+            <h1>SwiftTag Release Information</h1>
+            <p>
+                SwiftTag release notes are available at <a href="https://github.com/chrismccready/swifttag/releases">GitHub SwiftTag Releases</a>.
+            </p>
+            <p>
+                SwiftTag is an open source app and free to use. All code is available on my public GitHub 
+                <a href="https://github.com/chrismccready/swifttag">repository for SwiftTag</a> and the app released from this repository is built 
+                by me, Christopher McCready, signed with my Apple Developer ID and notarized by Apple. To confirm authenticity, the following 
+                checks can be performed via <b>Terminal</b> on the downloaded app bundle.
+            </p>
+            <section aria-labelledby="codesign-check">
+                <h2 id="codesign-check">codesign</h2>
+                <p>Use <b>codesign</b> (available if Xcode or Command Line Tools are installed) to check the app's signature:</p>
+                <pre><code>codesign -dv --verbose=2 /path/to/SwiftTag.app</code></pre>
+                <p>Look for the following in the output:</p>
+                <ul>
+                    <li>Authority=Developer ID Application: Christopher McCready (8ATUPCQAZN)</li>
+                    <li>Authority=Developer ID Certification Authority</li>
+                    <li>Authority=Apple Root CA</li>
+                </ul>
+            </section>
+            <section aria-labelledby="spctl-check">
+                <h2 id="spctl-check">spctl</h2>
+                <p>Use <b>spctl</b> (available on macOS regardless of Xcode/Command Line Tools installation) to check the app's notarization status:</p>
+                <pre><code>spctl -a -t exec -vv /path/to/SwiftTag.app</code></pre>
+                <p>Look for the following in the output:</p>
+                <ul>
+                    <li>SwiftTag.app: accepted</li>
+                    <li>source=Notarized Developer ID</li>
+                    <li>origin=Developer ID Application: Christopher McCready (8ATUPCQAZN)</li>
+                </ul>
+            </section>
+            <section aria-labelledby="cardano-check">
+                <h2 id="cardano-check">Cardano: Verify Signed Message</h2>
+                <p>
+                    If <a href="#spctl-check"><code>spctl</code></a> returns <code>SwiftTag.app: accepted</code> and this page is embedded in the targeted 
+                    SwiftTag app bundle, then none of this text, nor the following signed message verification information, can be changed without invalidating 
+                    the signature/notarization.  By using the <a href="https://verifycardanomessage.cardanofoundation.org/">Cardano Message Verification</a> tool 
+                    provided by the Cardano Foundation (or any other tool that can verfiy a Cardano cip-8 message), you can verify, given the aforementioned 
+                    checks, that I, Christopher McCready, built the SwiftTag app bundle containing this page as distributed via my 
+                    <a href="https://github.com/chrismccready/swifttag">GitHub repository for SwiftTag</a>, as only I can sign the message. 
+                    Enter the following public key, message and signature into the tool to verify:
+                </p>
+                <table class="wrap-table">
+                    <tbody>
+                        <tr>
+                            <th>Public Key</th>
+                            <td>a401010327200621582047fd60f37491e8e9bf6e7958d6ad94840a2efee674540161d2676b6960aaf116</td>
+                        </tr>
+                        <tr>
+                            <th>Message/Hash</th>
+                            <td>SwiftTag 1.0.2</td>
+                        </tr>
+                        <tr>
+                            <th>Signature</th>
+                            <td>845846a201276761646472657373583901724235cc131998441d494300c1dd78e85ef5feae75b8e9ada90e483d61cc99dae6270e8be384a5a65ac2267d9d2039a9f1819bfd3b68d854a166686173686564f44e537769667454616720312e302e3258407b587bbdbdf7074477d4c910d2411867bb53396c44cd6ed05ab4c6114d2b034f6ebc12dc591b00d02f5d0171553d3ce87fee30815b1f57a2b72aa1e25f61b60d</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    After pushing the <code>Verify Signature</code> button, the tool will indicate whether the signature is valid or not. A valid signature should produce a message like this:
+                    <blockquote class="verification-result">
+                        <p>Result: <b>VALID (CIP-0030 version of CIP-0008)</b></p>
+                        <p>Signed by:
+addr1q9eyydwvzvves3qaf9pspswa0r59aa074e6m36dd4y8ys0tpejva4e38p6978p995edvyfnan5srn203sxdl6wmgmp2qy753v5</p>
+                    </blockquote>
+                </p>
+                <p>
+                    The signing address above is the same used to sign the <code>SwiftTag-1.0.2.zip</code> release file checksum and is in the build's release notes available at 
+                    <a href="https://github.com/chrismccready/swifttag/releases">GitHub SwiftTag Releases</a>.
+                </p>
+                <aside class="callout warning">
+                    If <code>spctl</code> (<a href="#spctl-check">see above</a>) indicates the app is <b>rejected</b>, then even though the Cardano Message Verification 
+                    will succeed, the examined app bundle should not be trusted as it has likely been tampered with. Likewise, if <code>spctl</code> indicates the app is 
+                    <b>accepted</b>, but <code>origin=Developer ID Application:</code> is not <b>Christopher McCready (8ATUPCQAZN)</b>, then the app bundle was not built 
+                    and signed by me and I cannot attest to its trustworthiness.
+                </aside>
+                <aside class="callout note">
+                    The Cardano address used to sign the message is a valid payment address and tips in ADA, Midnight, or any Cardano Native Token are lovingly accepted:
+                    <table class="wrap-table">
+                        <tbody>
+                            <tr>
+                                <th><img src="assets/swifttag-cardano-qrc.png" width="150" height="150" alt="Cardano QRC"></th>
+                                <td>addr1q9eyydwvzvves3qaf9pspswa0r59aa074e6m36dd4y8ys0tpejva4e38p6978p995edvyfnan5srn203sxdl6wmgmp2qy753v5</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    and/or Bitcoin:
+                    <table class="wrap-table">
+                        <tbody>
+                            <tr>
+                                <th><img src="assets/swifttag-bitcoin-qrc.png" width="150" height="150" alt="Bitcoin QRC"></th>
+                                <td>bc1qsncwrheq3uqkrk7c584q7njt39xkrj0ry9ygt0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    Thank you for your support!
+                </aside>
+            </section>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <nav class="footer-nav" aria-label="Footer">
+                <a href="quick-start.html">Quick Start</a>
+                <a href="automation/applescript.html">AppleScript</a>
+                <a href="examples/clean-up-album.html">Examples</a>
+                <a href="troubleshooting.html">Troubleshooting</a>
+                <a href="release-information.html">Release Information</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
