@@ -4063,12 +4063,19 @@ struct SwiftTagTests {
         #expect(refreshedTrack.tags[TagKey.filename] == renamedURL.lastPathComponent)
         #expect(refreshedTrack.externalDifferences == nil)
         #expect(!viewModel.hasDeletedFile(for: trackID))
+        let differences = viewModel.editorDifferenceCounts(
+            for: [trackID],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+        #expect(differences.tagEdits == 0)
+        #expect(differences.pictureEdits == 0)
         let presentation = viewModel.trackStatusPresentation(
             for: trackID,
             tagWriteOptions: Self.defaultTagWriteOptions,
             albumArtPictures: albumArtPictures
         )
-        #expect(presentation != nil)
+        #expect(presentation?.systemImageName == "fish.fill")
     }
 
     @Test
@@ -4605,6 +4612,13 @@ struct SwiftTagTests {
         #expect(firstRenameObserved)
         #expect(viewModel.trackItems.first?.tags[TagKey.filename] == firstRenamedURL.lastPathComponent)
         #expect(!viewModel.hasDeletedFile(for: trackID))
+        let firstDifferences = viewModel.editorDifferenceCounts(
+            for: [trackID],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+        #expect(firstDifferences.tagEdits == 0)
+        #expect(firstDifferences.pictureEdits == 0)
         #expect(!sawDeleted)
 
         let secondRenamedURL = firstRenamedURL.deletingLastPathComponent().appendingPathComponent("rename-monitor-second.flac")
@@ -4616,6 +4630,13 @@ struct SwiftTagTests {
         #expect(secondRenameObserved)
         #expect(viewModel.trackItems.first?.tags[TagKey.filename] == secondRenamedURL.lastPathComponent)
         #expect(!viewModel.hasDeletedFile(for: trackID))
+        let secondDifferences = viewModel.editorDifferenceCounts(
+            for: [trackID],
+            tagWriteOptions: Self.defaultTagWriteOptions,
+            albumArtPictures: albumArtPictures
+        )
+        #expect(secondDifferences.tagEdits == 0)
+        #expect(secondDifferences.pictureEdits == 0)
         #expect(!sawDeleted)
         #expect(eventCount >= 2)
     }

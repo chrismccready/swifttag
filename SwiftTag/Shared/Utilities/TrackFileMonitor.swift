@@ -55,6 +55,11 @@ final class TrackFileMonitor {
                     continue
                 }
 
+                if existingObservation.monitoredPath == monitoredPath,
+                   !FileManager.default.fileExists(atPath: monitoredPath) {
+                    continue
+                }
+
                 if pointsToCurrentPath {
                     existingObservation.monitoredPath = monitoredPath
                     observationsByTrackID[track.id] = existingObservation

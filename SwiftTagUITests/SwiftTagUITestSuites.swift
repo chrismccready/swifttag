@@ -151,6 +151,11 @@ final class SwiftTagAppleScriptUITests: SwiftTagUITestCase {
     }
 
     @MainActor
+    func testAppleScriptHarnessRenameExampleUpdatesFilenamesAndKeepsTracksClean() throws {
+        try scenarioAppleScriptHarnessRenameExampleUpdatesFilenamesAndKeepsTracksClean()
+    }
+
+    @MainActor
     func testAppleScriptHarnessSavesDocumentPropertyFromEditorWindowTell() throws {
         try scenarioAppleScriptHarnessSavesDocumentPropertyFromEditorWindowTell()
     }

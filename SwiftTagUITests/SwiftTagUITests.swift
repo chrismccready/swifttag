@@ -835,6 +835,233 @@ class SwiftTagUITestCase: XCTestCase {
     }
 
     @MainActor
+    func scenarioAppleScriptHarnessRenameExampleUpdatesFilenamesAndKeepsTracksClean() throws {
+        try requireAppleScriptHarnessEnabled()
+
+        let fixtureURLs = try prepareExternalOpenPanelFlacFixtures(
+            fileCount: 15,
+            destinationPrefix: "swifttag-applescript-rename-source"
+        )
+        let appleScriptFileList = fixtureURLs
+            .map { "POSIX file \"\($0.path)\"" }
+            .joined(separator: ", ")
+        let expectedRenamedFileNames = Set((1...fixtureURLs.count).map { index in
+            String(format: "%02d Batch Rename Track %d.flac", index, index)
+        })
+
+        let app = try launchApp()
+        defer {
+            app.terminate()
+        }
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+
+        let output = try runAppleScript(
+            """
+            use scripting additions
+
+            tell application id "\(Self.appBundleIdentifier)"
+                activate
+                tell front editor window
+                    add {\(appleScriptFileList)}
+                    repeat 100 times
+                        if (count of tracks) is \(fixtureURLs.count) then exit repeat
+                        delay 0.1
+                    end repeat
+                    if (count of tracks) is not \(fixtureURLs.count) then error "SwiftTag add did not load every track."
+
+                    repeat 100 times
+                        if my everyTrackIsClean() then exit repeat
+                        delay 0.1
+                    end repeat
+                    if not my everyTrackIsClean() then error "Tracks did not load in clean state."
+                end tell
+            end tell
+
+            set trackInfos to {}
+            set targetPaths to {}
+            set frontWindow to my getFrontEditorWindow()
+            set loadedTracks to my getTracks at frontWindow
+
+            repeat with trackItem in loadedTracks
+                set trackRef to contents of trackItem
+                set trackProperties to my getTrackProperties for trackRef
+                set trackFilePath to POSIX path of (trackFile of trackProperties)
+                set sourceIndex to my sourceIndexFromFileName(my fileNameFromPath(trackFilePath))
+                set newFileName to (my zeroPaddedTrackNumber(sourceIndex)) & " Batch Rename Track " & (sourceIndex as text) & ".flac"
+                set newFilePath to (my folderPathFromPath(trackFilePath)) & newFileName
+
+                if newFilePath is in targetPaths then
+                    error "Multiple tracks would be renamed to the same path: " & newFilePath number -1
+                end if
+                set end of targetPaths to newFilePath
+
+                set end of trackInfos to {oldFilePath:trackFilePath, newFilePath:newFilePath, oldFileName:(my fileNameFromPath(trackFilePath)), newFileName:newFileName}
+            end repeat
+
+            set renamedCount to 0
+            set skippedCount to 0
+
+            repeat with trackInfoItem in trackInfos
+                set trackInfo to contents of trackInfoItem
+                if oldFilePath of trackInfo is newFilePath of trackInfo then
+                    set skippedCount to skippedCount + 1
+                else
+                    my renameFile from oldFilePath of trackInfo to newFilePath of trackInfo
+                    set renamedCount to renamedCount + 1
+                end if
+            end repeat
+
+            repeat 100 times
+                if my everyTargetPathIsLoaded(targetPaths) then exit repeat
+                delay 0.1
+            end repeat
+            if not my everyTargetPathIsLoaded(targetPaths) then error "SwiftTag did not refresh every renamed track file path."
+
+            set outputLines to {"Renamed " & renamedCount & " track file(s); skipped " & skippedCount & " already named track file(s)."}
+            tell application id "\(Self.appBundleIdentifier)"
+                repeat with trackItem in every track of front editor window
+                    set trackRef to contents of trackItem
+                    set trackFile to file of trackRef
+                    set trackPath to POSIX path of trackFile
+                    set end of outputLines to (my fileNameFromPath(trackPath)) & "|" & ((modified of trackRef) as text)
+                end repeat
+            end tell
+            return my joinText(outputLines, linefeed)
+
+            on getFrontEditorWindow()
+                tell application id "\(Self.appBundleIdentifier)"
+                    return front editor window
+                end tell
+            end getFrontEditorWindow
+
+            on getTracks at editorWindow
+                tell application id "\(Self.appBundleIdentifier)"
+                    return every track of editorWindow
+                end tell
+            end getTracks
+
+            on getTrackProperties for theTrack
+                tell application id "\(Self.appBundleIdentifier)"
+                    set trackFileValue to file of theTrack
+                    set trackNoValue to track number of theTrack
+                    set trackTitleValue to title of theTrack
+                    return {trackFile:trackFileValue, trackNo:trackNoValue, trackTitle:trackTitleValue}
+                end tell
+            end getTrackProperties
+
+            on renameFile from oldFilePath to newFilePath
+                try
+                    do shell script ("/bin/test -e " & (quoted form of (oldFilePath as text)))
+                on error
+                    error "Source file does not exist: " & oldFilePath number -1
+                end try
+
+                try
+                    do shell script ("/bin/test ! -e " & (quoted form of (newFilePath as text)))
+                on error
+                    error "Target file already exists: " & newFilePath number -1
+                end try
+
+                do shell script ("/bin/mv " & (quoted form of (oldFilePath as text)) & " " & (quoted form of (newFilePath as text)))
+            end renameFile
+
+            on everyTrackIsClean()
+                tell application id "\(Self.appBundleIdentifier)"
+                    repeat with trackItem in every track of front editor window
+                        if modified of (contents of trackItem) then return false
+                    end repeat
+                end tell
+                return true
+            end everyTrackIsClean
+
+            on everyTargetPathIsLoaded(targetPaths)
+                set loadedPaths to {}
+                tell application id "\(Self.appBundleIdentifier)"
+                    repeat with trackItem in every track of front editor window
+                        set trackRef to contents of trackItem
+                        set trackFile to file of trackRef
+                        set trackPath to POSIX path of trackFile
+                        set end of loadedPaths to trackPath
+                    end repeat
+                end tell
+                repeat with targetPath in targetPaths
+                    if (contents of targetPath) is not in loadedPaths then return false
+                end repeat
+                return true
+            end everyTargetPathIsLoaded
+
+            on zeroPaddedTrackNumber(trackNumber)
+                set trackNumber to trackNumber as integer
+                if trackNumber is less than 0 then error "Track number cannot be negative: " & trackNumber number -1
+                if trackNumber is less than 10 then return "0" & trackNumber
+                return trackNumber as text
+            end zeroPaddedTrackNumber
+
+            on sanitizedFileNameText(fileNameText)
+                set sanitizedText to fileNameText
+                set sanitizedText to my replaceText(sanitizedText, "/", "-")
+                set sanitizedText to my replaceText(sanitizedText, ":", "-")
+                set sanitizedText to my replaceText(sanitizedText, ">", "-")
+                return sanitizedText
+            end sanitizedFileNameText
+
+            on sourceIndexFromFileName(fileName)
+                set fileNameWithoutExtension to my replaceText(fileName, ".flac", "")
+                set oldDelimiters to AppleScript's text item delimiters
+                set AppleScript's text item delimiters to "-"
+                set fileNameParts to text items of fileNameWithoutExtension
+                set AppleScript's text item delimiters to oldDelimiters
+                return (item -1 of fileNameParts) as integer
+            end sourceIndexFromFileName
+
+            on replaceText(theText, searchText, replacementText)
+                set oldDelimiters to AppleScript's text item delimiters
+                set AppleScript's text item delimiters to searchText
+                set textParts to text items of theText
+                set AppleScript's text item delimiters to replacementText
+                set replacedText to textParts as text
+                set AppleScript's text item delimiters to oldDelimiters
+                return replacedText
+            end replaceText
+
+            on folderPathFromPath(filePath)
+                set fileName to my fileNameFromPath(filePath)
+                return text 1 thru ((length of filePath) - (length of fileName)) of filePath
+            end folderPathFromPath
+
+            on fileNameFromPath(filePath)
+                set oldDelimiters to AppleScript's text item delimiters
+                set AppleScript's text item delimiters to "/"
+                set pathComponents to text items of filePath
+                set AppleScript's text item delimiters to oldDelimiters
+                return item -1 of pathComponents
+            end fileNameFromPath
+
+            on joinText(textItems, delimiterText)
+                set oldDelimiters to AppleScript's text item delimiters
+                set AppleScript's text item delimiters to delimiterText
+                set joinedText to textItems as text
+                set AppleScript's text item delimiters to oldDelimiters
+                return joinedText
+            end joinText
+            """,
+            terminologyBundleIdentifier: Self.appBundleIdentifier,
+            timeout: 30.0
+        )
+
+        XCTAssertNil(dismissImportErrorAlertIfPresent(in: app, timeout: 1.0))
+        let outputLines = normalizedAppleScriptTextOutput(output)
+            .components(separatedBy: .newlines)
+            .filter { !$0.isEmpty }
+        XCTAssertEqual(outputLines.first, "Renamed 15 track file(s); skipped 0 already named track file(s).")
+        let trackStateLines = Set(outputLines.dropFirst())
+        XCTAssertEqual(
+            trackStateLines,
+            Set(expectedRenamedFileNames.map { "\($0)|false" })
+        )
+    }
+
+    @MainActor
     func scenarioAppleScriptHarnessSavesDocumentPropertyFromEditorWindowTell() throws {
         try requireAppleScriptHarnessEnabled()
 
@@ -4232,6 +4459,26 @@ class SwiftTagUITestCase: XCTestCase {
         try? FileManager.default.removeItem(at: destinationURL)
         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
         return destinationURL
+    }
+
+    private func prepareExternalOpenPanelFlacFixtures(
+        fileCount: Int,
+        destinationPrefix: String
+    ) throws -> [URL] {
+        let sourceURL = URL(fileURLWithPath: fixtureFlacPath(fileName: Self.fixtureFileName))
+        let destinationDirectoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SwiftTagUITestExternal-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: destinationDirectoryURL,
+            withIntermediateDirectories: true
+        )
+
+        return try (1...fileCount).map { index in
+            let destinationURL = destinationDirectoryURL
+                .appendingPathComponent(String(format: "\(destinationPrefix)-%02d.flac", index))
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            return destinationURL
+        }
     }
 
     @MainActor

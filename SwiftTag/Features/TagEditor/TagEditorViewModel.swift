@@ -2228,6 +2228,22 @@ final class TagEditorViewModel {
                         snapshot: fileSnapshot
                     )
                 let previousFileSnapshot = self.trackItems[index].latestFileSnapshot
+                let previousSourceFileURL = self.trackItems[index].sourceFileURL?.standardizedFileURL
+                let currentPicturesBeforeRefresh = self.picturesForTrack(at: index, fallback: albumArtPictures)
+                let refreshedTagDifferences = self.differingFileValues(
+                    expectedTags: self.currentEditorTagsForExternalComparison(
+                        at: index,
+                        matching: fileSnapshot.tags
+                    ),
+                    fileTags: fileSnapshot.tags
+                )
+                let refreshedPictureDifference = self.pictureRecordsDiffer(
+                    currentPictures: currentPicturesBeforeRefresh,
+                    snapshot: fileSnapshot
+                )
+                let refreshedFileMatchesEditor = refreshedTagDifferences.isEmpty && !refreshedPictureDifference
+                let isPathOnlyRefresh = previousSourceFileURL?.path != resolvedReference.fileURL.standardizedFileURL.path &&
+                    refreshedFileMatchesEditor
 
                 self.applyResolvedTrackFileReference(resolvedReference, at: index)
                 if shouldAdoptLivePictureState {
@@ -2243,6 +2259,15 @@ final class TagEditorViewModel {
                 self.trackItems[index].duration = metadata.duration
                 if !preservesEditorStateDuringFileRefresh {
                     self.trackItems[index].latestFileSnapshot = fileSnapshot
+                }
+                if isPathOnlyRefresh {
+                    let picturesForTrack = self.picturesForTrack(at: index, fallback: albumArtPictures)
+                    self.trackItems[index].latestFileSnapshot = TrackFileSnapshot(
+                        tags: self.expectedFileTags(forTrackAt: index, tagWriteOptions: tagWriteOptions),
+                        picturesByType: self.writablePicturesByType(from: picturesForTrack),
+                        pictureRecords: self.canonicalPictureRecords(picturesForTrack),
+                        fingerprint: metadata.fingerprint
+                    )
                 }
                 self.trackItems[index].externalDifferences = self.externalDifferences(
                     for: index,
