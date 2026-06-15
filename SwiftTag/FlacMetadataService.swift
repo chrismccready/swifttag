@@ -273,50 +273,53 @@ enum FlacMetadataService {
         }
 
         let fileManager = FileManager.default
-        let tempURL = fileManager.temporaryDirectory
+        let tempDirectoryURL = try fileManager.url(
+            for: .itemReplacementDirectory,
+            in: .userDomainMask,
+            appropriateFor: fileURL,
+            create: true
+        )
+        let tempURL = tempDirectoryURL
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension(fileURL.pathExtension.isEmpty ? "flac" : fileURL.pathExtension)
+        defer {
+            try? fileManager.removeItem(at: tempDirectoryURL)
+        }
 
-        do {
-            var usedTempRewrite = false
-            try withWriteTagPairs(tags) { tagPairs in
-                let normalizedPictures = try normalizePicturesForFlacWrite(pictures)
-                try withWritePictures(normalizedPictures) { flacPictures in
-                    var usedTempFile: UInt8 = 0
-                    let status: Int32 = fileURL.path.withCString { filePath in
-                        tempURL.path.withCString { tempFilePath in
-                            flac_write_metadata(
-                                filePath,
-                                tempFilePath,
-                                tagPairs.baseAddress,
-                                tagPairs.count,
-                                flacPictures.baseAddress,
-                                flacPictures.count,
-                                writeTags ? 1 : 0,
-                                writePictures ? 1 : 0,
-                                &usedTempFile,
-                                &errorMessage
-                            )
-                        }
-                    }
-
-                    guard status == 0 else {
-                        let message = errorMessage.map { String(cString: $0) } ?? "Unknown FLAC metadata write bridge error."
-                        throw FlacMetadataServiceError.bridgeFailed(message: message)
-                    }
-
-                    if usedTempFile != 0 {
-                        usedTempRewrite = true
-                        _ = try fileManager.replaceItemAt(fileURL, withItemAt: tempURL)
+        var usedTempRewrite = false
+        try withWriteTagPairs(tags) { tagPairs in
+            let normalizedPictures = try normalizePicturesForFlacWrite(pictures)
+            try withWritePictures(normalizedPictures) { flacPictures in
+                var usedTempFile: UInt8 = 0
+                let status: Int32 = fileURL.path.withCString { filePath in
+                    tempURL.path.withCString { tempFilePath in
+                        flac_write_metadata(
+                            filePath,
+                            tempFilePath,
+                            tagPairs.baseAddress,
+                            tagPairs.count,
+                            flacPictures.baseAddress,
+                            flacPictures.count,
+                            writeTags ? 1 : 0,
+                            writePictures ? 1 : 0,
+                            &usedTempFile,
+                            &errorMessage
+                        )
                     }
                 }
+
+                guard status == 0 else {
+                    let message = errorMessage.map { String(cString: $0) } ?? "Unknown FLAC metadata write bridge error."
+                    throw FlacMetadataServiceError.bridgeFailed(message: message)
+                }
+
+                if usedTempFile != 0 {
+                    usedTempRewrite = true
+                    _ = try fileManager.replaceItemAt(fileURL, withItemAt: tempURL)
+                }
             }
-            try? fileManager.removeItem(at: tempURL)
-            return usedTempRewrite
-        } catch {
-            try? fileManager.removeItem(at: tempURL)
-            throw error
         }
+        return usedTempRewrite
     }
 
     private static func normalizePicturesForFlacWrite(

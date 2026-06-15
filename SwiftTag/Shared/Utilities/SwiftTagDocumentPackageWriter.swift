@@ -193,18 +193,31 @@ enum SwiftTagDocumentPackageWriter {
         to destinationURL: URL,
         fileManager: FileManager
     ) throws {
-        let tempContainerURL = fileManager.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString, isDirectory: true)
-        let tempPackageURL = tempContainerURL.appendingPathComponent(destinationURL.lastPathComponent, isDirectory: true)
-        let tempPicturesDirectoryURL = tempPackageURL.appendingPathComponent(
-            SwiftTagDocumentPackageConstants.picturesDirectoryName,
-            isDirectory: true
-        )
-        defer {
-            try? fileManager.removeItem(at: tempContainerURL)
-        }
-
         do {
+            let destinationDirectoryURL = destinationURL.deletingLastPathComponent()
+            try fileManager.createDirectory(
+                at: destinationDirectoryURL,
+                withIntermediateDirectories: true
+            )
+
+            let tempContainerURL = try fileManager.url(
+                for: .itemReplacementDirectory,
+                in: .userDomainMask,
+                appropriateFor: destinationDirectoryURL,
+                create: true
+            )
+            let tempPackageURL = tempContainerURL.appendingPathComponent(
+                destinationURL.lastPathComponent,
+                isDirectory: true
+            )
+            let tempPicturesDirectoryURL = tempPackageURL.appendingPathComponent(
+                SwiftTagDocumentPackageConstants.picturesDirectoryName,
+                isDirectory: true
+            )
+            defer {
+                try? fileManager.removeItem(at: tempContainerURL)
+            }
+
             try fileManager.createDirectory(at: tempPicturesDirectoryURL, withIntermediateDirectories: true)
 
             let plistData = try PropertyListEncoder.swiftTagDocumentEncoder.encode(package.manifest)
@@ -223,11 +236,6 @@ enum SwiftTagDocumentPackageWriter {
                     options: .atomic
                 )
             }
-
-            try fileManager.createDirectory(
-                at: destinationURL.deletingLastPathComponent(),
-                withIntermediateDirectories: true
-            )
 
             if fileManager.fileExists(atPath: destinationURL.path) {
                 _ = try fileManager.replaceItemAt(destinationURL, withItemAt: tempPackageURL)
