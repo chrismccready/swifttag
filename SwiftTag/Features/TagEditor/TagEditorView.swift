@@ -36,6 +36,9 @@ struct TagEditorView: View {
     let onSetTrackTotalToCount: () -> Void
     let setTrackTotalMenuTitle: String
     let canSetTrackTotal: Bool
+    var onSetTrackTotalByDisc: () -> Void = {}
+    var setTrackTotalByDiscMenuTitle: String = "Set Track Total by Disc (0)"
+    var canSetTrackTotalByDisc: Bool = false
     let onAddFlacFiles: () -> Void
     let onAddReadOnlyFlacFiles: () -> Void
     let canAddFlacFiles: Bool
@@ -159,6 +162,9 @@ struct TagEditorView: View {
                 onSetTrackTotalToCount: onSetTrackTotalToCount,
                 setTrackTotalMenuTitle: setTrackTotalMenuTitle,
                 canSetTrackTotal: canSetTrackTotal,
+                onSetTrackTotalByDisc: onSetTrackTotalByDisc,
+                setTrackTotalByDiscMenuTitle: setTrackTotalByDiscMenuTitle,
+                canSetTrackTotalByDisc: canSetTrackTotalByDisc,
                 onAddFlacFiles: onAddFlacFiles,
                 onAddReadOnlyFlacFiles: onAddReadOnlyFlacFiles,
                 canAddFlacFiles: canAddFlacFiles,
@@ -232,6 +238,9 @@ struct TagEditorView: View {
                 onSetTrackTotalToCount: onSetTrackTotalToCount,
                 setTrackTotalMenuTitle: setTrackTotalMenuTitle,
                 canSetTrackTotal: canSetTrackTotal,
+                onSetTrackTotalByDisc: onSetTrackTotalByDisc,
+                setTrackTotalByDiscMenuTitle: setTrackTotalByDiscMenuTitle,
+                canSetTrackTotalByDisc: canSetTrackTotalByDisc,
                 isTrackTotalAutoUpdateEnabled: isTrackTotalAutoUpdateEnabled,
                 positiveIntegerTransform: positiveIntegerTransform
             )

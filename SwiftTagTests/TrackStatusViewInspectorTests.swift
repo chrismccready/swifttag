@@ -870,8 +870,78 @@ struct TrackStatusViewInspectorTests {
 
         #expect(source.contains("Apply Compilation to all Tracks"))
         #expect(source.contains("settings.tags.applyCompilationToAllTracks"))
+        #expect(source.contains("Auto update Track Total by Disc"))
+        #expect(source.contains("settings.tags.autoUpdateTrackTotalByDisc"))
+        let autoTotalRange = try #require(source.range(of: "Toggle(\"Auto update Track Total\""))
+        let byDiscRange = try #require(source.range(of: "Toggle(\"Auto update Track Total by Disc\""))
+        let compilationRange = try #require(source.range(of: "Toggle(\"Apply Compilation to all Tracks\""))
+        #expect(autoTotalRange.lowerBound < byDiscRange.lowerBound)
+        #expect(byDiscRange.lowerBound < compilationRange.lowerBound)
+        #expect(source.contains(".disabled(!autoUpdateTrackTotal)"))
         #expect(!source.contains("Update Track Total on Locked Tracks"))
         #expect(!source.contains("settings.tags.updateTrackTotalOnLockedTracks"))
+    }
+
+    @Test
+    func swiftTagAppSourceDeclaresSetTrackTotalByDiscAfterSetTrackTotal() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("SwiftTagApp.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        let setTrackTotalRange = try #require(source.range(of: "Button(setTrackTotalTitle"))
+        let byDiscRange = try #require(source.range(of: "Button(setTrackTotalByDiscTitle"))
+        #expect(setTrackTotalRange.lowerBound < byDiscRange.lowerBound)
+        #expect(source.contains("performSetTrackTotalByDisc?()"))
+        #expect(source.contains("canPerformSetTrackTotalByDisc"))
+    }
+
+    @Test
+    func tagEditorTrackFileViewSourceDeclaresSetTrackTotalByDiscContextMenu() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("TagEditor")
+            .appendingPathComponent("TagEditorTrackFileView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        let setTrackTotalRange = try #require(source.range(of: "Button(setTrackTotalMenuTitle)"))
+        let byDiscRange = try #require(source.range(of: "Button(setTrackTotalByDiscMenuTitle)"))
+        #expect(setTrackTotalRange.lowerBound < byDiscRange.lowerBound)
+        #expect(source.contains("onSetTrackTotalByDisc()"))
+    }
+
+    @Test
+    func tagEditorCoreTagsViewSourceDeclaresSetTrackTotalByDiscContextMenu() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("TagEditor")
+            .appendingPathComponent("TagEditorCoreTagsView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        let setTrackTotalCount = source.components(separatedBy: "Button(setTrackTotalMenuTitle)").count - 1
+        let byDiscCount = source.components(separatedBy: "Button(setTrackTotalByDiscMenuTitle)").count - 1
+        let firstSetTrackTotalRange = try #require(source.range(of: "Button(setTrackTotalMenuTitle)"))
+        let firstByDiscRange = try #require(source.range(of: "Button(setTrackTotalByDiscMenuTitle)"))
+        let secondSearchRange = firstByDiscRange.upperBound..<source.endIndex
+        let secondSetTrackTotalRange = try #require(
+            source.range(of: "Button(setTrackTotalMenuTitle)", range: secondSearchRange)
+        )
+        let secondByDiscRange = try #require(
+            source.range(of: "Button(setTrackTotalByDiscMenuTitle)", range: secondSearchRange)
+        )
+        #expect(setTrackTotalCount == 2)
+        #expect(byDiscCount == 2)
+        #expect(firstSetTrackTotalRange.lowerBound < firstByDiscRange.lowerBound)
+        #expect(secondSetTrackTotalRange.lowerBound < secondByDiscRange.lowerBound)
+        #expect(source.contains("onSetTrackTotalByDisc()"))
     }
 
     @Test

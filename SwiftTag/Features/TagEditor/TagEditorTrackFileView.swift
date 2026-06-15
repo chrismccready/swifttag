@@ -21,6 +21,9 @@ struct TagEditorTrackFileView: View {
     let onSetTrackTotalToCount: () -> Void
     let setTrackTotalMenuTitle: String
     let canSetTrackTotal: Bool
+    var onSetTrackTotalByDisc: () -> Void = {}
+    var setTrackTotalByDiscMenuTitle: String = "Set Track Total by Disc (0)"
+    var canSetTrackTotalByDisc: Bool = false
     let onAddFlacFiles: () -> Void
     let onAddReadOnlyFlacFiles: () -> Void
     let canAddFlacFiles: Bool
@@ -140,6 +143,11 @@ struct TagEditorTrackFileView: View {
                 onSetTrackTotalToCount()
             }
             .disabled(!canSetTrackTotal)
+
+            Button(setTrackTotalByDiscMenuTitle) {
+                onSetTrackTotalByDisc()
+            }
+            .disabled(!canSetTrackTotalByDisc)
 
             Divider()
 

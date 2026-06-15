@@ -300,6 +300,9 @@
             <property name="auto update track total" code="autt" type="boolean" access="rw" description="Automatically update track total based on track table count (aka: Track Total/Compilation Management: Auto update Track Total).">
                 <cocoa key="AutoUpdateTrackTotalSetting"/>
             </property>
+            <property name="auto update track total by disc" code="autd" type="boolean" access="rw" description="Automatically update track total based on each track's disc count when auto update track total is enabled (aka: Track Total/Compilation Management: Auto update Track Total by Disc).">
+                <cocoa key="AutoUpdateTrackTotalByDiscSetting"/>
+            </property>
             <property name="apply compilation to all tracks" code="apct" type="boolean" access="rw" description="Apply compilation setting to all tracks (aka: Track Total/Compilation Management: Apply Compilation to all Tracks).">
                 <cocoa key="ApplyCompilationToAllTracksSetting"/>
             </property>

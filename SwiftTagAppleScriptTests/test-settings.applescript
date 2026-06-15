@@ -126,6 +126,10 @@ on setTagSettingsTest given logging:logging
         if auto update track total is not true then
             error "ERROR: auto update track total is NOT set to true"
         end if
+        set auto update track total by disc to true
+        if auto update track total by disc is not true then
+            error "ERROR: auto update track total by disc is NOT set to true"
+        end if
         set apply compilation to all tracks to true
         if apply compilation to all tracks is not true then
             error "ERROR: apply compilation to all tracks is NOT set to true"
@@ -169,6 +173,10 @@ on setTagSettingsDefaults given logging:logging
         set auto update track total to false
         if auto update track total is not false then
             error "ERROR: auto update track total is NOT set to false"
+        end if
+        set auto update track total by disc to false
+        if auto update track total by disc is not false then
+            error "ERROR: auto update track total by disc is NOT set to false"
         end if
         set apply compilation to all tracks to false
         if apply compilation to all tracks is not false then

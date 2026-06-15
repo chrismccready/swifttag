@@ -241,6 +241,13 @@ struct SwiftTagAppleScriptTests {
         #expect(classDescription.type(forKey: "QuitAppOnLastWindowCloseSetting") == "boolean")
         #expect(classDescription.hasReadableProperty(forKey: "QuitAppOnLastWindowCloseSetting"))
         #expect(classDescription.hasWritableProperty(forKey: "QuitAppOnLastWindowCloseSetting"))
+
+        let byDiscCode = Self.fourCharCode("autd").uint32Value
+        #expect(classDescription.key(withAppleEventCode: byDiscCode) == "AutoUpdateTrackTotalByDiscSetting")
+        #expect(classDescription.appleEventCode(forKey: "AutoUpdateTrackTotalByDiscSetting") == byDiscCode)
+        #expect(classDescription.type(forKey: "AutoUpdateTrackTotalByDiscSetting") == "boolean")
+        #expect(classDescription.hasReadableProperty(forKey: "AutoUpdateTrackTotalByDiscSetting"))
+        #expect(classDescription.hasWritableProperty(forKey: "AutoUpdateTrackTotalByDiscSetting"))
     }
 
     @MainActor
@@ -736,6 +743,7 @@ struct SwiftTagAppleScriptTests {
             SaveSettingsKey.trackCountKeyStrategy,
             SaveSettingsKey.discCountKeyStrategy,
             SaveSettingsKey.autoUpdateTrackTotal,
+            SaveSettingsKey.autoUpdateTrackTotalByDisc,
             SaveSettingsKey.applyCompilationToAllTracks,
             SaveSettingsKey.saveFrontCoverToAllTracks,
             SaveSettingsKey.saveAllPicturesToAllTracks,
@@ -780,6 +788,7 @@ struct SwiftTagAppleScriptTests {
             ("ZeroPadTrackNumbersSetting", SaveSettingsKey.zeroPadTrackNumber, false),
             ("ZeroPadDiscNumbersSetting", SaveSettingsKey.zeroPadDiscNumber, false),
             ("AutoUpdateTrackTotalSetting", SaveSettingsKey.autoUpdateTrackTotal, true),
+            ("AutoUpdateTrackTotalByDiscSetting", SaveSettingsKey.autoUpdateTrackTotalByDisc, true),
             ("ApplyCompilationToAllTracksSetting", SaveSettingsKey.applyCompilationToAllTracks, true),
             ("SaveFrontCoverToAllTracksSetting", SaveSettingsKey.saveFrontCoverToAllTracks, true),
             ("SaveAllPicturesToAllTracksSetting", SaveSettingsKey.saveAllPicturesToAllTracks, true),

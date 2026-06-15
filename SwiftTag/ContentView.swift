@@ -120,6 +120,7 @@ struct ContentView: View {
     @AppStorage(SaveSettingsKey.zeroPadDiscNumber) private var zeroPadDiscNumber: Bool = SaveSettingsDefaults.zeroPadDiscNumber
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.autoUpdateTrackTotal) private var autoUpdateTrackTotal: Bool = SaveSettingsDefaults.autoUpdateTrackTotal
+    @AppStorage(SaveSettingsKey.autoUpdateTrackTotalByDisc) private var autoUpdateTrackTotalByDisc: Bool = SaveSettingsDefaults.autoUpdateTrackTotalByDisc
     @AppStorage(SaveSettingsKey.applyCompilationToAllTracks) private var applyCompilationToAllTracks: Bool = SaveSettingsDefaults.applyCompilationToAllTracks
     @AppStorage(SaveSettingsKey.saveFrontCoverToAllTracks) private var saveFrontCoverToAllTracks: Bool = SaveSettingsDefaults.saveFrontCoverToAllTracks
     @AppStorage(SaveSettingsKey.saveAllPicturesToAllTracks) private var saveAllPicturesToAllTracks: Bool = SaveSettingsDefaults.saveAllPicturesToAllTracks
@@ -277,11 +278,11 @@ struct ContentView: View {
     private var hasTotalTracksMismatch: Bool {
         formatOnTrackTotalMismatch &&
             trackCountKeyStrategy != .none &&
-            viewModel.hasTotalTracksMismatch
+            viewModel.hasTotalTracksMismatch(autoUpdateTrackTotalByDisc: autoUpdateTrackTotalByDisc)
     }
 
     private var totalTracksHoverMessage: String {
-        viewModel.totalTracksHoverMessage
+        viewModel.totalTracksHoverMessage(autoUpdateTrackTotalByDisc: autoUpdateTrackTotalByDisc)
     }
 
     private var hasTotalDiscsMismatch: Bool {
@@ -376,8 +377,16 @@ struct ContentView: View {
         "Set Track Total (\(viewModel.nonDeletedTrackCount))"
     }
 
+    private var setTrackTotalByDiscMenuTitle: String {
+        "Set Track Total by Disc \(viewModel.totalTrackCountsByDiscMenuSuffix())"
+    }
+
     private var canSetTrackTotal: Bool {
         !isSaveOperationRunning && viewModel.nonDeletedTrackCount > 0 && !autoUpdateTrackTotal
+    }
+
+    private var canSetTrackTotalByDisc: Bool {
+        canSetTrackTotal
     }
 
     private var canAddFlacFiles: Bool {
@@ -636,6 +645,9 @@ struct ContentView: View {
             onSetTrackTotalToCount: setTrackTotalToCurrentCount,
             setTrackTotalMenuTitle: setTrackTotalMenuTitle,
             canSetTrackTotal: canSetTrackTotal,
+            onSetTrackTotalByDisc: setTrackTotalToCurrentDiscCounts,
+            setTrackTotalByDiscMenuTitle: setTrackTotalByDiscMenuTitle,
+            canSetTrackTotalByDisc: canSetTrackTotalByDisc,
             onAddFlacFiles: showAddWritableImporter,
             onAddReadOnlyFlacFiles: showAddReadOnlyImporter,
             canAddFlacFiles: canAddFlacFiles,
@@ -970,7 +982,10 @@ struct ContentView: View {
             .onChange(of: autoUpdateTrackTotal) { _, _ in
                 applyAutoTrackTotalIfNeeded()
             }
-            .onChange(of: viewModel.nonDeletedTrackCount) { _, _ in
+            .onChange(of: autoUpdateTrackTotalByDisc) { _, _ in
+                applyAutoTrackTotalIfNeeded()
+            }
+            .onChange(of: viewModel.autoTrackTotalInputSnapshot) { _, _ in
                 applyAutoTrackTotalIfNeeded()
             }
             .onChange(of: focusedMiscTagKeyRowID) { oldValue, newValue in
@@ -1028,6 +1043,11 @@ struct ContentView: View {
                 setTrackTotalToCurrentCount()
             }
             .focusedSceneValue(\.canPerformSetTrackTotal, canSetTrackTotal)
+            .focusedSceneValue(\.setTrackTotalByDiscTitle, setTrackTotalByDiscMenuTitle)
+            .focusedSceneValue(\.performSetTrackTotalByDisc) {
+                setTrackTotalToCurrentDiscCounts()
+            }
+            .focusedSceneValue(\.canPerformSetTrackTotalByDisc, canSetTrackTotalByDisc)
             .focusedSceneValue(\.reloadSelectedTracksTitle, reloadSelectedTracksTitle)
             .focusedSceneValue(\.performReloadSelectedTracks) {
                 reloadSelectedTracks()
@@ -2382,6 +2402,13 @@ struct ContentView: View {
         viewModel.setTrackTotalToCurrentCount()
     }
 
+    private func setTrackTotalToCurrentDiscCounts() {
+        guard canSetTrackTotalByDisc else {
+            return
+        }
+        viewModel.setTrackTotalToCurrentDiscCounts()
+    }
+
     private func setCompilationEnabled(_ isEnabled: Bool) {
         guard isCompilationEditable else {
             return
@@ -2442,7 +2469,12 @@ struct ContentView: View {
         guard autoUpdateTrackTotal else {
             return
         }
-        viewModel.setTrackTotalToCurrentCount()
+
+        if autoUpdateTrackTotalByDisc {
+            viewModel.setTrackTotalToCurrentDiscCounts()
+        } else {
+            viewModel.setTrackTotalToCurrentCount()
+        }
     }
 
     private func handleDroppedFlacFileProviders(_ providers: [NSItemProvider]) -> Bool {
@@ -3120,6 +3152,9 @@ extension FocusedValues {
     @Entry var performSetTrackTotal: (() -> Void)?
     @Entry var setTrackTotalTitle: String?
     @Entry var canPerformSetTrackTotal: Bool?
+    @Entry var performSetTrackTotalByDisc: (() -> Void)?
+    @Entry var setTrackTotalByDiscTitle: String?
+    @Entry var canPerformSetTrackTotalByDisc: Bool?
     @Entry var performReloadSelectedTracks: (() -> Void)?
     @Entry var reloadSelectedTracksTitle: String?
     @Entry var canPerformReloadSelectedTracks: Bool?

@@ -6548,6 +6548,19 @@ extension NSApplication {
         }
     }
 
+    @objc(AutoUpdateTrackTotalByDiscSetting)
+    var autoUpdateTrackTotalByDiscSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.autoUpdateTrackTotalByDisc,
+                defaultValue: SaveSettingsDefaults.autoUpdateTrackTotalByDisc
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.autoUpdateTrackTotalByDisc)
+        }
+    }
+
     @objc(ApplyCompilationToAllTracksSetting)
     var applyCompilationToAllTracksSetting: Bool {
         get {

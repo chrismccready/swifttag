@@ -42,7 +42,7 @@
                     often shared across tracks and visually noteworthy, particularly for multi-track 
                     selection edits. Other album-centric features include:
                     <ul>
-                        <li><strong>File</strong> &gt; <strong>Set Track Total</strong> menu command.</li>
+                        <li><strong>File</strong> &gt; <strong>Set Track Total</strong> and <strong>Set Track Total by Disc</strong> menu commands.</li>
                         <li><a href="settings.html#tags-track-total-compilation"><strong>Auto update Track Total</strong></a> setting to manage total track counts.</li>
                         <li><a href="settings.html#tags-track-total-compilation"><strong>Auto update Compilation</strong></a> setting to manage compilation status.</li>
                         <li><a href="settings.html#tags-picture-management"><strong>Save Front Cover to all Tracks</strong></a> setting to manage cover art presence.</li>
@@ -57,7 +57,7 @@
                 <p>
                     The table shows <a href="status-and-diffs.html">status</a>, track number, title, 
                     optional duration, filename, and optional fingerprint (FLAC MD5). Edit <strong>Title</strong> 
-                    directly in the table.  Context menu commands can set track total, toggle selected track 
+                    directly in the table.  Context menu commands can set track total, set track total by disc, toggle selected track
                     <a href="adding-flac-files.html#read-only">locks</a>, reload selected tracks, remove 
                     selected tracks, and show or hide optional columns.
                 </p>
@@ -73,8 +73,10 @@
                     Number fields accept positive integer-style input.
                 </p>
                 <p>
-                    <strong>Set Track Total</strong> writes the current track count into selected
-                    total-track fields. If <strong>Auto update Track Total</strong> is enabled in
+                    <strong>Set Track Total</strong> writes the current non-deleted track count into
+                    total-track fields. <strong>Set Track Total by Disc</strong> writes each valid
+                    disc number's non-deleted track count and leaves blank, zero, or non-numeric
+                    disc numbers unchanged. If <strong>Auto update Track Total</strong> is enabled in
                     <a href="settings.html#tags-track-total-compilation">Tags: Track Total and Compilation Management</a> 
                     settings, SwiftTag manages that total automatically.
                 </p>

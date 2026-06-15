@@ -63,6 +63,9 @@ struct TagEditorCoreTagsView: View {
     let onSetTrackTotalToCount: () -> Void
     let setTrackTotalMenuTitle: String
     let canSetTrackTotal: Bool
+    var onSetTrackTotalByDisc: () -> Void = {}
+    var setTrackTotalByDiscMenuTitle: String = "Set Track Total by Disc (0)"
+    var canSetTrackTotalByDisc: Bool = false
     let isTrackTotalAutoUpdateEnabled: Bool
 
     let positiveIntegerTransform: (Binding<String>) -> Binding<String>
@@ -110,6 +113,11 @@ struct TagEditorCoreTagsView: View {
                                 onSetTrackTotalToCount()
                             }
                             .disabled(!canSetTrackTotal)
+
+                            Button(setTrackTotalByDiscMenuTitle) {
+                                onSetTrackTotalByDisc()
+                            }
+                            .disabled(!canSetTrackTotalByDisc)
                         }
                 } else {
                     TextField("#", text: .constant(""))
@@ -123,6 +131,11 @@ struct TagEditorCoreTagsView: View {
                                 onSetTrackTotalToCount()
                             }
                             .disabled(!canSetTrackTotal)
+
+                            Button(setTrackTotalByDiscMenuTitle) {
+                                onSetTrackTotalByDisc()
+                            }
+                            .disabled(!canSetTrackTotalByDisc)
                         }
                 }
 

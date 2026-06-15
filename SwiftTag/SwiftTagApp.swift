@@ -207,10 +207,12 @@ private struct AppCommands: Commands {
     @FocusedValue(\.performSaveSwiftTagDocumentAs) private var performSaveSwiftTagDocumentAs
     @FocusedValue(\.performToggleSelectedTrackLocks) private var performToggleSelectedTrackLocks
     @FocusedValue(\.performSetTrackTotal) private var performSetTrackTotal
+    @FocusedValue(\.performSetTrackTotalByDisc) private var performSetTrackTotalByDisc
     @FocusedValue(\.performReloadSelectedTracks) private var performReloadSelectedTracks
     @FocusedValue(\.performRemoveSelectedTracks) private var performRemoveSelectedTracks
     @FocusedValue(\.toggleSelectedTrackLocksTitle) private var toggleSelectedTrackLocksTitle
     @FocusedValue(\.setTrackTotalTitle) private var setTrackTotalTitle
+    @FocusedValue(\.setTrackTotalByDiscTitle) private var setTrackTotalByDiscTitle
     @FocusedValue(\.reloadSelectedTracksTitle) private var reloadSelectedTracksTitle
     @FocusedValue(\.removeSelectedTracksTitle) private var removeSelectedTracksTitle
     @FocusedValue(\.canPerformDefaultSave) private var canPerformDefaultSave
@@ -220,6 +222,7 @@ private struct AppCommands: Commands {
     @FocusedValue(\.canPerformSaveSwiftTagDocumentAs) private var canPerformSaveSwiftTagDocumentAs
     @FocusedValue(\.canPerformToggleSelectedTrackLocks) private var canPerformToggleSelectedTrackLocks
     @FocusedValue(\.canPerformSetTrackTotal) private var canPerformSetTrackTotal
+    @FocusedValue(\.canPerformSetTrackTotalByDisc) private var canPerformSetTrackTotalByDisc
     @FocusedValue(\.canPerformReloadSelectedTracks) private var canPerformReloadSelectedTracks
     @FocusedValue(\.canPerformRemoveSelectedTracks) private var canPerformRemoveSelectedTracks
 
@@ -292,6 +295,11 @@ private struct AppCommands: Commands {
                 performSetTrackTotal?()
             }
             .disabled(!(canPerformSetTrackTotal ?? false))
+
+            Button(setTrackTotalByDiscTitle ?? "Set Track Total by Disc (0)") {
+                performSetTrackTotalByDisc?()
+            }
+            .disabled(!(canPerformSetTrackTotalByDisc ?? false))
 
             Divider()
 
