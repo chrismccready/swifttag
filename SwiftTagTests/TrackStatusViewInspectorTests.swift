@@ -858,6 +858,30 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func tagEditorCoreTagsViewDisablesTotalDiscsWhenAutoUpdateIsEnabled() throws {
+        let sut = makeCoreTagsView(
+            isTrackTotalAutoUpdateEnabled: false,
+            isDiscTotalAutoUpdateEnabled: true
+        )
+
+        let textFields = try sut.inspect().findAll(ViewType.TextField.self)
+        #expect(textFields.count >= 4)
+        #expect(textFields[3].isDisabled())
+    }
+
+    @Test
+    func tagEditorCoreTagsViewEnablesTotalDiscsWhenAutoUpdateIsDisabled() throws {
+        let sut = makeCoreTagsView(
+            isTrackTotalAutoUpdateEnabled: false,
+            isDiscTotalAutoUpdateEnabled: false
+        )
+
+        let textFields = try sut.inspect().findAll(ViewType.TextField.self)
+        #expect(textFields.count >= 4)
+        #expect(!textFields[3].isDisabled())
+    }
+
+    @Test
     func tagEditorCoreTagsViewDimsCompilationCheckboxImageWhenDisabled() throws {
         let button = try hostedCompilationCheckbox(
             for: makeCoreTagsView(
@@ -935,11 +959,15 @@ struct TrackStatusViewInspectorTests {
         #expect(source.contains("settings.tags.applyCompilationToAllTracks"))
         #expect(source.contains("Auto update Track Total by Disc"))
         #expect(source.contains("settings.tags.autoUpdateTrackTotalByDisc"))
+        #expect(source.contains("Auto update Disc Total"))
+        #expect(source.contains("settings.tags.autoUpdateDiscTotal"))
         let autoTotalRange = try #require(source.range(of: "Toggle(\"Auto update Track Total\""))
         let byDiscRange = try #require(source.range(of: "Toggle(\"Auto update Track Total by Disc\""))
+        let discTotalRange = try #require(source.range(of: "Toggle(\"Auto update Disc Total\""))
         let compilationRange = try #require(source.range(of: "Toggle(\"Apply Compilation to all Tracks\""))
         #expect(autoTotalRange.lowerBound < byDiscRange.lowerBound)
-        #expect(byDiscRange.lowerBound < compilationRange.lowerBound)
+        #expect(byDiscRange.lowerBound < discTotalRange.lowerBound)
+        #expect(discTotalRange.lowerBound < compilationRange.lowerBound)
         #expect(source.contains(".disabled(!autoUpdateTrackTotal)"))
         #expect(!source.contains("Update Track Total on Locked Tracks"))
         #expect(!source.contains("settings.tags.updateTrackTotalOnLockedTracks"))
@@ -960,16 +988,20 @@ struct TrackStatusViewInspectorTests {
         let setTrackNumbersByDiscRange = try #require(source.range(of: "Button(setTrackNumbersByDiscTitle"))
         let setTrackTotalRange = try #require(source.range(of: "Button(setTrackTotalTitle"))
         let byDiscRange = try #require(source.range(of: "Button(setTrackTotalByDiscTitle"))
+        let setDiscTotalRange = try #require(source.range(of: "Button(setDiscTotalTitle"))
         #expect(lockRange.lowerBound < sortRange.lowerBound)
         #expect(sortRange.lowerBound < setTrackNumbersRange.lowerBound)
         #expect(setTrackNumbersRange.lowerBound < setTrackNumbersByDiscRange.lowerBound)
         #expect(setTrackNumbersByDiscRange.lowerBound < setTrackTotalRange.lowerBound)
         #expect(setTrackTotalRange.lowerBound < byDiscRange.lowerBound)
+        #expect(byDiscRange.lowerBound < setDiscTotalRange.lowerBound)
         #expect(source.contains("performSortTracks?()"))
         #expect(source.contains("performSetTrackNumbers?()"))
         #expect(source.contains("performSetTrackNumbersByDisc?()"))
         #expect(source.contains("performSetTrackTotalByDisc?()"))
+        #expect(source.contains("performSetDiscTotal?()"))
         #expect(source.contains("canPerformSetTrackTotalByDisc"))
+        #expect(source.contains("canPerformSetDiscTotal"))
     }
 
     @Test
@@ -989,15 +1021,18 @@ struct TrackStatusViewInspectorTests {
         let setTrackNumbersByDiscRange = try #require(source.range(of: "Button(setTrackNumbersByDiscMenuTitle)"))
         let setTrackTotalRange = try #require(source.range(of: "Button(setTrackTotalMenuTitle)"))
         let byDiscRange = try #require(source.range(of: "Button(setTrackTotalByDiscMenuTitle)"))
+        let setDiscTotalRange = try #require(source.range(of: "Button(setDiscTotalMenuTitle)"))
         #expect(lockRange.lowerBound < sortRange.lowerBound)
         #expect(sortRange.lowerBound < setTrackNumbersRange.lowerBound)
         #expect(setTrackNumbersRange.lowerBound < setTrackNumbersByDiscRange.lowerBound)
         #expect(setTrackNumbersByDiscRange.lowerBound < setTrackTotalRange.lowerBound)
         #expect(setTrackTotalRange.lowerBound < byDiscRange.lowerBound)
+        #expect(byDiscRange.lowerBound < setDiscTotalRange.lowerBound)
         #expect(source.contains("onSortTracks()"))
         #expect(source.contains("onSetTrackNumbers()"))
         #expect(source.contains("onSetTrackNumbersByDisc()"))
         #expect(source.contains("onSetTrackTotalByDisc()"))
+        #expect(source.contains("onSetDiscTotal()"))
     }
 
     @Test
@@ -1232,6 +1267,7 @@ struct TrackStatusViewInspectorTests {
 
     private func makeCoreTagsView(
         isTrackTotalAutoUpdateEnabled: Bool,
+        isDiscTotalAutoUpdateEnabled: Bool = false,
         compilationState: CompilationToggleState = .off,
         isCompilationEditable: Bool = true
     ) -> TagEditorCoreTagsView {
@@ -1297,6 +1333,7 @@ struct TrackStatusViewInspectorTests {
             setTrackTotalMenuTitle: "Set Track Total (2)",
             canSetTrackTotal: true,
             isTrackTotalAutoUpdateEnabled: isTrackTotalAutoUpdateEnabled,
+            isDiscTotalAutoUpdateEnabled: isDiscTotalAutoUpdateEnabled,
             positiveIntegerTransform: { $0 }
         )
     }

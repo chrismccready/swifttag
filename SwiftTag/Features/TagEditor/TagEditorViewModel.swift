@@ -20,6 +20,17 @@ struct AutoTrackTotalInputSnapshot: Equatable {
     let tracks: [TrackInput]
 }
 
+struct AutoDiscTotalInputSnapshot: Equatable {
+    struct TrackInput: Equatable {
+        let id: UUID
+        let isDeleted: Bool
+        let isLocked: Bool
+        let discNumber: Int?
+    }
+
+    let tracks: [TrackInput]
+}
+
 fileprivate enum TrackBookmarkIdentityResolver {
     static func identity(for track: Track) -> String? {
         identity(
@@ -317,8 +328,12 @@ final class TagEditorViewModel {
     }
 
     var hasTotalDiscsMismatch: Bool {
-        let totalDiscValues = trackItems.compactMap { track in
-            totalDiscTagKeys.lazy
+        let totalDiscValues = trackItems.compactMap { track -> String? in
+            guard !track.isDeletedInTable else {
+                return nil
+            }
+
+            return totalDiscTagKeys.lazy
                 .compactMap { self.normalizedTagValue(track.tags[$0] ?? "") }
                 .first(where: { !$0.isEmpty })
         }
@@ -332,7 +347,16 @@ final class TagEditorViewModel {
             return false
         }
 
+        let calculatedTotalDiscs = calculatedDiscTotal()
+        if maximumTotalDiscs != calculatedTotalDiscs {
+            return true
+        }
+
         if trackItems.contains(where: { track in
+            guard !track.isDeletedInTable else {
+                return false
+            }
+
             guard let discNumber = Int(normalizedTagValue(track.tags[TagKey.discNumber] ?? "")) else {
                 return false
             }
@@ -346,7 +370,7 @@ final class TagEditorViewModel {
 
     var totalDiscsHoverMessage: String {
         if hasTotalDiscsMismatch {
-            return "Disc count mismatch: loaded tracks disagree on total discs, or a disc number exceeds the maximum total discs value."
+            return "Disc count mismatch: loaded tracks disagree on total discs, or total discs does not match the current maximum disc number."
         }
 
         let selectedTracks = trackItems.filter { selectedTrackIDs.contains($0.id) }
@@ -411,6 +435,19 @@ final class TagEditorViewModel {
         )
     }
 
+    var autoDiscTotalInputSnapshot: AutoDiscTotalInputSnapshot {
+        AutoDiscTotalInputSnapshot(
+            tracks: trackItems.map { track in
+                AutoDiscTotalInputSnapshot.TrackInput(
+                    id: track.id,
+                    isDeleted: track.isDeletedInTable,
+                    isLocked: track.isLocked,
+                    discNumber: validDiscNumber(for: track)
+                )
+            }
+        )
+    }
+
     func validDiscNumber(for track: Track) -> Int? {
         let normalizedValue = normalizedTagValue(track.tags[TagKey.discNumber] ?? "")
         guard let discNumber = Int(normalizedValue), discNumber > 0 else {
@@ -447,6 +484,17 @@ final class TagEditorViewModel {
         }
 
         return "(\(orderedCounts.map(String.init).joined(separator: ",")))"
+    }
+
+    func calculatedDiscTotal() -> Int {
+        trackItems
+            .filter { !$0.isDeletedInTable }
+            .compactMap(validDiscNumber(for:))
+            .max() ?? 0
+    }
+
+    func discTotalMenuSuffix() -> String {
+        "(\(calculatedDiscTotal()))"
     }
 
     func expectedTotalTracks(
@@ -1438,6 +1486,26 @@ final class TagEditorViewModel {
                 trackItems[index].totalTracks = normalizedTotal
             }
             clearExternallyModifiedDifference(forTrackAt: index, keys: totalTrackTagKeys)
+        }
+    }
+
+    func setDiscTotalToCurrentDiscCount() {
+        let discTotal = calculatedDiscTotal()
+        guard discTotal > 0 else {
+            return
+        }
+
+        let normalizedTotal = String(discTotal)
+        for index in trackItems.indices {
+            guard !trackItems[index].isDeletedInTable,
+                  !trackItems[index].isLocked else {
+                continue
+            }
+
+            if needsCurrentTotalDiscsValue(normalizedTotal, forTrackAt: index) {
+                setCurrentTotalDiscsValue(normalizedTotal, forTrackAt: index)
+            }
+            clearExternallyModifiedDifference(forTrackAt: index, keys: totalDiscTagKeys)
         }
     }
 
@@ -3520,6 +3588,20 @@ final class TagEditorViewModel {
         if shouldWriteDiscTotal {
             trackItems[index].tags["DISCTOTAL"] = trimmedValue
         }
+    }
+
+    private func needsCurrentTotalDiscsValue(_ value: String, forTrackAt index: Int) -> Bool {
+        let normalizedValue = normalizedTagValue(value)
+        let existingAliasValues = totalDiscTagKeys.compactMap { key -> String? in
+            let aliasValue = normalizedTagValue(trackItems[index].tags[key] ?? "")
+            return aliasValue.isEmpty ? nil : aliasValue
+        }
+
+        guard !existingAliasValues.isEmpty else {
+            return true
+        }
+
+        return existingAliasValues.contains { $0 != normalizedValue }
     }
 
     private func keysForTrackProperty(_ keyPath: WritableKeyPath<Track, String>) -> [String] {

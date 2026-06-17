@@ -49,6 +49,9 @@ struct TagEditorView: View {
     var onSetTrackTotalByDisc: () -> Void = {}
     var setTrackTotalByDiscMenuTitle: String = "Set Track Total by Disc (0)"
     var canSetTrackTotalByDisc: Bool = false
+    var onSetDiscTotal: () -> Void = {}
+    var setDiscTotalMenuTitle: String = "Set Disc Total (0)"
+    var canSetDiscTotal: Bool = false
     let onAddFlacFiles: () -> Void
     let onAddReadOnlyFlacFiles: () -> Void
     let canAddFlacFiles: Bool
@@ -117,6 +120,7 @@ struct TagEditorView: View {
     let hasCommentExternalDifference: Bool
     let hasCommentExternallyModifiedDifference: Bool
     let isTrackTotalAutoUpdateEnabled: Bool
+    var isDiscTotalAutoUpdateEnabled: Bool = false
     let positiveIntegerTransform: (Binding<String>) -> Binding<String>
 
     var miscTagRowsBinding: Binding<[MiscTagRow]>
@@ -185,6 +189,9 @@ struct TagEditorView: View {
                 onSetTrackTotalByDisc: onSetTrackTotalByDisc,
                 setTrackTotalByDiscMenuTitle: setTrackTotalByDiscMenuTitle,
                 canSetTrackTotalByDisc: canSetTrackTotalByDisc,
+                onSetDiscTotal: onSetDiscTotal,
+                setDiscTotalMenuTitle: setDiscTotalMenuTitle,
+                canSetDiscTotal: canSetDiscTotal,
                 onAddFlacFiles: onAddFlacFiles,
                 onAddReadOnlyFlacFiles: onAddReadOnlyFlacFiles,
                 canAddFlacFiles: canAddFlacFiles,
@@ -262,6 +269,7 @@ struct TagEditorView: View {
                 setTrackTotalByDiscMenuTitle: setTrackTotalByDiscMenuTitle,
                 canSetTrackTotalByDisc: canSetTrackTotalByDisc,
                 isTrackTotalAutoUpdateEnabled: isTrackTotalAutoUpdateEnabled,
+                isDiscTotalAutoUpdateEnabled: isDiscTotalAutoUpdateEnabled,
                 positiveIntegerTransform: positiveIntegerTransform
             )
 

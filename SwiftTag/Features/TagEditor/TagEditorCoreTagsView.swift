@@ -67,6 +67,7 @@ struct TagEditorCoreTagsView: View {
     var setTrackTotalByDiscMenuTitle: String = "Set Track Total by Disc (0)"
     var canSetTrackTotalByDisc: Bool = false
     let isTrackTotalAutoUpdateEnabled: Bool
+    var isDiscTotalAutoUpdateEnabled: Bool = false
 
     let positiveIntegerTransform: (Binding<String>) -> Binding<String>
 
@@ -171,7 +172,7 @@ struct TagEditorCoreTagsView: View {
                         .multilineTextAlignment(.center)
                         .frame(width: 30)
                         .help(totalDiscsHoverMessage)
-                        .disabled(!isAlbumMetadataEditable)
+                        .disabled(!isAlbumMetadataEditable || isDiscTotalAutoUpdateEnabled)
                 } else {
                     TextField("#", text: .constant(""))
                         .multilineTextAlignment(.center)

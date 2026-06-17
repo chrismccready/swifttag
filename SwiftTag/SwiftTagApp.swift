@@ -211,6 +211,7 @@ private struct AppCommands: Commands {
     @FocusedValue(\.performSetTrackNumbersByDisc) private var performSetTrackNumbersByDisc
     @FocusedValue(\.performSetTrackTotal) private var performSetTrackTotal
     @FocusedValue(\.performSetTrackTotalByDisc) private var performSetTrackTotalByDisc
+    @FocusedValue(\.performSetDiscTotal) private var performSetDiscTotal
     @FocusedValue(\.performReloadSelectedTracks) private var performReloadSelectedTracks
     @FocusedValue(\.performRemoveSelectedTracks) private var performRemoveSelectedTracks
     @FocusedValue(\.toggleSelectedTrackLocksTitle) private var toggleSelectedTrackLocksTitle
@@ -219,6 +220,7 @@ private struct AppCommands: Commands {
     @FocusedValue(\.setTrackNumbersByDiscTitle) private var setTrackNumbersByDiscTitle
     @FocusedValue(\.setTrackTotalTitle) private var setTrackTotalTitle
     @FocusedValue(\.setTrackTotalByDiscTitle) private var setTrackTotalByDiscTitle
+    @FocusedValue(\.setDiscTotalTitle) private var setDiscTotalTitle
     @FocusedValue(\.reloadSelectedTracksTitle) private var reloadSelectedTracksTitle
     @FocusedValue(\.removeSelectedTracksTitle) private var removeSelectedTracksTitle
     @FocusedValue(\.canPerformDefaultSave) private var canPerformDefaultSave
@@ -232,6 +234,7 @@ private struct AppCommands: Commands {
     @FocusedValue(\.canPerformSetTrackNumbersByDisc) private var canPerformSetTrackNumbersByDisc
     @FocusedValue(\.canPerformSetTrackTotal) private var canPerformSetTrackTotal
     @FocusedValue(\.canPerformSetTrackTotalByDisc) private var canPerformSetTrackTotalByDisc
+    @FocusedValue(\.canPerformSetDiscTotal) private var canPerformSetDiscTotal
     @FocusedValue(\.canPerformReloadSelectedTracks) private var canPerformReloadSelectedTracks
     @FocusedValue(\.canPerformRemoveSelectedTracks) private var canPerformRemoveSelectedTracks
 
@@ -333,6 +336,12 @@ private struct AppCommands: Commands {
             }
             .keyboardShortcut("k", modifiers: [.option, .command])
             .disabled(!(canPerformSetTrackTotalByDisc ?? false))
+
+            Button(setDiscTotalTitle ?? "Set Disc Total (0)") {
+                performSetDiscTotal?()
+            }
+            .keyboardShortcut("k", modifiers: [.shift, .command])
+            .disabled(!(canPerformSetDiscTotal ?? false))
 
             Divider()
 

@@ -108,6 +108,7 @@ enum SaveSettingsKey {
     static let discCountKeyStrategy = "settings.discCountKeyStrategy"
     static let autoUpdateTrackTotal = "settings.autoUpdateTrackTotal"
     static let autoUpdateTrackTotalByDisc = "settings.autoUpdateTrackTotalByDisc"
+    static let autoUpdateDiscTotal = "settings.autoUpdateDiscTotal"
     static let applyCompilationToAllTracks = "settings.applyCompilationToAllTracks"
     static let saveFrontCoverToAllTracks = "settings.saveFrontCoverToAllTracks"
     static let saveAllPicturesToAllTracks = "settings.saveAllPicturesToAllTracks"
@@ -126,6 +127,7 @@ enum SaveSettingsDefaults {
     static let discCountKeyStrategy = DiscCountKeyStrategy.both
     static let autoUpdateTrackTotal = false
     static let autoUpdateTrackTotalByDisc = false
+    static let autoUpdateDiscTotal = false
     static let applyCompilationToAllTracks = false
     static let saveFrontCoverToAllTracks = false
     static let saveAllPicturesToAllTracks = false

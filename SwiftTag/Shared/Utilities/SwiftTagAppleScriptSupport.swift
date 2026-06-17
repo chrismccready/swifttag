@@ -6668,6 +6668,19 @@ extension NSApplication {
         }
     }
 
+    @objc(AutoUpdateDiscTotalSetting)
+    var autoUpdateDiscTotalSetting: Bool {
+        get {
+            boolSetting(
+                key: SaveSettingsKey.autoUpdateDiscTotal,
+                defaultValue: SaveSettingsDefaults.autoUpdateDiscTotal
+            )
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: SaveSettingsKey.autoUpdateDiscTotal)
+        }
+    }
+
     @objc(ApplyCompilationToAllTracksSetting)
     var applyCompilationToAllTracksSetting: Bool {
         get {

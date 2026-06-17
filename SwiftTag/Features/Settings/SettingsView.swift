@@ -21,7 +21,7 @@ struct SettingsView: View {
         }
         .accessibilityIdentifier("settings.tabView")
         .padding(4)
-        .frame(width: 352, height: 500)
+        .frame(width: 352, height: 524)
         .background(SettingsWindowRegistrar())
     }
 }

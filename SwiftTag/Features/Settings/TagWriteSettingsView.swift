@@ -7,6 +7,7 @@ struct TagWriteSettingsView: View {
     @AppStorage(SaveSettingsKey.discCountKeyStrategy) private var discCountKeyStrategyRawValue: String = SaveSettingsDefaults.discCountKeyStrategy.rawValue
     @AppStorage(SaveSettingsKey.autoUpdateTrackTotal) private var autoUpdateTrackTotal: Bool = SaveSettingsDefaults.autoUpdateTrackTotal
     @AppStorage(SaveSettingsKey.autoUpdateTrackTotalByDisc) private var autoUpdateTrackTotalByDisc: Bool = SaveSettingsDefaults.autoUpdateTrackTotalByDisc
+    @AppStorage(SaveSettingsKey.autoUpdateDiscTotal) private var autoUpdateDiscTotal: Bool = SaveSettingsDefaults.autoUpdateDiscTotal
     @AppStorage(SaveSettingsKey.applyCompilationToAllTracks) private var applyCompilationToAllTracks: Bool = SaveSettingsDefaults.applyCompilationToAllTracks
     @AppStorage(SaveSettingsKey.saveFrontCoverToAllTracks) private var saveFrontCoverToAllTracks: Bool = SaveSettingsDefaults.saveFrontCoverToAllTracks
     @AppStorage(SaveSettingsKey.saveAllPicturesToAllTracks) private var saveAllPicturesToAllTracks: Bool = SaveSettingsDefaults.saveAllPicturesToAllTracks
@@ -170,6 +171,11 @@ struct TagWriteSettingsView: View {
                             .accessibilityIdentifier("settings.tags.autoUpdateTrackTotalByDisc")
                             .accessibilityValue(autoUpdateTrackTotalByDisc ? "On" : "Off")
                             .disabled(!autoUpdateTrackTotal)
+
+                        Toggle("Auto update Disc Total", isOn: $autoUpdateDiscTotal)
+                            .padding(.horizontal, 2)
+                            .accessibilityIdentifier("settings.tags.autoUpdateDiscTotal")
+                            .accessibilityValue(autoUpdateDiscTotal ? "On" : "Off")
 
                         Toggle("Apply Compilation to all Tracks", isOn: $applyCompilationToAllTracks)
                             .padding(.horizontal, 2)

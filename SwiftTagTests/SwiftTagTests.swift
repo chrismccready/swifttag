@@ -241,6 +241,7 @@ struct SwiftTagTests {
         #expect(SaveSettingsDefaults.discCountKeyStrategy == .both)
         #expect(!SaveSettingsDefaults.autoUpdateTrackTotal)
         #expect(!SaveSettingsDefaults.autoUpdateTrackTotalByDisc)
+        #expect(!SaveSettingsDefaults.autoUpdateDiscTotal)
         #expect(!SaveSettingsDefaults.applyCompilationToAllTracks)
         #expect(!SaveSettingsDefaults.saveFrontCoverToAllTracks)
         #expect(!SaveSettingsDefaults.saveAllPicturesToAllTracks)
@@ -776,6 +777,219 @@ struct SwiftTagTests {
         #expect(viewModel.trackItems.first(where: { $0.id == invalidDisc.id })?.totalTracks == "9")
         #expect(viewModel.trackItems.first(where: { $0.id == zeroDisc.id })?.totalTracks == "9")
         #expect(viewModel.trackItems.first(where: { $0.id == deletedDiscThree.id })?.totalTracks == "9")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelCalculatedDiscTotalUsesMaximumValidNonDeletedDiscNumber() {
+        let discOne = Track(tags: [TagKey.title: "Disc 1", TagKey.discNumber: "1"])
+        let paddedDiscThree = Track(tags: [TagKey.title: "Disc 3", TagKey.discNumber: "03"])
+        let invalidDisc = Track(tags: [TagKey.title: "Invalid", TagKey.discNumber: "Side A"])
+        let zeroDisc = Track(tags: [TagKey.title: "Zero", TagKey.discNumber: "0"])
+        let deletedDiscFive = Track(
+            tags: [TagKey.title: "Deleted", TagKey.discNumber: "5"],
+            externalDifferences: TrackExternalDifferences(
+                isDeleted: true,
+                fileValuesByTag: [:],
+                hasPictureDifference: false
+            )
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [discOne, paddedDiscThree, invalidDisc, zeroDisc, deletedDiscFive]
+
+        #expect(viewModel.calculatedDiscTotal() == 3)
+        #expect(viewModel.discTotalMenuSuffix() == "(3)")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSetDiscTotalUpdatesEditableTracksAndPreservesAliasShape() {
+        let totalDiscsTrack = Track(
+            tags: [
+                TagKey.title: "TOTALDISCS",
+                TagKey.discNumber: "1",
+                "TOTALDISCS": "1"
+            ]
+        )
+        let discTotalTrack = Track(
+            tags: [
+                TagKey.title: "DISCTOTAL",
+                TagKey.discNumber: "3",
+                "DISCTOTAL": "1"
+            ]
+        )
+        let bothAliasesTrack = Track(
+            tags: [
+                TagKey.title: "Both",
+                TagKey.discNumber: "2",
+                "TOTALDISCS": "1",
+                "DISCTOTAL": "1"
+            ]
+        )
+        let missingAliasTrack = Track(
+            tags: [
+                TagKey.title: "Missing Alias",
+                TagKey.discNumber: "2"
+            ]
+        )
+        let lockedTrack = Track(
+            tags: [
+                TagKey.title: "Locked",
+                TagKey.discNumber: "4",
+                "TOTALDISCS": "1"
+            ],
+            isLocked: true
+        )
+        let deletedTrack = Track(
+            tags: [
+                TagKey.title: "Deleted",
+                TagKey.discNumber: "5",
+                "TOTALDISCS": "1"
+            ],
+            externalDifferences: TrackExternalDifferences(
+                isDeleted: true,
+                fileValuesByTag: [:],
+                hasPictureDifference: false
+            )
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            totalDiscsTrack,
+            discTotalTrack,
+            bothAliasesTrack,
+            missingAliasTrack,
+            lockedTrack,
+            deletedTrack
+        ]
+
+        viewModel.setDiscTotalToCurrentDiscCount()
+
+        #expect(viewModel.calculatedDiscTotal() == 4)
+        #expect(viewModel.trackItems[0].tags["TOTALDISCS"] == "4")
+        #expect(viewModel.trackItems[0].tags["DISCTOTAL"] == nil)
+        #expect(viewModel.trackItems[1].tags["TOTALDISCS"] == nil)
+        #expect(viewModel.trackItems[1].tags["DISCTOTAL"] == "4")
+        #expect(viewModel.trackItems[2].tags["TOTALDISCS"] == "4")
+        #expect(viewModel.trackItems[2].tags["DISCTOTAL"] == "4")
+        #expect(viewModel.trackItems[3].tags["TOTALDISCS"] == "4")
+        #expect(viewModel.trackItems[3].tags["DISCTOTAL"] == nil)
+        #expect(viewModel.trackItems[4].tags["TOTALDISCS"] == "1")
+        #expect(viewModel.trackItems[5].tags["TOTALDISCS"] == "1")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSetDiscTotalNoOpsWithoutValidDiscNumbers() {
+        let invalidTrack = Track(
+            tags: [
+                TagKey.title: "Invalid",
+                TagKey.discNumber: "Side A",
+                "TOTALDISCS": "1"
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [invalidTrack]
+
+        viewModel.setDiscTotalToCurrentDiscCount()
+
+        #expect(viewModel.calculatedDiscTotal() == 0)
+        #expect(viewModel.discTotalMenuSuffix() == "(0)")
+        #expect(viewModel.trackItems[0].tags["TOTALDISCS"] == "1")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelDiscTotalMismatchUpdatesWhenDiscNumberDropsBelowTotal() {
+        let discOne = Track(
+            tags: [
+                TagKey.title: "Disc One",
+                TagKey.discNumber: "1"
+            ]
+        )
+        let editedDisc = Track(
+            tags: [
+                TagKey.title: "Edited Disc",
+                TagKey.discNumber: "3"
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [discOne, editedDisc]
+
+        viewModel.setDiscTotalToCurrentDiscCount()
+        #expect(viewModel.trackItems.allSatisfy { $0.tags["TOTALDISCS"] == "3" })
+        #expect(!viewModel.hasTotalDiscsMismatch)
+
+        viewModel.trackItems[1].tags[TagKey.discNumber] = "2"
+
+        #expect(viewModel.calculatedDiscTotal() == 2)
+        #expect(viewModel.hasTotalDiscsMismatch)
+        #expect(viewModel.totalDiscsHoverMessage.contains("current maximum disc number"))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelDiscTotalMismatchUpdatesWhenAllDiscNumbersAreRemoved() {
+        let firstTrack = Track(
+            tags: [
+                TagKey.title: "Disc One",
+                TagKey.discNumber: "1"
+            ]
+        )
+        let secondTrack = Track(
+            tags: [
+                TagKey.title: "Disc Two",
+                TagKey.discNumber: "2"
+            ]
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstTrack, secondTrack]
+
+        viewModel.setDiscTotalToCurrentDiscCount()
+        #expect(viewModel.trackItems.allSatisfy { $0.tags["TOTALDISCS"] == "2" })
+        #expect(!viewModel.hasTotalDiscsMismatch)
+
+        viewModel.trackItems[0].tags[TagKey.discNumber] = ""
+        viewModel.trackItems[1].tags[TagKey.discNumber] = ""
+
+        #expect(viewModel.calculatedDiscTotal() == 0)
+        #expect(viewModel.hasTotalDiscsMismatch)
+        #expect(viewModel.totalDiscsHoverMessage.contains("current maximum disc number"))
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSetDiscTotalClearsExternalDiscTotalDifferences() {
+        var track = Track(
+            tags: [
+                TagKey.title: "Disc Diff",
+                TagKey.discNumber: "2",
+                "TOTALDISCS": "1"
+            ]
+        )
+        track.externalDifferences = TrackExternalDifferences(
+            isDeleted: false,
+            fileValuesByTag: [
+                "TOTALDISCS": "9",
+                "DISCTOTAL": "9",
+                TagKey.title: "External"
+            ],
+            hasPictureDifference: false
+        )
+
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [track]
+
+        viewModel.setDiscTotalToCurrentDiscCount()
+
+        #expect(viewModel.trackItems[0].tags["TOTALDISCS"] == "2")
+        #expect(viewModel.trackItems[0].externalDifferences?.fileValuesByTag["TOTALDISCS"] == nil)
+        #expect(viewModel.trackItems[0].externalDifferences?.fileValuesByTag["DISCTOTAL"] == nil)
+        #expect(viewModel.trackItems[0].externalDifferences?.fileValuesByTag[TagKey.title] == "External")
     }
 
     @Test
