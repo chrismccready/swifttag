@@ -637,6 +637,7 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
     case invalidSaveOptionValue(String)
     case invalidSaveScopeOptionValue(String)
     case invalidSavePayloadOptionValue(String)
+    case invalidTrackSortOptionValue(String)
     case invalidCloseSaveOptionValue(String)
     case invalidSelectedTrack
     case invalidTrackTarget
@@ -681,6 +682,8 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
             return "Save scope option \(optionName) must be all or selected."
         case let .invalidSavePayloadOptionValue(optionName):
             return "Save payload option \(optionName) must be tags only or pictures only or tags and pictures."
+        case let .invalidTrackSortOptionValue(optionName):
+            return "Track sort option \(optionName) must be track number order or filename order."
         case let .invalidCloseSaveOptionValue(optionName):
             return "Close save option \(optionName) must be yes, no, or ask."
         case .invalidSelectedTrack:
@@ -731,6 +734,7 @@ enum SwiftTagAppleScriptCommandError: LocalizedError, Equatable {
              .invalidSaveOptionValue,
              .invalidSaveScopeOptionValue,
              .invalidSavePayloadOptionValue,
+             .invalidTrackSortOptionValue,
              .invalidCloseSaveOptionValue,
              .invalidSelectedTrack,
              .invalidTrackTarget,
@@ -936,6 +940,23 @@ struct SwiftTagAppleScriptCloseRequest: Equatable {
     }
 }
 
+enum SwiftTagAppleScriptTrackSortOption {
+    static func sortMode(from rawValue: Any?, optionName: String = "track sort order") throws -> TrackTableSortMode? {
+        guard let token = SwiftTagAppleScriptEnumerationToken.normalized(from: rawValue) else {
+            return nil
+        }
+
+        switch token {
+        case "tnum", "track number order", "tracknumber", "number", "nmbr":
+            return .number
+        case "tfil", "filename order", "filename":
+            return .filename
+        default:
+            throw SwiftTagAppleScriptCommandError.invalidTrackSortOptionValue(optionName)
+        }
+    }
+}
+
 private enum SwiftTagAppleScriptArgumentValue {
     static func value(
         key: String,
@@ -1020,6 +1041,10 @@ private enum SwiftTagAppleScriptEnumerationToken {
         if let number = rawValue as? NSNumber {
             return normalized(fourCharCodeString(number.uint32Value))
         }
+
+        if let code = rawValue as? FourCharCode {
+            return normalized(fourCharCodeString(code))
+        }
         
         if let string = rawValue as? NSString {
             return normalized(string as String)
@@ -1057,6 +1082,17 @@ private enum SwiftTagAppleScriptCode {
         let paddedBytes = bytes + Array(repeating: UInt8(32), count: max(0, 4 - bytes.count))
         return paddedBytes.prefix(4).reduce(UInt32(0)) { result, byte in
             (result << 8) | UInt32(byte)
+        }
+    }
+}
+
+private extension TrackTableSortMode {
+    var appleScriptCode: FourCharCode {
+        switch self {
+        case .number:
+            SwiftTagAppleScriptCode.fourCharCode("tnum")
+        case .filename:
+            SwiftTagAppleScriptCode.fourCharCode("tfil")
         }
     }
 }
@@ -1302,6 +1338,17 @@ struct SwiftTagAppleScriptDocumentSnapshot {
 struct SwiftTagAppleScriptSessionSnapshot {
     let tracks: [Track]
     let selectedTrackIDs: Set<UUID>
+    let sortMode: TrackTableSortMode
+
+    init(
+        tracks: [Track],
+        selectedTrackIDs: Set<UUID>,
+        sortMode: TrackTableSortMode = .number
+    ) {
+        self.tracks = tracks
+        self.selectedTrackIDs = selectedTrackIDs
+        self.sortMode = sortMode
+    }
 }
 
 struct SwiftTagAppleScriptPictureIdentity: Equatable {
@@ -1320,6 +1367,7 @@ struct SwiftTagAppleScriptSessionBridge {
     let setTrackLocked: (UUID, Bool) throws -> Void
     let saveDocument: (URL?) throws -> SwiftTagDocumentSaveState
     let saveTracks: (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult
+    let sortTracks: (TrackTableSortMode) throws -> Void
     let upsertTag: (UUID, String, String) throws -> Void
     let deleteTag: (UUID, String) throws -> Void
     let upsertPicture: (UUID, SwiftTagAppleScriptPicturePayload) throws -> Int
@@ -1343,6 +1391,9 @@ struct SwiftTagAppleScriptSessionBridge {
         },
         saveDocument: @escaping (URL?) throws -> SwiftTagDocumentSaveState,
         saveTracks: @escaping (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult = { _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
+        sortTracks: @escaping (TrackTableSortMode) throws -> Void = { _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
         },
         upsertTag: @escaping (UUID, String, String) throws -> Void = { _, _, _ in },
@@ -1372,6 +1423,7 @@ struct SwiftTagAppleScriptSessionBridge {
             setTrackLocked: setTrackLocked,
             saveDocument: saveDocument,
             saveTracks: saveTracks,
+            sortTracks: sortTracks,
             upsertTag: upsertTag,
             deleteTag: deleteTag,
             upsertPicture: upsertPicture,
@@ -1397,6 +1449,9 @@ struct SwiftTagAppleScriptSessionBridge {
         },
         saveDocument: @escaping (URL?) throws -> SwiftTagDocumentSaveState,
         saveTracks: @escaping (SwiftTagAppleScriptFlacSaveRequest) throws -> SaveOperationResult = { _ in
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        },
+        sortTracks: @escaping (TrackTableSortMode) throws -> Void = { _ in
             throw SwiftTagAppleScriptCommandError.sessionUnavailable
         },
         upsertTag: @escaping (UUID, String, String) throws -> Void = { _, _, _ in },
@@ -1425,6 +1480,7 @@ struct SwiftTagAppleScriptSessionBridge {
         self.setTrackLocked = setTrackLocked
         self.saveDocument = saveDocument
         self.saveTracks = saveTracks
+        self.sortTracks = sortTracks
         self.upsertTag = upsertTag
         self.deleteTag = deleteTag
         self.upsertPicture = upsertPicture
@@ -4451,6 +4507,30 @@ final class SwiftTagScriptEditorWindow: NSObject {
         }
     }
 
+    @objc(TrackSortOrder)
+    var trackSortOrder: Any {
+        get {
+            NSNumber(
+                value: SwiftTagAppleScriptController.shared
+                    .trackSortOrder(forSessionID: sessionIDValue)
+                    .appleScriptCode
+            )
+        }
+        set {
+            do {
+                guard let sortMode = try SwiftTagAppleScriptTrackSortOption.sortMode(
+                    from: newValue,
+                    optionName: "track sort order"
+                ) else {
+                    return
+                }
+                try sortTracks(by: sortMode)
+            } catch {
+                _ = NSScriptCommand.current()?.fail(error)
+            }
+        }
+    }
+
     @objc(countOfSelectedTracks)
     var countOfSelectedTracks: Int {
         SwiftTagAppleScriptController.shared.selectedTrackObjects(forSessionID: sessionIDValue).count
@@ -4643,6 +4723,15 @@ final class SwiftTagScriptEditorWindow: NSObject {
             locked: locked,
             toSessionID: sessionIDValue
         )
+    }
+
+    @discardableResult
+    func sortTracks(by sortMode: TrackTableSortMode) throws -> SwiftTagScriptEditorWindow {
+        try SwiftTagAppleScriptController.shared.sortTracks(
+            forSessionID: sessionIDValue,
+            by: sortMode
+        )
+        return self
     }
 
     @objc(handleAddTracksScriptCommand:)
@@ -5839,7 +5928,7 @@ final class SwiftTagAppleScriptController {
             return []
         }
 
-        let orderedTracks = snapshot.tracks.sortedForTrackTableDisplay()
+        let orderedTracks = snapshot.tracks.sortedForTrackTableDisplay(sortMode: snapshot.sortMode)
         let validTrackIDs = Set(snapshot.tracks.map(\.id))
         pruneTrackWrappers(forSessionID: sessionID, validTrackIDs: validTrackIDs)
         return orderedTracks.compactMap { track(forSessionID: sessionID, trackID: $0.id) }
@@ -5850,7 +5939,7 @@ final class SwiftTagAppleScriptController {
             return []
         }
 
-        let orderedTracks = snapshot.tracks.sortedForTrackTableDisplay()
+        let orderedTracks = snapshot.tracks.sortedForTrackTableDisplay(sortMode: snapshot.sortMode)
         let validTrackIDs = Set(snapshot.tracks.map(\.id))
         pruneTrackWrappers(forSessionID: sessionID, validTrackIDs: validTrackIDs)
         return orderedTracks
@@ -6179,6 +6268,21 @@ final class SwiftTagAppleScriptController {
         return try bridge.saveTracks(request)
     }
 
+    func trackSortOrder(forSessionID sessionID: UUID) -> TrackTableSortMode {
+        sessionSnapshot(forSessionID: sessionID)?.sortMode ?? .number
+    }
+
+    func sortTracks(
+        forSessionID sessionID: UUID,
+        by sortMode: TrackTableSortMode
+    ) throws {
+        guard let bridge = sessionBridgesBySessionID[sessionID] else {
+            throw SwiftTagAppleScriptCommandError.sessionUnavailable
+        }
+
+        try bridge.sortTracks(sortMode)
+    }
+
     func closeEditorWindow(
         forSessionID sessionID: UUID,
         bypassUnsavedConfirmation: Bool
@@ -6238,9 +6342,12 @@ final class SwiftTagAppleScriptController {
     }
 
     func indexOfTrack(trackID: UUID, forSessionID sessionID: UUID) -> Int? {
-        sessionSnapshot(forSessionID: sessionID)?
-            .tracks
-            .sortedForTrackTableDisplay()
+        guard let snapshot = sessionSnapshot(forSessionID: sessionID) else {
+            return nil
+        }
+
+        return snapshot.tracks
+            .sortedForTrackTableDisplay(sortMode: snapshot.sortMode)
             .firstIndex(where: { $0.id == trackID })
     }
 

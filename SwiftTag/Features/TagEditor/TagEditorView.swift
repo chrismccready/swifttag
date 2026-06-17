@@ -33,6 +33,16 @@ struct TagEditorView: View {
     let onToggleTrackLocks: () -> Void
     let lockMenuTitle: String
     let canToggleTrackLocks: Bool
+    let trackTableSortMode: TrackTableSortMode
+    let onSortTracks: () -> Void
+    let sortTracksMenuTitle: String
+    let canSortTracks: Bool
+    let onSetTrackNumbers: () -> Void
+    let setTrackNumbersMenuTitle: String
+    let canSetTrackNumbers: Bool
+    let onSetTrackNumbersByDisc: () -> Void
+    let setTrackNumbersByDiscMenuTitle: String
+    let canSetTrackNumbersByDisc: Bool
     let onSetTrackTotalToCount: () -> Void
     let setTrackTotalMenuTitle: String
     let canSetTrackTotal: Bool
@@ -159,6 +169,16 @@ struct TagEditorView: View {
                 onToggleLockSelection: onToggleTrackLocks,
                 lockMenuTitle: lockMenuTitle,
                 canToggleLockSelection: canToggleTrackLocks,
+                sortMode: trackTableSortMode,
+                onSortTracks: onSortTracks,
+                sortTracksMenuTitle: sortTracksMenuTitle,
+                canSortTracks: canSortTracks,
+                onSetTrackNumbers: onSetTrackNumbers,
+                setTrackNumbersMenuTitle: setTrackNumbersMenuTitle,
+                canSetTrackNumbers: canSetTrackNumbers,
+                onSetTrackNumbersByDisc: onSetTrackNumbersByDisc,
+                setTrackNumbersByDiscMenuTitle: setTrackNumbersByDiscMenuTitle,
+                canSetTrackNumbersByDisc: canSetTrackNumbersByDisc,
                 onSetTrackTotalToCount: onSetTrackTotalToCount,
                 setTrackTotalMenuTitle: setTrackTotalMenuTitle,
                 canSetTrackTotal: canSetTrackTotal,

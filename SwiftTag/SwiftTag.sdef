@@ -190,6 +190,11 @@
             <enumerator name="system" code="sysp" description="Use system theme."/>
         </enumeration>
 
+        <enumeration name="track sort options" code="tsop">
+            <enumerator name="track number order" code="tnum" description="Sort tracks by track number, then filename."/>
+            <enumerator name="filename order" code="tfil" description="Sort tracks by filename, then track number."/>
+        </enumeration>
+
         <value-type name="data" code="tdta" description="Raw binary data.">
             <cocoa class="NSData"/>
         </value-type>
@@ -436,6 +441,9 @@
                 <cocoa key="selectedTracks"/>
                 <type type="specifier"/>
                 <type type="track" list="yes"/>
+            </property>
+            <property name="track sort order" code="tsor" type="track sort options" access="rw" description="Visible track table sort order.">
+                <cocoa key="TrackSortOrder"/>
             </property>
             <property name="window id" code="ewid" type="text" access="r" description="Window UUID.">
                 <cocoa key="windowID"/>

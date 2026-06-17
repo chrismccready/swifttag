@@ -497,6 +497,180 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func trackTableSortModeOrdersTracksByNumberAndFilename() {
+        let secondTrack = Track(
+            tags: [
+                TagKey.trackNumber: "2",
+                TagKey.filename: "02-Bravo.flac"
+            ]
+        )
+        let firstTrack = Track(
+            tags: [
+                TagKey.trackNumber: "1",
+                TagKey.filename: "03-Charlie.flac"
+            ]
+        )
+        let missingNumberTrack = Track(
+            tags: [
+                TagKey.trackNumber: "",
+                TagKey.filename: "01-Alpha.flac"
+            ]
+        )
+
+        let tracks = [secondTrack, firstTrack, missingNumberTrack]
+
+        #expect(tracks.sortedForTrackTableDisplay(sortMode: .number).map(\.id) == [
+            firstTrack.id,
+            secondTrack.id,
+            missingNumberTrack.id
+        ])
+        #expect(tracks.sortedForTrackTableDisplay(sortMode: .filename).map(\.id) == [
+            missingNumberTrack.id,
+            secondTrack.id,
+            firstTrack.id
+        ])
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSetTrackNumbersUsesCurrentVisibleOrderAndLockedPositions() {
+        let alpha = Track(
+            tags: [
+                TagKey.trackNumber: "7",
+                TagKey.filename: "01-Alpha.flac"
+            ],
+            externalDifferences: TrackExternalDifferences(
+                isDeleted: false,
+                fileValuesByTag: [TagKey.trackNumber: "99"],
+                hasPictureDifference: false
+            )
+        )
+        let lockedBeta = Track(
+            tags: [
+                TagKey.trackNumber: "9",
+                TagKey.filename: "02-Beta.flac"
+            ],
+            isLocked: true
+        )
+        let gamma = Track(
+            tags: [
+                TagKey.trackNumber: "3",
+                TagKey.filename: "03-Gamma.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [gamma, lockedBeta, alpha]
+        viewModel.trackTableSortMode = .filename
+
+        viewModel.setTrackNumbersToCurrentTableOrder()
+
+        #expect(viewModel.trackItems.first(where: { $0.id == alpha.id })?.tags[TagKey.trackNumber] == "1")
+        #expect(viewModel.trackItems.first(where: { $0.id == lockedBeta.id })?.tags[TagKey.trackNumber] == "9")
+        #expect(viewModel.trackItems.first(where: { $0.id == gamma.id })?.tags[TagKey.trackNumber] == "3")
+        #expect(viewModel.trackItems.first(where: { $0.id == alpha.id })?.externalDifferences == nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelSetTrackNumbersByDiscCountsVisibleValidDiscRows() {
+        let lockedDiscOne = Track(
+            tags: [
+                TagKey.trackNumber: "8",
+                TagKey.discNumber: "1",
+                TagKey.filename: "01-Locked.flac"
+            ],
+            isLocked: true
+        )
+        let editableDiscOneA = Track(
+            tags: [
+                TagKey.trackNumber: "8",
+                TagKey.discNumber: "1",
+                TagKey.filename: "02-Disc-One.flac"
+            ]
+        )
+        let invalidDisc = Track(
+            tags: [
+                TagKey.trackNumber: "8",
+                TagKey.discNumber: "Side A",
+                TagKey.filename: "03-Invalid.flac"
+            ]
+        )
+        let editableDiscTwo = Track(
+            tags: [
+                TagKey.trackNumber: "8",
+                TagKey.discNumber: "2",
+                TagKey.filename: "04-Disc-Two.flac"
+            ]
+        )
+        let editableDiscOneB = Track(
+            tags: [
+                TagKey.trackNumber: "8",
+                TagKey.discNumber: "1",
+                TagKey.filename: "05-Disc-One.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [
+            editableDiscOneB,
+            invalidDisc,
+            editableDiscTwo,
+            lockedDiscOne,
+            editableDiscOneA
+        ]
+        viewModel.trackTableSortMode = .filename
+
+        viewModel.setTrackNumbersByDiscToCurrentTableOrder()
+
+        #expect(viewModel.trackItems.first(where: { $0.id == lockedDiscOne.id })?.tags[TagKey.trackNumber] == "8")
+        #expect(viewModel.trackItems.first(where: { $0.id == editableDiscOneA.id })?.tags[TagKey.trackNumber] == "2")
+        #expect(viewModel.trackItems.first(where: { $0.id == invalidDisc.id })?.tags[TagKey.trackNumber] == "8")
+        #expect(viewModel.trackItems.first(where: { $0.id == editableDiscTwo.id })?.tags[TagKey.trackNumber] == "1")
+        #expect(viewModel.trackItems.first(where: { $0.id == editableDiscOneB.id })?.tags[TagKey.trackNumber] == "3")
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelTrackNumberingRoundTripsThroughSortModes() {
+        let firstByFilename = Track(
+            tags: [
+                TagKey.trackNumber: "3",
+                TagKey.filename: "01-First.flac"
+            ]
+        )
+        let secondByFilename = Track(
+            tags: [
+                TagKey.trackNumber: "1",
+                TagKey.filename: "02-Second.flac"
+            ]
+        )
+        let thirdByFilename = Track(
+            tags: [
+                TagKey.trackNumber: "2",
+                TagKey.filename: "03-Third.flac"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [firstByFilename, secondByFilename, thirdByFilename]
+
+        #expect(viewModel.sortedTrackItemsForTable().map(\.id) == [
+            secondByFilename.id,
+            thirdByFilename.id,
+            firstByFilename.id
+        ])
+
+        viewModel.sortTracks(by: .filename)
+        viewModel.setTrackNumbersToCurrentTableOrder()
+        viewModel.sortTracks(by: .number)
+
+        #expect(viewModel.sortedTrackItemsForTable().map(\.id) == [
+            firstByFilename.id,
+            secondByFilename.id,
+            thirdByFilename.id
+        ])
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelSetTrackTotalToCurrentCountExcludesDeletedAndLockedTracks() {
         let editableTrack = Track(
             totalTracks: "1",

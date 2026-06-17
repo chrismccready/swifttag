@@ -229,6 +229,113 @@ struct SwiftTagAppleScriptTests {
 
     @MainActor
     @Test
+    func scriptWindowTrackSortOrderUpdatesBridgeSortMode() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        var requestedSortMode: TrackTableSortMode?
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Sort Tracks",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    SwiftTagAppleScriptSessionSnapshot(tracks: [], selectedTrackIDs: [])
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() },
+                sortTracks: { sortMode in
+                    requestedSortMode = sortMode
+                }
+            )
+        )
+
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
+        #expect((scriptWindow.trackSortOrder as? NSNumber)?.uint32Value == Self.fourCharCode("tnum").uint32Value)
+
+        scriptWindow.trackSortOrder = Self.fourCharCode("tfil")
+
+        #expect(requestedSortMode == .filename)
+    }
+
+    @MainActor
+    @Test
+    func scriptTrackOrderFollowsSessionSortMode() throws {
+        SwiftTagAppleScriptController.shared.resetForTesting()
+        EditorWindowCoordinator.shared.resetForTesting()
+        defer {
+            SwiftTagAppleScriptController.shared.resetForTesting()
+            EditorWindowCoordinator.shared.resetForTesting()
+        }
+
+        let sessionID = UUID()
+        let alpha = Track(
+            tags: [TagKey.trackNumber: "2"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/01-Alpha.flac")
+        )
+        let beta = Track(
+            tags: [TagKey.trackNumber: "1"],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/02-Beta.flac")
+        )
+        var sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
+            tracks: [alpha, beta],
+            selectedTrackIDs: [],
+            sortMode: .number
+        )
+        SwiftTagAppleScriptController.shared.registerSessionBridge(
+            sessionID: sessionID,
+            bridge: SwiftTagAppleScriptSessionBridge(
+                documentSnapshot: {
+                    SwiftTagAppleScriptDocumentSnapshot(
+                        name: "Sort Tracks",
+                        modified: false,
+                        saveState: .init()
+                    )
+                },
+                sessionSnapshot: {
+                    sessionSnapshot
+                },
+                addTracks: { _ in [] },
+                selectTracks: { _ in },
+                saveDocument: { _ in .init() },
+                sortTracks: { sortMode in
+                    sessionSnapshot = SwiftTagAppleScriptSessionSnapshot(
+                        tracks: sessionSnapshot.tracks,
+                        selectedTrackIDs: sessionSnapshot.selectedTrackIDs,
+                        sortMode: sortMode
+                    )
+                }
+            )
+        )
+
+        let scriptWindow = SwiftTagScriptEditorWindow(sessionID: sessionID)
+        #expect(scriptWindow.tracks.compactMap { $0.fileURL?.lastPathComponent } == [
+            "02-Beta.flac",
+            "01-Alpha.flac"
+        ])
+
+        scriptWindow.trackSortOrder = Self.fourCharCode("tfil")
+
+        #expect(scriptWindow.tracks.compactMap { $0.fileURL?.lastPathComponent } == [
+            "01-Alpha.flac",
+            "02-Beta.flac"
+        ])
+        #expect(SwiftTagAppleScriptController.shared.indexOfTrack(trackID: alpha.id, forSessionID: sessionID) == 0)
+    }
+
+    @MainActor
+    @Test
     func applicationClassDescriptionExposesWindowsAndEditorWindows() throws {
         let classDescription = try #require(NSScriptClassDescription(for: NSApplication.self))
         let quitOnLastWindowCloseCode = Self.fourCharCode("qalw").uint32Value
@@ -261,6 +368,19 @@ struct SwiftTagAppleScriptTests {
         #expect(classDescription.type(forKey: "modified") == "boolean")
         #expect(classDescription.hasReadableProperty(forKey: "modified"))
         #expect(!classDescription.hasWritableProperty(forKey: "modified"))
+    }
+
+    @MainActor
+    @Test
+    func editorWindowClassDescriptionExposesTrackSortOrderProperty() throws {
+        let classDescription = try #require(NSScriptClassDescription(for: SwiftTagScriptEditorWindow.self))
+        let trackSortOrderCode = Self.fourCharCode("tsor").uint32Value
+
+        #expect(classDescription.key(withAppleEventCode: trackSortOrderCode) == "TrackSortOrder")
+        #expect(classDescription.appleEventCode(forKey: "TrackSortOrder") == trackSortOrderCode)
+        #expect(classDescription.type(forKey: "TrackSortOrder") == "track sort options")
+        #expect(classDescription.hasReadableProperty(forKey: "TrackSortOrder"))
+        #expect(classDescription.hasWritableProperty(forKey: "TrackSortOrder"))
     }
 
     @MainActor
@@ -378,6 +498,45 @@ struct SwiftTagAppleScriptTests {
         #expect(commandDescription.typeForArgument(withName: "WithLock") == "boolean")
         #expect(commandDescription.isOptionalArgument(withName: "WithLock"))
         #expect(commandDescription.appleEventCodeForArgument(withName: "WithLock") == Self.fourCharCode("wlok").uint32Value)
+    }
+
+    @MainActor
+    @Test
+    func sortTracksCommandDescriptionIsNotExposed() throws {
+        let commandDescription = NSScriptSuiteRegistry.shared().commandDescription(
+            withAppleEventClass: Self.fourCharCode("SwTG").uint32Value,
+            andAppleEventCode: Self.fourCharCode("sttr").uint32Value
+        )
+
+        #expect(commandDescription == nil)
+    }
+
+    @Test
+    func appleScriptTerminologyCompilesTrackNumberPropertyAndSortOptionWithoutVariableCollision() throws {
+        let applicationURL = Bundle.main.bundleURL.standardizedFileURL
+        let source = """
+            tell application "\(applicationURL.path)"
+                set track sort order of front editor window to track number order
+                set track sort order of front editor window to filename order
+            end tell
+
+            on setSwiftTagTrackNumber for filePath at editorWindow given newTrackNumber:trackNumber
+                tell application "\(applicationURL.path)"
+                    set trackRef to first track of editorWindow whose its file is POSIX file filePath
+                    tell trackRef
+                        set track number to trackNumber
+                    end tell
+                end tell
+            end setSwiftTagTrackNumber
+
+            on readSwiftTagTrackNumber from theTrack
+                tell application "\(applicationURL.path)"
+                    return track number of theTrack
+                end tell
+            end readSwiftTagTrackNumber
+            """
+
+        try Self.expectAppleScriptCompiles(source)
     }
 
     @MainActor
@@ -725,6 +884,22 @@ struct SwiftTagAppleScriptTests {
                     "SavePayloadOptions": Self.fourCharCode("lyrc")
                 ]
             )
+        }
+    }
+
+    @Test
+    func appleScriptTrackSortOptionsMapFourCharacterEnumerationCodes() throws {
+        let filenameDescriptor = NSAppleEventDescriptor(
+            enumCode: Self.fourCharCode("tfil").uint32Value
+        )
+
+        #expect(try SwiftTagAppleScriptTrackSortOption.sortMode(from: Self.fourCharCode("tnum")) == .number)
+        #expect(try SwiftTagAppleScriptTrackSortOption.sortMode(from: "track number order") == .number)
+        #expect(try SwiftTagAppleScriptTrackSortOption.sortMode(from: "filename order") == .filename)
+        #expect(try SwiftTagAppleScriptTrackSortOption.sortMode(from: filenameDescriptor) == .filename)
+
+        #expect(throws: SwiftTagAppleScriptCommandError.invalidTrackSortOptionValue("track sort order")) {
+            _ = try SwiftTagAppleScriptTrackSortOption.sortMode(from: Self.fourCharCode("nope"))
         }
     }
 
@@ -3177,6 +3352,15 @@ private extension SwiftTagAppleScriptTests {
     ) throws {
         let value = try #require(application.value(forKey: key) as? NSNumber)
         #expect(value.uint32Value == fourCharCode(code).uint32Value)
+    }
+
+    static func expectAppleScriptCompiles(_ source: String) throws {
+        let script = try #require(NSAppleScript(source: source))
+        var compileError: NSDictionary?
+        let didCompile = script.compileAndReturnError(&compileError)
+
+        #expect(didCompile)
+        #expect(compileError == nil)
     }
 
     static func expectColorRecord(

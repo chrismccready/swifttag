@@ -381,6 +381,30 @@ struct ContentView: View {
         "Set Track Total by Disc \(viewModel.totalTrackCountsByDiscMenuSuffix())"
     }
 
+    private var sortTracksMenuTitle: String {
+        viewModel.trackTableSortMode.nextSortMenuTitle
+    }
+
+    private var setTrackNumbersMenuTitle: String {
+        "Set Track Numbers"
+    }
+
+    private var setTrackNumbersByDiscMenuTitle: String {
+        "Set Track Numbers by Disc"
+    }
+
+    private var canSortTracks: Bool {
+        viewModel.canSortTracks
+    }
+
+    private var canSetTrackNumbers: Bool {
+        !isSaveOperationRunning && !viewModel.trackItems.isEmpty
+    }
+
+    private var canSetTrackNumbersByDisc: Bool {
+        canSetTrackNumbers
+    }
+
     private var canSetTrackTotal: Bool {
         !isSaveOperationRunning && viewModel.nonDeletedTrackCount > 0 && !autoUpdateTrackTotal
     }
@@ -642,6 +666,16 @@ struct ContentView: View {
             onToggleTrackLocks: toggleSelectedTrackLocks,
             lockMenuTitle: lockMenuTitle,
             canToggleTrackLocks: canToggleTrackLocks,
+            trackTableSortMode: viewModel.trackTableSortMode,
+            onSortTracks: toggleTrackTableSortMode,
+            sortTracksMenuTitle: sortTracksMenuTitle,
+            canSortTracks: canSortTracks,
+            onSetTrackNumbers: setTrackNumbersToCurrentTableOrder,
+            setTrackNumbersMenuTitle: setTrackNumbersMenuTitle,
+            canSetTrackNumbers: canSetTrackNumbers,
+            onSetTrackNumbersByDisc: setTrackNumbersByDiscToCurrentTableOrder,
+            setTrackNumbersByDiscMenuTitle: setTrackNumbersByDiscMenuTitle,
+            canSetTrackNumbersByDisc: canSetTrackNumbersByDisc,
             onSetTrackTotalToCount: setTrackTotalToCurrentCount,
             setTrackTotalMenuTitle: setTrackTotalMenuTitle,
             canSetTrackTotal: canSetTrackTotal,
@@ -1038,6 +1072,21 @@ struct ContentView: View {
                 toggleSelectedTrackLocks()
             }
             .focusedSceneValue(\.canPerformToggleSelectedTrackLocks, canToggleTrackLocks)
+            .focusedSceneValue(\.sortTracksTitle, sortTracksMenuTitle)
+            .focusedSceneValue(\.performSortTracks) {
+                toggleTrackTableSortMode()
+            }
+            .focusedSceneValue(\.canPerformSortTracks, canSortTracks)
+            .focusedSceneValue(\.setTrackNumbersTitle, setTrackNumbersMenuTitle)
+            .focusedSceneValue(\.performSetTrackNumbers) {
+                setTrackNumbersToCurrentTableOrder()
+            }
+            .focusedSceneValue(\.canPerformSetTrackNumbers, canSetTrackNumbers)
+            .focusedSceneValue(\.setTrackNumbersByDiscTitle, setTrackNumbersByDiscMenuTitle)
+            .focusedSceneValue(\.performSetTrackNumbersByDisc) {
+                setTrackNumbersByDiscToCurrentTableOrder()
+            }
+            .focusedSceneValue(\.canPerformSetTrackNumbersByDisc, canSetTrackNumbersByDisc)
             .focusedSceneValue(\.setTrackTotalTitle, setTrackTotalMenuTitle)
             .focusedSceneValue(\.performSetTrackTotal) {
                 setTrackTotalToCurrentCount()
@@ -2165,7 +2214,8 @@ struct ContentView: View {
                 sessionSnapshot: {
                     SwiftTagAppleScriptSessionSnapshot(
                         tracks: viewModel.trackItems,
-                        selectedTrackIDs: viewModel.selectedTrackIDs
+                        selectedTrackIDs: viewModel.selectedTrackIDs,
+                        sortMode: viewModel.trackTableSortMode
                     )
                 },
                 editorWindowModified: {
@@ -2191,6 +2241,9 @@ struct ContentView: View {
                 },
                 saveTracks: { request in
                     try performAppleScriptFlacSave(using: request)
+                },
+                sortTracks: { sortMode in
+                    viewModel.sortTracks(by: sortMode)
                 },
                 upsertTag: { trackID, key, value in
                     try performAppleScriptUpsertTag(key, value: value, for: trackID)
@@ -2407,6 +2460,27 @@ struct ContentView: View {
             return
         }
         viewModel.setTrackTotalToCurrentDiscCounts()
+    }
+
+    private func toggleTrackTableSortMode() {
+        guard canSortTracks else {
+            return
+        }
+        viewModel.toggleTrackTableSortMode()
+    }
+
+    private func setTrackNumbersToCurrentTableOrder() {
+        guard canSetTrackNumbers else {
+            return
+        }
+        viewModel.setTrackNumbersToCurrentTableOrder()
+    }
+
+    private func setTrackNumbersByDiscToCurrentTableOrder() {
+        guard canSetTrackNumbersByDisc else {
+            return
+        }
+        viewModel.setTrackNumbersByDiscToCurrentTableOrder()
     }
 
     private func setCompilationEnabled(_ isEnabled: Bool) {
@@ -3152,6 +3226,15 @@ extension FocusedValues {
     @Entry var performSetTrackTotal: (() -> Void)?
     @Entry var setTrackTotalTitle: String?
     @Entry var canPerformSetTrackTotal: Bool?
+    @Entry var performSetTrackNumbers: (() -> Void)?
+    @Entry var setTrackNumbersTitle: String?
+    @Entry var canPerformSetTrackNumbers: Bool?
+    @Entry var performSetTrackNumbersByDisc: (() -> Void)?
+    @Entry var setTrackNumbersByDiscTitle: String?
+    @Entry var canPerformSetTrackNumbersByDisc: Bool?
+    @Entry var performSortTracks: (() -> Void)?
+    @Entry var sortTracksTitle: String?
+    @Entry var canPerformSortTracks: Bool?
     @Entry var performSetTrackTotalByDisc: (() -> Void)?
     @Entry var setTrackTotalByDiscTitle: String?
     @Entry var canPerformSetTrackTotalByDisc: Bool?

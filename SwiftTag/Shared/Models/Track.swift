@@ -1,5 +1,28 @@
 import Foundation
 
+enum TrackTableSortMode: Equatable {
+    case number
+    case filename
+
+    var nextSortMenuTitle: String {
+        switch self {
+        case .number:
+            "Sort Tracks by Filename"
+        case .filename:
+            "Sort Tracks by Number"
+        }
+    }
+
+    var toggled: TrackTableSortMode {
+        switch self {
+        case .number:
+            .filename
+        case .filename:
+            .number
+        }
+    }
+}
+
 struct Track: Identifiable {
     let id: UUID
     var tags: [String: String]
@@ -275,26 +298,60 @@ struct Track: Identifiable {
 }
 
 extension Array where Element == Track {
-    func sortedForTrackTableDisplay() -> [Track] {
-        sorted {
-            let lhsNumber = Int($0.tags[TagKey.trackNumber] ?? "")
-            let rhsNumber = Int($1.tags[TagKey.trackNumber] ?? "")
-            switch (lhsNumber, rhsNumber) {
-            case let (lhs?, rhs?):
-                if lhs != rhs {
-                    return lhs < rhs
+    func sortedForTrackTableDisplay(sortMode: TrackTableSortMode = .number) -> [Track] {
+        enumerated()
+            .sorted { lhs, rhs in
+                let comparison = Self.trackTableComparison(lhs.element, rhs.element, sortMode: sortMode)
+                if let comparison {
+                    return comparison
                 }
-            case (_?, nil):
-                return true
-            case (nil, _?):
-                return false
-            case (nil, nil):
-                break
+                return lhs.offset < rhs.offset
             }
+            .map(\.element)
+    }
 
-            let lhsFilename = $0.displayFileName
-            let rhsFilename = $1.displayFileName
-            return lhsFilename.localizedStandardCompare(rhsFilename) == .orderedAscending
+    private static func trackTableComparison(
+        _ lhs: Track,
+        _ rhs: Track,
+        sortMode: TrackTableSortMode
+    ) -> Bool? {
+        switch sortMode {
+        case .number:
+            if let numberComparison = numericTrackNumberComparison(lhs, rhs) {
+                return numberComparison
+            }
+            return filenameComparison(lhs, rhs)
+        case .filename:
+            if let filenameComparison = filenameComparison(lhs, rhs) {
+                return filenameComparison
+            }
+            return numericTrackNumberComparison(lhs, rhs)
+        }
+    }
+
+    private static func numericTrackNumberComparison(_ lhs: Track, _ rhs: Track) -> Bool? {
+        let lhsNumber = Int(lhs.tags[TagKey.trackNumber] ?? "")
+        let rhsNumber = Int(rhs.tags[TagKey.trackNumber] ?? "")
+        switch (lhsNumber, rhsNumber) {
+        case let (lhs?, rhs?):
+            return lhs == rhs ? nil : lhs < rhs
+        case (_?, nil):
+            return true
+        case (nil, _?):
+            return false
+        case (nil, nil):
+            return nil
+        }
+    }
+
+    private static func filenameComparison(_ lhs: Track, _ rhs: Track) -> Bool? {
+        switch lhs.displayFileName.localizedStandardCompare(rhs.displayFileName) {
+        case .orderedAscending:
+            return true
+        case .orderedDescending:
+            return false
+        case .orderedSame:
+            return nil
         }
     }
 }

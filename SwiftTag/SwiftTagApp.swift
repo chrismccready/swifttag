@@ -206,11 +206,17 @@ private struct AppCommands: Commands {
     @FocusedValue(\.performSaveSwiftTagDocument) private var performSaveSwiftTagDocument
     @FocusedValue(\.performSaveSwiftTagDocumentAs) private var performSaveSwiftTagDocumentAs
     @FocusedValue(\.performToggleSelectedTrackLocks) private var performToggleSelectedTrackLocks
+    @FocusedValue(\.performSortTracks) private var performSortTracks
+    @FocusedValue(\.performSetTrackNumbers) private var performSetTrackNumbers
+    @FocusedValue(\.performSetTrackNumbersByDisc) private var performSetTrackNumbersByDisc
     @FocusedValue(\.performSetTrackTotal) private var performSetTrackTotal
     @FocusedValue(\.performSetTrackTotalByDisc) private var performSetTrackTotalByDisc
     @FocusedValue(\.performReloadSelectedTracks) private var performReloadSelectedTracks
     @FocusedValue(\.performRemoveSelectedTracks) private var performRemoveSelectedTracks
     @FocusedValue(\.toggleSelectedTrackLocksTitle) private var toggleSelectedTrackLocksTitle
+    @FocusedValue(\.sortTracksTitle) private var sortTracksTitle
+    @FocusedValue(\.setTrackNumbersTitle) private var setTrackNumbersTitle
+    @FocusedValue(\.setTrackNumbersByDiscTitle) private var setTrackNumbersByDiscTitle
     @FocusedValue(\.setTrackTotalTitle) private var setTrackTotalTitle
     @FocusedValue(\.setTrackTotalByDiscTitle) private var setTrackTotalByDiscTitle
     @FocusedValue(\.reloadSelectedTracksTitle) private var reloadSelectedTracksTitle
@@ -221,6 +227,9 @@ private struct AppCommands: Commands {
     @FocusedValue(\.canPerformSaveSwiftTagDocument) private var canPerformSaveSwiftTagDocument
     @FocusedValue(\.canPerformSaveSwiftTagDocumentAs) private var canPerformSaveSwiftTagDocumentAs
     @FocusedValue(\.canPerformToggleSelectedTrackLocks) private var canPerformToggleSelectedTrackLocks
+    @FocusedValue(\.canPerformSortTracks) private var canPerformSortTracks
+    @FocusedValue(\.canPerformSetTrackNumbers) private var canPerformSetTrackNumbers
+    @FocusedValue(\.canPerformSetTrackNumbersByDisc) private var canPerformSetTrackNumbersByDisc
     @FocusedValue(\.canPerformSetTrackTotal) private var canPerformSetTrackTotal
     @FocusedValue(\.canPerformSetTrackTotalByDisc) private var canPerformSetTrackTotalByDisc
     @FocusedValue(\.canPerformReloadSelectedTracks) private var canPerformReloadSelectedTracks
@@ -290,15 +299,39 @@ private struct AppCommands: Commands {
             .disabled(!(canPerformToggleSelectedTrackLocks ?? false))
 
             Divider()
+            
+            Button(sortTracksTitle ?? "Sort Tracks by Filename") {
+                performSortTracks?()
+            }
+            .keyboardShortcut(";", modifiers: [.command])
+            .disabled(!(canPerformSortTracks ?? false))
 
+            Divider()
+
+            Button(setTrackNumbersTitle ?? "Set Track Numbers") {
+                performSetTrackNumbers?()
+            }
+            .keyboardShortcut("j", modifiers: [.command])
+            .disabled(!(canPerformSetTrackNumbers ?? false))
+
+            Button(setTrackNumbersByDiscTitle ?? "Set Track Numbers by Disc") {
+                performSetTrackNumbersByDisc?()
+            }
+            .keyboardShortcut("j", modifiers: [.option, .command])
+            .disabled(!(canPerformSetTrackNumbersByDisc ?? false))
+
+            Divider()
+            
             Button(setTrackTotalTitle ?? "Set Track Total (0)") {
                 performSetTrackTotal?()
             }
+            .keyboardShortcut("k", modifiers: [.command])
             .disabled(!(canPerformSetTrackTotal ?? false))
 
             Button(setTrackTotalByDiscTitle ?? "Set Track Total by Disc (0)") {
                 performSetTrackTotalByDisc?()
             }
+            .keyboardShortcut("k", modifiers: [.option, .command])
             .disabled(!(canPerformSetTrackTotalByDisc ?? false))
 
             Divider()

@@ -42,7 +42,7 @@
                     often shared across tracks and visually noteworthy, particularly for multi-track 
                     selection edits. Other album-centric features include:
                     <ul>
-                        <li><strong>File</strong> &gt; <strong>Set Track Total</strong> and <strong>Set Track Total by Disc</strong> menu commands.</li>
+                        <li><strong>File</strong> &gt; <strong>Set Track Numbers</strong>, <strong>Set Track Numbers by Disc</strong>, <strong>Set Track Total</strong>, and <strong>Set Track Total by Disc</strong> menu commands.</li>
                         <li><a href="settings.html#tags-track-total-compilation"><strong>Auto update Track Total</strong></a> setting to manage total track counts.</li>
                         <li><a href="settings.html#tags-track-total-compilation"><strong>Auto update Compilation</strong></a> setting to manage compilation status.</li>
                         <li><a href="settings.html#tags-picture-management"><strong>Save Front Cover to all Tracks</strong></a> setting to manage cover art presence.</li>
@@ -57,9 +57,17 @@
                 <p>
                     The table shows <a href="status-and-diffs.html">status</a>, track number, title, 
                     optional duration, filename, and optional fingerprint (FLAC MD5). Edit <strong>Title</strong> 
-                    directly in the table.  Context menu commands can set track total, set track total by disc, toggle selected track
+                    directly in the table. Context menu commands can sort tracks by filename or track number,
+                    set track numbers, set track numbers by disc, set track total, set track total by disc,
+                    toggle selected track
                     <a href="adding-flac-files.html#read-only">locks</a>, reload selected tracks, remove 
                     selected tracks, and show or hide optional columns.
+                </p>
+                <p>
+                    Track sort mode is per editor window. Number mode sorts by numeric
+                    <code>TRACKNUMBER</code> and then filename. Filename mode sorts by filename and
+                    then numeric <code>TRACKNUMBER</code>. The active sort mode controls table display,
+                    whole-table track-number commands, and AppleScript track ordering.
                 </p>
             </section>
 
@@ -71,6 +79,13 @@
                     <strong>Genre</strong>, <strong>Artist</strong>, <strong>Composer</strong>,
                     <strong>Location</strong>, <strong>Date</strong>, and <strong>Description</strong>.
                     Number fields accept positive integer-style input.
+                </p>
+                <p>
+                    <strong>Set Track Numbers</strong> writes 1-based <code>TRACKNUMBER</code> values
+                    using current visible table order. <strong>Set Track Numbers by Disc</strong> writes
+                    1-based per-disc <code>TRACKNUMBER</code> values for tracks with valid positive
+                    <code>DISCNUMBER</code> values. Locked tracks keep existing values but still occupy
+                    their visible position, and invalid or missing disc numbers are left unchanged.
                 </p>
                 <p>
                     <strong>Set Track Total</strong> writes the current non-deleted track count into

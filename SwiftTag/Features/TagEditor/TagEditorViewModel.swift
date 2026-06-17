@@ -257,6 +257,7 @@ final class TagEditorViewModel {
     var miscTagRows: [MiscTagRow] = []
     var selectedMiscTagRowIDs: Set<MiscTagRow.ID> = []
     var originalMiscTagKeyByRowID: [MiscTagRow.ID: String] = [:]
+    var trackTableSortMode: TrackTableSortMode = .number
     var trackItems: [Track] {
         didSet {
             guard oldValue.map(\.id) != trackItems.map(\.id) else {
@@ -375,6 +376,26 @@ final class TagEditorViewModel {
 
     var nonDeletedTrackCount: Int {
         trackItems.count(where: { !$0.isDeletedInTable })
+    }
+
+    var canSortTracks: Bool {
+        !trackItems.isEmpty
+    }
+
+    func sortedTrackItemsForTable() -> [Track] {
+        trackItems.sortedForTrackTableDisplay(sortMode: trackTableSortMode)
+    }
+
+    func orderedTrackIDsForCurrentSortMode() -> [UUID] {
+        sortedTrackItemsForTable().map(\.id)
+    }
+
+    func sortTracks(by sortMode: TrackTableSortMode) {
+        trackTableSortMode = sortMode
+    }
+
+    func toggleTrackTableSortMode() {
+        sortTracks(by: trackTableSortMode.toggled)
     }
 
     var autoTrackTotalInputSnapshot: AutoTrackTotalInputSnapshot {
@@ -1417,6 +1438,39 @@ final class TagEditorViewModel {
                 trackItems[index].totalTracks = normalizedTotal
             }
             clearExternallyModifiedDifference(forTrackAt: index, keys: totalTrackTagKeys)
+        }
+    }
+
+    func setTrackNumbersToCurrentTableOrder() {
+        let orderedTrackIDs = orderedTrackIDsForCurrentSortMode()
+        for (offset, trackID) in orderedTrackIDs.enumerated() {
+            guard let index = trackItems.firstIndex(where: { $0.id == trackID }),
+                  !trackItems[index].isLocked else {
+                continue
+            }
+
+            setTrackNumber(String(offset + 1), forTrackAt: index)
+        }
+    }
+
+    func setTrackNumbersByDiscToCurrentTableOrder() {
+        let orderedTrackIDs = orderedTrackIDsForCurrentSortMode()
+        var countsByDisc: [Int: Int] = [:]
+
+        for trackID in orderedTrackIDs {
+            guard let index = trackItems.firstIndex(where: { $0.id == trackID }),
+                  let discNumber = validDiscNumber(for: trackItems[index]) else {
+                continue
+            }
+
+            let trackNumber = countsByDisc[discNumber, default: 0] + 1
+            countsByDisc[discNumber] = trackNumber
+
+            guard !trackItems[index].isLocked else {
+                continue
+            }
+
+            setTrackNumber(String(trackNumber), forTrackAt: index)
         }
     }
 
@@ -3496,6 +3550,20 @@ final class TagEditorViewModel {
         }
 
         trackItems[index].externalDifferences = differences.hasDifferences ? differences : nil
+    }
+
+    private func setTrackNumber(_ value: String, forTrackAt index: Int) {
+        guard trackItems.indices.contains(index) else {
+            return
+        }
+
+        let normalizedValue = normalizedTagValue(value)
+        guard trackItems[index].tags[TagKey.trackNumber] != normalizedValue else {
+            return
+        }
+
+        trackItems[index].setTagValue(normalizedValue, for: TagKey.trackNumber)
+        clearExternallyModifiedDifference(forTrackAt: index, keys: [TagKey.trackNumber, "TRACK"])
     }
 
     private func updateTrackFileURL(_ fileURL: URL, at index: Int) {

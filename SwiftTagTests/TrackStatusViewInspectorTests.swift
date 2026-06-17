@@ -743,6 +743,69 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
+    func tagEditorTrackFileViewReceivesSortAndTrackNumberControls() throws {
+        let track = makeTrack(id: UUID(), title: "Track A", filename: "track-a.flac")
+        var didSort = false
+        var didSetTrackNumbers = false
+        var didSetTrackNumbersByDisc = false
+
+        let sut = TagEditorTrackFileView(
+            trackItems: [track],
+            selection: .constant(Set([track.id])),
+            showsFingerprintColumn: .constant(false),
+            showsDurationColumn: .constant(false),
+            titleBindingForTrack: { _ in .constant("Track A") },
+            statusPresentationForTrack: { _ in nil },
+            isTrackLocked: { _ in false },
+            hasDeletedFile: { _ in false },
+            hasTrackToTrackTitleDifference: { _ in false },
+            hasTrackToFileTitleDifference: { _ in false },
+            hasExternallyModifiedTitleDifference: { _ in false },
+            onToggleLockSelection: {},
+            lockMenuTitle: "Lock Selected Track",
+            canToggleLockSelection: true,
+            sortMode: .filename,
+            onSortTracks: { didSort = true },
+            sortTracksMenuTitle: "Sort Tracks by Number",
+            canSortTracks: true,
+            onSetTrackNumbers: { didSetTrackNumbers = true },
+            setTrackNumbersMenuTitle: "Set Track Numbers",
+            canSetTrackNumbers: true,
+            onSetTrackNumbersByDisc: { didSetTrackNumbersByDisc = true },
+            setTrackNumbersByDiscMenuTitle: "Set Track Numbers by Disc",
+            canSetTrackNumbersByDisc: true,
+            onSetTrackTotalToCount: {},
+            setTrackTotalMenuTitle: "Set Track Total (1)",
+            canSetTrackTotal: true,
+            onAddFlacFiles: {},
+            onAddReadOnlyFlacFiles: {},
+            canAddFlacFiles: true,
+            onReloadSelectedTracks: {},
+            reloadSelectedTracksTitle: "Reload Selected Track",
+            canReloadSelectedTracks: false,
+            onRemoveSelectedTracks: {},
+            removeSelectedTracksTitle: "Remove Selected Track",
+            canRemoveSelectedTracks: false,
+            onDropFlacFiles: { _ in false }
+        )
+
+        let actualView = try sut.inspect().find(TagEditorTrackFileView.self).actualView()
+        #expect(actualView.sortMode == .filename)
+        #expect(actualView.sortTracksMenuTitle == "Sort Tracks by Number")
+        #expect(actualView.canSortTracks)
+        #expect(actualView.canSetTrackNumbers)
+        #expect(actualView.canSetTrackNumbersByDisc)
+
+        actualView.onSortTracks()
+        actualView.onSetTrackNumbers()
+        actualView.onSetTrackNumbersByDisc()
+
+        #expect(didSort)
+        #expect(didSetTrackNumbers)
+        #expect(didSetTrackNumbersByDisc)
+    }
+
+    @Test
     func tagEditorTrackFileViewSourceDeclaresFingerprintToggleContextMenuAction() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -883,7 +946,7 @@ struct TrackStatusViewInspectorTests {
     }
 
     @Test
-    func swiftTagAppSourceDeclaresSetTrackTotalByDiscAfterSetTrackTotal() throws {
+    func swiftTagAppSourceDeclaresTrackSortAndNumberCommandOrder() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -891,15 +954,26 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("SwiftTagApp.swift")
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
+        let lockRange = try #require(source.range(of: "Button(toggleSelectedTrackLocksTitle"))
+        let sortRange = try #require(source.range(of: "Button(sortTracksTitle"))
+        let setTrackNumbersRange = try #require(source.range(of: "Button(setTrackNumbersTitle"))
+        let setTrackNumbersByDiscRange = try #require(source.range(of: "Button(setTrackNumbersByDiscTitle"))
         let setTrackTotalRange = try #require(source.range(of: "Button(setTrackTotalTitle"))
         let byDiscRange = try #require(source.range(of: "Button(setTrackTotalByDiscTitle"))
+        #expect(lockRange.lowerBound < sortRange.lowerBound)
+        #expect(sortRange.lowerBound < setTrackNumbersRange.lowerBound)
+        #expect(setTrackNumbersRange.lowerBound < setTrackNumbersByDiscRange.lowerBound)
+        #expect(setTrackNumbersByDiscRange.lowerBound < setTrackTotalRange.lowerBound)
         #expect(setTrackTotalRange.lowerBound < byDiscRange.lowerBound)
+        #expect(source.contains("performSortTracks?()"))
+        #expect(source.contains("performSetTrackNumbers?()"))
+        #expect(source.contains("performSetTrackNumbersByDisc?()"))
         #expect(source.contains("performSetTrackTotalByDisc?()"))
         #expect(source.contains("canPerformSetTrackTotalByDisc"))
     }
 
     @Test
-    func tagEditorTrackFileViewSourceDeclaresSetTrackTotalByDiscContextMenu() throws {
+    func tagEditorTrackFileViewSourceDeclaresTrackSortAndNumberContextMenuOrder() throws {
         let sourceURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -909,9 +983,20 @@ struct TrackStatusViewInspectorTests {
             .appendingPathComponent("TagEditorTrackFileView.swift")
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
+        let lockRange = try #require(source.range(of: "Button(lockMenuTitle)"))
+        let sortRange = try #require(source.range(of: "Button(sortTracksMenuTitle)"))
+        let setTrackNumbersRange = try #require(source.range(of: "Button(setTrackNumbersMenuTitle)"))
+        let setTrackNumbersByDiscRange = try #require(source.range(of: "Button(setTrackNumbersByDiscMenuTitle)"))
         let setTrackTotalRange = try #require(source.range(of: "Button(setTrackTotalMenuTitle)"))
         let byDiscRange = try #require(source.range(of: "Button(setTrackTotalByDiscMenuTitle)"))
+        #expect(lockRange.lowerBound < sortRange.lowerBound)
+        #expect(sortRange.lowerBound < setTrackNumbersRange.lowerBound)
+        #expect(setTrackNumbersRange.lowerBound < setTrackNumbersByDiscRange.lowerBound)
+        #expect(setTrackNumbersByDiscRange.lowerBound < setTrackTotalRange.lowerBound)
         #expect(setTrackTotalRange.lowerBound < byDiscRange.lowerBound)
+        #expect(source.contains("onSortTracks()"))
+        #expect(source.contains("onSetTrackNumbers()"))
+        #expect(source.contains("onSetTrackNumbersByDisc()"))
         #expect(source.contains("onSetTrackTotalByDisc()"))
     }
 

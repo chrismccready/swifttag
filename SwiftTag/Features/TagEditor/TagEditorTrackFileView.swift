@@ -18,6 +18,16 @@ struct TagEditorTrackFileView: View {
     let onToggleLockSelection: () -> Void
     let lockMenuTitle: String
     let canToggleLockSelection: Bool
+    var sortMode: TrackTableSortMode = .number
+    var onSortTracks: () -> Void = {}
+    var sortTracksMenuTitle: String = TrackTableSortMode.number.nextSortMenuTitle
+    var canSortTracks: Bool = false
+    var onSetTrackNumbers: () -> Void = {}
+    var setTrackNumbersMenuTitle: String = "Set Track Numbers"
+    var canSetTrackNumbers: Bool = false
+    var onSetTrackNumbersByDisc: () -> Void = {}
+    var setTrackNumbersByDiscMenuTitle: String = "Set Track Numbers by Disc"
+    var canSetTrackNumbersByDisc: Bool = false
     let onSetTrackTotalToCount: () -> Void
     let setTrackTotalMenuTitle: String
     let canSetTrackTotal: Bool
@@ -36,7 +46,7 @@ struct TagEditorTrackFileView: View {
     let onDropFlacFiles: ([NSItemProvider]) -> Bool
 
     private var sortedTrackItems: [Track] {
-        trackItems.sortedForTrackTableDisplay()
+        trackItems.sortedForTrackTableDisplay(sortMode: sortMode)
     }
 
     private var fingerprintColumnMenuTitle: String {
@@ -138,7 +148,26 @@ struct TagEditorTrackFileView: View {
             .disabled(!canToggleLockSelection)
 
             Divider()
+            
+            Button(sortTracksMenuTitle) {
+                onSortTracks()
+            }
+            .disabled(!canSortTracks)
 
+            Divider()
+
+            Button(setTrackNumbersMenuTitle) {
+                onSetTrackNumbers()
+            }
+            .disabled(!canSetTrackNumbers)
+
+            Button(setTrackNumbersByDiscMenuTitle) {
+                onSetTrackNumbersByDisc()
+            }
+            .disabled(!canSetTrackNumbersByDisc)
+
+            Divider()
+            
             Button(setTrackTotalMenuTitle) {
                 onSetTrackTotalToCount()
             }

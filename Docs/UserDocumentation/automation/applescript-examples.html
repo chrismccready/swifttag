@@ -36,11 +36,15 @@ end tell</code></pre>
         set title of selectedTrack to "New Title"
     end tell
 end tell</code></pre>
-            <p>
-                Caveats for full examples: <code>selected tracks</code> is a list, file filters use
-                <code>whose its file is POSIX file ...</code>, empty tag values differ from deleted
-                tags, and picture data import is most reliable through Base64-backed data.
-            </p>
+            <div class="code-label">AppleScript</div>
+            <pre><code>tell application "SwiftTag"
+    set track sort order of front editor window to filename order
+    set firstVisibleTrack to track 1 of front editor window
+end tell</code></pre>
+            <aside class="callout note">
+                Editor window <a href="applescript-windows.html#editor-window-properties"><code>track sort order</code></a> changes
+                track index order.
+            </aside>
         </article>
     </main>
 
