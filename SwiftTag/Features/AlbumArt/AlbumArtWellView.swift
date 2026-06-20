@@ -3,7 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct AlbumArtWellView: View {
-    let image: Image
+    let imageSource: AlbumArtImageSource
     let dimension: CGFloat
     var interpolation: Image.Interpolation = .low
     let onDropProviders: ([NSItemProvider]) -> Bool
@@ -54,11 +54,11 @@ struct AlbumArtWellView: View {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .strokeBorder(.secondary, lineWidth: 1)
 
-            image
-                .interpolation(interpolation)
-                .resizable()
-                .scaledToFit()
-                .padding(4)
+            AlbumArtWellImageView(
+                imageSource: imageSource,
+                interpolation: interpolation
+            )
+            .equatable()
 
             if showsExternalDifferenceOverlay {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -82,5 +82,23 @@ struct AlbumArtWellView: View {
             }
             _ = onPasteProviders?(providers)
         }
+    }
+}
+
+private struct AlbumArtWellImageView: View, Equatable {
+    let imageSource: AlbumArtImageSource
+    let interpolation: Image.Interpolation
+
+    var body: some View {
+        imageSource.image
+            .interpolation(interpolation)
+            .resizable()
+            .scaledToFit()
+            .padding(4)
+    }
+
+    static func == (lhs: AlbumArtWellImageView, rhs: AlbumArtWellImageView) -> Bool {
+        lhs.imageSource == rhs.imageSource &&
+            String(describing: lhs.interpolation) == String(describing: rhs.interpolation)
     }
 }

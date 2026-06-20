@@ -146,7 +146,7 @@ struct TrackStatusViewInspectorTests {
             hasAlbumArtistExternalDifference: false,
             hasAlbumArtistExternallyModifiedDifference: false,
             showsPictureDifferenceOverlay: false,
-            frontCoverImage: Image(systemName: "photo"),
+            frontCoverImageSource: AlbumArtImageSource(systemName: "photo"),
             onFrontCoverDrop: { _ in false },
             onFrontCoverTap: {}
         )
@@ -181,7 +181,7 @@ struct TrackStatusViewInspectorTests {
             hasAlbumArtistExternalDifference: false,
             hasAlbumArtistExternallyModifiedDifference: false,
             showsPictureDifferenceOverlay: false,
-            frontCoverImage: Image(systemName: "photo"),
+            frontCoverImageSource: AlbumArtImageSource(systemName: "photo"),
             onFrontCoverDrop: { _ in false },
             onFrontCoverTap: {}
         )
@@ -1293,7 +1293,7 @@ struct TrackStatusViewInspectorTests {
             hasAlbumArtistExternalDifference: false,
             hasAlbumArtistExternallyModifiedDifference: false,
             showsPictureDifferenceOverlay: showsPictureDifferenceOverlay,
-            frontCoverImage: Image(systemName: "photo"),
+            frontCoverImageSource: AlbumArtImageSource(systemName: "photo"),
             onFrontCoverDrop: { _ in false },
             onFrontCoverTap: onFrontCoverTap
         )
@@ -1336,7 +1336,7 @@ struct TrackStatusViewInspectorTests {
             exportDocument: nil,
             exportContentType: .png,
             exportDefaultFileName: "cover",
-            imageForSlot: { _ in Image(systemName: "photo") },
+            imageSourceForSlot: { _ in AlbumArtImageSource(systemName: "photo") },
             hasImageForSlot: { _ in true },
             onOpenPicker: onOpenPicker,
             onPrepareExport: { _ in },

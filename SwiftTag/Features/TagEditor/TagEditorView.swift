@@ -15,7 +15,7 @@ struct TagEditorView: View {
     let hasAlbumArtistExternalDifference: Bool
     let hasAlbumArtistExternallyModifiedDifference: Bool
     let showsPictureDifferenceOverlay: Bool
-    let frontCoverImage: Image
+    let frontCoverImageSource: AlbumArtImageSource
     let onFrontCoverDrop: ([NSItemProvider]) -> Bool
     let onFrontCoverTap: () -> Void
 
@@ -159,7 +159,7 @@ struct TagEditorView: View {
                 hasAlbumArtistExternalDifference: hasAlbumArtistExternalDifference,
                 hasAlbumArtistExternallyModifiedDifference: hasAlbumArtistExternallyModifiedDifference,
                 showsPictureDifferenceOverlay: showsPictureDifferenceOverlay,
-                frontCoverImage: frontCoverImage,
+                frontCoverImageSource: frontCoverImageSource,
                 onFrontCoverDrop: onFrontCoverDrop,
                 onFrontCoverTap: onFrontCoverTap
             )

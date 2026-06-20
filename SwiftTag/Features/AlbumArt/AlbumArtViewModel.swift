@@ -124,6 +124,21 @@ final class AlbumArtViewModel {
     }
 
     func configureTrackContext(trackItems: [Track], selectedTrackIDs: Set<UUID>, albumArtTypes: [AlbumArtType]) {
+        updateTrackContextState(trackItems: trackItems, selectedTrackIDs: selectedTrackIDs, albumArtTypes: albumArtTypes)
+        mergePoolAndReferences(from: trackItems, albumArtTypes: albumArtTypes)
+        finishTrackContextUpdate(albumArtTypes: albumArtTypes)
+    }
+
+    func updateTrackSelectionContext(trackItems: [Track], selectedTrackIDs: Set<UUID>, albumArtTypes: [AlbumArtType]) {
+        updateTrackContextState(trackItems: trackItems, selectedTrackIDs: selectedTrackIDs, albumArtTypes: albumArtTypes)
+        finishTrackContextUpdate(albumArtTypes: albumArtTypes)
+    }
+
+    private func updateTrackContextState(
+        trackItems: [Track],
+        selectedTrackIDs: Set<UUID>,
+        albumArtTypes: [AlbumArtType]
+    ) {
         configuredSlots = albumArtTypes.map(\.slot)
         self.allTrackIDs = trackItems.map(\.id)
         self.selectedTrackIDs = selectedTrackIDs
@@ -132,8 +147,9 @@ final class AlbumArtViewModel {
             .filter { allTrackIDs.contains($0.key) }
         self.unpinnedReferenceKeysByTrackID = unpinnedReferenceKeysByTrackID
             .filter { allTrackIDs.contains($0.key) }
+    }
 
-        mergePoolAndReferences(from: trackItems, albumArtTypes: albumArtTypes)
+    private func finishTrackContextUpdate(albumArtTypes: [AlbumArtType]) {
         for slot in configuredSlots where typePictureScopeBySlot[slot] == nil {
             typePictureScopeBySlot[slot] = .selectedTrackPictures
         }
@@ -145,11 +161,15 @@ final class AlbumArtViewModel {
     }
 
     func imageForAlbumArtSlot(_ albumArtSlot: AlbumArtSlot) -> Image {
+        imageSourceForAlbumArtSlot(albumArtSlot).image
+    }
+
+    func imageSourceForAlbumArtSlot(_ albumArtSlot: AlbumArtSlot) -> AlbumArtImageSource {
         if let asset = albumArtImages[albumArtSlot] {
-            return Image(decorative: asset.cgImage, scale: 1, orientation: .up)
+            return asset.imageSource
         }
 
-        return Image(systemName: "photo.badge.plus")
+        return AlbumArtImageSource(systemName: "photo.badge.plus")
     }
 
     func hasImage(for albumArtSlot: AlbumArtSlot) -> Bool {
@@ -744,6 +764,7 @@ final class AlbumArtViewModel {
             }
 
             albumArtImages[mappedAlbumArtType.slot] = AlbumArtImageAsset(
+                id: Self.poolKey(for: data),
                 image: displayImage.image,
                 cgImage: displayImage.cgImage,
                 type: albumArtType(for: data),
@@ -956,6 +977,7 @@ final class AlbumArtViewModel {
             }
 
             updated[slot] = AlbumArtImageAsset(
+                id: poolItem.id.uuidString,
                 image: poolItem.image,
                 cgImage: poolItem.cgImage,
                 type: utType(forMimeType: reference.mimeType),
@@ -1266,12 +1288,20 @@ final class AlbumArtViewModel {
         slotByType: [Int: AlbumArtSlot]
     ) -> [AlbumArtTrackReference] {
         records.compactMap { record in
-            guard let slot = slotByType[record.type],
-                  let displayImage = AlbumArtDisplayImageFactory.displayImage(from: record.data) else {
+            guard let slot = slotByType[record.type] else {
                 return nil
             }
 
-            let poolID = upsertPoolItem(displayImage: displayImage, data: record.data)
+            let poolID: UUID
+            if let existingPoolID = existingPoolItemID(for: record.data) {
+                poolID = existingPoolID
+            } else {
+                guard let displayImage = AlbumArtDisplayImageFactory.displayImage(from: record.data) else {
+                    return nil
+                }
+                poolID = upsertPoolItem(displayImage: displayImage, data: record.data)
+            }
+
             return AlbumArtTrackReference(
                 poolItemID: poolID,
                 slot: slot,

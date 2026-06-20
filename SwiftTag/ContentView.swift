@@ -731,7 +731,7 @@ struct ContentView: View {
             hasAlbumArtistExternalDifference: hasAlbumArtistExternalDifference,
             hasAlbumArtistExternallyModifiedDifference: hasAlbumArtistExternallyModifiedDifference,
             showsPictureDifferenceOverlay: hasPictureDifference,
-            frontCoverImage: albumArtViewModel.imageForAlbumArtSlot(.frontCover),
+            frontCoverImageSource: albumArtViewModel.imageSourceForAlbumArtSlot(.frontCover),
             onFrontCoverDrop: { providers in
                 albumArtViewModel.handleAlbumArtDrop(
                     providers,
@@ -965,7 +965,7 @@ struct ContentView: View {
             exportDocument: albumArtViewModel.albumArtExportDocument,
             exportContentType: albumArtViewModel.albumArtExportContentType,
             exportDefaultFileName: albumArtViewModel.albumArtExportDefaultFileName,
-            imageForSlot: albumArtViewModel.imageForAlbumArtSlot(_:),
+            imageSourceForSlot: albumArtViewModel.imageSourceForAlbumArtSlot(_:),
             hasImageForSlot: albumArtViewModel.hasImage(for:),
             onOpenPicker: albumArtViewModel.openAlbumArtFilePicker(for:),
             onPrepareExport: { slot in
@@ -1131,7 +1131,7 @@ struct ContentView: View {
             }
             .onChange(of: selectedTrackIDs) { _, _ in
                 reloadMiscTagRowsFromSelection()
-                syncAlbumArtContext()
+                syncAlbumArtSelectionContext()
             }
             .onChange(of: trackMonitoringReferenceKeys) { _, _ in
                 syncAlbumArtContext()
@@ -2985,6 +2985,19 @@ struct ContentView: View {
 
     private func syncAlbumArtContext() {
         refreshAlbumArtContextFromTrackItems()
+        syncTrackPictureRecordsFromAlbumArt()
+    }
+
+    private func syncAlbumArtSelectionContext() {
+        albumArtViewModel.configurePinSettings(
+            saveFrontCoverToAllTracks: saveFrontCoverToAllTracks,
+            saveAllPicturesToAllTracks: saveAllPicturesToAllTracks
+        )
+        albumArtViewModel.updateTrackSelectionContext(
+            trackItems: viewModel.trackItems,
+            selectedTrackIDs: selectedTrackIDs,
+            albumArtTypes: albumArtTypes
+        )
         syncTrackPictureRecordsFromAlbumArt()
     }
 

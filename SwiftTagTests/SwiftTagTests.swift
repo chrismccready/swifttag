@@ -2075,7 +2075,51 @@ struct SwiftTagTests {
                 record.height == expectedSpecifications.height &&
                 record.depth == expectedSpecifications.depth &&
                 record.colors == expectedSpecifications.colors
-        })
+            })
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelSelectionContextKeepsCachedPictureState() throws {
+        let frontData = try Self.jpegData(color: .systemOrange)
+        let backData = try Self.jpegData(color: .systemPurple)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover),
+            AlbumArtType(flacPictureType: 4, flacDescription: "Cover (back)", navigationLinkName: "Back Cover", slot: .backCover)
+        ]
+        let trackA = Track(
+            tags: [TagKey.title: "A"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/jpeg", description: "Front A", data: frontData)
+            ]
+        )
+        let trackB = Track(
+            tags: [TagKey.title: "B"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 4, mimeType: "image/jpeg", description: "Back B", data: backData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [trackA, trackB], selectedTrackIDs: [trackA.id], albumArtTypes: albumArtTypes)
+        let initialPicturePool = viewModel.picturePool
+        let initialPicturePoolOrder = viewModel.picturePoolOrder
+        let initialReferencesByTrackID = viewModel.trackReferencesByTrackID
+        let initialTrackARecords = viewModel.flacPictures(for: trackA.id, albumArtTypes: albumArtTypes)
+        let initialTrackBRecords = viewModel.flacPictures(for: trackB.id, albumArtTypes: albumArtTypes)
+
+        viewModel.updateTrackSelectionContext(
+            trackItems: [trackA, trackB],
+            selectedTrackIDs: [trackB.id],
+            albumArtTypes: albumArtTypes
+        )
+
+        #expect(viewModel.selectedTrackIDs == Set([trackB.id]))
+        #expect(viewModel.picturePool == initialPicturePool)
+        #expect(viewModel.picturePoolOrder == initialPicturePoolOrder)
+        #expect(viewModel.trackReferencesByTrackID == initialReferencesByTrackID)
+        #expect(viewModel.flacPictures(for: trackA.id, albumArtTypes: albumArtTypes) == initialTrackARecords)
+        #expect(viewModel.flacPictures(for: trackB.id, albumArtTypes: albumArtTypes) == initialTrackBRecords)
     }
 
     @Test

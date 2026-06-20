@@ -85,10 +85,45 @@ struct AlbumArtType: Identifiable {
 }
 
 struct AlbumArtImageAsset {
+    let id: String
     let image: NSImage
     let cgImage: CGImage
     let type: UTType
     let data: Data
+
+    var imageSource: AlbumArtImageSource {
+        AlbumArtImageSource(id: id, cgImage: cgImage)
+    }
+}
+
+struct AlbumArtImageSource: Equatable {
+    let id: String
+    let cgImage: CGImage?
+    let systemName: String?
+
+    init(id: String, cgImage: CGImage) {
+        self.id = id
+        self.cgImage = cgImage
+        self.systemName = nil
+    }
+
+    init(systemName: String) {
+        self.id = "system:\(systemName)"
+        self.cgImage = nil
+        self.systemName = systemName
+    }
+
+    var image: Image {
+        if let cgImage {
+            return Image(decorative: cgImage, scale: 1, orientation: .up)
+        }
+
+        return Image(systemName: systemName ?? "photo.badge.plus")
+    }
+
+    static func == (lhs: AlbumArtImageSource, rhs: AlbumArtImageSource) -> Bool {
+        lhs.id == rhs.id
+    }
 }
 
 struct AlbumArtPoolItem: Identifiable, Equatable {

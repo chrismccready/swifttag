@@ -16,7 +16,7 @@ struct TagEditorAlbumView: View {
     let hasAlbumArtistExternalDifference: Bool
     let hasAlbumArtistExternallyModifiedDifference: Bool
     let showsPictureDifferenceOverlay: Bool
-    let frontCoverImage: Image
+    let frontCoverImageSource: AlbumArtImageSource
     let onFrontCoverDrop: ([NSItemProvider]) -> Bool
     let onFrontCoverTap: () -> Void
 
@@ -66,7 +66,7 @@ struct TagEditorAlbumView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             AlbumArtWellView(
-                image: frontCoverImage,
+                imageSource: frontCoverImageSource,
                 dimension: 60,
                 onDropProviders: onFrontCoverDrop,
                 isEnabled: isArtworkEditable && !isSaveOperationRunning,

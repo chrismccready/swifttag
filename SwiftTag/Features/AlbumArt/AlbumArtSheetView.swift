@@ -16,7 +16,7 @@ struct AlbumArtSheetView: View {
     let exportContentType: UTType
     let exportDefaultFileName: String
 
-    let imageForSlot: (AlbumArtSlot) -> Image
+    let imageSourceForSlot: (AlbumArtSlot) -> AlbumArtImageSource
     let hasImageForSlot: (AlbumArtSlot) -> Bool
     let onOpenPicker: (AlbumArtSlot) -> Void
     let onPrepareExport: (AlbumArtSlot) -> Void
@@ -269,7 +269,7 @@ struct AlbumArtSheetView: View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .bottomLeading) {
                 AlbumArtWellView(
-                    image: imageForSlot(albumArtSlot),
+                    imageSource: imageSourceForSlot(albumArtSlot),
                     dimension: 480,
                     interpolation: .medium,
                     onDropProviders: { providers in
