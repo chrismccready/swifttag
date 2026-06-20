@@ -398,6 +398,16 @@ private struct AppCommands: Commands {
                 SwiftTagHelpDocumentation.open()
             }
             .keyboardShortcut("?", modifiers: [.command])
+            
+            Divider()
+
+            Button("Release Notes") {
+                SwiftTagHelpMenuLinks.open(SwiftTagHelpMenuLinks.releaseNotesURL)
+            }
+
+            Button("SwiftTag project on GitHub") {
+                SwiftTagHelpMenuLinks.open(SwiftTagHelpMenuLinks.projectURL)
+            }
         }
 
         CommandGroup(replacing: .saveItem) {

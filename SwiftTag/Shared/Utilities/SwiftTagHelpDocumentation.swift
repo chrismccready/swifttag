@@ -27,3 +27,15 @@ enum SwiftTagHelpDocumentation {
         NSWorkspace.shared.open(documentationURL)
     }
 }
+
+enum SwiftTagHelpMenuLinks {
+    static let releaseNotesURL = URL(
+        string: "https://github.com/chrismccready/swifttag/releases/tag/v1.0.3"
+    )!
+    static let projectURL = URL(string: "https://github.com/chrismccready/swifttag")!
+
+    @MainActor
+    static func open(_ url: URL) {
+        NSWorkspace.shared.open(url)
+    }
+}
