@@ -4003,8 +4003,6 @@ final class TagEditorViewModel {
     }
 
     private func applyLegacySharedMetadataIfNeeded() {
-        let normalizedTrackCount = String(trackItems.count)
-
         for index in trackItems.indices {
             if !hasTagStorage(in: trackItems[index], keys: [TagKey.album]),
                trackItems[index].album.isEmpty,
@@ -4016,11 +4014,6 @@ final class TagEditorViewModel {
                trackItems[index].albumArtist.isEmpty,
                !pendingAlbumArtistValue.isEmpty {
                 trackItems[index].albumArtist = pendingAlbumArtistValue
-            }
-
-            if !hasTagStorage(in: trackItems[index], keys: totalTrackTagKeys),
-               trackItems[index].totalTracks.isEmpty {
-                trackItems[index].totalTracks = normalizedTrackCount
             }
         }
     }

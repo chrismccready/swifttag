@@ -91,9 +91,10 @@ struct SaveStatusView: View {
 
                 readOnlyField(
                     String(format: "%2d", presentation.currentTrackIndex),
-                    textAlignment: .center,
+                    textAlignment: .trailing,
                     width: 30,
-                    monospaced: true
+                    monospaced: true,
+                    trailingPadding: 2
                 )
 
                 readOnlyField(
@@ -104,12 +105,13 @@ struct SaveStatusView: View {
 
                 readOnlyField(
                     String(format: "%2d", presentation.totalTrackCount),
-                    textAlignment: .center,
+                    textAlignment: .leading,
                     width: 30,
                     monospaced: true,
+                    leadingPadding: 2
                 )
             }
-            .padding(EdgeInsets(top: 0, leading: 20, bottom: 4, trailing:4))
+            .padding(EdgeInsets(top: 0, leading: 12, bottom: 4, trailing:12))
         }
         .frame(width: 512, height: 512)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -134,7 +136,7 @@ struct SaveStatusView: View {
             .padding(.trailing, trailingPadding)
             .padding(.vertical, 6)
             .frame(maxWidth: width == nil ? .infinity : nil, alignment: frameAlignment(for: textAlignment))
-            .frame(width: width, alignment: .leading)
+            .frame(width: width)
             .fixedSize(horizontal: fixedSize, vertical: false)
     }
 

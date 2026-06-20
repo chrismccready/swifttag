@@ -1004,6 +1004,42 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func tagEditorViewModelLeavesMissingTotalTracksBlankWhenTracksLoad() {
+        let firstTrack = Track(
+            tags: [
+                TagKey.title: "First",
+                TagKey.filename: "first.flac"
+            ]
+        )
+        let secondTrack = Track(
+            tags: [
+                TagKey.title: "Second",
+                TagKey.filename: "second.flac"
+            ]
+        )
+        let taggedTrack = Track(
+            tags: [
+                TagKey.title: "Tagged",
+                TagKey.filename: "tagged.flac",
+                "TRACKTOTAL": "07"
+            ]
+        )
+        let viewModel = TagEditorViewModel()
+
+        viewModel.trackItems = [firstTrack, secondTrack, taggedTrack]
+
+        let loadedFirstTrack = viewModel.trackItems.first { $0.id == firstTrack.id }
+        let loadedSecondTrack = viewModel.trackItems.first { $0.id == secondTrack.id }
+        let loadedTaggedTrack = viewModel.trackItems.first { $0.id == taggedTrack.id }
+        #expect(loadedFirstTrack?.totalTracks == "")
+        #expect(loadedSecondTrack?.totalTracks == "")
+        #expect(loadedFirstTrack?.tags["TOTALTRACKS"] == nil)
+        #expect(loadedSecondTrack?.tags["TOTALTRACKS"] == nil)
+        #expect(loadedTaggedTrack?.totalTracks == "7")
+    }
+
+    @Test
+    @MainActor
     func tagEditorViewModelTrackTotalDiscCountsSkipInvalidAndDeletedDiscNumbers() {
         let editableDiscOne = Track(
             totalTracks: "9",
