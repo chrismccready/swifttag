@@ -52,6 +52,12 @@ struct TagEditorView: View {
     var onSetDiscTotal: () -> Void = {}
     var setDiscTotalMenuTitle: String = "Set Disc Total (0)"
     var canSetDiscTotal: Bool = false
+    var onRenameTrackFiles: () -> Void = {}
+    var canRenameTrackFiles: Bool = false
+    var onRenameSelectedTrackFiles: () -> Void = {}
+    var canRenameSelectedTrackFiles: Bool = false
+    var onShowRenameTrackFilesConfig: () -> Void = {}
+    var canShowRenameTrackFilesConfig: Bool = false
     let onAddFlacFiles: () -> Void
     let onAddReadOnlyFlacFiles: () -> Void
     let canAddFlacFiles: Bool
@@ -192,6 +198,12 @@ struct TagEditorView: View {
                 onSetDiscTotal: onSetDiscTotal,
                 setDiscTotalMenuTitle: setDiscTotalMenuTitle,
                 canSetDiscTotal: canSetDiscTotal,
+                onRenameTrackFiles: onRenameTrackFiles,
+                canRenameTrackFiles: canRenameTrackFiles,
+                onRenameSelectedTrackFiles: onRenameSelectedTrackFiles,
+                canRenameSelectedTrackFiles: canRenameSelectedTrackFiles,
+                onShowRenameTrackFilesConfig: onShowRenameTrackFilesConfig,
+                canShowRenameTrackFilesConfig: canShowRenameTrackFilesConfig,
                 onAddFlacFiles: onAddFlacFiles,
                 onAddReadOnlyFlacFiles: onAddReadOnlyFlacFiles,
                 canAddFlacFiles: canAddFlacFiles,

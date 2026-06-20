@@ -248,6 +248,291 @@ struct SwiftTagTests {
     }
 
     @Test
+    func trackFileRenameSettingsDefaultsMatchPlan() {
+        #expect(TrackFileRenameSettingsDefaults.format == "|TRACKNUMBER| |TITLE|")
+        #expect(TrackFileRenameSettingsDefaults.invalidReplacementText == .hyphen)
+        #expect(TrackFileRenameSettingsDefaults.spaceReplacement == .none)
+        #expect(!TrackFileRenameSettingsDefaults.strict)
+    }
+
+    @Test
+    func trackFileRenameFormatterNormalizesAliasesAndZeroPadsNumbers() throws {
+        let track = Track(
+            totalTracks: "12",
+            tags: [
+                TagKey.trackNumber: "3",
+                TagKey.discNumber: "1",
+                TagKey.title: "First/Song",
+                "TOTALDISCS": "2"
+            ],
+            sourceFileURL: URL(fileURLWithPath: "/tmp/original.flac")
+        )
+        let knownTagKeys = TrackFileRenameFormatter.knownTagKeys(from: [track])
+
+        let normalizedFormat = TrackFileRenameFormatter.normalizedFormat(
+            "|zp track number| |number| |track total| |disc count| |TITLE|",
+            knownTagKeys: knownTagKeys
+        )
+
+        #expect(normalizedFormat == "|zpTRACKNUMBER| |TRACKNUMBER| |TRACKTOTAL| |TOTALDISCS| |TITLE|")
+
+        let fileName = try TrackFileRenameFormatter.renderedFileName(
+            for: track,
+            totalDiscsValue: "2",
+            configuration: TrackFileRenameConfiguration(
+                format: "|zp track number| |TITLE|",
+                invalidReplacementText: .hyphen,
+                spaceReplacement: .none,
+                strict: false
+            ),
+            knownTagKeys: knownTagKeys
+        )
+
+        #expect(fileName == "03 First-Song.flac")
+    }
+
+    @Test
+    func trackFileRenameFormatterDefersTextFieldNormalizationUntilClosingDelimiter() {
+        let knownTagKeys = TrackFileRenameFormatter.knownTagKeys(from: [])
+
+        #expect(
+            TrackFileRenameFormatter.normalizedFormatAfterTextFieldEdit(
+                previousFormat: "",
+                newFormat: "|",
+                knownTagKeys: knownTagKeys
+            ) == "|"
+        )
+        #expect(
+            TrackFileRenameFormatter.normalizedFormatAfterTextFieldEdit(
+                previousFormat: "|track",
+                newFormat: "|trackn",
+                knownTagKeys: knownTagKeys
+            ) == "|trackn"
+        )
+        #expect(
+            TrackFileRenameFormatter.normalizedFormatAfterTextFieldEdit(
+                previousFormat: "|tracknumber",
+                newFormat: "|tracknumber|",
+                knownTagKeys: knownTagKeys
+            ) == "|TRACKNUMBER|"
+        )
+        #expect(
+            TrackFileRenameFormatter.normalizedFormatAfterTextFieldEdit(
+                previousFormat: "",
+                newFormat: "|title|",
+                knownTagKeys: knownTagKeys
+            ) == "|TITLE|"
+        )
+        #expect(
+            TrackFileRenameFormatter.normalizedFormatAfterTextFieldEdit(
+                previousFormat: "|tit|",
+                newFormat: "|titl|",
+                knownTagKeys: knownTagKeys
+            ) == "|titl|"
+        )
+    }
+
+    @Test
+    func trackFileRenameFormatterReportsSelectionAfterClosedPlaceholderEdit() {
+        let knownTagKeys = TrackFileRenameFormatter.knownTagKeys(from: [])
+
+        let expandedAliasResult = TrackFileRenameFormatter.normalizedFormatTextFieldEdit(
+            previousFormat: "Album |number suffix",
+            newFormat: "Album |number| suffix",
+            knownTagKeys: knownTagKeys
+        )
+
+        #expect(expandedAliasResult.format == "Album |TRACKNUMBER| suffix")
+        #expect(expandedAliasResult.insertionPointOffset == "Album |TRACKNUMBER|".count)
+
+        let appendedPlaceholderResult = TrackFileRenameFormatter.normalizedFormatTextFieldEdit(
+            previousFormat: "Album |tracknumber",
+            newFormat: "Album |tracknumber|",
+            knownTagKeys: knownTagKeys
+        )
+
+        #expect(appendedPlaceholderResult.format == "Album |TRACKNUMBER|")
+        #expect(appendedPlaceholderResult.insertionPointOffset == appendedPlaceholderResult.format.count)
+
+        let partialEditResult = TrackFileRenameFormatter.normalizedFormatTextFieldEdit(
+            previousFormat: "Album |tit",
+            newFormat: "Album |titl",
+            knownTagKeys: knownTagKeys
+        )
+
+        #expect(partialEditResult.format == "Album |titl")
+        #expect(partialEditResult.insertionPointOffset == nil)
+    }
+
+    @Test
+    func trackFileRenameFormatterAppliesStrictAndNonStrictFilenameSanitizing() {
+        #expect(
+            TrackFileRenameFormatter.sanitizedFilenameStem(
+                "A/B:C?.",
+                invalidReplacement: "-",
+                spaceReplacement: .none,
+                strict: false
+            ) == "A-B-C?."
+        )
+        #expect(
+            TrackFileRenameFormatter.sanitizedFilenameStem(
+                "A/B:C?.",
+                invalidReplacement: "-",
+                spaceReplacement: .none,
+                strict: true
+            ) == "A-B-C-."
+        )
+        #expect(
+            TrackFileRenameFormatter.sanitizedFilenameStem(
+                "A/B C",
+                invalidReplacement: "_",
+                spaceReplacement: .period,
+                strict: false
+            ) == "A_B.C"
+        )
+        #expect(
+            TrackFileRenameFormatter.sanitizedFilenameStem(
+                "A/B C.",
+                invalidReplacement: " ",
+                spaceReplacement: .underscore,
+                strict: true
+            ) == "A_B_C."
+        )
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelRenamesSelectedTrackFileAndUpdatesExportReference() throws {
+        let originalURL = try Self.tempFixtureCopyURL(name: "rename-selected-original.flac")
+        let otherURL = try Self.tempFixtureCopyURL(name: "rename-selected-other.flac")
+        let selectedTrack = Track(
+            tags: [
+                TagKey.trackNumber: "1",
+                TagKey.title: "Renamed Song",
+                TagKey.filename: originalURL.lastPathComponent
+            ],
+            sourceFileURL: originalURL
+        )
+        let otherTrack = Track(
+            tags: [
+                TagKey.trackNumber: "2",
+                TagKey.title: "Other Song",
+                TagKey.filename: otherURL.lastPathComponent
+            ],
+            sourceFileURL: otherURL
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [selectedTrack, otherTrack]
+        viewModel.selectedTrackIDs = [selectedTrack.id]
+
+        let renamedReferences = try viewModel.renameTrackFiles(
+            scope: .selectedTracks,
+            configuration: TrackFileRenameConfiguration(
+                format: "|zpTRACKNUMBER| |TITLE|",
+                invalidReplacementText: .hyphen,
+                spaceReplacement: .none,
+                strict: true
+            )
+        )
+
+        let renamedURL = originalURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("01 Renamed Song.flac")
+        let renamedTrack = try #require(viewModel.trackItems.first { $0.id == selectedTrack.id })
+        let untouchedTrack = try #require(viewModel.trackItems.first { $0.id == otherTrack.id })
+        let exportTrack = try #require(viewModel.swiftTagDocumentExportTracks().first { $0.sourceFileURL == renamedURL })
+
+        #expect(renamedReferences.map(\.filePath) == [renamedURL.path])
+        #expect(FileManager.default.fileExists(atPath: renamedURL.path))
+        #expect(!FileManager.default.fileExists(atPath: originalURL.path))
+        #expect(FileManager.default.fileExists(atPath: otherURL.path))
+        #expect(renamedTrack.sourceFileURL?.path == renamedURL.path)
+        #expect(renamedTrack.tags[TagKey.filename] == renamedURL.lastPathComponent)
+        #expect(renamedTrack.securityScopedBookmarkData != nil)
+        #expect(untouchedTrack.sourceFileURL?.path == otherURL.path)
+        #expect(exportTrack.securityScopedBookmarkData != nil)
+    }
+
+    @Test
+    @MainActor
+    func tagEditorViewModelRenameConflictAbortsWholeBatch() throws {
+        let sourceURL = try Self.tempFixtureCopyURL(name: "rename-conflict-source.flac")
+        let existingDestinationURL = sourceURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("02 Taken.flac")
+        try FileManager.default.copyItem(at: Self.fixtureURL, to: existingDestinationURL)
+
+        let sourceTrack = Track(
+            tags: [
+                TagKey.trackNumber: "2",
+                TagKey.title: "Taken",
+                TagKey.filename: sourceURL.lastPathComponent
+            ],
+            sourceFileURL: sourceURL
+        )
+        let existingTrack = Track(
+            tags: [
+                TagKey.trackNumber: "3",
+                TagKey.title: "Existing",
+                TagKey.filename: existingDestinationURL.lastPathComponent
+            ],
+            sourceFileURL: existingDestinationURL
+        )
+        let viewModel = TagEditorViewModel()
+        viewModel.trackItems = [sourceTrack, existingTrack]
+
+        #expect(throws: TrackFileRenameError.self) {
+            try viewModel.renameTrackFiles(
+                scope: .allTracks,
+                configuration: TrackFileRenameConfiguration(
+                    format: "|zpTRACKNUMBER| |TITLE|",
+                    invalidReplacementText: .hyphen,
+                    spaceReplacement: .none,
+                    strict: true
+                )
+            )
+        }
+
+        #expect(FileManager.default.fileExists(atPath: sourceURL.path))
+        #expect(FileManager.default.fileExists(atPath: existingDestinationURL.path))
+        #expect(viewModel.trackItems[0].sourceFileURL?.path == sourceURL.path)
+        #expect(viewModel.trackItems[1].sourceFileURL?.path == existingDestinationURL.path)
+    }
+
+    @Test
+    func tagEditorViewModelRenameUsesCoordinatedSandboxMove() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("Features")
+            .appendingPathComponent("TagEditor")
+            .appendingPathComponent("TagEditorViewModel.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        let directMoveRange = try #require(source.range(of: "try coordinatedMoveTrackFile("))
+        let sandboxFallbackRange = try #require(source.range(of: "moveTrackFileUsingSandboxFolderAccess("))
+        let coordinatorRange = try #require(source.range(of: "NSFileCoordinator(filePresenter: nil)"))
+        let coordinateRange = try #require(source.range(of: "coordinator.coordinate("))
+        let willMoveRange = try #require(
+            source.range(of: "coordinator.item(at: coordinatedSourceURL, willMoveTo: coordinatedDestinationURL)")
+        )
+        let moveItemRange = try #require(
+            source.range(of: "try fileManager.moveItem(at: coordinatedSourceURL, to: coordinatedDestinationURL)")
+        )
+        let didMoveRange = try #require(
+            source.range(of: "coordinator.item(at: coordinatedSourceURL, didMoveTo: coordinatedDestinationURL)")
+        )
+
+        #expect(directMoveRange.lowerBound < sandboxFallbackRange.lowerBound)
+        #expect(coordinatorRange.lowerBound < willMoveRange.lowerBound)
+        #expect(coordinateRange.lowerBound < willMoveRange.lowerBound)
+        #expect(willMoveRange.lowerBound < moveItemRange.lowerBound)
+        #expect(moveItemRange.lowerBound < didMoveRange.lowerBound)
+        #expect(source.contains("SandboxPathBookmarkAccess.withAccess"))
+    }
+
+    @Test
     func unsavedChangesChoiceResolverBypassesPromptWithoutUnsavedEdits() {
         let configuration = UnsavedChangesChoiceResolver.resolve(
             trigger: .closeWindow,

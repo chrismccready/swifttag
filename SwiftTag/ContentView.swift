@@ -93,9 +93,13 @@ struct ContentView: View {
     @State private var isSaveNewSwiftTagDocumentPromptPresented: Bool = false
     @State private var isDestructiveAlertPresented: Bool = false
     @State private var isAlbumArtSheetPresented: Bool = false
+    @State private var isTrackFileRenameSheetPresented: Bool = false
+    @State private var isTrackFileRenameErrorPresented: Bool = false
+    @State private var trackFileRenameFormatSelection: TextSelection?
     @State private var askToSaveNewSwiftTagDocumentOk: Bool = true
     @State private var importErrorMessage: String = ""
     @State private var saveErrorMessage: String = ""
+    @State private var trackFileRenameErrorMessage: String = ""
     @State private var destructiveAlertContext: DestructiveAlertContext?
     @State private var pendingDestructiveAction: (() -> Void)?
     @State private var viewModel: TagEditorViewModel = .init()
@@ -125,6 +129,10 @@ struct ContentView: View {
     @AppStorage(SaveSettingsKey.applyCompilationToAllTracks) private var applyCompilationToAllTracks: Bool = SaveSettingsDefaults.applyCompilationToAllTracks
     @AppStorage(SaveSettingsKey.saveFrontCoverToAllTracks) private var saveFrontCoverToAllTracks: Bool = SaveSettingsDefaults.saveFrontCoverToAllTracks
     @AppStorage(SaveSettingsKey.saveAllPicturesToAllTracks) private var saveAllPicturesToAllTracks: Bool = SaveSettingsDefaults.saveAllPicturesToAllTracks
+    @AppStorage(TrackFileRenameSettingsKey.format) private var trackFileRenameFormat: String = TrackFileRenameSettingsDefaults.format
+    @AppStorage(TrackFileRenameSettingsKey.invalidReplacementText) private var trackFileRenameInvalidReplacementTextRawValue: String = TrackFileRenameSettingsDefaults.invalidReplacementText.rawValue
+    @AppStorage(TrackFileRenameSettingsKey.spaceReplacement) private var trackFileRenameSpaceReplacementRawValue: String = TrackFileRenameSettingsDefaults.spaceReplacement.rawValue
+    @AppStorage(TrackFileRenameSettingsKey.strict) private var trackFileRenameStrict: Bool = TrackFileRenameSettingsDefaults.strict
     @AppStorage(FeedbackSettingsKey.themePreference) private var themePreferenceRawValue: String = FeedbackSettingsDefaults.themePreference.rawValue
     @AppStorage(FeedbackSettingsKey.showTrackFingerprintColumn) private var showTrackFingerprintColumn: Bool = FeedbackSettingsDefaults.showTrackFingerprintColumn
     @AppStorage(FeedbackSettingsKey.showTrackDurationColumn) private var showTrackDurationColumn: Bool = FeedbackSettingsDefaults.showTrackDurationColumn
@@ -212,6 +220,13 @@ struct ContentView: View {
         Binding(
             get: { viewModel.selectedMiscTagRowIDs },
             set: { viewModel.selectedMiscTagRowIDs = $0 }
+        )
+    }
+
+    private var mainTrackFileRenameErrorPresentedBinding: Binding<Bool> {
+        Binding(
+            get: { isTrackFileRenameErrorPresented && !isTrackFileRenameSheetPresented },
+            set: { isTrackFileRenameErrorPresented = $0 }
         )
     }
 
@@ -468,6 +483,72 @@ struct ContentView: View {
         !isSaveOperationRunning && !selectedTrackIDs.isEmpty
     }
 
+    private var trackFileRenameInvalidReplacementText: TrackFileRenameInvalidReplacementText {
+        TrackFileRenameInvalidReplacementText(rawValue: trackFileRenameInvalidReplacementTextRawValue) ??
+            TrackFileRenameSettingsDefaults.invalidReplacementText
+    }
+
+    private var trackFileRenameSpaceReplacement: TrackFileRenameSpaceReplacement {
+        TrackFileRenameSpaceReplacement(rawValue: trackFileRenameSpaceReplacementRawValue) ??
+            TrackFileRenameSettingsDefaults.spaceReplacement
+    }
+
+    private var trackFileRenameConfiguration: TrackFileRenameConfiguration {
+        TrackFileRenameConfiguration(
+            format: trackFileRenameFormat,
+            invalidReplacementText: trackFileRenameInvalidReplacementText,
+            spaceReplacement: trackFileRenameSpaceReplacement,
+            strict: trackFileRenameStrict
+        )
+    }
+
+    private var trackFileRenameFormatBinding: Binding<String> {
+        Binding(
+            get: { trackFileRenameFormat },
+            set: { newValue in
+                let editResult = viewModel.normalizedTrackFileRenameFormatAfterTextFieldEdit(
+                    previousFormat: trackFileRenameFormat,
+                    newFormat: newValue
+                )
+                trackFileRenameFormat = editResult.format
+                setTrackFileRenameFormatSelection(
+                    insertionPointOffset: editResult.insertionPointOffset,
+                    in: editResult.format
+                )
+            }
+        )
+    }
+
+    private var trackFileRenameInvalidReplacementTextBinding: Binding<TrackFileRenameInvalidReplacementText> {
+        Binding(
+            get: { trackFileRenameInvalidReplacementText },
+            set: { trackFileRenameInvalidReplacementTextRawValue = $0.rawValue }
+        )
+    }
+
+    private var trackFileRenameSpaceReplacementBinding: Binding<TrackFileRenameSpaceReplacement> {
+        Binding(
+            get: { trackFileRenameSpaceReplacement },
+            set: { trackFileRenameSpaceReplacementRawValue = $0.rawValue }
+        )
+    }
+
+    private var canRenameAllTrackFiles: Bool {
+        !isSaveOperationRunning && viewModel.canRenameTrackFiles(scope: .allTracks)
+    }
+
+    private var canRenameSelectedTrackFiles: Bool {
+        !isSaveOperationRunning && viewModel.canRenameTrackFiles(scope: .selectedTracks)
+    }
+
+    private var canShowTrackFileRenameConfig: Bool {
+        !isSaveOperationRunning
+    }
+
+    private var trackFileRenameExample: String {
+        viewModel.trackFileRenameExample(configuration: trackFileRenameConfiguration)
+    }
+
     private var hasTrackNumberExternalDifference: Bool {
         viewModel.hasTrackToFileDifference(forAnyOf: [TagKey.trackNumber])
     }
@@ -697,6 +778,16 @@ struct ContentView: View {
             onSetDiscTotal: setDiscTotalToCurrentDiscCount,
             setDiscTotalMenuTitle: setDiscTotalMenuTitle,
             canSetDiscTotal: canSetDiscTotal,
+            onRenameTrackFiles: {
+                performTrackFileRename(scope: .allTracks)
+            },
+            canRenameTrackFiles: canRenameAllTrackFiles,
+            onRenameSelectedTrackFiles: {
+                performTrackFileRename(scope: .selectedTracks)
+            },
+            canRenameSelectedTrackFiles: canRenameSelectedTrackFiles,
+            onShowRenameTrackFilesConfig: showTrackFileRenameConfig,
+            canShowRenameTrackFilesConfig: canShowTrackFileRenameConfig,
             onAddFlacFiles: showAddWritableImporter,
             onAddReadOnlyFlacFiles: showAddReadOnlyImporter,
             canAddFlacFiles: canAddFlacFiles,
@@ -992,6 +1083,37 @@ struct ContentView: View {
         )
     }
 
+    private var trackFileRenameSheetView: some View {
+        TrackFileRenameSheetView(
+            renameExample: trackFileRenameExample,
+            renameFormat: trackFileRenameFormatBinding,
+            renameFormatSelection: $trackFileRenameFormatSelection,
+            invalidReplacementText: trackFileRenameInvalidReplacementTextBinding,
+            strict: $trackFileRenameStrict,
+            spaceReplacement: trackFileRenameSpaceReplacementBinding,
+            canRenameSelectedTracks: canRenameSelectedTrackFiles,
+            canRenameAllTracks: canRenameAllTrackFiles,
+            onCancel: {
+                isTrackFileRenameSheetPresented = false
+            },
+            onRenameSelectedTracks: {
+                if performTrackFileRename(scope: .selectedTracks) {
+                    isTrackFileRenameSheetPresented = false
+                }
+            },
+            onRenameAllTracks: {
+                if performTrackFileRename(scope: .allTracks) {
+                    isTrackFileRenameSheetPresented = false
+                }
+            }
+        )
+        .alert("Track File Rename Error", isPresented: $isTrackFileRenameErrorPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(trackFileRenameErrorMessage)
+        }
+    }
+
     private var observedContent: some View {
         contentStack
             .onAppear {
@@ -1055,7 +1177,7 @@ struct ContentView: View {
             }
     }
 
-    private var commandFocusedContent: some View {
+    private var importAndSaveFocusedContent: some View {
         observedContent
             .focusedSceneValue(\.showFlacImporter) {
                 showWritableImporter()
@@ -1089,6 +1211,10 @@ struct ContentView: View {
             .focusedSceneValue(\.performSaveSwiftTagDocumentAs) {
                 saveSwiftTagDocumentAs()
             }
+    }
+
+    private var trackNumberFocusedContent: some View {
+        importAndSaveFocusedContent
             .focusedSceneValue(\.toggleSelectedTrackLocksTitle, lockMenuTitle)
             .focusedSceneValue(\.performToggleSelectedTrackLocks) {
                 toggleSelectedTrackLocks()
@@ -1124,6 +1250,22 @@ struct ContentView: View {
                 setDiscTotalToCurrentDiscCount()
             }
             .focusedSceneValue(\.canPerformSetDiscTotal, canSetDiscTotal)
+    }
+
+    private var trackFileActionFocusedContent: some View {
+        trackNumberFocusedContent
+            .focusedSceneValue(\.performRenameTrackFiles) {
+                performTrackFileRename(scope: .allTracks)
+            }
+            .focusedSceneValue(\.canPerformRenameTrackFiles, canRenameAllTrackFiles)
+            .focusedSceneValue(\.performRenameSelectedTrackFiles) {
+                performTrackFileRename(scope: .selectedTracks)
+            }
+            .focusedSceneValue(\.canPerformRenameSelectedTrackFiles, canRenameSelectedTrackFiles)
+            .focusedSceneValue(\.showTrackFileRenameConfig) {
+                showTrackFileRenameConfig()
+            }
+            .focusedSceneValue(\.canShowTrackFileRenameConfig, canShowTrackFileRenameConfig)
             .focusedSceneValue(\.reloadSelectedTracksTitle, reloadSelectedTracksTitle)
             .focusedSceneValue(\.performReloadSelectedTracks) {
                 reloadSelectedTracks()
@@ -1134,6 +1276,10 @@ struct ContentView: View {
                 removeSelectedTracks()
             }
             .focusedSceneValue(\.canPerformRemoveSelectedTracks, canRemoveSelectedTracks)
+    }
+
+    private var commandFocusedContent: some View {
+        trackFileActionFocusedContent
             .focusedSceneValue(\.canPerformDefaultSave, canSave(payload: saveSettingsSnapshot.payload))
             .focusedSceneValue(\.canPerformSaveTagsOnly, canSave(payload: .writeTags))
             .focusedSceneValue(\.canPerformSavePicturesOnly, canSave(payload: .writePictures))
@@ -1166,6 +1312,9 @@ struct ContentView: View {
             .sheet(isPresented: $isAlbumArtSheetPresented) {
                 albumArtSheetView
             }
+            .sheet(isPresented: $isTrackFileRenameSheetPresented) {
+                trackFileRenameSheetView
+            }
             .alert("FLAC Import Error", isPresented: $isImportErrorPresented) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -1175,6 +1324,11 @@ struct ContentView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(saveErrorMessage)
+            }
+            .alert("Track File Rename Error", isPresented: mainTrackFileRenameErrorPresentedBinding) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(trackFileRenameErrorMessage)
             }
             .alert("Save New SwiftTag Document?", isPresented: $isSaveNewSwiftTagDocumentPromptPresented) {
                 Button("Cancel", role: .cancel) {}
@@ -1994,6 +2148,72 @@ struct ContentView: View {
         let description = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         saveErrorMessage = "FLAC changes were saved, but the SwiftTag document could not be saved.\n\n\(description)"
         isSaveErrorPresented = true
+    }
+
+    private func presentTrackFileRenameError(_ error: Error) {
+        trackFileRenameErrorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        isTrackFileRenameErrorPresented = true
+    }
+
+    private func showTrackFileRenameConfig() {
+        guard canShowTrackFileRenameConfig else {
+            return
+        }
+
+        trackFileRenameFormat = viewModel.normalizedTrackFileRenameFormat(trackFileRenameFormat)
+        trackFileRenameFormatSelection = nil
+        isTrackFileRenameSheetPresented = true
+    }
+
+    private func setTrackFileRenameFormatSelection(
+        insertionPointOffset: Int?,
+        in format: String
+    ) {
+        guard let insertionPointOffset,
+              let insertionPoint = format.index(
+                  format.startIndex,
+                  offsetBy: insertionPointOffset,
+                  limitedBy: format.endIndex
+              ) else {
+            return
+        }
+
+        trackFileRenameFormatSelection = TextSelection(insertionPoint: insertionPoint)
+    }
+
+    @discardableResult
+    private func performTrackFileRename(scope: TrackFileRenameScope) -> Bool {
+        guard !isSaveOperationRunning else {
+            return false
+        }
+        guard viewModel.canRenameTrackFiles(scope: scope) else {
+            presentTrackFileRenameError(TrackFileRenameError.noTracksToRename)
+            return false
+        }
+
+        let normalizedFormat = viewModel.normalizedTrackFileRenameFormat(trackFileRenameFormat)
+        trackFileRenameFormat = normalizedFormat
+        let configuration = TrackFileRenameConfiguration(
+            format: normalizedFormat,
+            invalidReplacementText: trackFileRenameInvalidReplacementText,
+            spaceReplacement: trackFileRenameSpaceReplacement,
+            strict: trackFileRenameStrict
+        )
+
+        isSaveOperationRunning = true
+        defer {
+            isSaveOperationRunning = false
+        }
+
+        do {
+            _ = try viewModel.renameTrackFiles(scope: scope, configuration: configuration)
+            refreshTrackMonitoring()
+            registerEditorSession()
+            return true
+        } catch {
+            presentTrackFileRenameError(error)
+            return false
+        }
     }
 
     private func promptForSwiftTagDocumentDestination() -> URL? {
@@ -3285,6 +3505,12 @@ extension FocusedValues {
     @Entry var performSetDiscTotal: (() -> Void)?
     @Entry var setDiscTotalTitle: String?
     @Entry var canPerformSetDiscTotal: Bool?
+    @Entry var performRenameTrackFiles: (() -> Void)?
+    @Entry var canPerformRenameTrackFiles: Bool?
+    @Entry var performRenameSelectedTrackFiles: (() -> Void)?
+    @Entry var canPerformRenameSelectedTrackFiles: Bool?
+    @Entry var showTrackFileRenameConfig: (() -> Void)?
+    @Entry var canShowTrackFileRenameConfig: Bool?
     @Entry var performReloadSelectedTracks: (() -> Void)?
     @Entry var reloadSelectedTracksTitle: String?
     @Entry var canPerformReloadSelectedTracks: Bool?

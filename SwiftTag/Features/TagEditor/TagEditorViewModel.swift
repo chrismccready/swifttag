@@ -257,6 +257,12 @@ final class TagEditorViewModel {
         let refreshedBookmarkData: Data?
     }
 
+    private struct PreparedTrackFileRename {
+        let index: Int
+        let sourceURL: URL
+        let destinationURL: URL
+    }
+
     private struct ImportedFlacTrackResult {
         let track: Track
         let picturesByType: [Int: Data]
@@ -404,6 +410,87 @@ final class TagEditorViewModel {
 
     var canSortTracks: Bool {
         !trackItems.isEmpty
+    }
+
+    func normalizedTrackFileRenameFormat(_ format: String) -> String {
+        TrackFileRenameFormatter.normalizedFormat(
+            format,
+            knownTagKeys: TrackFileRenameFormatter.knownTagKeys(from: trackItems)
+        )
+    }
+
+    func normalizedTrackFileRenameFormatAfterTextFieldEdit(
+        previousFormat: String,
+        newFormat: String
+    ) -> TrackFileRenameFormatEditResult {
+        TrackFileRenameFormatter.normalizedFormatTextFieldEdit(
+            previousFormat: previousFormat,
+            newFormat: newFormat,
+            knownTagKeys: TrackFileRenameFormatter.knownTagKeys(from: trackItems)
+        )
+    }
+
+    func trackFileRenameExample(configuration: TrackFileRenameConfiguration) -> String {
+        let exampleTrack = trackItems.first { selectedTrackIDs.contains($0.id) } ?? trackItems.first
+        let totalDiscsValue = exampleTrack.map(currentTotalDiscsValue(for:)) ?? ""
+        return TrackFileRenameFormatter.renderedExample(
+            for: exampleTrack,
+            totalDiscsValue: totalDiscsValue,
+            configuration: configuration,
+            knownTagKeys: TrackFileRenameFormatter.knownTagKeys(from: trackItems)
+        )
+    }
+
+    func canRenameTrackFiles(scope: TrackFileRenameScope) -> Bool {
+        !renameTrackIndices(for: scope).isEmpty
+    }
+
+    @discardableResult
+    func renameTrackFiles(
+        scope: TrackFileRenameScope,
+        configuration: TrackFileRenameConfiguration,
+        fileManager: FileManager = .default
+    ) throws -> [ImportedTrackReference] {
+        let indices = renameTrackIndices(for: scope)
+        guard !indices.isEmpty else {
+            throw TrackFileRenameError.noTracksToRename
+        }
+
+        let knownTagKeys = TrackFileRenameFormatter.knownTagKeys(from: trackItems)
+        var plans: [PreparedTrackFileRename] = []
+        for index in indices {
+            try withResolvedTrackFileURL(for: index) { resolvedReference in
+                let destinationFileName = try TrackFileRenameFormatter.renderedFileName(
+                    for: trackItems[index],
+                    totalDiscsValue: currentTotalDiscsValue(for: trackItems[index]),
+                    configuration: configuration,
+                    knownTagKeys: knownTagKeys
+                )
+                let sourceURL = resolvedReference.fileURL.standardizedFileURL
+                let destinationURL = sourceURL
+                    .deletingLastPathComponent()
+                    .appendingPathComponent(destinationFileName)
+                    .standardizedFileURL
+
+                plans.append(
+                    PreparedTrackFileRename(
+                        index: index,
+                        sourceURL: sourceURL,
+                        destinationURL: destinationURL
+                    )
+                )
+            }
+        }
+
+        try validateTrackFileRenamePlans(plans, fileManager: fileManager)
+
+        var renamedReferences: [ImportedTrackReference] = []
+        for plan in plans {
+            let refreshedReference = try performTrackFileRename(plan, fileManager: fileManager)
+            renamedReferences.append(refreshedReference)
+        }
+
+        return renamedReferences
     }
 
     func sortedTrackItemsForTable() -> [Track] {
@@ -3215,6 +3302,211 @@ final class TagEditorViewModel {
         case .allTracks:
             return trackItems.indices.filter { trackItems[$0].isImportedFlacTrack && !trackItems[$0].isLocked }
         }
+    }
+
+    private func renameTrackIndices(for scope: TrackFileRenameScope) -> [Int] {
+        switch scope {
+        case .selectedTracks:
+            return trackItems.indices.filter { index in
+                selectedTrackIDs.contains(trackItems[index].id) && canRenameTrackFile(at: index)
+            }
+        case .allTracks:
+            return trackItems.indices.filter { canRenameTrackFile(at: $0) }
+        }
+    }
+
+    private func canRenameTrackFile(at index: Int) -> Bool {
+        guard trackItems.indices.contains(index) else {
+            return false
+        }
+
+        return trackItems[index].isImportedFlacTrack &&
+            !trackItems[index].isLocked &&
+            !trackItems[index].isDeletedInTable
+    }
+
+    private func validateTrackFileRenamePlans(
+        _ plans: [PreparedTrackFileRename],
+        fileManager: FileManager
+    ) throws {
+        var sourceKeys: Set<String> = []
+        var destinationSourceByKey: [String: String] = [:]
+
+        for plan in plans {
+            sourceKeys.insert(fileConflictKey(for: plan.sourceURL))
+        }
+
+        for plan in plans {
+            let destinationKey = fileConflictKey(for: plan.destinationURL)
+            let sourceKey = fileConflictKey(for: plan.sourceURL)
+
+            if let existingSource = destinationSourceByKey[destinationKey],
+               existingSource != sourceKey {
+                throw TrackFileRenameError.duplicateDestination(plan.destinationURL.path)
+            }
+            destinationSourceByKey[destinationKey] = sourceKey
+
+            guard destinationKey != sourceKey else {
+                continue
+            }
+
+            if sourceKeys.contains(destinationKey) ||
+                fileManager.fileExists(atPath: plan.destinationURL.path) {
+                throw TrackFileRenameError.destinationExists(plan.destinationURL.path)
+            }
+        }
+    }
+
+    private func performTrackFileRename(
+        _ plan: PreparedTrackFileRename,
+        fileManager: FileManager
+    ) throws -> ImportedTrackReference {
+        try withResolvedTrackFileURL(for: plan.index, currentPath: plan.sourceURL.path) { resolvedReference in
+            let sourceURL = resolvedReference.fileURL.standardizedFileURL
+            let destinationURL = sourceURL
+                .deletingLastPathComponent()
+                .appendingPathComponent(plan.destinationURL.lastPathComponent)
+                .standardizedFileURL
+
+            let movedDestinationURL: URL
+            if sourceURL.path != destinationURL.path {
+                movedDestinationURL = try moveTrackFile(
+                    from: sourceURL,
+                    to: destinationURL,
+                    fileManager: fileManager
+                )
+            } else {
+                movedDestinationURL = destinationURL
+            }
+
+            let refreshedBookmarkData = try? movedDestinationURL.bookmarkData(
+                options: .withSecurityScope,
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+            applyResolvedTrackFileReference(
+                ResolvedTrackFileReference(
+                    fileURL: movedDestinationURL,
+                    refreshedBookmarkData: refreshedBookmarkData
+                ),
+                at: plan.index
+            )
+            return ImportedTrackReference(
+                filePath: movedDestinationURL.path,
+                securityScopedBookmarkData: refreshedBookmarkData
+            )
+        }
+    }
+
+    private func moveTrackFile(
+        from sourceURL: URL,
+        to destinationURL: URL,
+        fileManager: FileManager
+    ) throws -> URL {
+        do {
+            try coordinatedMoveTrackFile(
+                from: sourceURL,
+                to: destinationURL,
+                fileManager: fileManager
+            )
+            return destinationURL
+        } catch let error as TrackFileRenameError {
+            throw error
+        } catch {
+            return try moveTrackFileUsingSandboxFolderAccess(
+                from: sourceURL,
+                to: destinationURL,
+                fileManager: fileManager,
+                originalError: error
+            )
+        }
+    }
+
+    private func moveTrackFileUsingSandboxFolderAccess(
+        from sourceURL: URL,
+        to destinationURL: URL,
+        fileManager: FileManager,
+        originalError: Error
+    ) throws -> URL {
+        do {
+            if let scopedDestinationURL = try SandboxPathBookmarkAccess.withAccess(
+                to: destinationURL,
+                { scopedDestinationURL in
+                    let scopedSourceURL = scopedDestinationURL
+                        .deletingLastPathComponent()
+                        .appendingPathComponent(sourceURL.lastPathComponent)
+                        .standardizedFileURL
+                    try coordinatedMoveTrackFile(
+                        from: scopedSourceURL,
+                        to: scopedDestinationURL,
+                        fileManager: fileManager
+                    )
+                    return scopedDestinationURL
+                }
+            ) {
+                return scopedDestinationURL
+            }
+
+            throw originalError
+        } catch let error as TrackFileRenameError {
+            throw error
+        } catch {
+            throw TrackFileRenameError.failedToRename(
+                from: sourceURL.path,
+                to: destinationURL.path,
+                reason: trackFileRenameFailureReason(for: error)
+            )
+        }
+    }
+
+    private func coordinatedMoveTrackFile(
+        from sourceURL: URL,
+        to destinationURL: URL,
+        fileManager: FileManager
+    ) throws {
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        var coordinationError: NSError?
+        var moveError: Error?
+        var didCoordinateMove = false
+
+        coordinator.coordinate(
+            writingItemAt: sourceURL,
+            options: .forMoving,
+            writingItemAt: destinationURL,
+            options: .forReplacing,
+            error: &coordinationError
+        ) { coordinatedSourceURL, coordinatedDestinationURL in
+            coordinator.item(at: coordinatedSourceURL, willMoveTo: coordinatedDestinationURL)
+            do {
+                try fileManager.moveItem(at: coordinatedSourceURL, to: coordinatedDestinationURL)
+                coordinator.item(at: coordinatedSourceURL, didMoveTo: coordinatedDestinationURL)
+                didCoordinateMove = true
+            } catch {
+                moveError = error
+            }
+        }
+
+        if let moveError {
+            throw moveError
+        }
+        if let coordinationError {
+            throw coordinationError
+        }
+        if !didCoordinateMove {
+            throw TrackFileRenameError.failedToRename(
+                from: sourceURL.path,
+                to: destinationURL.path,
+                reason: "File coordination did not grant rename access."
+            )
+        }
+    }
+
+    private func trackFileRenameFailureReason(for error: Error) -> String {
+        (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+    }
+
+    private func fileConflictKey(for fileURL: URL) -> String {
+        fileURL.standardizedFileURL.path.lowercased()
     }
 
     private func saveStatusDisplayName(for track: Track) -> String {

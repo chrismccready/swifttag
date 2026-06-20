@@ -748,6 +748,9 @@ struct TrackStatusViewInspectorTests {
         var didSort = false
         var didSetTrackNumbers = false
         var didSetTrackNumbersByDisc = false
+        var didRenameTrackFiles = false
+        var didRenameSelectedTrackFiles = false
+        var didShowRenameConfig = false
 
         let sut = TagEditorTrackFileView(
             trackItems: [track],
@@ -777,6 +780,12 @@ struct TrackStatusViewInspectorTests {
             onSetTrackTotalToCount: {},
             setTrackTotalMenuTitle: "Set Track Total (1)",
             canSetTrackTotal: true,
+            onRenameTrackFiles: { didRenameTrackFiles = true },
+            canRenameTrackFiles: true,
+            onRenameSelectedTrackFiles: { didRenameSelectedTrackFiles = true },
+            canRenameSelectedTrackFiles: true,
+            onShowRenameTrackFilesConfig: { didShowRenameConfig = true },
+            canShowRenameTrackFilesConfig: true,
             onAddFlacFiles: {},
             onAddReadOnlyFlacFiles: {},
             canAddFlacFiles: true,
@@ -795,14 +804,90 @@ struct TrackStatusViewInspectorTests {
         #expect(actualView.canSortTracks)
         #expect(actualView.canSetTrackNumbers)
         #expect(actualView.canSetTrackNumbersByDisc)
+        #expect(actualView.canRenameTrackFiles)
+        #expect(actualView.canRenameSelectedTrackFiles)
+        #expect(actualView.canShowRenameTrackFilesConfig)
 
         actualView.onSortTracks()
         actualView.onSetTrackNumbers()
         actualView.onSetTrackNumbersByDisc()
+        actualView.onRenameTrackFiles()
+        actualView.onRenameSelectedTrackFiles()
+        actualView.onShowRenameTrackFilesConfig()
 
         #expect(didSort)
         #expect(didSetTrackNumbers)
         #expect(didSetTrackNumbersByDisc)
+        #expect(didRenameTrackFiles)
+        #expect(didRenameSelectedTrackFiles)
+        #expect(didShowRenameConfig)
+    }
+
+    @Test
+    func trackFileRenameSheetViewReceivesConfigurationAndActions() throws {
+        var renameFormat = "|TRACKNUMBER| |TITLE|"
+        var renameFormatSelection: TextSelection?
+        var invalidReplacementText = TrackFileRenameInvalidReplacementText.hyphen
+        var strict = false
+        var spaceReplacement = TrackFileRenameSpaceReplacement.none
+        var didCancel = false
+        var didRenameSelected = false
+        var didRenameAll = false
+
+        let sut = TrackFileRenameSheetView(
+            renameExample: "01 Track.flac",
+            renameFormat: Binding(
+                get: { renameFormat },
+                set: { renameFormat = $0 }
+            ),
+            renameFormatSelection: Binding(
+                get: { renameFormatSelection },
+                set: { renameFormatSelection = $0 }
+            ),
+            invalidReplacementText: Binding(
+                get: { invalidReplacementText },
+                set: { invalidReplacementText = $0 }
+            ),
+            strict: Binding(
+                get: { strict },
+                set: { strict = $0 }
+            ),
+            spaceReplacement: Binding(
+                get: { spaceReplacement },
+                set: { spaceReplacement = $0 }
+            ),
+            canRenameSelectedTracks: true,
+            canRenameAllTracks: true,
+            onCancel: { didCancel = true },
+            onRenameSelectedTracks: { didRenameSelected = true },
+            onRenameAllTracks: { didRenameAll = true }
+        )
+
+        let actualView = try sut.inspect().find(TrackFileRenameSheetView.self).actualView()
+        #expect(actualView.renameExample == "01 Track.flac")
+        #expect(actualView.$renameFormat.wrappedValue == "|TRACKNUMBER| |TITLE|")
+        #expect(actualView.$renameFormatSelection.wrappedValue == nil)
+        #expect(actualView.$invalidReplacementText.wrappedValue == .hyphen)
+        #expect(!actualView.$strict.wrappedValue)
+        #expect(actualView.$spaceReplacement.wrappedValue == .none)
+        #expect(actualView.canRenameSelectedTracks)
+        #expect(actualView.canRenameAllTracks)
+
+        actualView.$renameFormat.wrappedValue = "|TITLE|"
+        actualView.$invalidReplacementText.wrappedValue = .underscore
+        actualView.$strict.wrappedValue = true
+        actualView.$spaceReplacement.wrappedValue = .period
+        actualView.onCancel()
+        actualView.onRenameSelectedTracks()
+        actualView.onRenameAllTracks()
+
+        #expect(renameFormat == "|TITLE|")
+        #expect(invalidReplacementText == .underscore)
+        #expect(strict)
+        #expect(spaceReplacement == .period)
+        #expect(didCancel)
+        #expect(didRenameSelected)
+        #expect(didRenameAll)
     }
 
     @Test
@@ -989,19 +1074,33 @@ struct TrackStatusViewInspectorTests {
         let setTrackTotalRange = try #require(source.range(of: "Button(setTrackTotalTitle"))
         let byDiscRange = try #require(source.range(of: "Button(setTrackTotalByDiscTitle"))
         let setDiscTotalRange = try #require(source.range(of: "Button(setDiscTotalTitle"))
+        let renameRange = try #require(source.range(of: "Button(\"Rename Track Files\")"))
+        let renameSelectedRange = try #require(source.range(of: "Button(\"Rename Selected Track Files\")"))
+        let configRange = try #require(source.range(of: "Button(\"Rename Track Files Config...\")"))
+        let reloadRange = try #require(source.range(of: "Button(reloadSelectedTracksTitle"))
         #expect(lockRange.lowerBound < sortRange.lowerBound)
         #expect(sortRange.lowerBound < setTrackNumbersRange.lowerBound)
         #expect(setTrackNumbersRange.lowerBound < setTrackNumbersByDiscRange.lowerBound)
         #expect(setTrackNumbersByDiscRange.lowerBound < setTrackTotalRange.lowerBound)
         #expect(setTrackTotalRange.lowerBound < byDiscRange.lowerBound)
         #expect(byDiscRange.lowerBound < setDiscTotalRange.lowerBound)
+        #expect(setDiscTotalRange.lowerBound < renameRange.lowerBound)
+        #expect(renameRange.lowerBound < renameSelectedRange.lowerBound)
+        #expect(renameSelectedRange.lowerBound < configRange.lowerBound)
+        #expect(configRange.lowerBound < reloadRange.lowerBound)
         #expect(source.contains("performSortTracks?()"))
         #expect(source.contains("performSetTrackNumbers?()"))
         #expect(source.contains("performSetTrackNumbersByDisc?()"))
         #expect(source.contains("performSetTrackTotalByDisc?()"))
         #expect(source.contains("performSetDiscTotal?()"))
+        #expect(source.contains("performRenameTrackFiles?()"))
+        #expect(source.contains("performRenameSelectedTrackFiles?()"))
+        #expect(source.contains("showTrackFileRenameConfig?()"))
         #expect(source.contains("canPerformSetTrackTotalByDisc"))
         #expect(source.contains("canPerformSetDiscTotal"))
+        #expect(source.contains("canPerformRenameTrackFiles"))
+        #expect(source.contains("canPerformRenameSelectedTrackFiles"))
+        #expect(source.contains("canShowTrackFileRenameConfig"))
     }
 
     @Test
@@ -1022,17 +1121,51 @@ struct TrackStatusViewInspectorTests {
         let setTrackTotalRange = try #require(source.range(of: "Button(setTrackTotalMenuTitle)"))
         let byDiscRange = try #require(source.range(of: "Button(setTrackTotalByDiscMenuTitle)"))
         let setDiscTotalRange = try #require(source.range(of: "Button(setDiscTotalMenuTitle)"))
+        let renameRange = try #require(source.range(of: "Button(\"Rename Track Files\")"))
+        let renameSelectedRange = try #require(source.range(of: "Button(\"Rename Selected Track Files\")"))
+        let configRange = try #require(source.range(of: "Button(\"Rename Track Files Config...\")"))
+        let reloadRange = try #require(source.range(of: "Button(reloadSelectedTracksTitle)"))
         #expect(lockRange.lowerBound < sortRange.lowerBound)
         #expect(sortRange.lowerBound < setTrackNumbersRange.lowerBound)
         #expect(setTrackNumbersRange.lowerBound < setTrackNumbersByDiscRange.lowerBound)
         #expect(setTrackNumbersByDiscRange.lowerBound < setTrackTotalRange.lowerBound)
         #expect(setTrackTotalRange.lowerBound < byDiscRange.lowerBound)
         #expect(byDiscRange.lowerBound < setDiscTotalRange.lowerBound)
+        #expect(setDiscTotalRange.lowerBound < renameRange.lowerBound)
+        #expect(renameRange.lowerBound < renameSelectedRange.lowerBound)
+        #expect(renameSelectedRange.lowerBound < configRange.lowerBound)
+        #expect(configRange.lowerBound < reloadRange.lowerBound)
         #expect(source.contains("onSortTracks()"))
         #expect(source.contains("onSetTrackNumbers()"))
         #expect(source.contains("onSetTrackNumbersByDisc()"))
         #expect(source.contains("onSetTrackTotalByDisc()"))
         #expect(source.contains("onSetDiscTotal()"))
+        #expect(source.contains("onRenameTrackFiles()"))
+        #expect(source.contains("onRenameSelectedTrackFiles()"))
+        #expect(source.contains("onShowRenameTrackFilesConfig()"))
+    }
+
+    @Test
+    func contentViewSourcePresentsRenameErrorsInsideConfigSheet() throws {
+        let sourceURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTag")
+            .appendingPathComponent("ContentView.swift")
+        let source = try String(contentsOf: sourceURL, encoding: .utf8)
+
+        let sheetViewRange = try #require(source.range(of: "TrackFileRenameSheetView("))
+        let sheetAlertRange = try #require(
+            source.range(of: ".alert(\"Track File Rename Error\", isPresented: $isTrackFileRenameErrorPresented)")
+        )
+        let mainAlertRange = try #require(
+            source.range(of: ".alert(\"Track File Rename Error\", isPresented: mainTrackFileRenameErrorPresentedBinding)")
+        )
+
+        #expect(sheetViewRange.lowerBound < sheetAlertRange.lowerBound)
+        #expect(source.contains("private var mainTrackFileRenameErrorPresentedBinding"))
+        #expect(source.contains("isTrackFileRenameErrorPresented && !isTrackFileRenameSheetPresented"))
+        #expect(sheetAlertRange.lowerBound < mainAlertRange.lowerBound)
     }
 
     @Test

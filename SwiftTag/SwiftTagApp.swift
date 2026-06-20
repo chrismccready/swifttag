@@ -212,6 +212,9 @@ private struct AppCommands: Commands {
     @FocusedValue(\.performSetTrackTotal) private var performSetTrackTotal
     @FocusedValue(\.performSetTrackTotalByDisc) private var performSetTrackTotalByDisc
     @FocusedValue(\.performSetDiscTotal) private var performSetDiscTotal
+    @FocusedValue(\.performRenameTrackFiles) private var performRenameTrackFiles
+    @FocusedValue(\.performRenameSelectedTrackFiles) private var performRenameSelectedTrackFiles
+    @FocusedValue(\.showTrackFileRenameConfig) private var showTrackFileRenameConfig
     @FocusedValue(\.performReloadSelectedTracks) private var performReloadSelectedTracks
     @FocusedValue(\.performRemoveSelectedTracks) private var performRemoveSelectedTracks
     @FocusedValue(\.toggleSelectedTrackLocksTitle) private var toggleSelectedTrackLocksTitle
@@ -235,6 +238,9 @@ private struct AppCommands: Commands {
     @FocusedValue(\.canPerformSetTrackTotal) private var canPerformSetTrackTotal
     @FocusedValue(\.canPerformSetTrackTotalByDisc) private var canPerformSetTrackTotalByDisc
     @FocusedValue(\.canPerformSetDiscTotal) private var canPerformSetDiscTotal
+    @FocusedValue(\.canPerformRenameTrackFiles) private var canPerformRenameTrackFiles
+    @FocusedValue(\.canPerformRenameSelectedTrackFiles) private var canPerformRenameSelectedTrackFiles
+    @FocusedValue(\.canShowTrackFileRenameConfig) private var canShowTrackFileRenameConfig
     @FocusedValue(\.canPerformReloadSelectedTracks) private var canPerformReloadSelectedTracks
     @FocusedValue(\.canPerformRemoveSelectedTracks) private var canPerformRemoveSelectedTracks
 
@@ -342,6 +348,26 @@ private struct AppCommands: Commands {
             }
             .keyboardShortcut("k", modifiers: [.shift, .command])
             .disabled(!(canPerformSetDiscTotal ?? false))
+
+            Divider()
+
+            Button("Rename Track Files") {
+                performRenameTrackFiles?()
+            }
+            .keyboardShortcut("r", modifiers: [.command])
+            .disabled(!(canPerformRenameTrackFiles ?? false))
+
+            Button("Rename Selected Track Files") {
+                performRenameSelectedTrackFiles?()
+            }
+            .keyboardShortcut("r", modifiers: [.shift, .command])
+            .disabled(!(canPerformRenameSelectedTrackFiles ?? false))
+
+            Button("Rename Track Files Config...") {
+                showTrackFileRenameConfig?()
+            }
+            .keyboardShortcut("r", modifiers: [.option, .command])
+            .disabled(!(canShowTrackFileRenameConfig ?? false))
 
             Divider()
 

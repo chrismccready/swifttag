@@ -42,7 +42,7 @@
                     often shared across tracks and visually noteworthy, particularly for multi-track 
                     selection edits. Other album-centric features include:
                     <ul>
-                        <li><strong>File</strong> &gt; <strong>Set Track Numbers</strong>, <strong>Set Track Numbers by Disc</strong>, <strong>Set Track Total</strong>, <strong>Set Track Total by Disc</strong>, and <strong>Set Disc Total</strong> menu commands.</li>
+                        <li><strong>File</strong> &gt; <strong>Set Track Numbers</strong>, <strong>Set Track Numbers by Disc</strong>, <strong>Set Track Total</strong>, <strong>Set Track Total by Disc</strong>, <strong>Set Disc Total</strong>, and track file rename menu commands.</li>
                         <li><a href="settings.html#tags-track-total-compilation"><strong>Auto update Track Total</strong></a> setting to manage total track counts.</li>
                         <li><a href="settings.html#tags-track-total-compilation"><strong>Auto update Disc Total</strong></a> setting to manage total disc counts.</li>
                         <li><a href="settings.html#tags-track-total-compilation"><strong>Auto update Compilation</strong></a> setting to manage compilation status.</li>
@@ -69,6 +69,39 @@
                     then numeric <code>TRACKNUMBER</code>. The active sort mode controls table display,
                     whole-table track-number commands, and AppleScript track ordering.
                 </p>
+            </section>
+
+            <section aria-labelledby="track-file-rename">
+                <h2 id="track-file-rename">Track File Rename</h2>
+                <p>
+                    <strong>File</strong> &gt; <strong>Rename Track Files</strong> renames loaded,
+                    unlocked FLAC files in place. <strong>Rename Selected Track Files</strong> uses
+                    the track table selection. <strong>Rename Track Files Config...</strong> opens
+                    the rename sheet with a live example from the first selected track, or the first
+                    loaded track when nothing is selected.
+                </p>
+                <p>
+                    <b>Rename formats</b> use tag placeholders wrapped in pipes, for example
+                    <code>|TRACKNUMBER| |TITLE|</code>. Placeholder matching accepts common aliases
+                    such as <code>|track number|</code> and <code>|number|</code>. Prepend 
+                    <code>zp</code> to zero-pad numeric values, for example 
+                    <code>|zpTRACKNUMBER|</code>, <code>|zpDISCNUMBER|</code>, 
+                    <code>|zpTOTALTRACKS|</code>, or <code>|zpTOTALDISCS|</code>.
+                </p>
+                <p>
+                    <b>Invalid Replacement</b> chooses how invalid filename characters are replaced
+                    with: <code>-</code>, <code>_</code>, <code>.</code>, or space. Non-strict mode
+                    replaces <code>/</code>, <code>:</code>, and NUL. Strict mode also replaces
+                    <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, <code>\</code>,
+                    <code>|</code>, <code>?</code>, <code>*</code>, and ASCII control characters.
+                    <b>Space Replacement</b> can then replace whitespace in the generated filename with
+                    <code>-</code>, <code>_</code>, or <code>.</code>; choose <b>none</b> to preserve
+                    whitespace. SwiftTag preserves the original <code>.flac</code> extension.
+                </p>
+                <aside class="callout note">
+                    <code>TOTALTRACKS</code> and <code>TRACKTOTAL</code> are aliases for the same 
+                    tag, as are <code>TOTALDISCS</code> and <code>DISCTOTAL</code>.
+                </aside>
             </section>
 
             <section aria-labelledby="core-tags">
@@ -105,7 +138,7 @@
             <section aria-labelledby="misc-tags">
                 <h2 id="misc-tags">Misc Tags</h2>
                 <p>
-                    Use plus to add a custom key/value row and minus to delete selected rows.
+                    Use <code>+</code> to add a custom key/value row and <code>-</code> to delete selected rows.
                     Keys are normalized for FLAC tag writing. Invalid or duplicate keys are marked.
                 </p>
                 <p>
@@ -122,7 +155,7 @@
                     SwiftTag <a href="status-and-diffs.html#diff-formatting">marks/formats</a> mixed or 
                     differing values/fields. Entering a new value applies it to the selected editable tracks.
                 </p>
-                <aside class="callout">
+                <aside class="callout note">
                     Locked (<a href="adding-flac-files.html#read-only">read-only</a>) tracks block editing and
                     writeback. Unlock only files you intend to change.
                 </aside>
