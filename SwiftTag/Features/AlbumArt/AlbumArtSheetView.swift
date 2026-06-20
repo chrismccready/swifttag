@@ -271,6 +271,7 @@ struct AlbumArtSheetView: View {
                 AlbumArtWellView(
                     image: imageForSlot(albumArtSlot),
                     dimension: 480,
+                    interpolation: .medium,
                     onDropProviders: { providers in
                         onDropForSlot(providers, albumArtSlot)
                     },

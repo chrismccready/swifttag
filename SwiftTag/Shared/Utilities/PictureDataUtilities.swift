@@ -50,10 +50,10 @@ enum PictureDataUtilities {
         }
 
         let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
-        let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
-        let width = (properties?[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue ?? image?.width ?? 0
-        let height = (properties?[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue ?? image?.height ?? 0
-        let depth = inferredBitsPerPixel(properties: properties, image: image)
+        let sourceType = CGImageSourceGetType(source)
+        let width = (properties?[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue ?? 0
+        let height = (properties?[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue ?? 0
+        let depth = inferredBitsPerPixel(properties: properties, sourceType: sourceType)
 
         return PictureDataSpecifications(width: width, height: height, depth: depth, colors: 0)
     }
@@ -129,23 +129,18 @@ enum PictureDataUtilities {
         }
     }
 
-    nonisolated private static func inferredBitsPerPixel(properties: [CFString: Any]?, image: CGImage?) -> Int {
+    nonisolated private static func inferredBitsPerPixel(properties: [CFString: Any]?, sourceType: CFString?) -> Int {
         let propertyBitsPerComponent = (properties?[kCGImagePropertyDepth] as? NSNumber)?.intValue ?? 0
+        guard propertyBitsPerComponent > 0 else {
+            return 0
+        }
+
         let propertyComponentCount = componentCount(for: properties?[kCGImagePropertyColorModel] as? String)
+            ?? defaultComponentCount(for: sourceType)
         let propertyHasAlpha = properties?[kCGImagePropertyHasAlpha] as? Bool
-        if propertyBitsPerComponent > 0, let propertyComponentCount {
-            let totalComponentCount = propertyComponentCount + ((propertyHasAlpha ?? false) ? 1 : 0)
-            return propertyBitsPerComponent * max(totalComponentCount, 1)
-        }
+        let totalComponentCount = (propertyComponentCount ?? 1) + ((propertyHasAlpha ?? false) ? 1 : 0)
 
-        let imageBitsPerComponent = image?.bitsPerComponent ?? 0
-        if imageBitsPerComponent > 0 {
-            let imageComponentCount = image?.colorSpace?.numberOfComponents ?? propertyComponentCount ?? 1
-            let totalComponentCount = imageComponentCount + (hasAlphaChannel(image: image, properties: properties) ? 1 : 0)
-            return imageBitsPerComponent * max(totalComponentCount, 1)
-        }
-
-        return image?.bitsPerPixel ?? 0
+        return propertyBitsPerComponent * max(totalComponentCount, 1)
     }
 
     nonisolated private static func componentCount(for colorModel: String?) -> Int? {
@@ -168,19 +163,17 @@ enum PictureDataUtilities {
         }
     }
 
-    nonisolated private static func hasAlphaChannel(image: CGImage?, properties: [CFString: Any]?) -> Bool {
-        if let image {
-            switch image.alphaInfo {
-            case .alphaOnly, .first, .last, .premultipliedFirst, .premultipliedLast:
-                return true
-            case .none, .noneSkipFirst, .noneSkipLast:
-                return false
-            @unknown default:
-                break
-            }
+    nonisolated private static func defaultComponentCount(for sourceType: CFString?) -> Int? {
+        guard let sourceType,
+              let type = UTType(sourceType as String) else {
+            return nil
         }
 
-        return properties?[kCGImagePropertyHasAlpha] as? Bool ?? false
+        if type.conforms(to: .jpeg) || type.conforms(to: .png) {
+            return 3
+        }
+
+        return nil
     }
 
     nonisolated private static func pngChannelCount(for colorType: UInt8?) -> Int {

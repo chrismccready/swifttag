@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct AlbumArtWellView: View {
     let image: Image
     let dimension: CGFloat
+    var interpolation: Image.Interpolation = .low
     let onDropProviders: ([NSItemProvider]) -> Bool
     var onCopyProviders: (() -> [NSItemProvider])? = nil
     var onPasteProviders: (([NSItemProvider]) -> Bool)? = nil
@@ -54,6 +55,7 @@ struct AlbumArtWellView: View {
                 .strokeBorder(.secondary, lineWidth: 1)
 
             image
+                .interpolation(interpolation)
                 .resizable()
                 .scaledToFit()
                 .padding(4)

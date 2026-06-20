@@ -2212,14 +2212,21 @@ final class TagEditorViewModel {
 
     func hasExternalPictureDifference(
         for pictureType: Int,
-        in selection: Set<UUID>? = nil,
-        albumArtPictures: [FlacWritablePictureRecord]
+        in selection: Set<UUID>? = nil
     ) -> Bool {
         let trackIDs = selection ?? Set(trackItems.map(\.id))
         return trackItems.contains { track in
             trackIDs.contains(track.id) &&
                 track.externalDifferences?.externallyModifiedPictureTypes.contains(pictureType) == true
         }
+    }
+
+    func hasExternalPictureDifference(
+        for pictureType: Int,
+        in selection: Set<UUID>? = nil,
+        albumArtPictures: [FlacWritablePictureRecord]
+    ) -> Bool {
+        hasExternalPictureDifference(for: pictureType, in: selection)
     }
 
     func hasInternalPictureDifference(

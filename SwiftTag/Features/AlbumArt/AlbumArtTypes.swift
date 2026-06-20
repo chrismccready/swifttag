@@ -86,6 +86,7 @@ struct AlbumArtType: Identifiable {
 
 struct AlbumArtImageAsset {
     let image: NSImage
+    let cgImage: CGImage
     let type: UTType
     let data: Data
 }
@@ -94,6 +95,15 @@ struct AlbumArtPoolItem: Identifiable, Equatable {
     let id: UUID
     let data: Data
     let image: NSImage
+    let cgImage: CGImage
+    let specifications: PictureDataSpecifications
+
+    static func == (lhs: AlbumArtPoolItem, rhs: AlbumArtPoolItem) -> Bool {
+        lhs.id == rhs.id &&
+            lhs.data == rhs.data &&
+            lhs.image == rhs.image &&
+            lhs.specifications == rhs.specifications
+    }
 }
 
 struct AlbumArtTrackReference: Identifiable, Equatable {

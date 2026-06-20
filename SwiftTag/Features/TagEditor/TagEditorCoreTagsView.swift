@@ -299,6 +299,7 @@ struct TagEditorCoreTagsView: View {
                 .frame(minWidth: 90, maxWidth: .infinity, minHeight: 60, idealHeight: 60)
             }
             .padding(.top, 5)
+            .frame(maxWidth: .infinity, maxHeight: 120)
         }
     }
 

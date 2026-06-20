@@ -1559,10 +1559,7 @@ struct ContentView: View {
             return false
         }
 
-        return viewModel.hasExternalPictureDifference(
-            for: pictureType,
-            albumArtPictures: currentAlbumArtPictures
-        )
+        return viewModel.hasExternalPictureDifference(for: pictureType)
     }
 
     private func hasInternalPictureDifference(for slot: AlbumArtSlot) -> Bool {

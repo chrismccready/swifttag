@@ -2022,6 +2022,76 @@ struct SwiftTagTests {
 
     @Test
     @MainActor
+    func albumArtViewModelUsesDisplayImageWithoutChangingPictureBytes() throws {
+        let jpegData = try Self.jpegData(color: .systemBlue)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/jpeg", description: "Front", data: jpegData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let displayAsset = try #require(viewModel.albumArtImages[.frontCover])
+        let exportedRecord = try #require(viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).first)
+
+        #expect(displayAsset.data == jpegData)
+        #expect(exportedRecord.data == jpegData)
+        #expect(exportedRecord.mimeType == "image/jpeg")
+    }
+
+    @Test
+    @MainActor
+    func albumArtViewModelUsesCachedPictureSpecificationsForWritableRecords() throws {
+        let jpegData = try Self.jpegData(color: .systemOrange)
+        let expectedSpecifications = PictureDataUtilities.computedSpecifications(from: jpegData)
+        let albumArtTypes: [AlbumArtType] = [
+            AlbumArtType(flacPictureType: 3, flacDescription: "Cover (front)", navigationLinkName: "Front Cover", slot: .frontCover)
+        ]
+        let track = Track(
+            tags: [TagKey.title: "Track"],
+            flacPictureRecords: [
+                FlacWritablePictureRecord(type: 3, mimeType: "image/jpeg", description: "Front", data: jpegData)
+            ]
+        )
+
+        let viewModel = AlbumArtViewModel()
+        viewModel.configureTrackContext(trackItems: [track], selectedTrackIDs: [track.id], albumArtTypes: albumArtTypes)
+
+        let poolItem = try #require(viewModel.picturePool.values.first)
+        let exportedRecords = (0 ..< 10).compactMap { _ in
+            viewModel.flacPictures(for: track.id, albumArtTypes: albumArtTypes).first
+        }
+
+        #expect(poolItem.specifications == expectedSpecifications)
+        #expect(exportedRecords.count == 10)
+        #expect(exportedRecords.allSatisfy { record in
+            record.width == expectedSpecifications.width &&
+                record.height == expectedSpecifications.height &&
+                record.depth == expectedSpecifications.depth &&
+                record.colors == expectedSpecifications.colors
+        })
+    }
+
+    @Test
+    func albumArtDisplayImageFactoryCreatesSRGBBitmap() throws {
+        let displayImage = try #require(AlbumArtDisplayImageFactory.image(from: try Self.jpegData(color: .systemGreen)))
+        var proposedRect = NSRect(origin: .zero, size: displayImage.size)
+        let cgImage = try #require(displayImage.cgImage(forProposedRect: &proposedRect, context: nil, hints: nil))
+
+        #expect(cgImage.width <= 1024)
+        #expect(cgImage.height <= 1024)
+        #expect(cgImage.bitsPerComponent == 8)
+        #expect(cgImage.colorSpace?.name == CGColorSpace.sRGB)
+    }
+
+    @Test
+    @MainActor
     func albumArtViewModelPictureIdentityCanFollowTrackRecordOrder() throws {
         let sharedData = try Self.pngData(color: .purple)
         let albumArtTypes: [AlbumArtType] = [

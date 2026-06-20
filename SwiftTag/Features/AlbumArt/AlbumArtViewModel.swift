@@ -146,7 +146,7 @@ final class AlbumArtViewModel {
 
     func imageForAlbumArtSlot(_ albumArtSlot: AlbumArtSlot) -> Image {
         if let asset = albumArtImages[albumArtSlot] {
-            return Image(nsImage: asset.image)
+            return Image(decorative: asset.cgImage, scale: 1, orientation: .up)
         }
 
         return Image(systemName: "photo.badge.plus")
@@ -639,13 +639,14 @@ final class AlbumArtViewModel {
         if let imageProvider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.image.identifier) }) {
             let preferredTypeIdentifier = preferredImageTypeIdentifier(for: imageProvider) ?? UTType.image.identifier
             imageProvider.loadDataRepresentation(forTypeIdentifier: preferredTypeIdentifier) { data, _ in
-                guard let data, let image = NSImage(data: data) else {
+                guard let data,
+                      let displayImage = AlbumArtDisplayImageFactory.displayImage(from: data) else {
                     return
                 }
 
                 Task { @MainActor in
                     if self.applyDroppedImage(
-                        image: image,
+                        displayImage: displayImage,
                         data: data,
                         type: UTType(preferredTypeIdentifier) ?? self.albumArtType(for: data),
                         for: albumArtSlot,
@@ -661,14 +662,14 @@ final class AlbumArtViewModel {
         if let fileProvider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) }) {
             fileProvider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
                 guard let url = Self.droppedFileURL(from: item),
-                      let image = NSImage(contentsOf: url),
-                      let data = try? Data(contentsOf: url) else {
+                      let data = try? Data(contentsOf: url),
+                      let displayImage = AlbumArtDisplayImageFactory.displayImage(from: data) else {
                     return
                 }
 
                 Task { @MainActor in
                     if self.applyDroppedImage(
-                        image: image,
+                        displayImage: displayImage,
                         data: data,
                         type: self.albumArtType(for: url),
                         for: albumArtSlot,
@@ -704,13 +705,13 @@ final class AlbumArtViewModel {
             selectedURL.stopAccessingSecurityScopedResource()
         }
 
-        guard let image = NSImage(contentsOf: selectedURL),
-              let data = try? Data(contentsOf: selectedURL) else {
+        guard let data = try? Data(contentsOf: selectedURL),
+              let displayImage = AlbumArtDisplayImageFactory.displayImage(from: data) else {
             return
         }
 
         if applyDroppedImage(
-            image: image,
+            displayImage: displayImage,
             data: data,
             type: albumArtType(for: selectedURL),
             for: pendingAlbumArtSlotForImport,
@@ -738,12 +739,13 @@ final class AlbumArtViewModel {
 
         for (flacPictureType, data) in picturesByType {
             guard let mappedAlbumArtType = albumArtTypeByFlacType[flacPictureType],
-                  let image = NSImage(data: data) else {
+                  let displayImage = AlbumArtDisplayImageFactory.displayImage(from: data) else {
                 continue
             }
 
             albumArtImages[mappedAlbumArtType.slot] = AlbumArtImageAsset(
-                image: image,
+                image: displayImage.image,
+                cgImage: displayImage.cgImage,
                 type: albumArtType(for: data),
                 data: data
             )
@@ -764,12 +766,11 @@ final class AlbumArtViewModel {
 
                 seenReferenceIDs.insert(reference.id)
                 records.append(
-                    FlacWritablePictureRecord(
-                        type: flacType,
-                        mimeType: reference.mimeType,
-                        description: reference.description,
-                        data: poolItem.data
-                    ).withComputedPictureMetadata()
+                    writablePictureRecord(
+                        reference: reference,
+                        flacType: flacType,
+                        poolItem: poolItem
+                    )
                 )
             }
         }
@@ -787,12 +788,11 @@ final class AlbumArtViewModel {
                     continue
                 }
 
-                let record = FlacWritablePictureRecord(
-                    type: flacType,
-                    mimeType: reference.mimeType,
-                    description: reference.description,
-                    data: poolItem.data
-                ).withComputedPictureMetadata()
+                let record = writablePictureRecord(
+                    reference: reference,
+                    flacType: flacType,
+                    poolItem: poolItem
+                )
 
                 if reference.slot == .frontCover {
                     frontCoverRecords.append(record)
@@ -803,6 +803,24 @@ final class AlbumArtViewModel {
         }
 
         return nonFrontCoverRecords + frontCoverRecords
+    }
+
+    private func writablePictureRecord(
+        reference: AlbumArtTrackReference,
+        flacType: Int,
+        poolItem: AlbumArtPoolItem
+    ) -> FlacWritablePictureRecord {
+        let specifications = poolItem.specifications
+        return FlacWritablePictureRecord(
+            type: flacType,
+            mimeType: reference.mimeType,
+            description: reference.description,
+            data: poolItem.data,
+            width: specifications.width,
+            height: specifications.height,
+            depth: specifications.depth,
+            colors: specifications.colors
+        )
     }
 
     func appleScriptPictureIdentity(
@@ -939,6 +957,7 @@ final class AlbumArtViewModel {
 
             updated[slot] = AlbumArtImageAsset(
                 image: poolItem.image,
+                cgImage: poolItem.cgImage,
                 type: utType(forMimeType: reference.mimeType),
                 data: poolItem.data
             )
@@ -949,7 +968,7 @@ final class AlbumArtViewModel {
 
     @discardableResult
     private func applyDroppedImage(
-        image: NSImage,
+        displayImage: AlbumArtDisplayImage,
         data: Data,
         type: UTType,
         for slot: AlbumArtSlot,
@@ -989,7 +1008,7 @@ final class AlbumArtViewModel {
             return false
         }
 
-        let poolID = existingPoolID ?? upsertPoolItem(image: image, data: data)
+        let poolID = existingPoolID ?? upsertPoolItem(displayImage: displayImage, data: data)
 
         if slot == .frontCover {
             let targetTracksWithFrontCover = targetTrackIDs.filter { trackID in
@@ -1248,11 +1267,11 @@ final class AlbumArtViewModel {
     ) -> [AlbumArtTrackReference] {
         records.compactMap { record in
             guard let slot = slotByType[record.type],
-                  let image = NSImage(data: record.data) else {
+                  let displayImage = AlbumArtDisplayImageFactory.displayImage(from: record.data) else {
                 return nil
             }
 
-            let poolID = upsertPoolItem(image: image, data: record.data)
+            let poolID = upsertPoolItem(displayImage: displayImage, data: record.data)
             return AlbumArtTrackReference(
                 poolItemID: poolID,
                 slot: slot,
@@ -1557,14 +1576,20 @@ final class AlbumArtViewModel {
         )
     }
 
-    private func upsertPoolItem(image: NSImage, data: Data) -> UUID {
+    private func upsertPoolItem(displayImage: AlbumArtDisplayImage, data: Data) -> UUID {
         let key = Self.poolKey(for: data)
         if let existingID = poolItemIDByKey[key] {
             return existingID
         }
 
         let id = UUID()
-        picturePool[id] = AlbumArtPoolItem(id: id, data: data, image: image)
+        picturePool[id] = AlbumArtPoolItem(
+            id: id,
+            data: data,
+            image: displayImage.image,
+            cgImage: displayImage.cgImage,
+            specifications: PictureDataUtilities.computedSpecifications(from: data)
+        )
         picturePoolOrder.append(id)
         poolItemIDByKey[key] = id
         return id
@@ -1646,5 +1671,73 @@ final class AlbumArtViewModel {
         }
 
         return nil
+    }
+}
+
+struct AlbumArtDisplayImage {
+    let image: NSImage
+    let cgImage: CGImage
+}
+
+enum AlbumArtDisplayImageFactory {
+    private static let maximumDisplayPixelSize = 1024
+
+    static func image(from data: Data) -> NSImage? {
+        displayImage(from: data)?.image
+    }
+
+    static func displayImage(from data: Data) -> AlbumArtDisplayImage? {
+        let sourceOptions = [
+            kCGImageSourceShouldCache: false
+        ] as CFDictionary
+        guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else {
+            return nil
+        }
+
+        let thumbnailOptions: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maximumDisplayPixelSize,
+            kCGImageSourceShouldCache: false,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceDecodeRequest: kCGImageSourceDecodeToSDR
+        ]
+        guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions as CFDictionary) else {
+            return nil
+        }
+
+        let cgImage = sRGBImage(from: thumbnail) ?? thumbnail
+        return AlbumArtDisplayImage(
+            image: NSImage(
+                cgImage: cgImage,
+                size: NSSize(width: cgImage.width, height: cgImage.height)
+            ),
+            cgImage: cgImage
+        )
+    }
+
+    private static func sRGBImage(from image: CGImage) -> CGImage? {
+        guard image.width > 0,
+              image.height > 0,
+              let colorSpace = CGColorSpace(name: CGColorSpace.sRGB) else {
+            return nil
+        }
+
+        let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+        guard let context = CGContext(
+            data: nil,
+            width: image.width,
+            height: image.height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo
+        ) else {
+            return nil
+        }
+
+        context.interpolationQuality = .high
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return context.makeImage()
     }
 }
