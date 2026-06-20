@@ -82,6 +82,8 @@ struct AlbumArtWellView: View {
             }
             _ = onPasteProviders?(providers)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Album Art")
     }
 }
 

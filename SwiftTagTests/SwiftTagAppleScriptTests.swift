@@ -824,6 +824,7 @@ struct SwiftTagAppleScriptTests {
         #expect(request == .defaults)
     }
 
+    @MainActor
     @Test
     func appleScriptAddTracksRequestUsesUnlockedDefaultWhenOptionOmitted() throws {
         let request = try SwiftTagAppleScriptAddTracksRequest.from(arguments: nil)
@@ -894,6 +895,7 @@ struct SwiftTagAppleScriptTests {
         }
     }
 
+    @MainActor
     @Test
     func appleScriptTrackSortOptionsMapFourCharacterEnumerationCodes() throws {
         let filenameDescriptor = NSAppleEventDescriptor(

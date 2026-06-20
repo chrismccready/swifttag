@@ -6497,7 +6497,8 @@ struct SwiftTagTests {
             tags: [
                 TagKey.title: "Selected Title",
                 TagKey.trackNumber: "1",
-                TagKey.discNumber: "1"
+                TagKey.discNumber: "1",
+                "TOTALTRACKS": "2"
             ]
         )
         let unselectedTrack = Self.importedTrack(

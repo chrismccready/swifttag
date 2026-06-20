@@ -436,12 +436,12 @@ private struct AppCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: [.control])
             .disabled(!(canPerformSaveSwiftTagDocument ?? false))
-            .modifierKeyAlternate(.shift) {
-                Button("Save SwiftTag Document as...") {
-                    performSaveSwiftTagDocumentAs?()
-                }
-                .disabled(!(canPerformSaveSwiftTagDocumentAs ?? false))
+            
+            Button("Save SwiftTag Document as...") {
+                performSaveSwiftTagDocumentAs?()
             }
+            .keyboardShortcut("s", modifiers: [.option, .control])
+            .disabled(!(canPerformSaveSwiftTagDocumentAs ?? false))
         }
     }
 
