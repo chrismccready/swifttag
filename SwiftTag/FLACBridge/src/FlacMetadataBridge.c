@@ -63,6 +63,52 @@ static int append_tag_pair(FlacTagResult *result, const char *key, const char *v
     return 0;
 }
 
+static int append_vorbis_comment_tags(
+    FlacTagResult *out_result,
+    const FLAC__StreamMetadata_VorbisComment *comments,
+    char **error_message
+) {
+    if (out_result == NULL || comments == NULL) {
+        return -1;
+    }
+
+    for (uint32_t i = 0; i < comments->num_comments; i++) {
+        FLAC__StreamMetadata_VorbisComment_Entry entry = comments->comments[i];
+        if (entry.entry == NULL || entry.length == 0) {
+            continue;
+        }
+
+        size_t lineLen = (size_t)entry.length;
+        char *line = (char *)malloc(lineLen + 1);
+        if (line == NULL) {
+            set_error(error_message, "Out of memory while parsing FLAC tags.");
+            return -1;
+        }
+
+        memcpy(line, entry.entry, lineLen);
+        line[lineLen] = '\0';
+
+        char *equals = strchr(line, '=');
+        if (equals != NULL) {
+            *equals = '\0';
+            const char *key = line;
+            const char *value = equals + 1;
+
+            if (key[0] != '\0') {
+                if (append_tag_pair(out_result, key, value) != 0) {
+                    free(line);
+                    set_error(error_message, "Out of memory while collecting FLAC tags.");
+                    return -1;
+                }
+            }
+        }
+
+        free(line);
+    }
+
+    return 0;
+}
+
 static int append_picture(FlacPictureResult *result, const FLAC__StreamMetadata_Picture *picture) {
     if (result == NULL || picture == NULL) {
         return -1;
@@ -453,55 +499,40 @@ int flac_read_tags(const char *file_path, FlacTagResult *out_result, char **erro
     FLAC__StreamMetadata *metadata = NULL;
     FLAC__bool ok = FLAC__metadata_get_tags(file_path, &metadata);
     if (!ok || metadata == NULL) {
-        set_error(error_message, "FLAC__metadata_get_tags failed for file. (Check file/app sandbox permissions.)");
         if (metadata != NULL) {
             FLAC__metadata_object_delete(metadata);
         }
-        return -1;
+
+        FLAC__Metadata_Chain *chain = FLAC__metadata_chain_new();
+        if (chain == NULL) {
+            set_error(error_message, "Failed to allocate FLAC metadata chain.");
+            return -1;
+        }
+
+        if (!FLAC__metadata_chain_read(chain, file_path)) {
+            FLAC__metadata_chain_delete(chain);
+            set_error(error_message, "FLAC__metadata_get_tags failed for file. (Check file/app sandbox permissions.)");
+            return -1;
+        }
+
+        FLAC__StreamMetadata *vorbisComment = find_vorbis_comment_block(chain);
+        if (vorbisComment == NULL) {
+            FLAC__metadata_chain_delete(chain);
+            return 0;
+        }
+
+        int status = append_vorbis_comment_tags(out_result, &vorbisComment->data.vorbis_comment, error_message);
+        FLAC__metadata_chain_delete(chain);
+        return status;
     }
 
+    int status = 0;
     if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
-        FLAC__StreamMetadata_VorbisComment vc = metadata->data.vorbis_comment;
-
-        for (uint32_t i = 0; i < vc.num_comments; i++) {
-            FLAC__StreamMetadata_VorbisComment_Entry entry = vc.comments[i];
-            if (entry.entry == NULL || entry.length == 0) {
-                continue;
-            }
-
-            size_t lineLen = (size_t)entry.length;
-            char *line = (char *)malloc(lineLen + 1);
-            if (line == NULL) {
-                set_error(error_message, "Out of memory while parsing FLAC tags.");
-                FLAC__metadata_object_delete(metadata);
-                return -1;
-            }
-
-            memcpy(line, entry.entry, lineLen);
-            line[lineLen] = '\0';
-
-            char *equals = strchr(line, '=');
-            if (equals != NULL) {
-                *equals = '\0';
-                const char *key = line;
-                const char *value = equals + 1;
-
-                if (key[0] != '\0') {
-                    if (append_tag_pair(out_result, key, value) != 0) {
-                        free(line);
-                        set_error(error_message, "Out of memory while collecting FLAC tags.");
-                        FLAC__metadata_object_delete(metadata);
-                        return -1;
-                    }
-                }
-            }
-
-            free(line);
-        }
+        status = append_vorbis_comment_tags(out_result, &metadata->data.vorbis_comment, error_message);
     }
 
     FLAC__metadata_object_delete(metadata);
-    return 0;
+    return status;
 }
 
 int flac_read_pictures(const char *file_path, FlacPictureResult *out_result, char **error_message) {

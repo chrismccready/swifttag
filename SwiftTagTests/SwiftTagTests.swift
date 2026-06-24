@@ -22,6 +22,14 @@ struct SwiftTagTests {
             .appendingPathComponent("test-with_padding.flac")
     }
 
+    private static var noTagsFixtureURL: URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftTagTestFiles")
+            .appendingPathComponent("test-no_tags.flac")
+    }
+
     private static let fixtureFingerprint = "ad98344c162662ceeb88f25aa552af60"
 
     private static func isolatedUserDefaults(prefix: String) throws -> (UserDefaults, String) {
@@ -82,6 +90,16 @@ struct SwiftTagTests {
 
         let fileURL = directoryURL.appendingPathComponent(name)
         try FileManager.default.copyItem(at: paddedFixtureURL, to: fileURL)
+        return fileURL
+    }
+
+    private static func tempNoTagsFixtureCopyURL(name: String) throws -> URL {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+
+        let fileURL = directoryURL.appendingPathComponent(name)
+        try FileManager.default.copyItem(at: noTagsFixtureURL, to: fileURL)
         return fileURL
     }
 
@@ -1770,6 +1788,41 @@ struct SwiftTagTests {
         #expect(record.bitsPerSample == 16)
         #expect(record.channels == 1)
         #expect(record.fingerprint == Self.fixtureFingerprint)
+    }
+
+    @Test
+    func flacMetadataServiceReadsFixtureFileWithoutTags() throws {
+        let fileURL = Self.noTagsFixtureURL
+        #expect(FileManager.default.fileExists(atPath: fileURL.path))
+
+        let record = try FlacMetadataService.readTags(for: fileURL)
+        #expect(record.tags.isEmpty)
+        #expect(record.pictures.isEmpty)
+        #expect(record.sampleRate == 44_100)
+        #expect(record.totalSamples == 6_754)
+        #expect(record.bitsPerSample == 16)
+        #expect(record.channels == 1)
+        #expect(record.fingerprint == Self.fixtureFingerprint)
+    }
+
+    @Test
+    @MainActor
+    func importFlacFilesLoadsFixtureFileWithoutTags() async throws {
+        let fileURL = try Self.tempNoTagsFixtureCopyURL(name: "no-tags-import.flac")
+        let viewModel = TagEditorViewModel()
+
+        try await viewModel.importFlacFiles([fileURL])
+
+        let importedTrack = try #require(viewModel.trackItems.first)
+        #expect(importedTrack.tags[TagKey.title] == "no-tags-import")
+        #expect(importedTrack.tags[TagKey.filename] == "no-tags-import.flac")
+        #expect(importedTrack.latestFileSnapshot?.tags.isEmpty == true)
+        #expect(importedTrack.flacPictureRecords.isEmpty)
+        #expect(importedTrack.sampleRate == 44_100)
+        #expect(importedTrack.totalSamples == 6_754)
+        #expect(importedTrack.bitsPerSample == 16)
+        #expect(importedTrack.channels == 1)
+        #expect(importedTrack.fingerprint == Self.fixtureFingerprint)
     }
 
     @Test
