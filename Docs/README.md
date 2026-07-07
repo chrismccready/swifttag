@@ -1,5 +1,12 @@
 # SwiftTag
 
+This README is available/rendered at the 
+[SwiftTag GitHub repository](https://github.com/chrismccready/swifttag)
+where documentation links are rendered by the GitHub repository site as code and 
+at the [SwiftTag GitHub Pages site](https://chrismccready.github.io/swifttag/Docs/)
+where documentation links are rendered as an html web page (unless referencing the 
+location of code files directly). The content is identical.
+
 SwiftTag is a macOS SwiftUI app for editing [FLAC](https://xiph.org/flac/) 
 metadata. It is built as a focused scriptable desktop tagging utility, not a 
 media library manager: load FLAC files, edit tags and embedded pictures across 
@@ -20,17 +27,19 @@ Initial development was done using Xcode Assistant in a pre-release of Xcode
 26.3. Some initial Assistant exchange transcripts were lost due to early Xcode 
 release limitations and my learning curve. However, the loses were few and 
 essentially all human/agent interactions for the project are available at
-[Docs/Plans/Transcripts](Docs/Plans/Transcripts). Since late march, the 
-[Codex App](https://developers.openai.com/codex/app) has been used for most
+[Docs/Plans/Transcripts](https://github.com/chrismccready/swifttag/tree/main/Docs/Plans/Transcripts). 
+Since late march, the [Codex App](https://developers.openai.com/codex/app) has been used for most
 development and occasionally Copilot in VSCode. The AI models used were GPT-5.3
 (Codex 5.3), GPT-5.4, and GPT-5.5 with reasoning set to High or Very High
 usually the latter.   
 
 The development process usually follows prompting the agent to create a
-[plan](Docs/Plans), reviewing the plan and tweaking as needed, and then 
+[Plan](https://github.com/chrismccready/swifttag/tree/main/Docs/Plans), 
+reviewing the plan and tweaking as needed, and then 
 implementation. Almost no code was written by a human, but as can be seen in 
 the transcripts, there is continuous guidance, review, and yet more guidance. 
-The [Guides](Docs/Guides) folder contains AI agent guides/rules beyond 
+The [Guides](https://github.com/chrismccready/swifttag/tree/main/Docs/Guides) 
+folder contains AI agent guides/rules beyond 
 AGENTS.md. There are some transcripts there as well - getting the basic dev 
 cycle (including tests) was/is an ongoing thing.
 
