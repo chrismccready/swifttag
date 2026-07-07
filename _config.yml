@@ -2,3 +2,21 @@ theme: minima
 title: SwiftTag GitHub Page
 description: SwiftTag project information, links, blog, etc.
 author: Chris McCready
+exclude:
+  - BuildScripts/
+  - Docs/AppleDocsIndex/
+  - Docs/Guides/
+  - Docs/Plans/
+  - Docs/testing-tools-review.md
+  - SwiftTag.xcodeproj/
+  - SwiftTag/
+  - SwiftTagAppleScriptTests/
+  - SwiftTagQuickLookPreview/
+  - SwiftTagTestFiles/
+  - SwiftTagTests/
+  - SwiftTagUITests/
+  - AGENTS.md
+  - LICENSE
+  - SwiftTag-Bridging-Header.h
+  - SwiftTag.xctestplan
+  - .gitignore
