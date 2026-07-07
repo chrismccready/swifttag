@@ -22,9 +22,9 @@ exclude:
   - SwiftTag.xctestplan
   - .gitignore
 
- defaults:
- - scope:
-     path: "Docs/README.md"
-   values:
-     layout: default
-     title: "README"
+defaults:
+  - scope:
+      path: "Docs/README.md"
+    values:
+      layout: default
+      title: "README"
