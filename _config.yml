@@ -28,3 +28,9 @@ defaults:
     values:
       layout: default
       title: "README"
+
+  - scope:
+      path: "Docs/UserDocumentation/README.md"
+    values:
+      layout: default
+      title: "Docs"
