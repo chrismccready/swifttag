@@ -34,3 +34,12 @@ SwiftTagTestFiles/*.swifttag
 ## VSCode
 # Ignore VSCode workspace settings
 .vscode/
+
+## Jekyll
+# Ignore Jekyll build artifacts and cache
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+vendor/bundle/
+.bundle/

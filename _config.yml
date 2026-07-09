@@ -3,6 +3,10 @@ title: SwiftTag GitHub Pages
 description: SwiftTag project information, links, blog, etc.
 author: Chris McCready
 
+extra_nav_links:
+  - title: "User Documentation"
+    url: /Docs/UserDocumentation/
+
 exclude:
   - BuildScripts/
   - Docs/AppleDocsIndex/
@@ -16,6 +20,7 @@ exclude:
   - SwiftTagTestFiles/
   - SwiftTagTests/
   - SwiftTagUITests/
+  - ThirdParty/
   - AGENTS.md
   - LICENSE
   - SwiftTag-Bridging-Header.h
@@ -28,9 +33,3 @@ defaults:
     values:
       layout: default
       title: "README"
-
-  - scope:
-      path: "Docs/UserDocumentation/README.md"
-    values:
-      layout: default
-      title: "Docs"
