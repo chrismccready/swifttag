@@ -1,0 +1,1431 @@
+{
+  "archive_provenance_commit_ids": [
+    "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+  ],
+  "base_segments": [
+    {
+      "assistant_processing_seconds": 1122.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 74,
+      "excerpt": "Read pre-AddMultiPicturePerTrackSupport.md and based on its contents create a plan file named 11-AddMultiPicturePerTrackSupport.md. Please ask questions to clarify. > > - Update FLAC picture management so that pictures of a given type are associated per track, can differ between tracks and a given picture can be written to one or more tracks at time of save: > - Be sure to use data structures that allow images to associated with a given track by reference so that images are not being duplicated in memory. Specifically, only single unique pictures, regardless of type or associated track, are in memory. > - There can be more than one picture of a given type per track file except for type 1 (32x32 png icon) of which there can be only one and it needs to be png. > - Pictures of the same type are ordered and can be reordered per track file. > - Pictures that are associated/referenced by a given file, regardless of the picture’s origination (from track file or added in editor), are considered “pinned” for the UI descriptions that follow. Pictures de-pinned from tracks remove the track’s reference to a picture and do not remove a track’s association with a picture in its source file. > - ",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-001",
+      "source_line_count": 80,
+      "source_line_end": 91,
+      "source_line_start": 12,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-001",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-002"
+      ],
+      "user_response_seconds": 8001.0,
+      "valid_atomic_elapsed_seconds": 9123.0
+    },
+    {
+      "assistant_processing_seconds": 52.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 24,
+      "excerpt": "1. Picture pool dedupe identity should be data bytes only. 2. When Save Front Cover to all Tracks is On, locked tracks should not get front-cover pin changes in-memory. 3. When Save all Pictures to all Tracks is On, it applies to all loaded tracks regardless of save scope. 4. On remove-picture when unselected tracks still reference the picture, remove from selected tracks only plus, rather than an alert, draw a 0.25 opacity overlay using the “Track/Disc Total Mismatch Color\" and with a text layer on top of the overlay that indicates that the picture will be removed from selected tracks and is displayed here due to it being referenced by tracks outside the selection and can be “added” back to selected tracks by pinning again. 5. In the front-cover drop dialog, Replace existing image(s) replaces only front-cover entries, so: - If the dropped picture is already in the pool and all affected tracks already have a reference to it as their first front cover, then no change occurs and in fact this dialog should never been displayed. - If the dropped picture is already in the pool and one or more affected tracks does not have a reference to it as their first front cover, then add first fron",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-002",
+      "source_line_count": 30,
+      "source_line_end": 121,
+      "source_line_start": 92,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-003",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-004"
+      ],
+      "user_response_seconds": 615.0,
+      "valid_atomic_elapsed_seconds": 667.0
+    },
+    {
+      "assistant_processing_seconds": 27.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 14,
+      "excerpt": "1. With bytes-only dedupe, if identical bytes come in with different MIME/description values, metadata should be stored per track-reference. 2. Yes, for Save all Pictures to all Tracks = On, locked tracks are still excluded from in-memory pin mutations. 3. For the remove-picture informational overlay text, use wording that is appropriate but be sure to include something like a hint that the picture can be re added by pinning again. I’m applying these last three clarifications into the Confirmed Decisions and Open Questions sections now so the plan is implementation-ready with no unresolved behavior gaps. Updated 11-AddMultiPicturePerTrackSupport.md with your final clarifications. The plan now records: 1. Bytes-only dedupe with MIME/description stored per track-reference. 2. Save all Pictures to all Tracks still excludes locked tracks from in-memory pin mutations. 3. Remove-picture overlay copy can be flexible but must include a re-pin hint. 4. Open Questions is now cleared (None currently). [ 2026-03-21T20:37:47Z (27s since Assistant start) ]",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-003",
+      "source_line_count": 20,
+      "source_line_end": 141,
+      "source_line_start": 122,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-005",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-006"
+      ],
+      "user_response_seconds": 7646.0,
+      "valid_atomic_elapsed_seconds": 7673.0
+    },
+    {
+      "assistant_processing_seconds": 25.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 18,
+      "excerpt": "Under High-Risk Concerns you wrote “Shared pooled-image references can produce unexpected bulk changes if track association boundaries are unclear in UI, especially with bytes-only dedupe identity.” We are going to keep any meta data differences per track reference so the UI should and pool should “see” these pictures are different. Do not change the plan, just expand a bit more on why you think this an issue and perhaps some methods to diminish the concern if there still is one. You’re right that per-track-reference metadata removes one major ambiguity. I’ll explain the remaining risk as an operational/reference risk (not a metadata-collision risk), and list concrete mitigations. Good callout. With metadata stored per track-reference, that specific “same bytes but different metadata get merged incorrectly” risk is mostly addressed. The remaining risk I had in mind is this: - If multiple tracks reference the same pooled image bytes, any action that is implemented at pool-item scope instead of reference scope can still affect more tracks than intended. - Typical failure modes are remove/reorder/pin operations accidentally touching every reference to that pooled item. - UI confusion ",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-004",
+      "source_line_count": 24,
+      "source_line_end": 165,
+      "source_line_start": 142,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-007",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-008"
+      ],
+      "user_response_seconds": 714.0,
+      "valid_atomic_elapsed_seconds": 739.0
+    },
+    {
+      "assistant_processing_seconds": 32.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 12,
+      "excerpt": "Ok, add to the plan (editing as needed for clarity and brevity) your suggestions on how to diminish concern without changing plan scope, especially the tests. And a potential todo to the plan that calls for updating the UI to include picture meta data information. I’ll update the plan with concise mitigation items (including targeted test cases) and add a scoped TODO for showing picture metadata in the UI. Updated 11-AddMultiPicturePerTrackSupport.md with the requested additions, kept concise: - Added explicit in-scope risk mitigations under High-Risk Concerns. - Strengthened Test Strategy with scope-isolation and per-reference metadata-retention tests. - Added UI validation coverage for scope text and partial-removal overlay re-pin hint. - Added implementation hardening note for debug assertions on unintended cross-track mutations. - Added a TODO section for a follow-up UI metadata inspector/detail enhancement. [ 2026-03-21T22:58:04Z (32s since Assistant start) ]",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-005",
+      "source_line_count": 18,
+      "source_line_end": 183,
+      "source_line_start": 166,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-009",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-010"
+      ],
+      "user_response_seconds": 659.0,
+      "valid_atomic_elapsed_seconds": 691.0
+    },
+    {
+      "assistant_processing_seconds": 903.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 72,
+      "excerpt": "I have removed the file pre-AddMultiPicturePerTrackSupport.md and going forward we will only refer to 11-AddMultiPicturePerTrackSupport.md as the plan. Go ahead and implement 11-AddMultiPicturePerTrackSupport.md. I’m starting implementation now by refactoring the album-art data model first, then I’ll wire import/save/diff paths, and finally update UI/commands and tests in that order. I’ve mapped the impact surface: to keep momentum and avoid breaking unrelated flows, I’m implementing the new multi-picture core with backward-compatible wrappers first, then layering the new UI/tooling behavior on top. I’m moving into code edits now: first I’ll add new album-art core types and state APIs, then wire ContentView and TagEditorViewModel to those APIs before tackling the new menu/toolbar behavior. I’ve started model changes by extending file snapshots to carry ordered picture records alongside the legacy map; next I’m updating Track and mappers so imports/save paths can actually populate and use that data. I’m editing TagEditorViewModel next to make picture handling track-specific while keeping backward compatibility for existing call sites and tests. I’ve wired core model/save changes; no",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-006",
+      "source_line_count": 78,
+      "source_line_end": 261,
+      "source_line_start": 184,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-011",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-012"
+      ],
+      "user_response_seconds": 1266.0,
+      "valid_atomic_elapsed_seconds": 2169.0
+    },
+    {
+      "assistant_processing_seconds": 461.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 58,
+      "excerpt": "Yes, continue. I’m continuing with the remaining gaps now: front-cover drop conflict dialog logic, cross-type duplicate warning styling/overlay, and wiring post-drop state sync so per-track references stay consistent. I’m patching AlbumArtViewModel now to add two missing behaviors: front-cover drop conflict resolution (cancel/replace/add first/add last) and duplicate-cross-type detection for list/overlay presentation. Continuing implementation from the current partial state. I’ll compile first to surface any signature mismatches from the latest AlbumArtViewModel changes, then patch callsites and tests until the project is green again. Build is currently passing, so I’m now checking the plan and the newly added album-art APIs for any remaining unimplemented requirements (duplicate-type UI cues, overlay behavior, and drop-dialog edge cases). I found likely remaining gaps in the album-art UI wiring (duplicate-type styling and metadata display) and I’m checking the exact AlbumArtViewModel string/output and sheet callbacks before patching. Next I’m wiring the remaining sheet-level UI signals from ContentView into AlbumArtSheetView (duplicate warning state and metadata overlay), then I’l",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-007",
+      "source_line_count": 64,
+      "source_line_end": 325,
+      "source_line_start": 262,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-013",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-014"
+      ],
+      "user_response_seconds": 678.0,
+      "valid_atomic_elapsed_seconds": 1139.0
+    },
+    {
+      "assistant_processing_seconds": 93.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 32,
+      "excerpt": "App hangs on attmepting to load one or more flac files. I’ll trace the FLAC load path first, focusing on ContentView change handlers and album-art sync functions to find a re-entrant state update loop that could cause the hang. I found a suspicious spot: syncAlbumArtContext() currently calls syncTrackPictureRecordsFromAlbumArt(), and that function writes back into viewModel.trackItems, which can cause repeated state churn during import. I’m confirming exact implementation now. Root cause looks like UI-thread churn in album-art pooling: dedupe currently re-hashes and scans the entire pool for every picture insert. I’m applying a constant-time dedupe index to remove that hotspot and then re-validating import-related tests/build. I’ve applied a performance fix in the picture dedupe path that was likely freezing the UI during FLAC load, and validation is green. I’ll summarize exactly what changed and what to try next. I fixed a likely load-hang hotspot in AlbumArtViewModel.swift. What was happening: - Bytes-only dedupe was O(n²) during pool rebuild/import. - For each picture it re-hashed and scanned all pooled images, on the main actor. - With large/Multiple FLAC picture payloads this ",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-008",
+      "source_line_count": 38,
+      "source_line_end": 363,
+      "source_line_start": 326,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-015",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-016"
+      ],
+      "user_response_seconds": 790.0,
+      "valid_atomic_elapsed_seconds": 883.0
+    },
+    {
+      "assistant_processing_seconds": 117.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 26,
+      "excerpt": "The issue still exists. I am seeing: cannot open file at line 51044 of [f0ca7bba1c] os_unix.c:51044: (2) open(/private/var/db/DetachedSignatures) - No such file or directory In the debug output. The hang happens at leaving handleFlacImportResult. I’m going to inspect the exact import path after handleFlacImportResult (especially collectFlacFiles and importFlacFiles) for main-thread blocking or re-entrant UI updates, then patch it to keep heavy work off the main actor. I found a high-probability hang cause: canSave() was mutating model state during view recomputation (syncTrackPictureRecordsFromAlbumArt()), which can create a self-triggering render/update loop. I’m removing that mutation and making picture sync write only when records actually changed. That DetachedSignatures message is typically noise from macOS and not the root cause of the UI freeze. I found and fixed a real hang trigger in ContentView.swift: 1. canSave(payload:) was mutating app state by calling syncTrackPictureRecordsFromAlbumArt(). 2. canSave is evaluated during SwiftUI rendering (via focused command enablement), so this could create a render/update loop right after import. 3. I removed that mutation from canS",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-009",
+      "source_line_count": 32,
+      "source_line_end": 395,
+      "source_line_start": 364,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-017",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-018"
+      ],
+      "user_response_seconds": 558.0,
+      "valid_atomic_elapsed_seconds": 675.0
+    },
+    {
+      "assistant_processing_seconds": 60.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 21,
+      "excerpt": "App hangs when attempting to open album art sheet. I found a strong candidate for this hang: album-art sheet rendering is calling view-model methods that mutate state during read (currentReference), which can trigger a render loop when the sheet opens. I’m patching that now. Fixed a render-loop trigger that can hang when opening the album art sheet. Change made: - In AlbumArtViewModel.swift, currentReference(for:) no longer writes to currentReferenceIndexBySlot while being called for view rendering. - It now clamps the index locally and returns the reference without mutating observable state. Why this matters: - The sheet UI calls methods like duplicate/metadata providers during render. - Those methods call currentReference(for:). - Mutating observable state during render can cause repeated invalidation/re-render loops and apparent hangs. Validation: - BuildProject passes. - TrackStatusViewInspectorTests/albumArtSheetViewDisablesWellAndShowsSaveOverlayWhenSaveIsRunning() passes. Please test opening the album art sheet again. [ 2026-03-22T00:31:09Z (1m 0s since Assistant start) ]",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-010",
+      "source_line_count": 27,
+      "source_line_end": 422,
+      "source_line_start": 396,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-019",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-020"
+      ],
+      "user_response_seconds": 1341.0,
+      "valid_atomic_elapsed_seconds": 1401.0
+    },
+    {
+      "assistant_processing_seconds": 179.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 29,
+      "excerpt": "Currently de-pinning a picture removes it from the list - not desired. I think I made a mistake in my wording used in initial design work. Pinning and reference making are not exactly the same thing. The desired result is that a user can browse any of the pictures based on type and then “pin” the picture(s) that they would like to be saved to a given track (selected or all). De-pinning a picture should not remove the picture from the available list of pictures it just means don’t save that picture to the track’s file. Pictures are removed by actually removing them from the list via the “minus” button. Please update code as needed. I’m implementing pin-state separation in AlbumArtViewModel so de-pin no longer deletes picture references, then I’ll adjust ContentView pin-toggle wiring to avoid reloading the model context on every pin toggle. I’ve applied the pin-vs-reference separation and added a test for de-pin behavior. I’m running build plus targeted tests now to ensure this doesn’t regress sheet behavior or save logic. Updated to match your clarified behavior: de-pin no longer removes the picture from the browsable list. What changed: - In AlbumArtViewModel.swift: 1. Added separa",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-011",
+      "source_line_count": 35,
+      "source_line_end": 457,
+      "source_line_start": 423,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-021",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-022"
+      ],
+      "user_response_seconds": 20186.0,
+      "valid_atomic_elapsed_seconds": 20365.0
+    },
+    {
+      "assistant_processing_seconds": 141.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 37,
+      "excerpt": "Upon remove action the picture is removed however: - The overlay be drawn below the picture it should be drawn over the picture - The picture should actually be removed from presentation because it is referenced by other tracks, hence the overlay saying so. If there is one or no picture for a give type the first, previous, next and last buttons should be disabled. I’ll adjust both model and sheet behavior: keep removed pictures visible via out-of-scope fallback presentation, draw overlay directly over the image, and tighten navigation enablement based on the actual presented picture count. I’m patching AlbumArtViewModel to use a presentation fallback list (all tracks only when selected scope is empty for that slot and the remove overlay is active), then moving the remove overlay into a ZStack over the image well in AlbumArtSheetView. Edits compile at file-diagnostic level; I’m running full build and targeted tests for remove-overlay and navigation disable behavior now. Implemented all three requested behaviors. Changes made: 1. Remove overlay now draws over the picture - Updated AlbumArtSheetView.swift to render the remove informational overlay in a ZStack on top of the image well ",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-012",
+      "source_line_count": 43,
+      "source_line_end": 500,
+      "source_line_start": 458,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-023",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-024"
+      ],
+      "user_response_seconds": 896.0,
+      "valid_atomic_elapsed_seconds": 1037.0
+    },
+    {
+      "assistant_processing_seconds": 106.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 29,
+      "excerpt": "Add to the picture information text currently located below image well, the count of pictures of that type and of that specific image. It looks as though a copy of the picture per reference to it is being put into the presentation list for a give type rather than just one unique picture that has multiple references to it. I’m updating album-art presentation to dedupe by unique image bytes (pool item) per type for browsing, and expanding metadata text to include both counts: total images for that type and references for the currently shown image. I’ve patched the core behavior. I’m adding one focused test to lock in “unique image browsing + reference count metadata,” then I’ll build and run targeted tests. Running build and focused tests now. Implemented. What changed: - Updated AlbumArtViewModel.swift: 1. Browsing/presentation list is now unique per image bytes (poolItemID) for each type, instead of showing one entry per reference. 2. Metadata text now includes: - Type images: N (unique images for that type in current presentation scope) - This image refs: M (how many references point to the currently shown image in active scope) 3. Navigation enablement now naturally reflects uniq",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-013",
+      "source_line_count": 35,
+      "source_line_end": 535,
+      "source_line_start": 501,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-025",
+        "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:turn-026"
+      ],
+      "user_response_seconds": 0.0,
+      "valid_atomic_elapsed_seconds": 106.0
+    }
+  ],
+  "candidate_commits": [
+    {
+      "archive_provenance": false,
+      "body": "• add read-only # track table column and default ascending track-number sort\n• add Auto update ​Track ​Total and Update ​Track ​Total on ​Locked ​Tracks settings\n• disable total-tracks editing while auto update is enabled\n• sync track total from non-deleted track count and apply by locked-track setting\n• add Set ​Track ​Total (*) actions to table, total-tracks field, and File menu\n• add additive Add ​FLAC files... and read-only variant in context and File menus\n• add bookmark-identity duplicate filtering for additive import and drop flows\n• add .flac drag/drop additive import with Option modifier forcing locked add\n• add selection-aware reload/remove commands with enabled-state gating\n• add destructive confirmation flow for load, reload, remove, close window, and quit\n• include unsaved edit counts in destructive prompts and action-specific confirm labels\n• update File menu ordering, separators, focused command routing, and shortcuts\n• scope unsaved-edit/file references to each window/tab lifecycle\n• skip writing unchanged tracks during save operations\n• add unit and ViewInspector tests for total update, duplicate filtering, and UI states",
+      "changed_paths": [
+        "Docs/Plans/10-AddTrackManagement.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/Settings/GeneralSettingsView.swift",
+        "SwiftTag/Features/Settings/TagWriteSettingsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/SaveSettings.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/UnsavedChangesCoordinator.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift"
+      ],
+      "code_line_count": 932,
+      "commit_hash": "68f7c7b1c66c1a7acd0564610efe03ceff89180b",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: action, actions, apply, close, command, commands",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "68f7c7b",
+      "source_link": "../../sources/commits/68f7c7b.html",
+      "subject": "feat(editor): add track management commands, safeguards, and additive import flows",
+      "test_line_count": 259
+    },
+    {
+      "archive_provenance": true,
+      "body": "• add pooled multi-picture album art state with per-track references, scoped browsing, and pin controls\n• add track and type picture scope pickers, effective pin overrides, and setting-driven save behavior\n• update picture metadata, removal overlays, reload state handling, and track status synchronization\n• extend save and import flows to preserve ordered per-track pictures and forced write behavior\n• add targeted unit and ViewInspector coverage for browser state, scope rules, and reload regressions",
+      "changed_paths": [
+        "Docs/Plans/11-v1-AddMultiPicturePerTrackSupport.md",
+        "Docs/Plans/11-v2-AddMultiPicturePerTrackSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-03-22-1-11-AddMultiPicturePerTrackSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtTypes.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/Settings/TagWriteSettingsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorAlbumView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/FlacMetadataService.swift",
+        "SwiftTag/Shared/Models/SaveSettings.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Models/TrackStatus.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift"
+      ],
+      "code_line_count": 1707,
+      "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+      "docs_line_count": 0,
+      "reasons": [
+        "archive provenance only",
+        "subject tokens: album, art, behavior, browser, browsing, controls",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "9e1ce62",
+      "source_link": "../../sources/commits/9e1ce62.html",
+      "subject": "feat(album-art): add scoped multi-picture browser and per-track picture save behavior",
+      "test_line_count": 714
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-03-19-1-10-AddTrackManagement.md"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "b1c99ff0e11dc7d38d78a51a328115010a433f80",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: commands, docs, flows, import, management, track",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "b1c99ff",
+      "source_link": "../../sources/commits/b1c99ff.html",
+      "subject": "docs(transcript): plan 10 add track management commands, safeguards, and additive import flows",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.md"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "94246bbd4bebc8a284577f2d68b82ff5db235599",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: docs, inspector, status, track, transcript, view",
+        "path/topic overlap",
+        "commit before transcript within 7d"
+      ],
+      "score": 0.93,
+      "short_hash": "94246bb",
+      "source_link": "../../sources/commits/94246bb.html",
+      "subject": "docs(transcript): 8-AddTrackStatusPlan.md finalization and introduction of ViewInspector",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "• rename diff settings to track-to-file and track-to-track terminology with new persisted keys\n• add externally modified diff formatting toggle and color setting\n• add track/disc total mismatch color and apply it to warning text and background\n• split formatting into track-to-track, track-to-file, and externally modified precedence\n• update editor bindings for per-track total discs, mixed markers, and date text diff display\n• limit misc track-to-track styling to values and detect missing-snapshot misc file diffs\n• update content and view model diff wiring plus flac import/write mapping for new behavior\n• add and update unit, view-inspector, and ui tests for feedback settings and diff formatting\n• update plan 9 and add transcripts for the feedback settings implementation changes",
+      "changed_paths": [
+        "Docs/Plans/9-AddUIFeedbackSettings.md",
+        "Docs/Plans/Transcripts/transcript-2026-03-17-1-9-AddUIFeedbackSettings.md",
+        "Docs/Plans/Transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.md",
+        "SwiftTag.xcodeproj/project.pbxproj",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/FlacImport/FlacWriteMapper.swift",
+        "SwiftTag/Features/Settings/DiffToolsView.swift",
+        "SwiftTag/Features/Settings/FeedbackSettingsView.swift",
+        "SwiftTag/Features/Settings/SettingsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorAlbumView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/EditorSessionModels.swift",
+        "SwiftTag/Shared/Models/FeedbackSettings.swift",
+        "SwiftTag/Shared/Models/TagKey.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/SaveNotificationCoordinator.swift",
+        "SwiftTag/Shared/Utilities/TagDiffFormatting.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 1685,
+      "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: apply, behavior, changes, color, content, date",
+        "path/topic overlap",
+        "commit before transcript within 7d"
+      ],
+      "score": 0.93,
+      "short_hash": "ac28a73",
+      "source_link": "../../sources/commits/ac28a73.html",
+      "subject": "feat(diff-tools): implement track/file diff states and mismatch warning customization",
+      "test_line_count": 573
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add shared tag-key groups for TRACKTOTAL/TOTALTRACKS and DISCTOTAL/TOTALDISCS\n- include DISCTOTAL in explicit tag keys so total-disc aliases stay out of misc tags\n- compare total-count alias groups by value and presence when computing file differences\n- read DISCTOTAL as fallback source for imported total-disc initial values\n- add tests for alias cleanliness, value/presence differences, and misc-tag exclusion",
+      "changed_paths": [
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/TagNormalization.swift",
+        "SwiftTagTests/SwiftTagTests.swift"
+      ],
+      "code_line_count": 114,
+      "commit_hash": "03227c22ec04d4a16f48e8159bca42426af9eac7",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: count, differences, disc, equivalent, exclusion, explicit",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "03227c2",
+      "source_link": "../../sources/commits/03227c2.html",
+      "subject": "fix(tags): treat total count aliases as equivalent",
+      "test_line_count": 160
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add picture-data budget validation using current description bytes and reserved FLAC buffer\n- stop drop, paste, and file-import updates when picture data exceeds remaining payload budget\n- show a single-button \"Picture Too Large\" alert from album art sheet bindings\n- cover budget math and rejection flow in SwiftTagTests and TrackStatusViewInspectorTests\n\ndocs(agents): add \"smart caveman\" response guidance to AGENTS.md",
+      "changed_paths": [
+        "AGENTS.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Shared/Utilities/FlacPictureUtilities.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift"
+      ],
+      "code_line_count": 238,
+      "commit_hash": "0539816b5ba23a6e25ff44d6be08444b0f8dd6c7",
+      "docs_line_count": 7,
+      "reasons": [
+        "subject tokens: agents, album, alert, art, button, bytes",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "0539816",
+      "source_link": "../../sources/commits/0539816.html",
+      "subject": "fix(album-art): reject oversized flac picture imports",
+      "test_line_count": 85
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add SwiftTag Suite application properties for Diff Tools formatting toggles\n- map new AppleScript properties to UserDefaults-backed feedback settings\n- assert AppleScript read/write behavior in unit and UI harness coverage\n- add Diff Tools toggle accessibility values for UI assertions\n\ndocs: add transcript for AppleScript support feature branch",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-02-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/Features/Settings/DiffToolsView.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 97,
+      "commit_hash": "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: assertions, backed, behavior, coverage, defaults, diff",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "063c138",
+      "source_link": "../../sources/commits/063c138.html",
+      "subject": "feat(applescript): expose diff tools settings",
+      "test_line_count": 71
+    },
+    {
+      "archive_provenance": false,
+      "body": "- expose track tags and tag objects in SwiftTag.sdef for standard suite collection access\n- add session bridge and view-model tag upsert/delete flows with script errors for invalid targets\n- normalize related FLAC tag keys during AppleScript lookup, rename, replacement, and deletion\n- add AppleScript tests for canonical tag access and update plan and transcript artifacts\n\ndocs(transcript): add additional track properties and tag class implementation transcripts",
+      "changed_paths": [
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-21-1-26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-22-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift"
+      ],
+      "code_line_count": 695,
+      "commit_hash": "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: collection, docs, during, errors, flac, flows",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "0c2d385",
+      "source_link": "../../sources/commits/0c2d385.html",
+      "subject": "feat(applescript): support standard track tag scripting",
+      "test_line_count": 120
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add picture terminology, FLAC picture type enum, and track picture elements to SDEF\n- add SwiftTagScriptPicture wrappers with picture filtering and NSData descriptors\n- route scripted picture description edits through editor state and album-art refresh\n- cover picture reads, description updates, album-art refresh, and UI AppleScript harness\n\ndocs(plan): update AppleScript support plan 26 and add implementation transcript",
+      "changed_paths": [
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-28-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 435,
+      "commit_hash": "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: album, art, cover, description, docs, editor",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "11ba785",
+      "source_link": "../../sources/commits/11ba785.html",
+      "subject": "feat(applescript): expose FLAC pictures to scripts",
+      "test_line_count": 283
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add SwiftTag document package type registration with `.swifttag` extension and `<id>-<hash>.<extension>` pooled image assets\n- add `Save SwiftTag Document...` File menu command through focused-scene command system to serialize current frontmost-editor track list, tags, etc.\n- add image dimension/colors data will now surface as saveable file differences\n\ndocs(plan): add plan 15 for SwiftTag document creation support",
+      "changed_paths": [
+        "Docs/Plans/15-AddSwiftTagDocumentCreation.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/FLACBridge/include/FlacMetadataBridge.h",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/FlacMetadataService.swift",
+        "SwiftTag/Info.plist",
+        "SwiftTag/Shared/Utilities/PictureDataUtilities.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 931,
+      "commit_hash": "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: command, current, data, differences, docs, editor",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1276536",
+      "source_link": "../../sources/commits/1276536.html",
+      "subject": "feat(package): add SwiftTag document creation and serialization",
+      "test_line_count": 298
+    },
+    {
+      "archive_provenance": false,
+      "body": "- keep the track title field focused while editing table rows\n- remove the table status refresh identity reset and related view plumbing\n- allow inactive finder opens to create a new session when a window action already exists\n- update track file inspector tests for the removed track view initializer argument\n- compare loaded picture fields explicitly in the document reader test to avoid actor isolation warnings\n\ntest(ui): add regression for track title focus loss\n\n- verify renaming a track in the table keeps the edited value after the first text change\n\ndocs(transcript): add transcript for test bug fixes\n\n- add the April 6 transcript covering the staged test and editor fixes",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-06-4-TestBugFixes.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 27,
+      "commit_hash": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: action, actor, after, allow, already, avoid",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1936954",
+      "source_link": "../../sources/commits/1936954.html",
+      "subject": "fix(editor): preserve track title editing and queued finder opens",
+      "test_line_count": 29
+    },
+    {
+      "archive_provenance": false,
+      "body": "- change color terminology from script class to record-type\n- return color settings as NSDictionary records and accept Apple event record descriptors\n- update color settings tests to validate RGBA record round trips\n- rename track/disc total mismatch color scripting key to match settings name\n\ndocs(plans): add AppleScript support implementation transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-01-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift"
+      ],
+      "code_line_count": 84,
+      "commit_hash": "1b08404c005806083a5443603d98c10c5510ee70",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: change, color, disc, docs, implementation, key",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1b08404",
+      "source_link": "../../sources/commits/1b08404.html",
+      "subject": "feat(applescript): model color settings as records",
+      "test_line_count": 45
+    },
+    {
+      "archive_provenance": false,
+      "body": "- Add `Open SwiftTag Document...` command to the File menu.\n- Add `SwiftTagDocumentPackageReader` to read `.swifttag` packages.\n- Update `EditorWindowCoordinator` to route `.swifttag` documents to existing unused windows or new windows.\n- Update `TagEditorViewModel` to load the `SwiftTagDocumentImportResult` into editable track state.\n- Retain the loaded document URL and ID for saving.\n- Include unit and UI tests for document read operations and routing.\n\ndocs(plan): add plan and transcript for SwiftTag document read",
+      "changed_paths": [
+        "Docs/Plans/16-AddSwiftTagDocumentRead.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-04-1-16-AddSwiftTagDocumentRead.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 479,
+      "commit_hash": "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: command, docs, editable, editor, existing, file",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1c2bb82",
+      "source_link": "../../sources/commits/1c2bb82.html",
+      "subject": "feat(document): add support for opening .swifttag documents",
+      "test_line_count": 282
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "BuildScripts/build-libflac.sh",
+        "Docs/FLACBridgeExecution.md",
+        "SwiftTag-Bridging-Header.h",
+        "SwiftTag.xcodeproj/project.pbxproj",
+        "SwiftTag.xcodeproj/xcshareddata/xcschemes/SwiftTagApp.xcscheme",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c.template",
+        "SwiftTag/FlacMetadataService.swift"
+      ],
+      "code_line_count": 264,
+      "commit_hash": "1fcd08274065e59e148cb05d16e592e98f02bced",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: app, build, dependency, disable, flac, link",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1fcd082",
+      "source_link": "../../sources/commits/1fcd082.html",
+      "subject": "Build ​FLAC from source and link as stais lib • configure FLAC CMake build for app use:    • static lib only (BUILD​_​SHARED​_​LIBS​=​OFF)    • disable programs (BUILD​_​PROGRAMS​=​OFF)    • disable C++ lib (BUILD​_​CXXLIBS​=​OFF)    • disable Ogg dependency (WITH​_​OGG​=​OFF) • remove dependency on bundled prebuilt Resources​/bin FLAC/metaflac artifacts",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "- resolve create command targets from tell-context receivers when at is omitted\n- create tag wrappers from track tag collections and attach inserted tags to tracks\n- expose tag specifier descriptors so make returns scriptable tag results\n- add UI coverage for make new tag inside tell first track\n\nfix(misc-tags): refresh misc tag rows after selection and reload changes\n\n- clear misc tag row values when no tracks are selected\n- reload misc tag rows after selected track reload replaces track data\n- add misc value field and destructive action accessibility identifiers\n- add unit and UI coverage for placeholder values and reload restoration\n\ndocs(transcripts): add AppleScript support session plan 26 and bug fix transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-29-2-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 170,
+      "commit_hash": "24428a1548324e06268c9174e358e22e9559801b",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: action, after, changes, command, context, coverage",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "24428a1",
+      "source_link": "../../sources/commits/24428a1.html",
+      "subject": "fix(applescript): support making tags from track tell contexts",
+      "test_line_count": 295
+    }
+  ],
+  "candidate_plans": [
+    {
+      "creation_commit_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+      "current_source_path": "Docs/Plans/11-v4-AddMultiPicturePerTrackSupport.md",
+      "display_title": "Add Multi Picture Per Track Support Plan",
+      "plan_id": "11",
+      "revision_commit_ids": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "68e340f508e0f0f5b0ac2fbbcae259abf6155b6e",
+        "b4593bad7a73d4737a89fa81f52b0a0c853f2bce"
+      ],
+      "section_names": "Goal; Scope; Plan Input Checklist Coverage; Current Implementation Snapshot; Confirmed Decisions; Dependencies And Constraints; High-Risk Concerns; Destructive / Write-Back Behavior; Implementation Phases; Test Strategy; Acceptance Criteria; Open Questions",
+      "source_link": "../../sources/plans/11-v4-AddMultiPicturePerTrackSupport.html#L1"
+    }
+  ],
+  "candidate_themes": [
+    {
+      "accepted_commit_ids": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "AppleScript",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+          "entity_type": "commit",
+          "evidence_source": "keywords: script",
+          "relationship_type": "include",
+          "theme_id": "applescript"
+        }
+      ],
+      "theme_id": "applescript"
+    },
+    {
+      "accepted_commit_ids": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Diff",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+          "entity_type": "commit",
+          "evidence_source": "alias: status",
+          "relationship_type": "include",
+          "theme_id": "diff"
+        }
+      ],
+      "theme_id": "diff"
+    },
+    {
+      "accepted_commit_ids": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "FLAC Lib",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+          "entity_type": "commit",
+          "evidence_source": "configured exact path",
+          "relationship_type": "include",
+          "theme_id": "flac-lib"
+        }
+      ],
+      "theme_id": "flac-lib"
+    },
+    {
+      "accepted_commit_ids": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+      ],
+      "accepted_plan_ids": [
+        "11"
+      ],
+      "display_name": "Picture",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "picture"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "11",
+          "entity_type": "plan",
+          "evidence_source": "explicit Plan Theme include",
+          "relationship_type": "include",
+          "theme_id": "picture"
+        }
+      ],
+      "theme_id": "picture"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Project",
+      "positive_and_negative_edges": [],
+      "theme_id": "project"
+    },
+    {
+      "accepted_commit_ids": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Save",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+          "entity_type": "commit",
+          "evidence_source": "alias: save",
+          "relationship_type": "include",
+          "theme_id": "save"
+        }
+      ],
+      "theme_id": "save"
+    },
+    {
+      "accepted_commit_ids": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Settings",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+          "entity_type": "commit",
+          "evidence_source": "alias: settings",
+          "relationship_type": "include",
+          "theme_id": "settings"
+        }
+      ],
+      "theme_id": "settings"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "SwiftTag Document",
+      "positive_and_negative_edges": [],
+      "theme_id": "swifttag-document"
+    },
+    {
+      "accepted_commit_ids": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Tags",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+          "entity_type": "commit",
+          "evidence_source": "alias: metadata",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        }
+      ],
+      "theme_id": "tags"
+    }
+  ],
+  "conservation_preview": {
+    "commit_lens": {
+      "allocated_atomic_elapsed_seconds": 46668.0,
+      "allocated_back_and_forth": 13.0,
+      "allocated_lines": 536.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "header_note_lines": 12,
+    "plan_lens": {
+      "allocated_atomic_elapsed_seconds": 46668.0,
+      "allocated_back_and_forth": 13.0,
+      "allocated_lines": 536.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "segment_source_lines": 524,
+    "transcript_source_lines": 536
+  },
+  "current_review_status": {
+    "configured_content_digest": "dec1bd8c8d77ef0fa3094cfce2a05624880cab94965a5a88c378107e0b3534b7",
+    "configured_review_input_digest": "f8702990395cfaedf753961311b46fe2abd68e96a23b575b49b911517df6a82d",
+    "message": "Reviewed allocation accepted",
+    "normalized_content_digest": "dec1bd8c8d77ef0fa3094cfce2a05624880cab94965a5a88c378107e0b3534b7",
+    "review_input_digest": "f8702990395cfaedf753961311b46fe2abd68e96a23b575b49b911517df6a82d",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10",
+    "reviewed_by": "Codex semantic review A",
+    "transcript_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport"
+  },
+  "existing_review": {
+    "accepted_candidate_commit_ids": [
+      "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+    ],
+    "accepted_candidate_plan_ids": [
+      "11"
+    ],
+    "evidence_note": "Reviewed against Plan 34, transcript, Plans, packet evidence, and git history.",
+    "feature_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-001"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-001",
+            "source_line_end": 91,
+            "source_line_start": 12
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-002"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-002",
+            "source_line_end": 121,
+            "source_line_start": 92
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-003"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-003",
+            "source_line_end": 141,
+            "source_line_start": 122
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-004"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-004",
+            "source_line_end": 165,
+            "source_line_start": 142
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-005"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-005",
+            "source_line_end": 183,
+            "source_line_start": 166
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-006"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-006",
+            "source_line_end": 261,
+            "source_line_start": 184
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-007"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-007",
+            "source_line_end": 325,
+            "source_line_start": 262
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-008"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-008",
+            "source_line_end": 363,
+            "source_line_start": 326
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-009"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-009",
+            "source_line_end": 395,
+            "source_line_start": 364
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-010"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-010",
+            "source_line_end": 422,
+            "source_line_start": 396
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-011"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-011",
+            "source_line_end": 457,
+            "source_line_start": 423
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-012"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-012",
+            "source_line_end": 500,
+            "source_line_start": 458
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-013"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-013",
+            "source_line_end": 535,
+            "source_line_start": 501
+          }
+        ]
+      }
+    ],
+    "feature_unallocated_remainder": {
+      "assistant_processing": 0,
+      "back_and_forth": 0,
+      "lines": 0,
+      "user_response": 0
+    },
+    "normalized_content_digest": "dec1bd8c8d77ef0fa3094cfce2a05624880cab94965a5a88c378107e0b3534b7",
+    "plan_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-001"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-001",
+            "source_line_end": 91,
+            "source_line_start": 12
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-002"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-002",
+            "source_line_end": 121,
+            "source_line_start": 92
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-003"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-003",
+            "source_line_end": 141,
+            "source_line_start": 122
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-004"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-004",
+            "source_line_end": 165,
+            "source_line_start": 142
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-005"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-005",
+            "source_line_end": 183,
+            "source_line_start": 166
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-006"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-006",
+            "source_line_end": 261,
+            "source_line_start": 184
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-007"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-007",
+            "source_line_end": 325,
+            "source_line_start": 262
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-008"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-008",
+            "source_line_end": 363,
+            "source_line_start": 326
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-009"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-009",
+            "source_line_end": 395,
+            "source_line_start": 364
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-010"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-010",
+            "source_line_end": 422,
+            "source_line_start": 396
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-011"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-011",
+            "source_line_end": 457,
+            "source_line_start": 423
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-012"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-012",
+            "source_line_end": 500,
+            "source_line_start": 458
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "11",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-013"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport:segment-013",
+            "source_line_end": 535,
+            "source_line_start": 501
+          }
+        ]
+      }
+    ],
+    "plan_unallocated_remainder": {
+      "assistant_processing": 0,
+      "back_and_forth": 0,
+      "lines": 0,
+      "user_response": 0
+    },
+    "rejected_candidate_commit_ids": [
+      "03227c22ec04d4a16f48e8159bca42426af9eac7",
+      "0539816b5ba23a6e25ff44d6be08444b0f8dd6c7",
+      "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+      "1b08404c005806083a5443603d98c10c5510ee70",
+      "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "1fcd08274065e59e148cb05d16e592e98f02bced",
+      "24428a1548324e06268c9174e358e22e9559801b",
+      "68f7c7b1c66c1a7acd0564610efe03ceff89180b",
+      "94246bbd4bebc8a284577f2d68b82ff5db235599",
+      "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+      "b1c99ff0e11dc7d38d78a51a328115010a433f80"
+    ],
+    "rejected_candidate_plan_ids": [],
+    "review_input_digest": "f8702990395cfaedf753961311b46fe2abd68e96a23b575b49b911517df6a82d",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10",
+    "reviewed_by": "Codex semantic review A",
+    "transcript_digest": "dec1bd8c8d77ef0fa3094cfce2a05624880cab94965a5a88c378107e0b3534b7"
+  },
+  "header": {
+    "agent": "GPT-5.3-Codex",
+    "export_date": "2026-03-21",
+    "reference_type": "Plan",
+    "references": [
+      "11-v1-AddMultiPicturePerTrackSupport.md"
+    ]
+  },
+  "normalized_content_digest": "dec1bd8c8d77ef0fa3094cfce2a05624880cab94965a5a88c378107e0b3534b7",
+  "path": "Docs/Plans/Transcripts/transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport.md",
+  "raw_metrics": {
+    "assistant_processing_seconds": 3318.0,
+    "back_and_forth_count": 13,
+    "line_count": 536,
+    "turn_count": 26,
+    "user_response_seconds": 43350.0,
+    "valid_atomic_elapsed_seconds": 46668.0
+  },
+  "review_input_digest": "f8702990395cfaedf753961311b46fe2abd68e96a23b575b49b911517df6a82d",
+  "review_method_version": "plan-34-v1",
+  "schema_version": 1,
+  "source_link": "../../sources/transcripts/transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport.html#L1",
+  "transcript_id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport",
+  "unresolved_questions": [
+    "Accept or reject Commit ownership for every base segment.",
+    "Assign direct or implementation Plan role for every accepted Plan segment.",
+    "Explain any Commit-lens or Plan-lens unallocated remainder."
+  ]
+}

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan 1: FLAC Bridge Build Notes</title>
+  <link rel="stylesheet" href="../assets.css">
+</head>
+<body>
+<header><h1>Plan 1: FLAC Bridge Build Notes</h1><nav>
+  <a href="../index.html">Index</a>
+  <a href="../commits.html">Commits</a>
+  <a href="../plans.html">Plans</a>
+  <a href="../themes.html">Themes</a>
+  <a href="../response-times.html">Response Times</a>
+  <a href="../difficulty.html">Difficulty</a>
+  <a href="../charts.html">Charts</a>
+  <a href="../transcripts.html">Transcripts</a>
+  <a href="../warnings.html">Warnings</a>
+</nav></header><main>
+<p>FLAC Bridge Build Notes</p>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>17.6 Low</span></div>
+  <div><strong>Direct Time</strong><span>Unavailable</span></div>
+  <div><strong>Implementation Time</strong><span>Unavailable</span></div>
+  <div><strong>Plan Lines</strong><span>23</span></div>
+  <div><strong>Revision Churn</strong><span>67</span></div>
+  <div><strong>Implementation Code</strong><span>579</span></div>
+</section>
+<h2>Sources</h2><p><a href="../sources/plans/1-FLACBridgeExecution.html#L1">1-FLACBridgeExecution</a></p>
+<h2>Commits</h2><p><a href="../sources/commits/1fcd082.html">1fcd082 Build ​FLAC from source and link as stais lib • configure FLAC CMake build for app use:    • static lib only (BUILD​_​SHARED​_​LIBS​=​OFF)    • disable programs (BUILD​_​PROGRAMS​=​OFF)    • disable C++ lib (BUILD​_​CXXLIBS​=​OFF)    • disable Ogg dependency (WITH​_​OGG​=​OFF) • remove dependency on bundled prebuilt Resources​/bin FLAC/metaflac artifacts</a>, <a href="../sources/commits/4f1e273.html">4f1e273 Cleanup: - Updated bridge include to generated header path:    - FlacMetadataBridge.c:2    - #include &lt;​FLAC​/metadata​.h&gt; - Added app target header search path (Debug + Release):    - project.pbxproj    - HEADER​_​SEARCH​_​PATHS includes $(​DERIVED​_​FILE​_​DIR)/flac​-include - Removed no-longer-used vendored FLAC headers:    - deleted Swift​Tag​/​FLACBridge​/vendor​/​FLAC/* - Removed no-longer-used modulemap artifact:    - deleted module.modulemap - Updated cleanup docs:    - FLACBridgeExecution.md</a>, <a href="../sources/commits/6cf4772.html">6cf4772 FLAC C-Bridge Incremental Execution (pre-lib use)</a></p>
+<h2>Transcripts</h2><p><a href="../sources/transcripts/transcript-2026-02-27-1-1-FLACBridgeExecution.html#L1">transcript-2026-02-27-1-1-FLACBridgeExecution</a></p>
+<h2>Revision Timeline</h2><table><thead><tr>
+<th>Commit</th>
+<th>Roles</th>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Date</th>
+</tr></thead><tbody>
+<tr><td><a href="../sources/commits/6cf4772.html">6cf4772</a></td><td>creation</td><td>Docs/FLACBridgeExecution.md</td><td>24</td><td>0</td><td>2026-02-27</td></tr>
+<tr><td><a href="../sources/commits/1fcd082.html">1fcd082</a></td><td>plan-revision</td><td>Docs/FLACBridgeExecution.md</td><td>2</td><td>1</td><td>2026-02-27</td></tr>
+<tr><td><a href="../sources/commits/4f1e273.html">4f1e273</a></td><td>plan-revision</td><td>Docs/FLACBridgeExecution.md</td><td>19</td><td>21</td><td>2026-02-27</td></tr>
+</tbody></table>
+<h2>Reviewed Transcript Segments</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../sources/transcripts/transcript-2026-02-27-1-1-FLACBridgeExecution.html#L10">transcript-2026-02-27-1-1-FLACBridgeExecution</a></td><td>transcript-2026-02-27-1-1-FLACBridgeExecution:segment-001</td><td>direct</td><td>0.659</td><td>59.9</td><td>Unavailable</td></tr>
+<tr><td><a href="../sources/transcripts/transcript-2026-02-27-1-1-FLACBridgeExecution.html#L10">transcript-2026-02-27-1-1-FLACBridgeExecution</a></td><td>transcript-2026-02-27-1-1-FLACBridgeExecution:segment-001</td><td>implementation</td><td>0.341</td><td>31.1</td><td>Unavailable</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>579.00</td></tr>
+<tr><td>transcript_lines</td><td>91.00</td></tr>
+<tr><td>plan_lines</td><td>23.00</td></tr>
+<tr><td>elapsed_time</td><td>Unavailable</td></tr>
+<tr><td>assistant_processing_time</td><td>Unavailable</td></tr>
+<tr><td>back_and_forth_count</td><td>1.00</td></tr>
+</tbody></table>
+</main></body></html>

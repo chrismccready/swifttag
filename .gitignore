@@ -35,7 +35,15 @@ SwiftTagTestFiles/*.swifttag
 # Ignore VSCode workspace settings
 .vscode/
 
+## Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 ## Jekyll
+Gemfile
+Gemfile.lock
 # Ignore Jekyll build artifacts and cache
 _site/
 .sass-cache/

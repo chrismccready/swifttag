@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-03-17-1-9-AddUIFeedbackSettings</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-03-17-1-9-AddUIFeedbackSettings</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-03-17-1-9-AddUIFeedbackSettings.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-03-17  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: 9-AddUIFeedbackSettings.md </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.4  </pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User 2026-03-17T03:41:14Z </pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>Create a plan to:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>Add UI Feedback Settings:</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Update total tracks tag field logic so that it is user editable by converting totalTracks Text view to TextField view.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>    - Move totalTracks of TagEditorCoreTagsView to Track struct so that totalTracks can differ between tracks.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>    - Regardless of other color formatting rules, if the totalTracks Field value is mot the count a tracks then totalTracks TextEdit text should be red.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Move album from TagEditorViewModel to Track struct so that ALBUM can differ between tracks.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Move albumArtist from TagEditorViewModel to Track struct so that ALBUMARTIST can differ between tracks.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Add to SettingsView, following “Tags” tab, a TabView labeled “Feedback”</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>    - Add to Feedback tab a Picker labeled “Send Save Notifications” and segmented with “Always”, “When Not Frontmost”, “Never”. Default selection is “When Not Frontmost”. Use @AppStorage to save selection.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>        - When “When Not Frontmost” is selected, the app will not send save notifications when the app is not frontmost.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>        - When “Always” is selected, the app will always send save notifications when applicable.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>        - When “Never” is selected, the app will never send save notifications.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>    - Below the “Send Save Notifications” Picker, add a Picker labeled “Theme” and segmented with “System”, “Light”, “Dark”. Default selection is “System”. Use @AppStorage to save selection.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>        - When “System” is selected, ContentView’s preferredColorScheme() will set nil.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>        - When “Light” is selected, ContentView’s preferredColorScheme() will set .light.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>        - When “Dark” is selected, ContentView’s preferredColorScheme() will set .dark.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>    - Below the “Theme” Picker, add a ColorPicker labeled “Internal Diff Color” that defaults to Orange. Use @AppStorage to save “Internal Diff Color” setting.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>        - Update tag TextEdit views so that the “Internal Diff Color” setting is the color applied to the text of a tag TextEdit view when there is a difference between the current tag value and the associated track file tag value of the same tag key or a difference between the current tag value and another track’s tag value of the same tag key.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>    - Below the “Internal Diff Color” ColorPicker, add a ColorPicker labeled “External Diff Color” that defaults to Red. Use @AppStorage to save “External Diff Color” setting.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>        - Update tag TextEdit views so that the “External Diff Color” setting is the color applied to the text of a tag TextEdit view when there is a difference between the current tag value and the associated track file tag value of the same tag key. Note, this has already been partially implemented and the logic is correct with regards to determining when an external difference occurs (a given track file has been modified outside of the app) and the strikethrough use/logic should not be changed on the filename column values.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Add a UtilityWindow called “Diff Tools” that has the following:</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>    - Add a Toggle view labeled “Bold On File Diff”, defaults to On/true and use @AppStorage to save selection.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>        - When “Bold On File Diff” is On, then the text of a tag TextEdit view is set to bold when there is a difference between the current tag value and the associated track file tag value of the same tag key.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>    - Below the “Bold On File Diff” Toggle, add a Toggle view labeled “Italic On File Diff”, defaults to On/true and use @AppStorage to save selection.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>        - When “Italic On File Diff” is On, the text of a tag TextEdit view is italicized when there is a difference between the current tag value and another track’s tag value of the same tag key.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>    - Below “Italic On File Diff” Toggle, add Toggles for each track tag labeled by the associated tag Text view name and use @AppStorage to save selection.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>        - The tag toggles are to granulize the “Italic On File Diff” functionality so that the italicization is only applied to a given tag’s TextView text when the tag toggle is On.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>        - If “Italic On File Diff” is Off, then al individual tag toggles are disabled and with no change in their underlying selection state (this enables all/any italicization to be turned on/off while retaining individual italicization selection).</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>Save plan to Plans/9-AddUIFeedbackSettings.md. Ask questions for clarification.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre></pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>## Assistant 2026-03-17T03:41:14Z (0s since User start)</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>I’m gathering the current plan format, guidance, and the implementation points this work touches so I can write a concrete plan without inventing behavior. After that I’ll draft the plan file and call out the ambiguities that need decisions before implementation.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>I have the plan template and the current state of the affected editor/settings code. I’m pulling a few more implementation files now so the plan can name the actual seams for per-track album fields, theme wiring, diff styling, and the new utility window instead of staying abstract.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>The remaining gaps are around how global album metadata is currently imported and how diff styling is duplicated across views. I’m reading those seams now so the plan can separate the required model migration from the visual-settings work and identify where centralization is needed.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>I have enough context to draft the implementation-driving plan. I’m writing it into Docs/Plans/9-AddUIFeedbackSettings.md now with the current architecture, testing approach, write-back implications, and the unresolved behavior decisions called out explicitly.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre></pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>The plan file is written. I’m doing one quick read-back for path/content sanity, then I’ll give you the clarification questions that block implementation choices.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre></pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>The plan is saved at 9-AddUIFeedbackSettings.md. It follows the current numbered-plan format, covers the per-track metadata migration, feedback settings, diff-style centralization, utility-window work, write-back implications, fixture-backed verification, and calls out the main behavioral risks.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre></pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>Clarifications needed before implementation:</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>• For When Not Frontmost, should notifications be sent only when the app is not frontmost, or only when it is frontmost?</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>• After moving album, albumArtist, and totalTracks onto Track, should those top editor controls still bulk-edit all selected tracks, with mixed selected values shown as blank?</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>• What diff class should Italic On File Diff actually target: external file diff, internal cross-track diff, or both?</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>• If a field has both internal and external diff at once, which color/emphasis should win?</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>• How should the Diff Tools utility window be opened?</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>• Should per-tag toggles cover only the built-in visible tag editors, or misc tags too?</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre></pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>[ 2026-03-17T03:44:45Z (3m 31s since Assistant start) ]</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre></pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>## User 2026-03-17T04:33:14Z (52m 1s since previous Assistant start) </pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre></pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>- For When Not Frontmost,  notifications should be sent only when the app is not frontmost.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- After moving album, albumArtist, and totalTracks onto Track, those top editor controls should edit only selected tracks. With the case of mixed selected values show a bold “*”.</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- Italic On File Diff should target both external file diff and internal cross-track diff.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- If a field has both internal and external diff at once, which color/emphasis should win?</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- “How should the Diff Tools utility window be opened?” According to [Apple’s Documentation](https://developer.apple.com/documentation/swiftui/utilitywindow), the UtilityWindow will automatically add a menu item to show/hide itself in the “View” menu. We should confirm this behavior.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- Per-tag toggles should cover the built-in visible tag editors and misc tags. To handle the variability of Misc tags, create a toggle at the bottom of all the per-tag toggles labeled Misc that will apply the diff formatting On/Off for any/all misc tags, this toggle should be enabled/disabled by the “Italic On File Diff” toggle.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- Also, source track files that have no value for a given tag, in terms of formatting, are not to be considered different. </pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre></pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>## Assistant 2026-03-17T04:33:14Z (0s since User start)</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>I’m updating the plan with your clarified decisions and checking the UtilityWindow behavior against Apple’s documentation before I revise the remaining open questions.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>I have the Apple doc result: UtilityWindow does automatically add a show/hide item in the View menu unless .commandsRemoved() is applied. I’m folding that and your other decisions into the plan now, leaving only the color/emphasis precedence question open.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre></pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>The first patch missed the repo-relative path for the plan file. I’m applying the same content update to the correct file now.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre></pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>The patch path still included an extra SwiftTag/ segment relative to the repo root. I’m correcting that now.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre></pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>The plan now includes your confirmed decisions, the missing-tag non-difference rule, and the verified UtilityWindow menu behavior from Apple’s docs. I’m doing a quick read-back to make sure the remaining open question list is reduced correctly.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre></pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>The plan is updated in 9-AddUIFeedbackSettings.md with your confirmed decisions. It now captures:</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>• When Not Frontmost = notify only when the app is not frontmost</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>• selected-track-only editing for album, albumArtist, and totalTracks</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>• mixed selected values shown as bold *</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>• Italic On File Diff applying to both external and internal diffs</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>• built-in tag toggles plus a Misc toggle</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>• missing source tag values not counting as differences</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>• confirmed UtilityWindow behavior from Apple’s docs: it automatically adds a show/hide item in View unless .commandsRemoved() is used</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre></pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>One behavior is still unresolved and remains in the plan:</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>• If a field has both an internal diff and an external diff at the same time, what color/emphasis precedence should win?</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre></pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>[ 2026-03-17T04:35:38Z (2m 24s since Assistant start) ]</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre></pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>## User 2026-03-17T04:41:19Z (8m 5s since previous Assistant start) </pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre></pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>-  If a field has both an internal diff and an external diff at the same time, then the external diff formatting takes precedence.</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre></pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>## Assistant 2026-03-17T04:41:19Z (0s since User start)</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre></pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>I’m applying that final precedence decision to the plan so the open questions section can be cleared.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre></pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>I’ve applied the final decision and removed the last open question from the plan. I’m doing one quick read-back, then I’ll close with the updated status.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre></pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>The plan is fully updated in 9-AddUIFeedbackSettings.md. The final precedence rule is now explicit: when a field has both internal and external diff states, external diff formatting wins. The open questions section has been cleared.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre></pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>[ 2026-03-17T04:41:58Z (39s since Assistant start) ]</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre></pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>## User 2026-03-17T04:44:12Z (2m 54s since previous Assistant start) </pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre></pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>Ok, start plan 9-AddUIFeedbackSettings.md implementation.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre></pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>## Assistant 2026-03-17T04:44:12Z (0s since User start)</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre></pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>I’m starting implementation from the plan and first mapping the concrete edit set across the model, settings, diff-style, and save-notification seams so the migration happens in one pass instead of leaving duplicate state behind.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre></pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>I’ve got the current tests and the save/diff call sites. Next I’m reading the view-model snapshot and save paths directly, because the per-track field migration has to update diff detection and write mapping together or it will break save gating.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre></pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>I’m adding the shared settings and diff-formatting infrastructure first so the later view/model edits can land against stable types instead of repeating raw UserDefaults logic everywhere.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>The shared settings types and diff-style modifier are in. I’m moving the per-track metadata into Track next and wiring import/write mapping to those stored values so the rest of the editor can bind against one source of truth.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre></pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>The view-model patch partly applied, but the trailing hunk missed the current footer shape. I’m reading the exact lower section and then I’ll land the migration/helpers in smaller chunks.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>I’m updating ContentView now to stop using the removed global album state, feed the new selection bindings into the editor, and pass the internal/external diff flags the styling layer needs.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre></pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>TagEditorCoreTagsView has enough structural churn that it’s cleaner to replace it wholesale than patching line-by-line. I’m rewriting that file now with the new bindings and shared diff styling.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre></pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>The core model/view wiring is in place. I’m running fast file-level diagnostics now before I touch the tests, so I can fix the API breakage in one sweep instead of chasing secondary errors later.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre></pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>The source files are clean under fast diagnostics. I’ve patched the obvious ViewInspector API breaks, and I’m moving to a real project build now to catch the remaining test and cross-file regressions.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre></pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>The project builds. I’m adding a focused batch of unit tests now for the new feedback settings types, mixed-selection binding behavior, diff precedence, and the missing-source-value rule so this change set isn’t validated by build-only.</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre></pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>The new tests passed. I’m running a second targeted batch against the existing save/write and snapshot tests now, because those are the areas most likely to regress from the per-track metadata move.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre></pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>I’ve got the new settings, per-track metadata migration, theme/notification behavior, and diff styling working together, and the focused tests are green. I’m doing one final build and a couple of broad targeted tests before I close this out.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre></pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>Implemented plan 9 across the editor, settings, and notification paths.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre></pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>The main changes are:</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>• Per-track album, albumArtist, and totalTracks now live on Track.swift, with import/write/diff logic updated in FlacImportMapper.swift, FlacWriteMapper.swift, and TagEditorViewModel.swift.</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>• The album/album artist/total tracks editors now operate on selected tracks, show bold * for mixed values, and use centralized diff styling from TagDiffFormatting.swift. External diff styling wins over internal diff styling, and missing source tag values are ignored for formatting.</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>• Added feedback settings and diff tools UI in FeedbackSettingsView.swift, DiffToolsView.swift, SettingsView.swift, plus the new settings/types in FeedbackSettings.swift and the new UtilityWindow scene in SwiftTagApp.swift.</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>• Theme preference now drives preferredColorScheme in ContentView.swift, and save notifications now respect Always / When Not Frontmost / Never in SaveNotificationCoordinator.swift and SwiftTagApp.swift.</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre></pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>Verification:</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>• BuildProject: passed</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>• Targeted tests passed, including new feedback/diff tests and impacted existing save/write tests</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>• I did not run the full test suite or UI suite</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre></pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>[ 2026-03-17T05:03:09Z (18m 57s since Assistant start) ]</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre></pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

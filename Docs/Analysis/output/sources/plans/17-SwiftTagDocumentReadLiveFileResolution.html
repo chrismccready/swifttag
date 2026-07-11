@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 17-SwiftTagDocumentReadLiveFileResolution</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 17-SwiftTagDocumentReadLiveFileResolution</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/17-SwiftTagDocumentReadLiveFileResolution.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># SwiftTag Document Read Live File Resolution Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Fix `.swifttag` document loading so the editor still loads the saved tags and pictures as it does today, then immediately compares that saved document state against the current live FLAC files by reusing the existing difference-detection and UI-formatting mechanics, surfaces accurate live differences as if those editor values had been produced through the normal UI, and correctly resolves bookmark-backed files that were modified, moved, or renamed instead of incorrectly showing them as deleted. A top priority is that each editor session maintains valid bookmark data per loaded track and that later `.swifttag` saves write bookmark data that is still resolvable and usable.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Compare each loaded `.swifttag` track against the current live FLAC file state immediately after document load.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Preserve the `.swifttag` contents as the editor baseline while surfacing live FLAC tag and picture differences as external differences.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Reuse the existing track-to-file difference determination, external-difference state, and status/formatting presentation mechanics instead of inventing a document-only compare path.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Treat `.swifttag`-loaded track values as normal editor state, so live FLAC differences are handled the same way they would be if a user had produced those current editor values through the UI.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Fix bookmark-resolution behavior so modified, moved, and renamed FLAC files remain active when the saved bookmark can still resolve them.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Define and implement fallback ordering when bookmark resolution fails:</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- first try the saved bookmark</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- then try the saved `FLAC File URL`</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- only mark the file as deleted when neither path is usable</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Ensure `.swifttag`-loaded sessions participate in the same ongoing live file-monitor refresh behavior already seen when the same FLAC file is loaded directly in multiple editors.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Ensure each open editor session maintains its own current valid bookmark data per loaded track and refreshes that state when resolution succeeds on a moved, renamed, or otherwise refreshed file.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Ensure `.swifttag` save/export verifies or refreshes the bookmark data it writes so saved bookmarks remain valid, resolvable, and usable on later reopen.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Add substantial automated coverage for document-load comparison, bookmark resolution, rename/move handling, delete fallback, and ongoing live external-difference updates.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- Changing the `.swifttag` package schema.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Replacing the existing standard FLAC import flow.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Converting SwiftTag to `NSDocument` or changing the window architecture.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- Automatically rewriting the `.swifttag` package on disk during load or passive file monitoring.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- Broad redesign of status icon presentation, save notifications, or unrelated editor UI.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre></pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- Latest numbered plan reviewed: `Docs/Plans/16-AddSwiftTagDocumentRead.md`.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Relevant prior plans reviewed:</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- `Docs/Plans/12-AddFLACDocumentOpenSupport.md`</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- `Docs/Plans/15-AddSwiftTagDocumentCreation.md`</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- `Docs/Plans/16-AddSwiftTagDocumentRead.md`</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- Current implementation files reviewed:</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- `SwiftTag/SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- `SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- `SwiftTag/SwiftTag/Shared/Models/EditorSessionModels.swift`</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- `SwiftTag/SwiftTag/Shared/Models/Track.swift`</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- `SwiftTag/SwiftTag/Shared/Models/TrackStatus.swift`</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- `SwiftTag/SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift`</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- `SwiftTag/SwiftTag/Shared/Utilities/TrackFileMonitor.swift`</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- `SwiftTag/SwiftTagTests/SwiftTagDocumentTests.swift`</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- `SwiftTag/SwiftTagTests/SwiftTagTests.swift`</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- `AGENTS.md`</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- Relevant fixtures inspected:</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- Existing test helpers already create copied temporary FLAC fixtures and cover rename/delete monitor cases, which should be reused for the new document-read scenarios.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- Constraints accounted for:</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- `.swifttag` load already reconstructs editable tracks through `TagEditorViewModel.loadSwiftTagDocument`.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- That load path currently calls `syncCurrentStateAsSaved`, so the saved document becomes the editor/file snapshot baseline before any live FLAC comparison happens.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>- `TrackFileMonitor` and `refreshTrackFileState` already support rename-aware refresh for directly imported FLAC tracks, but the `.swifttag` path does not currently force an initial live comparison on load.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>- Deleted-state handling currently flows through `handleMissingTrackFileState`, so bookmark failure and true deletion need to be separated carefully.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- Existing track/file difference and formatting behavior already flows through `latestFileSnapshot`, `externalDifferences`, track-status lookups, and existing formatting helpers, so the plan should keep `.swifttag` load aligned with those same seams.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- `.swifttag` export currently serializes whatever `sourceFileURL` and `securityScopedBookmarkData` each track currently holds, so stale per-editor bookmark state would be written back unless the save path validates or refreshes that data first.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- ViewInspector remains the preferred UI/state harness, but bookmark resolution and file monitoring are better covered through unit/service tests with copied fixtures and targeted monitor tests.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre></pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- `SwiftTagDocumentPackageReader` already restores saved `FLAC File URL`, `FLAC File Bookmark`, tags, pictures, and FLAC fingerprint from the package manifest.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- `TagEditorViewModel.loadSwiftTagDocument` already rebuilds editor tracks, marks them with `preservesEditorStateDuringFileRefresh = true`, and remembers the document URL and document ID for later saves.</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- `loadSwiftTagDocument` then calls `syncCurrentStateAsSaved`, which currently makes the saved document content the `latestFileSnapshot` and clears `externalDifferences`.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- `ContentView.handleOpenedSwiftTagDocument(_:)` currently loads the document, syncs album art, installs file monitoring, and re-registers the session, but it does not perform an immediate live FLAC comparison before returning control to the editor.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- `TagEditorViewModel.refreshTrackFileState` already:</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- accepts file-monitor `currentPath` hints</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- falls back to `withAccessingSecurityScopedTrackURL`</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- updates `sourceFileURL`, filename tag, and bookmark data when a new resolved path is found</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>- computes external tag/picture differences against the current editor state</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- marks tracks deleted only through `handleMissingTrackFileState`</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- Existing UI/status presentation already reads the current track state plus `externalDifferences`, so a reused refresh path can drive the same formatting/help output for `.swifttag`-loaded tracks without a special document-only renderer.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- `TagEditorViewModel.swiftTagDocumentExportTracks()` currently writes each track&#x27;s in-memory `sourceFileURL` and `securityScopedBookmarkData` directly into the `.swifttag` export payload.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- Existing tests in `SwiftTagTests.swift` already cover rename, multiple rename, rewrite, file-monitor rename, and delete behavior for imported tracks, but not the equivalent `.swifttag` document-load path or initial post-load comparison.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre></pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- Loading a `.swifttag` document still restores the saved document tags and pictures into the editor first.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- The `.swifttag` contents remain the editor baseline after load; current FLAC contents are shown only as external differences until the user chooses to reload or save.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- A FLAC file changed since document save must not be shown as deleted when its saved bookmark still resolves to the file.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- Modified, moved, and renamed FLAC files are all treated as bookmark-resolvable success cases when the bookmark or fallback file URL leads to a readable file.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- If bookmark resolution fails, SwiftTag should next try the saved `FLAC File URL`.</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>- Only when both bookmark resolution and saved `FLAC File URL` lookup fail should the UI show the file as deleted.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- When a moved or renamed file is successfully resolved, the editor session should update its in-memory `sourceFileURL`, filename tag, and bookmark data so ongoing monitoring and later save flows follow the resolved file location.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- A successful live refresh for a `.swifttag`-loaded track must preserve the editor’s current document-derived tag and picture state while updating only the external-difference presentation.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- Live file monitoring should behave the same for `.swifttag`-loaded tracks as it already does for directly imported FLAC tracks.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- Initial `.swifttag` live comparison must reuse the same difference-determining mechanisms, `externalDifferences` updates, and UI formatting/status lookups already used for existing editor/file comparison behavior.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- The editor should treat `.swifttag`-loaded values as ordinary current editor values, so loaded-document differences against live FLAC state present the same way user-made UI edits versus live file state already do.</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- Each editor window/session owns its own bookmark state for its loaded tracks; successful resolution in one editor should refresh that editor’s in-memory bookmark data rather than assuming another editor instance will keep it current.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- Before saving a `.swifttag` package, SwiftTag must ensure the bookmarks it is about to write are valid/resolvable/usable, refreshing them from the resolved file URL when possible and surfacing a clear failure instead of silently exporting unusable bookmark data.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>- The fix should reuse the existing `.swifttag` manifest contract and current `TagEditorViewModel` refresh logic instead of inventing a separate document-only refresh path.</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- The fix should route initial `.swifttag` live comparison through the same core difference/update mechanics already used for current editor state versus current file state, so status icons, formatting, and help text do not drift between load-time and later monitor-driven comparisons.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- Initial load comparison and ongoing file-monitor refreshes must agree on the same resolution order and deleted-state rules, or the UI will oscillate between “different” and “deleted.”</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- `preservesEditorStateDuringFileRefresh` is currently the key mechanism that lets live file refresh update external-difference state without replacing the document-loaded editor content; the fix should preserve that contract.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- Bookmark success, stale bookmark refresh, saved-URL fallback, and true deletion need an explicit shared resolution seam so tests can cover each branch without relying only on monitor timing.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>- Because `.swifttag` load is not destructive, any path or bookmark updates during resolution should stay in memory until a later explicit save writes a new `.swifttag` package.</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>- Because `.swifttag` export currently writes the track-level bookmark data as-is, the save flow needs an explicit pre-export bookmark validation/refresh step or equivalent guarantee that each exported bookmark is still usable.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- File-monitor timing remains inherently asynchronous, so direct `refreshTrackFileState` tests should cover the core logic and monitor tests should only verify the wiring/on-change path.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre></pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- If initial document-load comparison mutates the editor state instead of only setting `externalDifferences`, users could lose the saved document baseline they expected to inspect.</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>- If fallback ordering is wrong, a temporarily stale bookmark could still surface as `&lt;deleted&gt;` even though the saved URL or refreshed bookmark can resolve the file.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>- If move/rename refresh updates the live file path but not the in-memory bookmark and filename state, later monitoring or save/reload flows can drift back to stale paths.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>- If initial load comparison uses a bespoke compare/render path instead of the existing difference and formatting mechanics, `.swifttag`-opened editors can present a different status story than directly imported editors for the same underlying file state.</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>- If deletion detection becomes too permissive, a genuinely missing file could remain shown as active with stale metadata instead of clearly presenting deletion.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- If document-loaded sessions do not reuse the same live refresh path as directly imported tracks, the app will continue to show inconsistent external-change behavior between editor types.</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- If each editor session does not refresh and own its own bookmark state, one window can save stale bookmark data even after another window successfully resolved the same moved file.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- If `.swifttag` save writes stale or unresolvable bookmark data, reopen behavior will regress even when the active editor had enough information to repair the bookmark before export.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre></pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>### Tooling / Environment / Sandbox Risks</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- Security-scoped bookmark behavior can differ between direct refresh calls and monitor-driven refresh calls, so tests must cover both deterministic direct refresh and at least one real monitor path.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- File-monitor rename/delete events are timing-sensitive; over-reliance on monitor-only tests would make the plan brittle.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>- FLAC fixture mutation tests need temporary copied files so rename, move, and tag rewrite operations do not affect checked-in fixtures.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre></pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>1. Extract Explicit Live File Resolution Semantics</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- Introduce or formalize a shared track-file resolution helper used by both initial document-load comparison and later refreshes.</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>- Make the helper return enough structured outcome to distinguish:</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- resolved via bookmark</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- resolved via saved file URL fallback</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- resolved after stale bookmark refresh</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- missing/unresolvable</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- Keep the resolution contract responsible for updating in-memory path/bookmark state only after a usable FLAC file is confirmed.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Ensure the shared seam plugs back into the existing refresh/difference/update mechanics rather than splitting document-load comparison into a separate state model.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre></pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>2. Add Immediate Post-Load Live Comparison For SwiftTag Documents</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>- Extend the `.swifttag` open flow so, after `loadSwiftTagDocument` reconstructs the editor state, SwiftTag immediately refreshes each loaded track against the current FLAC file state.</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>- Preserve the current document-derived editor content and `latestFileSnapshot` baseline while populating `externalDifferences` from the live FLAC snapshot through the same difference-determining/state-update path already used for normal editor/file comparison.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- Ensure the initial compare runs before or immediately alongside monitor installation so already-modified files show the correct external-difference formatting as soon as the document opens.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>- Verify that the resulting UI/status/hover presentation comes from the existing formatting/status mechanics, so a `.swifttag`-loaded difference looks the same as the corresponding live-file difference in a normal editor session.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>3. Harden Missing-File Versus Resolved-File Handling</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- Refine `refreshTrackFileState` and `handleMissingTrackFileState` so bookmark-resolvable modified/moved/renamed files do not fall through the delete path.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Apply the saved `FLAC File URL` fallback only after bookmark resolution cannot produce a usable file URL.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Keep deleted presentation limited to true unresolvable cases where neither bookmark nor saved URL locates the file.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- Confirm filename-tag updates and bookmark refreshes happen for rename/move success cases in `.swifttag`-loaded sessions too, and that each editor instance retains its own repaired bookmark state after those refreshes.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre></pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>4. Add Save-Time Bookmark Validation For SwiftTag Export</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>- Add a pre-export validation/refresh step for the track references used by `swiftTagDocumentExportTracks()`.</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>- Where a track can still be resolved, refresh `sourceFileURL` and `securityScopedBookmarkData` before the `.swifttag` package is written.</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>- If a bookmark cannot be validated or repaired into a usable exported reference, fail clearly rather than silently saving stale bookmark data.</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre></pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>5. Ensure Live Monitoring Works For SwiftTag-Loaded Sessions</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>- Re-check the `ContentView.handleOpenedSwiftTagDocument(_:)` and `refreshTrackMonitoring()` sequence so document-loaded sessions install the same observations as imported FLAC sessions.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>- Verify that monitor-triggered refreshes continue to honor `preservesEditorStateDuringFileRefresh` and only update external-difference state.</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- Confirm that when another editor saves a shared FLAC file, a `.swifttag`-loaded editor reflects the change and later clears the difference again if the file returns to matching state.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre></pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>6. Expand Automated Coverage Aggressively</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>- Add direct view-model tests for initial document-load comparison when the underlying FLAC has changed since document save.</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>- Add explicit bookmark-resolution tests for:</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>- modified file still resolved by bookmark</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>- moved file resolved by bookmark</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- renamed file resolved by bookmark</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- bookmark resolution failure with saved URL fallback success</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- bookmark resolution failure with saved URL fallback failure resulting in deleted UI state</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>- Add save-path tests proving `.swifttag` export refreshes/validates bookmark data before writing and does not persist unusable bookmark state silently.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>- Add monitor-driven tests proving `.swifttag`-loaded sessions receive the same live external-difference updates as imported-track sessions.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>- Keep XCUI optional unless a lightweight state test cannot validate the editor formatting outcome.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre></pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>Order:</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>1. Pure unit / view-model tests:</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>- loading a `.swifttag` document whose FLAC tags changed after document save shows external tag differences immediately</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>- loading a `.swifttag` document whose FLAC pictures changed after document save shows external picture differences immediately</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- when the live FLAC matches the saved document, the loaded track stays clean with no external differences</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>- modified-file refresh preserves editor state and only updates external-difference presentation</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>- initial document-load comparison produces the same status/formatting outcome already used by normal editor/file difference presentation</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>- bookmark-resolved rename updates `sourceFileURL`, filename tag, and bookmark without deleted state</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>- bookmark-resolved move updates `sourceFileURL`, filename tag, and bookmark without deleted state</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>- separate editors loaded from the same `.swifttag` or FLAC source maintain independent in-memory bookmark state updates</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>- true deletion requires both bookmark resolution failure and saved-URL fallback failure</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>- `.swifttag` save refreshes or validates bookmark data before export and fails clearly when a usable bookmark cannot be produced</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>2. Service / fixture tests using copied FLAC files:</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- save a `.swifttag` package from a copied fixture, mutate FLAC tags afterward, load the package, and verify the editor-facing model shows the expected difference</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>- repeat that pattern for picture changes when practical with current fixture utilities</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>- save a `.swifttag` package, rename or move the copied FLAC, load the package, and verify the track resolves to the new location</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>- save a `.swifttag` package, break bookmark resolution but keep the saved file URL valid, then verify fallback succeeds</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>- save a `.swifttag` package, remove the copied FLAC entirely, then verify the track is shown as deleted</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>- save a `.swifttag` package after rename/move repair and verify the exported bookmark resolves to the repaired location on later reopen</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>3. Targeted monitor tests:</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>- a `.swifttag`-loaded track receives file-monitor refreshes after an external save to the same FLAC file</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>- the external-difference indicator appears after the first external change and clears after the file is restored to match the document baseline</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>- rename monitor events for `.swifttag`-loaded tracks do not transiently mark the file deleted</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>4. SwiftUI / ViewInspector tests where practical:</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>- row/file-status presentation for a `.swifttag`-loaded track reflects external difference versus deleted states through existing view-model lookups</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>- any new state wiring added to `ContentView` remains narrow and assertion-friendly</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>5. Verification workflow:</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>- prefer `BuildProject`</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- run targeted `RunSomeTests` for `SwiftTagTests` and `SwiftTagDocumentTests`</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- reserve broader UI or full-suite runs only if targeted coverage leaves a gap</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre></pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- Opening a `.swifttag` document still restores the saved document tags and pictures into the editor.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>- Immediately after open, SwiftTag compares each loaded track to the current live FLAC file state and updates the editor UI accordingly.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>- If the live FLAC tags or pictures changed since the document was saved, the editor shows those changes as external differences instead of keeping the track falsely clean.</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>- The load-time compare and resulting UI/status/formatting behavior reuse the same difference-determining and presentation mechanics already used for current editor state versus live file state.</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>- If the associated FLAC file was modified, moved, or renamed, and the saved bookmark still resolves it, the editor does not show the track as deleted.</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>- If bookmark resolution fails but the saved `FLAC File URL` still points to a usable FLAC file, the editor uses that fallback and does not show the track as deleted.</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>- Only when both bookmark resolution and saved-file-URL fallback fail does the UI show the file as deleted.</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>- Successful move/rename resolution updates the in-memory track path, filename, and bookmark for that editor session so later monitoring and save flows keep working.</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>- Saving a `.swifttag` document writes bookmark data that has been validated or refreshed into a resolvable, usable form, or it fails clearly instead of silently exporting stale bookmark data.</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>- A `.swifttag`-loaded editor responds to ongoing underlying FLAC changes the same way a directly imported editor already does, including clearing the external-difference formatting when the live file returns to matching state.</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>- Automated tests cover the modified, moved, renamed, fallback-success, fallback-failure, and ongoing live-update scenarios with enough depth for implementation sign-off.</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre></pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>- None currently.</pre></td></tr></table></main></body></html>

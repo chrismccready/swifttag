@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: fix(document): refresh live flac state for swifttag sessions</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: fix(document): refresh live flac state for swifttag sessions</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-04</p>
+<p><code>d0fca7dec639c9bd9845c8efb59147ccd1016e26</code></p>
+<p>fix(document): refresh live flac state for swifttag sessions</p>
+<h2>Body</h2><pre>- compare loaded `.swifttag` tracks against live FLAC files immediately after document open
+- resolve track files by current path, bookmark, then saved file URL before marking them deleted
+- refresh in-memory file URLs and bookmarks after successful move or rename resolution
+- validate and repair exported SwiftTag document track references before saving the package
+- add document read, fallback, monitor, and export regression tests
+
+docs(plan): add the live file resolution plan and transcript for the implemented change</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>75.8 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>1h 8m</span></div>
+  <div><strong>Assistant</strong><span>21m 55s</span></div>
+  <div><strong>User Response</strong><span>47m 4s</span></div>
+  <div><strong>Back/Forth</strong><span>3.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/16.html">Plan 16: Add SwiftTag Document Read Plan</a>, <a href="../../plans/17.html">Plan 17: SwiftTag Document Read Live File Resolution Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution.html#L1">transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution.html#L278">transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution</a></td><td>transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution:segment-009</td><td>work</td><td>1.000</td><td>33.0</td><td>47m 48s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution.html#L310">transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution</a></td><td>transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution:segment-010</td><td>work</td><td>1.000</td><td>26.8</td><td>6m 42s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution.html#L336">transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution</a></td><td>transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution:segment-011</td><td>work</td><td>1.000</td><td>45.4</td><td>14m 29s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/17-SwiftTagDocumentReadLiveFileResolution.md</td><td>208</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution.md</td><td>380</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>6</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>175</td><td>105</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/TrackFileMonitor.swift</td><td>7</td><td>3</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagDocumentTests.swift</td><td>288</td><td>1</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>297.00</td></tr>
+<tr><td>transcript_lines</td><td>105.33</td></tr>
+<tr><td>plan_lines</td><td>208.00</td></tr>
+<tr><td>elapsed_time</td><td>4139.00</td></tr>
+<tr><td>assistant_processing_time</td><td>1315.00</td></tr>
+<tr><td>back_and_forth_count</td><td>3.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

@@ -261,10 +261,6 @@ Note: `Docs/Plans/33-AddTrackFileRename.md` remains untracked, already present.
 
 Add to `SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift` track table context menu before `Reload Selected Tracks` the menu item labeled `Rename Track Files` followed by `Rename Selected Track Files` followed by `Rename Track Files Config...` followed by a divider. These menu items have the functionality and availability of their `File` menu counterparts.
 
-## User 2026-06-18T21:10:58Z (36m 22s since previous Assistant start) 
-
-Add to `SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift` track table context menu before `Reload Selected Tracks` the menu item labeled `Rename Track Files` followed by `Rename Selected Track Files` followed by `Rename Track Files Config...` followed by a divider. These menu items have the functionality and availability of their `File` menu counterparts.
-
 ## Assistant 2026-06-18T21:10:58Z (0s since User start)
 
 Context menu needs same closures as File menu. Reading current track table and wrapper plumbing, then patch.

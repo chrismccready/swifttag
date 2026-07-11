@@ -1,0 +1,835 @@
+{
+  "archive_provenance_commit_ids": [
+    "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+  ],
+  "base_segments": [
+    {
+      "assistant_processing_seconds": 1454.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 74,
+      "excerpt": "The following AppleScript will fail with `execution error: SwiftTag got an error: Can’t make class picture. (-2710)`: ```applescript on run set testPNGData to \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO3ZbZ0AAAAASUVORK5CYII=\" tell application \"SwiftTag\" tell firstTrack set newLeafletPicture to make new picture with properties {data:testPNGData, picture type:leaflet, description:\"New Leaflet\"} end tell end tell end run ``` The error is currently expected as there have been issues with AppleScript handling binary data and typing (consequently there is a custom command `import picture` in place to handle the failure of `make`). I just want to confirm/deny that if the above `make` is used where the `data` property can be known (or forced) to be a base64 encoded string that `make` will not work. It would be preferable to get `make with properties` to work for the `picture` class. Add tests including UI tests as needed. Use Apple Docs Scout agent to review Apple’s AppleScript documentation to confirm use of latest technology, coding patterns, etc. Ask questions for clarification as needed. Using project docs + Apple docs path first. Need inspect AppleScript ob",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-05-20-1-MakePictureFix:segment-001",
+      "source_line_count": 80,
+      "source_line_end": 89,
+      "source_line_start": 10,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-05-20-1-MakePictureFix:turn-001",
+        "transcript-2026-05-20-1-MakePictureFix:turn-002"
+      ],
+      "user_response_seconds": 5214.0,
+      "valid_atomic_elapsed_seconds": 6668.0
+    },
+    {
+      "assistant_processing_seconds": 671.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 39,
+      "excerpt": "Now that `make` command works for pictures, remove custom `import picture` command definition in [SwiftTag.sdef](SwiftTag/SwiftTag.sdef) and application code support for it (scripting bridge, tests, user documentation, etc.). Need cut out import picture cleanly now that make picture owns path. First map command surface, tests, docs hits. Need replace tests rather than delete coverage: existing import tests become make new picture tests for duplicate, delete, status restore. Historical transcript docs stay untouched unless active user docs require update. [ Context automatically compacted ] Code already shaped for standard make. Removing old custom AppleScript hook now: sdef command, bridge plumbing, tests, docs. Search shows old command lives in sdef, one command subclass, track/application handlers, scenario tests, generated user docs, and two implementation plans. Editing those now; transcript archive left untouched. Apple docs check done through Xcode docs. NSCreateCommand maps to AppleScript make; docs say properties from with properties are set via setScriptingProperties, so standard command path now fits. Tests moving from custom verb to standard make new picture with propert",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-05-20-1-MakePictureFix:segment-002",
+      "source_line_count": 45,
+      "source_line_end": 134,
+      "source_line_start": 90,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-05-20-1-MakePictureFix:turn-003",
+        "transcript-2026-05-20-1-MakePictureFix:turn-004"
+      ],
+      "user_response_seconds": 0.0,
+      "valid_atomic_elapsed_seconds": 671.0
+    }
+  ],
+  "candidate_commits": [
+    {
+      "archive_provenance": false,
+      "body": "- add SwiftTag Suite application properties for Diff Tools formatting toggles\n- map new AppleScript properties to UserDefaults-backed feedback settings\n- assert AppleScript read/write behavior in unit and UI harness coverage\n- add Diff Tools toggle accessibility values for UI assertions\n\ndocs: add transcript for AppleScript support feature branch",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-02-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/Features/Settings/DiffToolsView.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 97,
+      "commit_hash": "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: apple, applescript, application, assertions, behavior, coverage",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "063c138",
+      "source_link": "../../sources/commits/063c138.html",
+      "subject": "feat(applescript): expose diff tools settings",
+      "test_line_count": 71
+    },
+    {
+      "archive_provenance": false,
+      "body": "- expose track tags and tag objects in SwiftTag.sdef for standard suite collection access\n- add session bridge and view-model tag upsert/delete flows with script errors for invalid targets\n- normalize related FLAC tag keys during AppleScript lookup, rename, replacement, and deletion\n- add AppleScript tests for canonical tag access and update plan and transcript artifacts\n\ndocs(transcript): add additional track properties and tag class implementation transcripts",
+      "changed_paths": [
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-21-1-26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-22-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift"
+      ],
+      "code_line_count": 695,
+      "commit_hash": "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: apple, applescript, bridge, class, delete, deletion",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "0c2d385",
+      "source_link": "../../sources/commits/0c2d385.html",
+      "subject": "feat(applescript): support standard track tag scripting",
+      "test_line_count": 120
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add picture terminology, FLAC picture type enum, and track picture elements to SDEF\n- add SwiftTagScriptPicture wrappers with picture filtering and NSData descriptors\n- route scripted picture description edits through editor state and album-art refresh\n- cover picture reads, description updates, album-art refresh, and UI AppleScript harness\n\ndocs(plan): update AppleScript support plan 26 and add implementation transcript",
+      "changed_paths": [
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-28-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 435,
+      "commit_hash": "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: apple, applescript, description, descriptors, docs, edits",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "11ba785",
+      "source_link": "../../sources/commits/11ba785.html",
+      "subject": "feat(applescript): expose FLAC pictures to scripts",
+      "test_line_count": 283
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add application terminology for save, tag write, notification, theme, and diff settings\n- add KVC settings bridge through UserDefaults and enum Apple event codes\n- add RGBA color object support with component write-back\n- add unit and UI AppleScript coverage for settings read/write behavior",
+      "changed_paths": [
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 877,
+      "commit_hash": "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: apple, applescript, application, back, behavior, bridge",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "17b6c10",
+      "source_link": "../../sources/commits/17b6c10.html",
+      "subject": "feat(applescript): expose settings preferences",
+      "test_line_count": 184
+    },
+    {
+      "archive_provenance": false,
+      "body": "- make/count editor window\n- quit app\n\ndocs(plan): add plan 26 add AppleScript support",
+      "changed_paths": [
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "SwiftTag/Info.plist",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift"
+      ],
+      "code_line_count": 313,
+      "commit_hash": "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: app, apple, applescript, docs, make, script",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "192eaac",
+      "source_link": "../../sources/commits/192eaac.html",
+      "subject": "feat(applescript): initial AppleScript support",
+      "test_line_count": 37
+    },
+    {
+      "archive_provenance": false,
+      "body": "- change color terminology from script class to record-type\n- return color settings as NSDictionary records and accept Apple event record descriptors\n- update color settings tests to validate RGBA record round trips\n- rename track/disc total mismatch color scripting key to match settings name\n\ndocs(plans): add AppleScript support implementation transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-01-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift"
+      ],
+      "code_line_count": 84,
+      "commit_hash": "1b08404c005806083a5443603d98c10c5510ee70",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: accept, apple, applescript, class, descriptors, docs",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "1b08404",
+      "source_link": "../../sources/commits/1b08404.html",
+      "subject": "feat(applescript): model color settings as records",
+      "test_line_count": 45
+    },
+    {
+      "archive_provenance": false,
+      "body": "docs(transcript): add update tag normalization transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-22-2-26-AddAppleScriptSupport.md",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/Shared/Utilities/TagNormalization.swift",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift"
+      ],
+      "code_line_count": 39,
+      "commit_hash": "2298c43c00492de67ad920a395d3ec7a8c8fb722",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: applescript, contents, docs, tag, transcript",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "2298c43",
+      "source_link": "../../sources/commits/2298c43.html",
+      "subject": "feat(applescript): update tag normalization to invalidate white space contents",
+      "test_line_count": 72
+    },
+    {
+      "archive_provenance": false,
+      "body": "- resolve create command targets from tell-context receivers when at is omitted\n- create tag wrappers from track tag collections and attach inserted tags to tracks\n- expose tag specifier descriptors so make returns scriptable tag results\n- add UI coverage for make new tag inside tell first track\n\nfix(misc-tags): refresh misc tag rows after selection and reload changes\n\n- clear misc tag row values when no tracks are selected\n- reload misc tag rows after selected track reload replaces track data\n- add misc value field and destructive action accessibility identifiers\n- add unit and UI coverage for placeholder values and reload restoration\n\ndocs(transcripts): add AppleScript support session plan 26 and bug fix transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-29-2-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 170,
+      "commit_hash": "24428a1548324e06268c9174e358e22e9559801b",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: apple, applescript, bug, clear, command, context",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "24428a1",
+      "source_link": "../../sources/commits/24428a1.html",
+      "subject": "fix(applescript): support making tags from track tell contexts",
+      "test_line_count": 295
+    },
+    {
+      "archive_provenance": false,
+      "body": "- remove only the deleted album art reference instead of discarding all track picture state\n- resolve attached script pictures through captured stable IDs after index shifts\n- add unit and UI AppleScript coverage for same-type picture deletion",
+      "changed_paths": [
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 131,
+      "commit_hash": "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: apple, applescript, attached, coverage, deleted, deletion",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "25fde2c",
+      "source_link": "../../sources/commits/25fde2c.html",
+      "subject": "fix(applescript): preserve picture IDs after deleting same-type pictures",
+      "test_line_count": 250
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add scriptable file URL wrapper with file descriptors and scripting equality\n- normalize file URL, file descriptor, and path string values for comparisons\n- expose track file values through the wrapper while keeping Swift URL access\n- add unit and UI coverage for track file whose specifiers",
+      "changed_paths": [
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 105,
+      "commit_hash": "2e24923ec49954fa4d4b17f56f3d26c10265a51b",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: applescript, coverage, descriptor, descriptors, expose, file",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "2e24923",
+      "source_link": "../../sources/commits/2e24923.html",
+      "subject": "fix(applescript): support track file comparisons",
+      "test_line_count": 119
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add missing value descriptors for unavailable picture width, height, color depth, and colors\n- allow picture metric terminology to return integer or missing value\n- use standard width and height terminology codes\n- avoid color record plural collision with picture colors property\n- cover missing picture metadata and picture metric reads in unit and UI tests\n\nfeat(applescript)!: expose conductor and nullable track terminology\n\n- add conductor track property mapped to CONDUCTOR tags\n- declare editable track tag properties with missing value variants in SDEF\n- rename track date terminology to release date",
+      "changed_paths": [
+        "SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 251,
+      "commit_hash": "380be212ade022a481997efbb4051584360a9b92",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: allow, applescript, date, descriptors, expose, missing",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "380be21",
+      "source_link": "../../sources/commits/380be21.html",
+      "subject": "fix(applescript): return missing value for unavailable picture metrics",
+      "test_line_count": 102
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add optional with lock parameter to add command and default omitted values to false\n- expose writable locked property on track objects through SwiftTag AppleScript bridge\n- route add and lock updates through editor session handlers and existing track lock state\n- add unit and UI AppleScript coverage for locked adds and track lock property reads/writes\n\ndocs(transcript): add scripting track lock implementation transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-03-2-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 210,
+      "commit_hash": "3fd6771aa6fbbc5afe81722f5d39ce0c171019cd",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: apple, applescript, bridge, command, coverage, default",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "3fd6771",
+      "source_link": "../../sources/commits/3fd6771.html",
+      "subject": "feat(applescript): add locked track support to scripting commands",
+      "test_line_count": 288
+    },
+    {
+      "archive_provenance": false,
+      "body": "- route track deletes through session bridge, view model, and script wrappers\n- enable delete on track elements and editor window track collections in scripting definitions\n- add unit and UI coverage for nested, bulk, and whose-based track deletion\n\nfix(tag-editor): keep disabled placeholders visible without track selection\n\n- show placeholder text for disabled date and misc tag value fields with empty selection\n- dim disabled description editors in core tags view\n\ndocs(transcript): add plan 26 applescript session transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-04-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 274,
+      "commit_hash": "43b64835145b64f3346d6298de67754019b36df8",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: applescript, bridge, coverage, date, delete, deletion",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "43b6483",
+      "source_link": "../../sources/commits/43b6483.html",
+      "subject": "feat(applescript): support deleting tracks from editor windows",
+      "test_line_count": 154
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add read-only tag id terminology backed by the normalized tag key\n- expose SwiftTagScriptTag id for unique ID specifier resolution\n- cover first tag whose key lookup in unit and UI AppleScript tests",
+      "changed_paths": [
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 8,
+      "commit_hash": "46a24e9e98968ea9d3bfa50853be92e35d857f8e",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: apple, applescript, expose, first, key, lookup",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "46a24e9",
+      "source_link": "../../sources/commits/46a24e9.html",
+      "subject": "fix(applescript): expose tag IDs for key-filtered references",
+      "test_line_count": 106
+    },
+    {
+      "archive_provenance": false,
+      "body": "- expose application and editor window tracks as AppleScript lists backed by track-table ordering\n- back selected tracks with multi-selection state and normalize single, list, and specifier inputs\n- share track-table sorting with scripting indices and add unit plus gated osascript coverage\n\ndocs(transcript): transcript, osascript harness constraints and update AppleScript support plan notes",
+      "changed_paths": [
+        "Docs/Guides/testing-guide.md",
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-23-2-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 206,
+      "commit_hash": "546e43d639eb9d7eceb46aa966b8a592b187b12c",
+      "docs_line_count": 26,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: apple, applescript, application, back, coverage, docs",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "546e43d",
+      "source_link": "../../sources/commits/546e43d.html",
+      "subject": "feat(applescript): support selected tracks and track list filtering",
+      "test_line_count": 494
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/UserDocumentation/automation/applescript-import-picture.html",
+        "Docs/UserDocumentation/automation/applescript-make.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "5944288d9bd94e8186dd374b0aec6090ad90fc96",
+      "docs_line_count": 51,
+      "reasons": [
+        "subject tokens: applescript, docs, import, make, picture, user",
+        "path/topic overlap",
+        "commit before transcript within 1d"
+      ],
+      "score": 1.0,
+      "short_hash": "5944288",
+      "source_link": "../../sources/commits/5944288.html",
+      "subject": "docs(user): applescript make and import picture examples update",
+      "test_line_count": 0
+    }
+  ],
+  "candidate_plans": [
+    {
+      "creation_commit_id": "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+      "current_source_path": "Docs/Plans/26-AddAppleScriptSupport.md",
+      "display_title": "Add AppleScript Support Plan",
+      "plan_id": "26",
+      "revision_commit_ids": [
+        "0c2d38575541a8dada750da08698d78e75a4d3f0",
+        "d65459355d32c58116293e4f6cce8a759b6d67f5",
+        "546e43d639eb9d7eceb46aa966b8a592b187b12c",
+        "11ba78598b25840b5e415e7410b8df4b75c964c5",
+        "6811df91487bd977d74d60b43af798e9970e5d69",
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+      ],
+      "section_names": "Goal; Scope; Plan Input Checklist Coverage; Current Implementation Snapshot; Confirmed Decisions; Apple Documentation Review Update; Dependencies And Constraints; Destructive / Write-Back Behavior; High-Risk Concerns; Implementation Phases; Test Strategy; Acceptance Criteria; Open Questions",
+      "source_link": "../../sources/plans/26-AddAppleScriptSupport.html#L1"
+    }
+  ],
+  "candidate_themes": [
+    {
+      "accepted_commit_ids": [
+        "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+      ],
+      "accepted_plan_ids": [
+        "26"
+      ],
+      "display_name": "AppleScript",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "applescript"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "applescript"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "26",
+          "entity_type": "plan",
+          "evidence_source": "explicit Plan Theme include",
+          "relationship_type": "include",
+          "theme_id": "applescript"
+        }
+      ],
+      "theme_id": "applescript"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Diff",
+      "positive_and_negative_edges": [],
+      "theme_id": "diff"
+    },
+    {
+      "accepted_commit_ids": [
+        "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Picture",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "picture"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "picture"
+        }
+      ],
+      "theme_id": "picture"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Project",
+      "positive_and_negative_edges": [],
+      "theme_id": "project"
+    },
+    {
+      "accepted_commit_ids": [
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Save",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+          "entity_type": "commit",
+          "evidence_source": "keywords: payload",
+          "relationship_type": "include",
+          "theme_id": "save"
+        }
+      ],
+      "theme_id": "save"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Settings",
+      "positive_and_negative_edges": [],
+      "theme_id": "settings"
+    },
+    {
+      "accepted_commit_ids": [
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "SwiftTag Document",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.61,
+          "entity_id": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+          "entity_type": "commit",
+          "evidence_source": "keywords: document, session",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        }
+      ],
+      "theme_id": "swifttag-document"
+    },
+    {
+      "accepted_commit_ids": [
+        "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Tags",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+          "entity_type": "commit",
+          "evidence_source": "keywords: tag",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+          "entity_type": "commit",
+          "evidence_source": "keywords: tag",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        }
+      ],
+      "theme_id": "tags"
+    },
+    {
+      "accepted_commit_ids": [
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "User Docs",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+          "entity_type": "commit",
+          "evidence_source": "configured path prefix",
+          "relationship_type": "include",
+          "theme_id": "user-docs"
+        }
+      ],
+      "theme_id": "user-docs"
+    }
+  ],
+  "conservation_preview": {
+    "commit_lens": {
+      "allocated_atomic_elapsed_seconds": 7339.0,
+      "allocated_back_and_forth": 2.0,
+      "allocated_lines": 135.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "header_note_lines": 10,
+    "plan_lens": {
+      "allocated_atomic_elapsed_seconds": 7339.0,
+      "allocated_back_and_forth": 2.0,
+      "allocated_lines": 135.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "segment_source_lines": 125,
+    "transcript_source_lines": 135
+  },
+  "current_review_status": {
+    "configured_content_digest": "9d4b25ef4a4d3d0b37d883cb7150a53ae8b32cc3547430ba107acda8a61c0e56",
+    "configured_review_input_digest": "f623e9e4909b1a2aefa55b7b60d326e959709b7972e34a0b447bcef06783b6ba",
+    "message": "Reviewed allocation accepted",
+    "normalized_content_digest": "9d4b25ef4a4d3d0b37d883cb7150a53ae8b32cc3547430ba107acda8a61c0e56",
+    "review_input_digest": "f623e9e4909b1a2aefa55b7b60d326e959709b7972e34a0b447bcef06783b6ba",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10T19:02:59Z",
+    "reviewed_by": "codex-semantic-review-c",
+    "transcript_id": "transcript-2026-05-20-1-MakePictureFix"
+  },
+  "existing_review": {
+    "accepted_candidate_commit_ids": [
+      "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+      "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+    ],
+    "accepted_candidate_plan_ids": [
+      "26"
+    ],
+    "evidence_note": "Reviewed against Plan 34, transcript source, packet segments, commits, and relevant Plans.",
+    "feature_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+        "confidence": 1.0,
+        "entry_id": "review-c:transcript-2026-05-20-1-MakePictureFix:feature:01",
+        "evidence_note": "Segment meaning matches 7602f5d: feat(applescript): accept base64 text when making pictures",
+        "included_in_rollup_totals": true,
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-05-20-1-MakePictureFix:segment-001"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-05-20-1-MakePictureFix:segment-001",
+            "source_line_end": 89,
+            "source_line_start": 10
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+        "confidence": 1.0,
+        "entry_id": "review-c:transcript-2026-05-20-1-MakePictureFix:feature:02",
+        "evidence_note": "Segment meaning matches 8053109: refactor(applescript)!: remove custom import picture command (replaced by use of `make`)",
+        "included_in_rollup_totals": true,
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-05-20-1-MakePictureFix:segment-002"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-05-20-1-MakePictureFix:segment-002",
+            "source_line_end": 134,
+            "source_line_start": 90
+          }
+        ]
+      }
+    ],
+    "feature_unallocated_remainder": {
+      "assistant_processing": 0,
+      "back_and_forth": 0,
+      "lines": 0,
+      "user_response": 0
+    },
+    "normalized_content_digest": "9d4b25ef4a4d3d0b37d883cb7150a53ae8b32cc3547430ba107acda8a61c0e56",
+    "plan_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "entry_id": "review-c:transcript-2026-05-20-1-MakePictureFix:plan:01",
+        "evidence_note": "Implementation/verification governed by Plan.",
+        "included_in_direct_totals": false,
+        "included_in_rollup_totals": true,
+        "plan_id": "26",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-05-20-1-MakePictureFix:segment-001",
+          "transcript-2026-05-20-1-MakePictureFix:segment-002"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-05-20-1-MakePictureFix:segment-001",
+            "source_line_end": 89,
+            "source_line_start": 10
+          },
+          {
+            "segment_id": "transcript-2026-05-20-1-MakePictureFix:segment-002",
+            "source_line_end": 134,
+            "source_line_start": 90
+          }
+        ]
+      }
+    ],
+    "plan_unallocated_remainder": {
+      "assistant_processing": 0,
+      "back_and_forth": 0,
+      "lines": 0,
+      "user_response": 0
+    },
+    "rejected_candidate_commit_ids": [
+      "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+      "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+      "1b08404c005806083a5443603d98c10c5510ee70",
+      "2298c43c00492de67ad920a395d3ec7a8c8fb722",
+      "24428a1548324e06268c9174e358e22e9559801b",
+      "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+      "2e24923ec49954fa4d4b17f56f3d26c10265a51b",
+      "380be212ade022a481997efbb4051584360a9b92",
+      "3fd6771aa6fbbc5afe81722f5d39ce0c171019cd",
+      "43b64835145b64f3346d6298de67754019b36df8",
+      "46a24e9e98968ea9d3bfa50853be92e35d857f8e",
+      "546e43d639eb9d7eceb46aa966b8a592b187b12c",
+      "5944288d9bd94e8186dd374b0aec6090ad90fc96"
+    ],
+    "rejected_candidate_plan_ids": [],
+    "review_input_digest": "f623e9e4909b1a2aefa55b7b60d326e959709b7972e34a0b447bcef06783b6ba",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10T19:02:59Z",
+    "reviewed_by": "codex-semantic-review-c",
+    "transcript_digest": "9d4b25ef4a4d3d0b37d883cb7150a53ae8b32cc3547430ba107acda8a61c0e56",
+    "unallocated_reason": ""
+  },
+  "header": {
+    "agent": "GPT-5.5 Extra High (Codex app)",
+    "export_date": "2026-05-20",
+    "reference_type": "Feature/Bug Fix",
+    "references": [
+      "26-AddAppleScriptSupport.md",
+      "make` command"
+    ]
+  },
+  "normalized_content_digest": "9d4b25ef4a4d3d0b37d883cb7150a53ae8b32cc3547430ba107acda8a61c0e56",
+  "path": "Docs/Plans/Transcripts/transcript-2026-05-20-1-MakePictureFix.md",
+  "raw_metrics": {
+    "assistant_processing_seconds": 2125.0,
+    "back_and_forth_count": 2,
+    "line_count": 135,
+    "turn_count": 4,
+    "user_response_seconds": 5214.0,
+    "valid_atomic_elapsed_seconds": 7339.0
+  },
+  "review_input_digest": "f623e9e4909b1a2aefa55b7b60d326e959709b7972e34a0b447bcef06783b6ba",
+  "review_method_version": "plan-34-v1",
+  "schema_version": 1,
+  "source_link": "../../sources/transcripts/transcript-2026-05-20-1-MakePictureFix.html#L1",
+  "transcript_id": "transcript-2026-05-20-1-MakePictureFix",
+  "unresolved_questions": [
+    "Accept or reject Commit ownership for every base segment.",
+    "Assign direct or implementation Plan role for every accepted Plan segment.",
+    "Explain any Commit-lens or Plan-lens unallocated remainder."
+  ]
+}

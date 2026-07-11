@@ -23,6 +23,10 @@ application that has at least a moderate level of complexity: UI, internal and
 external file/document state management, Quick Look, User Notifications, 
 AppleScript scriptability, documentation and of course actual usefulness.  
 
+See [SwiftTag GitHub Pages](https://chrismccready.github.io/swifttag/) for a 
+full analysis of project development using AI, including analysis metrics and
+generation process.
+
 Initial development was done using Xcode Assistant in a pre-release of Xcode 
 26.3. Some initial Assistant exchange transcripts were lost due to early Xcode 
 release limitations and my learning curve. However, the loses were few and 

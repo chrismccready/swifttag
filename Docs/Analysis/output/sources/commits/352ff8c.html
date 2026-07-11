@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: fix: preserve picture diff state across refresh flows</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: fix: preserve picture diff state across refresh flows</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-16</p>
+<p><code>352ff8c562657dc7ed4c0171d4448bdda0bec559</code></p>
+<p>fix: preserve picture diff state across refresh flows</p>
+<h2>Body</h2><pre>- keep document refresh baselines when editor state must survive file refreshes
+- adopt live picture state for clean rename refreshes and derive fallback picture metadata
+- update ui, document, and coordinator tests for current labels, save state, fixtures, and routing
+- align picture description budget expectations with current behavior
+
+docs(transcript): add transcript for 2026-04-16 regression fix session</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>66.5 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>4h 2m</span></div>
+  <div><strong>Assistant</strong><span>50m 48s</span></div>
+  <div><strong>User Response</strong><span>3h 11m</span></div>
+  <div><strong>Back/Forth</strong><span>6.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/25.html">Plan 25: Add Picture Description Edit Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-16-1-InternalExternalDiffUpdateFix.html#L1">transcript-2026-04-16-1-InternalExternalDiffUpdateFix</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-16-1-InternalExternalDiffUpdateFix.html#L12">transcript-2026-04-16-1-InternalExternalDiffUpdateFix</a></td><td>transcript-2026-04-16-1-InternalExternalDiffUpdateFix:segment-001</td><td>work</td><td>1.000</td><td>16.9</td><td>6m 8s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-16-1-InternalExternalDiffUpdateFix.html#L28">transcript-2026-04-16-1-InternalExternalDiffUpdateFix</a></td><td>transcript-2026-04-16-1-InternalExternalDiffUpdateFix:segment-002</td><td>work</td><td>1.000</td><td>30.6</td><td>17m 23s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-16-1-InternalExternalDiffUpdateFix.html#L57">transcript-2026-04-16-1-InternalExternalDiffUpdateFix</a></td><td>transcript-2026-04-16-1-InternalExternalDiffUpdateFix:segment-003</td><td>work</td><td>1.000</td><td>41.2</td><td>1h 48m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-16-1-InternalExternalDiffUpdateFix.html#L96">transcript-2026-04-16-1-InternalExternalDiffUpdateFix</a></td><td>transcript-2026-04-16-1-InternalExternalDiffUpdateFix:segment-004</td><td>work</td><td>1.000</td><td>51.7</td><td>1h 8m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-16-1-InternalExternalDiffUpdateFix.html#L145">transcript-2026-04-16-1-InternalExternalDiffUpdateFix</a></td><td>transcript-2026-04-16-1-InternalExternalDiffUpdateFix:segment-005</td><td>work</td><td>1.000</td><td>34.8</td><td>22m 2s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-16-1-InternalExternalDiffUpdateFix.html#L178">transcript-2026-04-16-1-InternalExternalDiffUpdateFix</a></td><td>transcript-2026-04-16-1-InternalExternalDiffUpdateFix:segment-006</td><td>work</td><td>1.000</td><td>53.8</td><td>19m 50s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-16-1-Internal-ExternalDiffUpdateFix.md</td><td>229</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift</td><td>1</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>24</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/Track.swift</td><td>18</td><td>16</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagDocumentTests.swift</td><td>136</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>24</td><td>4</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/TrackStatusViewInspectorTests.swift</td><td>2</td><td>2</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>7</td><td>20</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>61.00</td></tr>
+<tr><td>transcript_lines</td><td>229.00</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>14561.00</td></tr>
+<tr><td>assistant_processing_time</td><td>3048.00</td></tr>
+<tr><td>back_and_forth_count</td><td>6.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

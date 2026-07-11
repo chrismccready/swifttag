@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 7-AddSaveStatusViewPlan</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 7-AddSaveStatusViewPlan</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/7-AddSaveStatusViewPlan.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add Save Status View Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Add a `SaveStatusView` overlay that appears (fading in) only while a track save operation is active for a given editor window, remains visible until the save finishes and any required minimum display duration is satisfied (fading out). The overlay shows the fish artwork over the current `ultraThinMaterial` plus blur background treatment, plus album and track-progress details for the current save.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- A new SwiftUI `SaveStatusView` for in-window save progress display.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Save-lifecycle state needed to show and hide the overlay for each `ContentView` / editor window independently.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Per-track progress reporting so the overlay can show the current track index and total tracks being saved.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Timing behavior for minimum visible duration plus 0.25 second fade-in and fade-out transitions.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Centered overlay presentation in the active `ContentView` associated with the current save operation.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Save-time disabling of editable tag editor controls and album-art editing controls.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Rendering the save-status overlay inside `AlbumArtSheetView` while the sheet is presented.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Tests for save-status state transitions and targeted verification of save progress behavior.</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre></pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Changing save-notification behavior after completion.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Changing FLAC write semantics, save payload semantics, or save-scope semantics beyond the progress/status plumbing needed for this overlay.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Adding cancelation, pause/resume, or user interaction inside the status view.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Showing separate success or failure completion states after the save ends.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre></pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- For all-tracks saves and picture-only saves, the left status label uses `Saving Album: …` with the current editor window’s `album` value from `TagEditorViewModel`.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- For selected-track saves, the left status label uses `Saving Track:` with the current track name shown in the adjacent value field.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- If a save fails or partially fails, the overlay is dismissed immediately and then the error alert is presented.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- The default minimum display duration is 1.5 seconds.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- Fade-in duration is 0.25 seconds.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- Fade-out duration is 0.25 seconds.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- The overlay is centered in the `ContentView` instance for the editor window that initiated the save.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- The overlay keeps the `Brightly_Colored_Fish-512-circle-alpha-full` artwork and uses the current `ultraThinMaterial` plus blur treatment underneath it.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- The bottom status row uses read-only `Text` views, not editable fields.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- The left side of the status row is split into a label view and a value view.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- The progress row reads, from left to right: label, album-or-track value, spacer, current track index, `of`, total track count.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- The status-row text uses appearance-aware color: white in Dark Mode and black in Light Mode.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- The status-row `Text` views are single-line and use the current middle truncation behavior when content exceeds the available width.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- During saves, editable tag editor controls and the main front-cover well are disabled and re-enabled when the save completes.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- If `AlbumArtSheetView` is open during a save, its editable album-art well interactions are disabled and the save overlay remains visible inside the sheet.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Save execution is currently started in [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift) via `save(using:)`, while the per-track write loop currently lives in [TagEditorViewModel.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift). Progress display needs state from both layers.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- The current save API in [TagEditorViewModel.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift) is synchronous and returns only after the full save loop completes. Per-track overlay updates therefore require either a progress callback or a dedicated save-status model passed into that loop.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- Save failure handling currently happens back in [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift) by setting `saveErrorMessage` and toggling `isSaveErrorPresented`. The overlay dismissal rules must integrate cleanly with that path so failure does not leave the overlay onscreen.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- The save operation runs on the main actor today through `TagEditorViewModel`, so any timing or animation state added for the overlay must avoid blocking UI updates during multi-file saves.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- The plan should avoid introducing global cross-window overlay state. Each `ContentView` should own only the save-status state for its own editor session.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- The sheet overlay cannot rely on the editor-window `ZStack` alone because SwiftUI sheets render in a separate presentation layer; the sheet needs the same save-status data passed into it explicitly.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>### Product Or Behavioral Risks</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- If progress state is updated only before the save loop starts or only after it ends, the overlay cannot correctly display the current track number during multi-track saves.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- If the minimum-display timer is enforced the same way for success and failure, the confirmed failure behavior would be violated by leaving the overlay visible while an error is waiting to appear.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- If the overlay is attached too high in the view tree or stored globally, one editor window could show another window’s save status.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- The status-row layout can become unstable if album titles are long or if single-digit and double-digit track counts are not given explicit width constraints.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>- If the editor and album-art sheet do not share the same save-state source, one surface can remain interactive or lose the overlay while the other is saving.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre></pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>### Tooling, Environment, Or Filesystem Risks</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- The existing synchronous save path may make animation timing appear abrupt if write work monopolizes the main actor during file I/O. If that occurs, implementation may need a narrowly scoped async refactor or explicit main-actor progress hops.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- Full UI automation for fade timing can be fragile in Xcode. Most coverage should therefore live in unit tests for the status-state controller, with limited UI checks for presence and dismissal.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- The current `ultraThinMaterial` plus blur appearance can vary by macOS appearance and wallpaper, so the text color choice needs to remain legible in both Light and Dark Mode.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre></pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre></pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>### 1. Define a window-local save-status model</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- Add a dedicated model to represent the overlay state for one editor window, for example:</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>  - visibility intent</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>  - currently displayed album string</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>  - current track index</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>  - total track count</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  - save start time</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>  - pending minimum-display dismissal task, if needed</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- Keep this model owned by `ContentView` or by a small helper type used only by `ContentView`, not by a global coordinator.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- Encode the rule that the overlay is hidden by default and only becomes visible at the start of a save operation.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre></pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>### 2. Define the save-progress reporting contract</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- Extend the save flow in [TagEditorViewModel.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift) so the caller can observe:</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>  - total tracks to be saved</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>  - the one-based index of the track currently being written</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>  - the display name of the track currently being written</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- Recommended approach:</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>  - add a progress callback parameter to `save(...)`</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>  - invoke it once before each track write begins</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>  - keep the existing `SaveOperationResult` return shape unchanged unless implementation proves a richer result is necessary</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- Ensure the callback reflects the actual save set after `scope` filtering, so selected-track saves show only the written subset.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre></pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>### 3. Add minimum-duration and dismissal coordination</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- Add logic in `ContentView` or a dedicated helper to:</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>  - show the overlay immediately when save starts</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>  - record the save start time</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>  - keep the overlay visible until either:</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>    - the save completes and the elapsed visible time is at least 1.5 seconds, or</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>    - the remaining time to reach 1.5 seconds has elapsed</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- On successful save completion:</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>  - wait only for the remaining minimum-display interval, if any</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>  - then fade the overlay out</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- On failure or partial failure:</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>  - dismiss the overlay immediately</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>  - do not wait for the minimum display duration</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>  - present the existing save error alert after dismissal state is applied</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre></pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>### 4. Build `SaveStatusView`</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>- Add a new SwiftUI view, likely under `SwiftTag/SwiftTag/Shared` or a focused feature/UI folder, named `SaveStatusView`.</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- The view should:</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>  - use the current `ultraThinMaterial` plus blur treatment as the base background</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>  - render the `Brightly_Colored_Fish-512-circle-alpha-full` artwork above that background treatment</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>  - be sized intentionally around the 512x512 fish artwork rather than stretched arbitrarily</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>  - place the status row at the bottom of the view</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>  - render the row as read-only `Text` views</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>  - use appearance-aware text color: white in Dark Mode and black in Light Mode</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>  - constrain each status label to a single line with middle truncation</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- The row layout should provide:</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>  - leftmost field:</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>  - `Saving Album:` for all-tracks saves</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>  - `Saving Track:` for selected-track saves</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>  - second field:</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>  - album value for all-tracks and picture-only saves</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>  - current track name for selected-track saves</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>  - spacer</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>  - center-aligned current-track field sized for 2 characters</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>  - centered `of` field</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>  - center-aligned total-track field sized for 2 characters</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre></pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>### 5. Present the overlay from `ContentView`</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- Wrap the editor content in a presentation container such as `ZStack` so `SaveStatusView` can be centered over the current window’s content.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- Bind the overlay’s presence to the new save-status model instead of deriving it from general error or notification state.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Apply `.transition(.opacity)` or equivalent fade behavior with 0.25 second animation for both appearance and disappearance.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- Pass the active save-status presentation into `AlbumArtSheetView` so the same overlay can render while the sheet is open.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Keep existing alerts and file importer behavior intact unless the overlay integration requires a narrowly scoped layout adjustment.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>### 6. Integrate with the existing save command flow</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- Update `save(using:)` in [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift) to:</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>  - initialize the save-status model with the current album value, selected/all scope state, and computed total track count for the requested save scope</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>  - show the overlay before invoking the save loop</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>  - pass a progress callback into `viewModel.save(...)` that includes the current track display name</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>  - drive success dismissal timing after the save result returns</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>  - drive immediate failure dismissal in the `catch` path before presenting the alert</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Preserve existing notification scheduling and window registration after a successful save.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- Disable editable tag editor controls while `isSaveOperationRunning` is true.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- Disable the interactive album-art wells both in the main editor and in `AlbumArtSheetView` while `isSaveOperationRunning` is true.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre></pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>### 7. Verify asset and sizing assumptions</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>- Confirm that `Brightly_Colored_Fish-512-circle-alpha-full` remains available in [Assets.xcassets](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Assets.xcassets).</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>- Verify that the fish artwork plus the current `ultraThinMaterial` and blur combination keeps the bottom text row legible in both Light and Dark Mode.</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>- Verify that the bottom text row remains legible over the image and does not overflow for longer album or track names at typical window sizes.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre></pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>## Suggested File Updates</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>- Update [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift)</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- Update [TagEditorViewModel.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift)</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- Update [AlbumArtSheetView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift)</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>- Update [AlbumArtWellView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/AlbumArt/AlbumArtWellView.swift)</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>- Update [TagEditorAlbumView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorAlbumView.swift)</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>- Update [TagEditorView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorView.swift)</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>- Add or update `SaveStatusView` under `SwiftTag/SwiftTag/Shared` or a closely related UI folder</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>- Add a small save-status state/helper type if implementation benefits from separating timing logic from the view</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- Update [SwiftTagTests.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTagTests/SwiftTagTests.swift) or split tests into focused files for save-status behavior</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre></pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>- Prefer unit tests first:</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>  - save-status timing rules for success</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>  - immediate dismissal on failure</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>  - correct current-track and total-track progress values for all-tracks and selected-tracks saves</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>  - minimum-duration enforcement when save completes faster than 1.5 seconds</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>  - no extra wait when save duration already exceeds 1.5 seconds</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- Add service or view-model tests where practical:</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>  - `TagEditorViewModel.save(...)` invokes progress updates in one-based order for the actual saved track set</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>  - selected-track saves report the filtered count, not the full imported count</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- Add limited UI verification:</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>  - the overlay appears centered during a save-triggered test seam</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>  - the overlay remains visible when `AlbumArtSheetView` is open during a save</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>  - the overlay disappears after success</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>  - the overlay dismisses before the save error alert appears on failure</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>  - the main editor controls are disabled during save and re-enabled afterward</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>  - album-art well interactions are disabled during save both in the main editor and in `AlbumArtSheetView`</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>  - `AlbumArtSheetView` album-art interactions should be re-enabled after the simulated save completes</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>  - Note: direct targeted UI verification of that sheet re-enable transition proved difficult because of repeated stumbling blocks in the current UI test harness; treat it as a follow-up TODO unless the harness is improved</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- Use `BuildProject` for compile validation and prefer targeted tests over full UI automation if animation timing makes UI tests unstable.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre></pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>- No open questions at this time. Implementation should proceed with the confirmed decisions above.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre></pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>- A `SaveStatusView` exists and is hidden by default.</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>- Starting a save in an editor window shows the overlay centered in that window’s `ContentView`.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>- The overlay uses the current `ultraThinMaterial` plus blur treatment underneath the `Brightly_Colored_Fish-512-circle-alpha-full` artwork.</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>- The overlay fades in over 0.25 seconds and fades out over 0.25 seconds.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>- The overlay remains visible until the save ends and at least 1.5 seconds of display time has elapsed on successful saves.</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>- On save failure or partial failure, the overlay dismisses immediately and the existing save error alert is then shown.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>- The bottom status row displays a left label (`Saving Album:` or `Saving Track:`), a left-aligned album-or-track value, the current track index, `of`, and the total track count with the requested alignment and styling.</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>- The album label/value pair is used for all-tracks saves and picture-only saves, and the track label/value pair is used for selected-track saves.</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>- The track progress values reflect the actual save scope for that save operation.</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- Long status labels stay on one line and use middle truncation when needed.</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- Text remains legible in both Light and Dark Mode.</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>- While saving, editable tag editor controls are disabled and then re-enabled when the save completes.</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>- While saving with `AlbumArtSheetView` open, the album-art editing well interactions are disabled and the save-status overlay remains visible inside the sheet.</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- While saving with `AlbumArtSheetView` open, the album-art editing well interactions should be re-enabled after the save completes.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>- Direct targeted UI verification of the sheet re-enable transition is deferred for now because the current UI test harness made that state change difficult to assert reliably; this remains a reasonable follow-up TODO if the harness is improved.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>- The implementation is covered by unit tests for timing/progress behavior plus targeted compile and UI verification.</pre></td></tr></table></main></body></html>

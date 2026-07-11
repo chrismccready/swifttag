@@ -1,0 +1,854 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="900pt" height="704.16pt" viewBox="0 0 900 704.16" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>SwiftTag project analysis</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 704.16 
+L 900 704.16 
+L 900 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 351 662.4 
+L 846 662.4 
+L 846 27.36 
+L 351 27.36 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 351 662.4 
+L 351 27.36 
+" clip-path="url(#pd0ceb7c150)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2">
+      <defs>
+       <path id="me9c26add9c" d="M 0 0 
+L 0 3.5 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#me9c26add9c" x="351" y="662.4" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="351" y="676.997656" transform="rotate(-0 351 676.997656)">0</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 447.033524 662.4 
+L 447.033524 27.36 
+" clip-path="url(#pd0ceb7c150)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#me9c26add9c" x="447.033524" y="662.4" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="447.033524" y="676.997656" transform="rotate(-0 447.033524 676.997656)">20</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 543.067049 662.4 
+L 543.067049 27.36 
+" clip-path="url(#pd0ceb7c150)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#me9c26add9c" x="543.067049" y="662.4" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="543.067049" y="676.997656" transform="rotate(-0 543.067049 676.997656)">40</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 639.100573 662.4 
+L 639.100573 27.36 
+" clip-path="url(#pd0ceb7c150)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#me9c26add9c" x="639.100573" y="662.4" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="639.100573" y="676.997656" transform="rotate(-0 639.100573 676.997656)">60</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_9">
+      <path d="M 735.134098 662.4 
+L 735.134098 27.36 
+" clip-path="url(#pd0ceb7c150)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <g>
+       <use xlink:href="#me9c26add9c" x="735.134098" y="662.4" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="735.134098" y="676.997656" transform="rotate(-0 735.134098 676.997656)">80</text>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_11">
+      <path d="M 831.167622 662.4 
+L 831.167622 27.36 
+" clip-path="url(#pd0ceb7c150)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#me9c26add9c" x="831.167622" y="662.4" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="831.167622" y="676.997656" transform="rotate(-0 831.167622 676.997656)">100</text>
+     </g>
+    </g>
+    <g id="text_7">
+     <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle" x="598.5" y="691.757422" transform="rotate(-0 598.5 691.757422)">Score</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_13"/>
+     <g id="text_8">
+      <a xlink:href="../plans/26.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="40.401115" transform="rotate(-0 347.5 40.401115)">Plan 26 Add AppleScript Support Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_14"/>
+     <g id="text_9">
+      <a xlink:href="../plans/11.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="59.644751" transform="rotate(-0 347.5 59.644751)">Plan 11 Add Multi Picture Per Track Support Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_15"/>
+     <g id="text_10">
+      <a xlink:href="../plans/8.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="78.888388" transform="rotate(-0 347.5 78.888388)">Plan 8 Add Track Status Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_16"/>
+     <g id="text_11">
+      <a xlink:href="../plans/33.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="98.132024" transform="rotate(-0 347.5 98.132024)">Plan 33 Add Track File Rename Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_17"/>
+     <g id="text_12">
+      <a xlink:href="../plans/9.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="117.375661" transform="rotate(-0 347.5 117.375661)">Plan 9 Add UI Feedback Settings Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_18"/>
+     <g id="text_13">
+      <a xlink:href="../plans/25.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="136.619297" transform="rotate(-0 347.5 136.619297)">Plan 25 Add Picture Description Edit Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_19"/>
+     <g id="text_14">
+      <a xlink:href="../plans/15.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="155.862933" transform="rotate(-0 347.5 155.862933)">Plan 15 Add SwiftTag Document Creation Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_8">
+     <g id="line2d_20"/>
+     <g id="text_15">
+      <a xlink:href="../plans/23.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="175.10657" transform="rotate(-0 347.5 175.10657)">Plan 23 Add SwiftTag Document Quick Look Preview Extension Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_9">
+     <g id="line2d_21"/>
+     <g id="text_16">
+      <a xlink:href="../plans/16.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="194.350206" transform="rotate(-0 347.5 194.350206)">Plan 16 Add SwiftTag Document Read Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_10">
+     <g id="line2d_22"/>
+     <g id="text_17">
+      <a xlink:href="../plans/28.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="213.593842" transform="rotate(-0 347.5 213.593842)">Plan 28 Add SwiftTag Use Documentation Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_11">
+     <g id="line2d_23"/>
+     <g id="text_18">
+      <a xlink:href="../plans/29.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="232.837479" transform="rotate(-0 347.5 232.837479)">Plan 29 Add Sandbox Path Settings Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_12">
+     <g id="line2d_24"/>
+     <g id="text_19">
+      <a xlink:href="../plans/10.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="252.081115" transform="rotate(-0 347.5 252.081115)">Plan 10 Add Track Management Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_13">
+     <g id="line2d_25"/>
+     <g id="text_20">
+      <a xlink:href="../plans/18.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="271.324751" transform="rotate(-0 347.5 271.324751)">Plan 18 Update Window Title Text Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_14">
+     <g id="line2d_26"/>
+     <g id="text_21">
+      <a xlink:href="../plans/12.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="290.568388" transform="rotate(-0 347.5 290.568388)">Plan 12 Add FLAC Document Open Support Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_15">
+     <g id="line2d_27"/>
+     <g id="text_22">
+      <a xlink:href="../plans/4.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="309.812024" transform="rotate(-0 347.5 309.812024)">Plan 4 FLAC Write Tags and Pictures Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_16">
+     <g id="line2d_28"/>
+     <g id="text_23">
+      <a xlink:href="../plans/31.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="329.055661" transform="rotate(-0 347.5 329.055661)">Plan 31 Set Track Numbers And Sort Tracks Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_17">
+     <g id="line2d_29"/>
+     <g id="text_24">
+      <a xlink:href="../plans/30.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="348.299297" transform="rotate(-0 347.5 348.299297)">Plan 30 Auto Update Track Total By Disc Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_18">
+     <g id="line2d_30"/>
+     <g id="text_25">
+      <a xlink:href="../plans/19.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="367.542933" transform="rotate(-0 347.5 367.542933)">Plan 19 Add SwiftTag Document Save Options Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_19">
+     <g id="line2d_31"/>
+     <g id="text_26">
+      <a xlink:href="../plans/21.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="386.78657" transform="rotate(-0 347.5 386.78657)">Plan 21 Add SwiftTag Document Bookmark Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_20">
+     <g id="line2d_32"/>
+     <g id="text_27">
+      <a xlink:href="../plans/20.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="406.030206" transform="rotate(-0 347.5 406.030206)">Plan 20 Add Window-Close SwiftTag Document Save Options Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_21">
+     <g id="line2d_33"/>
+     <g id="text_28">
+      <a xlink:href="../plans/7.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="425.273842" transform="rotate(-0 347.5 425.273842)">Plan 7 Add Save Status View Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_22">
+     <g id="line2d_34"/>
+     <g id="text_29">
+      <a xlink:href="../plans/5.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="444.517479" transform="rotate(-0 347.5 444.517479)">Plan 5 Add Save Notifications Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_23">
+     <g id="line2d_35"/>
+     <g id="text_30">
+      <a xlink:href="../plans/24.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="463.761115" transform="rotate(-0 347.5 463.761115)">Plan 24 Add Track Duration Info Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_24">
+     <g id="line2d_36"/>
+     <g id="text_31">
+      <a xlink:href="../plans/32.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="483.004751" transform="rotate(-0 347.5 483.004751)">Plan 32 Auto Update Disc Total Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_25">
+     <g id="line2d_37"/>
+     <g id="text_32">
+      <a xlink:href="../plans/14.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="502.248388" transform="rotate(-0 347.5 502.248388)">Plan 14 Add Compilation Tag Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_26">
+     <g id="line2d_38"/>
+     <g id="text_33">
+      <a xlink:href="../plans/22.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="521.492024" transform="rotate(-0 347.5 521.492024)">Plan 22 Add Referenced SwiftTag Document Track-List Save Offer Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_27">
+     <g id="line2d_39"/>
+     <g id="text_34">
+      <a xlink:href="../plans/2.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="540.735661" transform="rotate(-0 347.5 540.735661)">Plan 2 ContentView Reorganization Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_28">
+     <g id="line2d_40"/>
+     <g id="text_35">
+      <a xlink:href="../plans/6.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="559.979297" transform="rotate(-0 347.5 559.979297)">Plan 6 Agents Transcript Skill Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_29">
+     <g id="line2d_41"/>
+     <g id="text_36">
+      <a xlink:href="../plans/3.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="579.222933" transform="rotate(-0 347.5 579.222933)">Plan 3 FLAC Picture Import + Album Art Assignment Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_30">
+     <g id="line2d_42"/>
+     <g id="text_37">
+      <a xlink:href="../plans/17.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="598.46657" transform="rotate(-0 347.5 598.46657)">Plan 17 SwiftTag Document Read Live File Resolution Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_31">
+     <g id="line2d_43"/>
+     <g id="text_38">
+      <a xlink:href="../plans/27.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="617.710206" transform="rotate(-0 347.5 617.710206)">Plan 27 Track Tags Refactor Plan</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_32">
+     <g id="line2d_44"/>
+     <g id="text_39">
+      <a xlink:href="../plans/1.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="636.953842" transform="rotate(-0 347.5 636.953842)">Plan 1 FLAC Bridge Build Notes</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_33">
+     <g id="line2d_45"/>
+     <g id="text_40">
+      <a xlink:href="../plans/13.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="656.197479" transform="rotate(-0 347.5 656.197479)">Plan 13 Add FLAC Fingerprint Support Plan</text>
+      </a>
+     </g>
+    </g>
+   </g>
+   <g id="patch_3">
+    <a xlink:href="../plans/26.html" target="_blank">
+     <path d="M 351 30.054109 
+L 822.428571 30.054109 
+L 822.428571 43.909527 
+L 351 43.909527 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_4">
+    <a xlink:href="../plans/11.html" target="_blank">
+     <path d="M 351 49.297745 
+L 784.591363 49.297745 
+L 784.591363 63.153164 
+L 351 63.153164 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_5">
+    <a xlink:href="../plans/8.html" target="_blank">
+     <path d="M 351 68.541382 
+L 755.493205 68.541382 
+L 755.493205 82.3968 
+L 351 82.3968 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_6">
+    <a xlink:href="../plans/33.html" target="_blank">
+     <path d="M 351 87.785018 
+L 729.324069 87.785018 
+L 729.324069 101.640436 
+L 351 101.640436 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_7">
+    <a xlink:href="../plans/9.html" target="_blank">
+     <path d="M 351 107.028655 
+L 719.144516 107.028655 
+L 719.144516 120.884073 
+L 351 120.884073 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_8">
+    <a xlink:href="../plans/25.html" target="_blank">
+     <path d="M 351 126.272291 
+L 713.286471 126.272291 
+L 713.286471 140.127709 
+L 351 140.127709 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_9">
+    <a xlink:href="../plans/15.html" target="_blank">
+     <path d="M 351 145.515927 
+L 700.946163 145.515927 
+L 700.946163 159.371345 
+L 351 159.371345 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_10">
+    <a xlink:href="../plans/23.html" target="_blank">
+     <path d="M 351 164.759564 
+L 695.856386 164.759564 
+L 695.856386 178.614982 
+L 351 178.614982 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_11">
+    <a xlink:href="../plans/16.html" target="_blank">
+     <path d="M 351 184.0032 
+L 679.098536 184.0032 
+L 679.098536 197.858618 
+L 351 197.858618 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_12">
+    <a xlink:href="../plans/28.html" target="_blank">
+     <path d="M 351 203.246836 
+L 650.000378 203.246836 
+L 650.000378 217.102255 
+L 351 217.102255 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_13">
+    <a xlink:href="../plans/29.html" target="_blank">
+     <path d="M 351 222.490473 
+L 649.280127 222.490473 
+L 649.280127 236.345891 
+L 351 236.345891 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_14">
+    <a xlink:href="../plans/10.html" target="_blank">
+     <path d="M 351 241.734109 
+L 623.110991 241.734109 
+L 623.110991 255.589527 
+L 351 255.589527 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_15">
+    <a xlink:href="../plans/18.html" target="_blank">
+     <path d="M 351 260.977745 
+L 616.532695 260.977745 
+L 616.532695 274.833164 
+L 351 274.833164 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_16">
+    <a xlink:href="../plans/12.html" target="_blank">
+     <path d="M 351 280.221382 
+L 610.002415 280.221382 
+L 610.002415 294.0768 
+L 351 294.0768 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_17">
+    <a xlink:href="../plans/4.html" target="_blank">
+     <path d="M 351 299.465018 
+L 607.793644 299.465018 
+L 607.793644 313.320436 
+L 351 313.320436 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_18">
+    <a xlink:href="../plans/31.html" target="_blank">
+     <path d="M 351 318.708655 
+L 602.703868 318.708655 
+L 602.703868 332.564073 
+L 351 332.564073 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_19">
+    <a xlink:href="../plans/30.html" target="_blank">
+     <path d="M 351 337.952291 
+L 573.60571 337.952291 
+L 573.60571 351.807709 
+L 351 351.807709 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_20">
+    <a xlink:href="../plans/19.html" target="_blank">
+     <path d="M 351 357.195927 
+L 570.724704 357.195927 
+L 570.724704 371.051345 
+L 351 371.051345 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_21">
+    <a xlink:href="../plans/21.html" target="_blank">
+     <path d="M 351 376.439564 
+L 568.515933 376.439564 
+L 568.515933 390.294982 
+L 351 390.294982 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_22">
+    <a xlink:href="../plans/20.html" target="_blank">
+     <path d="M 351 395.6832 
+L 561.265402 395.6832 
+L 561.265402 409.538618 
+L 351 409.538618 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_23">
+    <a xlink:href="../plans/7.html" target="_blank">
+     <path d="M 351 414.926836 
+L 548.877077 414.926836 
+L 548.877077 428.782255 
+L 351 428.782255 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_24">
+    <a xlink:href="../plans/5.html" target="_blank">
+     <path d="M 351 434.170473 
+L 537.257021 434.170473 
+L 537.257021 448.025891 
+L 351 448.025891 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_25">
+    <a xlink:href="../plans/24.html" target="_blank">
+     <path d="M 351 453.414109 
+L 533.607747 453.414109 
+L 533.607747 467.269527 
+L 351 467.269527 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_26">
+    <a xlink:href="../plans/32.html" target="_blank">
+     <path d="M 351 472.657745 
+L 528.51797 472.657745 
+L 528.51797 486.513164 
+L 351 486.513164 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_27">
+    <a xlink:href="../plans/14.html" target="_blank">
+     <path d="M 351 491.901382 
+L 521.98769 491.901382 
+L 521.98769 505.7568 
+L 351 505.7568 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_28">
+    <a xlink:href="../plans/22.html" target="_blank">
+     <path d="M 351 511.145018 
+L 519.778919 511.145018 
+L 519.778919 525.000436 
+L 351 525.000436 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_29">
+    <a xlink:href="../plans/2.html" target="_blank">
+     <path d="M 351 530.388655 
+L 503.789337 530.388655 
+L 503.789337 544.244073 
+L 351 544.244073 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_30">
+    <a xlink:href="../plans/6.html" target="_blank">
+     <path d="M 351 549.632291 
+L 488.520007 549.632291 
+L 488.520007 563.487709 
+L 351 563.487709 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_31">
+    <a xlink:href="../plans/3.html" target="_blank">
+     <path d="M 351 568.875927 
+L 478.340453 568.875927 
+L 478.340453 582.731345 
+L 351 582.731345 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_32">
+    <a xlink:href="../plans/17.html" target="_blank">
+     <path d="M 351 588.119564 
+L 463.023106 588.119564 
+L 463.023106 601.974982 
+L 351 601.974982 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_33">
+    <a xlink:href="../plans/27.html" target="_blank">
+     <path d="M 351 607.3632 
+L 459.421849 607.3632 
+L 459.421849 621.218618 
+L 351 621.218618 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_34">
+    <a xlink:href="../plans/1.html" target="_blank">
+     <path d="M 351 626.606836 
+L 435.413468 626.606836 
+L 435.413468 640.462255 
+L 351 640.462255 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_35">
+    <a xlink:href="../plans/13.html" target="_blank">
+     <path d="M 351 645.850473 
+L 431.764194 645.850473 
+L 431.764194 659.705891 
+L 351 659.705891 
+z
+" clip-path="url(#pd0ceb7c150)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_36">
+    <path d="M 351 662.4 
+L 846 662.4 
+" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_41">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="825.428571" y="39.319709" transform="rotate(-0 825.428571 39.319709)">98</text>
+   </g>
+   <g id="text_42">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="787.591363" y="58.563345" transform="rotate(-0 787.591363 58.563345)">90</text>
+   </g>
+   <g id="text_43">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="758.493205" y="77.806982" transform="rotate(-0 758.493205 77.806982)">84</text>
+   </g>
+   <g id="text_44">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="732.324069" y="97.050618" transform="rotate(-0 732.324069 97.050618)">79</text>
+   </g>
+   <g id="text_45">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="722.144516" y="116.294254" transform="rotate(-0 722.144516 116.294254)">77</text>
+   </g>
+   <g id="text_46">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="716.286471" y="135.537891" transform="rotate(-0 716.286471 135.537891)">75</text>
+   </g>
+   <g id="text_47">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="703.946163" y="154.781527" transform="rotate(-0 703.946163 154.781527)">73</text>
+   </g>
+   <g id="text_48">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="698.856386" y="174.025163" transform="rotate(-0 698.856386 174.025163)">72</text>
+   </g>
+   <g id="text_49">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="682.098536" y="193.2688" transform="rotate(-0 682.098536 193.2688)">68</text>
+   </g>
+   <g id="text_50">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="653.000378" y="212.512436" transform="rotate(-0 653.000378 212.512436)">62</text>
+   </g>
+   <g id="text_51">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="652.280127" y="231.756072" transform="rotate(-0 652.280127 231.756072)">62</text>
+   </g>
+   <g id="text_52">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="626.110991" y="250.999709" transform="rotate(-0 626.110991 250.999709)">57</text>
+   </g>
+   <g id="text_53">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="619.532695" y="270.243345" transform="rotate(-0 619.532695 270.243345)">55</text>
+   </g>
+   <g id="text_54">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="613.002415" y="289.486982" transform="rotate(-0 613.002415 289.486982)">54</text>
+   </g>
+   <g id="text_55">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="610.793644" y="308.730618" transform="rotate(-0 610.793644 308.730618)">53</text>
+   </g>
+   <g id="text_56">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="605.703868" y="327.974254" transform="rotate(-0 605.703868 327.974254)">52</text>
+   </g>
+   <g id="text_57">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="576.60571" y="347.217891" transform="rotate(-0 576.60571 347.217891)">46</text>
+   </g>
+   <g id="text_58">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="573.724704" y="366.461527" transform="rotate(-0 573.724704 366.461527)">46</text>
+   </g>
+   <g id="text_59">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="571.515933" y="385.705163" transform="rotate(-0 571.515933 385.705163)">45</text>
+   </g>
+   <g id="text_60">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="564.265402" y="404.9488" transform="rotate(-0 564.265402 404.9488)">44</text>
+   </g>
+   <g id="text_61">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="551.877077" y="424.192436" transform="rotate(-0 551.877077 424.192436)">41</text>
+   </g>
+   <g id="text_62">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="540.257021" y="443.436072" transform="rotate(-0 540.257021 443.436072)">39</text>
+   </g>
+   <g id="text_63">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="536.607747" y="462.679709" transform="rotate(-0 536.607747 462.679709)">38</text>
+   </g>
+   <g id="text_64">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="531.51797" y="481.923345" transform="rotate(-0 531.51797 481.923345)">37</text>
+   </g>
+   <g id="text_65">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="524.98769" y="501.166982" transform="rotate(-0 524.98769 501.166982)">36</text>
+   </g>
+   <g id="text_66">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="522.778919" y="520.410618" transform="rotate(-0 522.778919 520.410618)">35</text>
+   </g>
+   <g id="text_67">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="506.789337" y="539.654254" transform="rotate(-0 506.789337 539.654254)">32</text>
+   </g>
+   <g id="text_68">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="491.520007" y="558.897891" transform="rotate(-0 491.520007 558.897891)">29</text>
+   </g>
+   <g id="text_69">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="481.340453" y="578.141527" transform="rotate(-0 481.340453 578.141527)">27</text>
+   </g>
+   <g id="text_70">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="466.023106" y="597.385163" transform="rotate(-0 466.023106 597.385163)">23</text>
+   </g>
+   <g id="text_71">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="462.421849" y="616.6288" transform="rotate(-0 462.421849 616.6288)">23</text>
+   </g>
+   <g id="text_72">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="438.413468" y="635.872436" transform="rotate(-0 438.413468 635.872436)">18</text>
+   </g>
+   <g id="text_73">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="434.764194" y="655.116072" transform="rotate(-0 434.764194 655.116072)">17</text>
+   </g>
+   <g id="text_74">
+    <text style="font-weight: 700; font-size: 16px; font-family: 'DejaVu Sans'; text-anchor: start" x="351" y="21.36" transform="rotate(-0 351 21.36)">Plan Difficulty</text>
+   </g>
+  </g>
+  <g id="text_75">
+   <a xlink:href="../data/plans.csv" target="_blank">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #5d6668" x="9" y="700.6392" transform="rotate(-0 9 700.6392)">Data: data/plans.csv</text>
+   </a>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pd0ceb7c150">
+   <rect x="351" y="27.36" width="495" height="635.04"/>
+  </clipPath>
+ </defs>
+</svg>

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-04-09-2-21-AddSwiftTagDocumentBookmark</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-04-09-2-21-AddSwiftTagDocumentBookmark</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-04-09-2-21-AddSwiftTagDocumentBookmark.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-04-09  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: 21-AddSwiftTagDocumentBookmark.md    </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.4 High/Extra High (VSCode/Codex app)  </pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User 2026-04-09T19:10:10Z </pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>Update UnsavedChangesSessionContext to take a URL instead of a String and then update the formatted string displayed in the unsaved changes dialog so that the file name string used when there is a referenced swifttag document is formatted with the String extension `truncated` with a limit 24 chars and a TruncationPosition of middle so that resulting string is like “&lt;filename…&gt;.&lt;extension&gt;”. Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre></pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>## Assistant 2026-04-09T19:10:10Z (0s since User start)</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre></pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>I’m updating the unsaved-changes flow so the session context carries a URL and the dialog formats referenced SwiftTag document names with middle truncation. I’ll trace the context type and the dialog rendering path first, then make the minimal code changes and validate them.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre></pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>I’ve located the unsaved-changes model and the existing string truncation helper. Next I’m reading the flow/coordinator code and any tests around the dialog text so I can change the type and the displayed label without widening the surface area.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>I’ve confirmed the label is built in the unsaved-changes flow, not the coordinator, and there are existing tests covering the current string-based behavior. I’m updating the model plus those tests together so the dialog text change stays pinned by unit coverage.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre></pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>I have the exact change surface now: one context model field, the resolver’s button-title formatting, the caller in ContentView, and four unit tests. I’m applying those edits next, keeping the rest of the unsaved-changes flow unchanged.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre></pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>The code change is in place. I’m checking the affected files for compile issues now and will correct any test expectation mismatch from the exact truncation behavior before I finish.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre></pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>I’m running the focused unit tests that cover the resolver so the new URL-based context and truncated label behavior are verified against the actual test target.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre></pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>The targeted test run completed, but I need the result file because the terminal output was too large to inline. I’m pulling just the failing or passing summary now.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>One assertion is off in the new truncation test. I’m extracting the exact expected-vs-actual value from the test log, then I’ll fix the assertion and rerun just that case.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>The failing case is just the literal expected truncated string. I’m checking the helper’s exact output directly, then I’ll update the test to match the real 24-character middle truncation result and rerun only that test.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>I have the exact helper output now. I’m fixing the test literal to the real middle-truncated filename and rerunning only that one test case to close the loop quickly.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre></pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>The assertion is updated. I’m reading the summary from the focused rerun now; if it passed, I’m done.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>I’ve finished the code and test updates. I’m grabbing the required UTC timestamp now, then I’ll summarize exactly what changed and what I verified.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre></pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>The unsaved-changes session context now carries the referenced SwiftTag document as a URL instead of a string. The dialog action labels now derive the displayed name from that URL’s lastPathComponent and format it with the existing String.truncated helper using a 24-character middle truncation limit, so referenced document labels preserve the extension in the form filename…extension. The fallback label remains SwiftTag Document when no usable file name is available.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre></pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>I also updated the resolver tests to use URL-based context and added coverage for the truncated referenced-document label. I ran the targeted SwiftTagTests suite once, which exposed a bad expected literal in the new test, then corrected it and reran the focused truncation test successfully. I did not rerun the full suite after that focused pass.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>[ 2026-04-09T19:13:13Z (3m 3s since Assistant start) ]</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>## User 2026-04-09T22:57:30Z (3h 47m 20s since previous Assistant start) </pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>Create a plan that makes referenced .swifttag document a bookmark:</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- Add an associated `.swifttag` document file bookmark so file changes outside the app can be tracked.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- Add a test confirming that when a `.swifttag` file is renamed or moved, the window title updates and `.navigationDocument(...)` remains present with the correct updated URL.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- Add functionality to handle associated document deletion:</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>    - Update the window title text to the last known filename followed by ` (deleted)`.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>    - When the user attempts to save, prompt that the file was deleted and offer saving to a new file.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>Save plan to 21-AddSwiftTagDocumentBookmark.md Ask questions for clarification.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre></pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>## Assistant 2026-04-09T22:57:30Z (0s since User start)</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre></pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>I’m gathering the current planning format, related document-save behavior, and test guidance first so the new plan matches the repo’s conventions and calls out the right risks.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre></pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>I’ve got the current plan format and testing constraints. Next I’m locating the existing .swifttag document tracking, window-title logic, and current tests so the plan can name concrete implementation and verification targets.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre></pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>The code already has close/save flow modeling and .navigationDocument(...) wiring; I’m drilling into the window-title and document-save-state code paths now so the plan can point at the real seams instead of guessing.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre></pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>I’ve confirmed the window title already comes from TagEditorViewModel.editorNavigationMetadata(...), and .navigationDocument(...) is already conditional on the remembered document URL. I’m reading the bookmark and monitoring patterns next so the new plan can specify whether this should mirror track monitoring or use a document-specific watcher.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre></pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>I’ve got enough to draft the plan: the document URL is remembered today, but only as a raw URL/document ID pair, and there’s no dedicated .swifttag monitor or bookmark state yet. I’m checking the session-registration seam once so the plan can cover window restoration and title updates cleanly, then I’ll save the plan and send the clarification questions.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre></pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>One last read: the coordinator keys sessions by standardized .swifttag path today, which is exactly the seam that a move/rename will invalidate. I’m capturing that in the plan and then I’ll save it with explicit open questions.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre></pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>I’m at the write step. I’m setting a short task list so the plan, file save, and clarification pass stay explicit and complete.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre></pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>I caught one extra implementation constraint that matters for the plan quality: .swifttag is a package, so rename/delete monitoring can behave differently than flat-file monitoring. I’m checking how the package writer currently rewrites documents so the plan can call out the right monitoring risk.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre></pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>I’m writing the plan file now. It will be implementation-driving, but I’m leaving the unresolved behavioral points in an Open Questions section so your answers can be folded back into Confirmed Decisions cleanly.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre></pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>The plan file is saved. I’m sending the clarification questions now so the open items can be promoted into Confirmed Decisions before implementation.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>Q: When the associated .swifttag document is deleted, should .navigationDocument(...) be removed immediately or kept pointing at the last known URL until the user saves elsewhere?  </pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>A: Keep last known URL - Leave the document URL attached until recovery save  </pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>Q: In the deleted-document save prompt, should recovery only offer saving to a new file, or also allow recreating the document at the original path?  </pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>A: Also allow recreate at original path - Offer the stale path again if it becomes writable  </pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre></pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>Q: After recovering by saving to a new file, should that new file immediately become the associated document for future Save commands, title updates, and routing?  </pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>A: Yes, rebind immediately - New file becomes the live associated document  </pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre></pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>You answered the behavior questions, so I’m folding those decisions back into the plan now and clearing the open-question section.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>The plan now reflects your answers: keep .navigationDocument(...) on the last known URL while deleted, offer both recovery paths on save, and rebind immediately after recovery. I’m marking the task done and then I’ll return the saved plan path.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre></pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>The plan is saved at Docs/Plans/21-AddSwiftTagDocumentBookmark.md. It now covers the bookmark-backed associated-document model, live rename and move tracking, deleted-document state, save recovery behavior, coordinator updates, and the test strategy for title and navigationDocument continuity.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre></pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>I also updated the plan with your clarified decisions: keep navigationDocument attached to the last known URL while the document is deleted, offer both recovery actions on save after deletion, and immediately rebind the session to the recovered file after a successful save.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre></pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>[ 2026-04-09T23:04:13Z (6m 43s since Assistant start) ]</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre></pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>## User 2026-04-09T23:34:03Z (36m 33s since previous Assistant start) </pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre></pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>Review 21-AddSwiftTagDocumentBookmark.md. Ask questions for clarification as needed. Implement plan.</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre></pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>## Assistant 2026-04-09T23:34:03Z (0s since User start)</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre></pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>I’m reviewing the 21-AddSwiftTagDocumentBookmark.md plan first, then I’ll inspect the related app code, guides, and current project state so we can implement it cleanly and only stop if the plan leaves a risky behavior undefined.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre></pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>I found the new plan file is currently untracked, so I’m treating it as the implementation spec for this change and checking it against the current document/bookmark code paths before editing anything.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre></pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>I’ve got the plan and the recent save-flow work in view now. Next I’m tracing the actual document state path through ContentView, the view model, and the window coordinator so we can implement one source of truth instead of bolting bookmark logic onto three separate places.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre></pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>The implementation seams are lining up: document save/open state currently fans out from a plain URL, and that’s exactly where the rename/delete fragility comes from. I’m drilling into the save/open and session-registration methods now so we can swap in a richer associated-document reference without changing behavior in unrelated flows.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre></pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>I’ve confirmed there’s already good test coverage around navigation metadata and unsaved-change orchestration, which gives us safe seams to extend. I’m checking the actual window title and .navigationDocument(...) wiring next so the bookmark-backed state lands in the right place with minimal UI churn.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre></pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>1. Introduce a richer associated-document model in the shared SwiftTag document utilities and move title/document derivation onto it in the view model.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>2. Add a bookmark-backed monitor for the .swifttag package, keep the live URL/bookmark fresh after rename, move, delete, and after in-app saves, and republish that state into the window coordinator.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>3. Intercept save paths when the associated document is deleted so normal Save/close/quit flows offer recovery instead of silently writing to a stale path.</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>4. Add targeted tests for navigation metadata, monitor behavior, coordinator rerouting after rename/move, and deleted-document recovery behavior, then run a focused build/test pass.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre></pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>routing, and coordinator all speak the same richer associated-document model instead of each inventing their own “deleted vs live” logic.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre></pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre></pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>’m moving into the view layer now: wiring the new state into the window title, live .navigationDocument(...), session registration, and save recovery path. This is where the previous “remembered URL” assumption needs to be swapped out carefully so close/quit/save behavior stays coherent.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre></pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>state refresh, monitor-driven rename tracking, deleted-state navigation metadata, and coordinator routing by document ID after a move.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre></pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>The main code is in place. I’m doing a compile-focused pass now to catch any integration issues before I touch anything else, especially around the new monitor file and the updated shared document-state API.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre></pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>or the new bookmark field, the new monitor’s deinit needs to avoid calling an actor-isolated method directly, and one test landed in the XCTest section so it needs XCTest-style plumbing instead of Swift Testing syntax.</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre></pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>and that the updated save-state API composes cleanly across the app and tests.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre></pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>One targeted test identifier needs the exact XCTest name from the generated list, so I’m looking that up from the local test list file instead of guessing. The document-focused tests are already queued; I just want the coordinator case to run in the same pass.</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre></pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>I’ve got the new coverage passing. I’m running two existing impacted tests as a quick regression check: one for normal document-session routing and one for regular document load state, so we’re not only proving the new paths.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre></pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>Implemented the `21-AddSwiftTagDocumentBookmark.md` plan without needing further clarification because the plan already pinned down the risky behaviors. The main change is that associated `.swifttag` documents are now tracked as bookmark-backed state instead of just a remembered URL, so the app can follow external rename/move/delete events, keep window/navigation metadata current, and stop treating a deleted document like a normal save target.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre></pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>The core work lives in [SwiftTagDocumentPackage.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift), [SwiftTagDocumentMonitor.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagDocumentMonitor.swift), [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift), [ContentView.swift](Swift/SwiftTag/SwiftTag/ContentView.swift), and [EditorWindowCoordinator.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift). I also added targeted coverage in [SwiftTagDocumentTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagDocumentTests.swift) and [SwiftTagTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagTests.swift) for deleted-title metadata, bookmark repair after document rename, monitor-driven rename updates, reader bookmark capture, and coordinator reuse by document ID after a move.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre></pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>Verification passed with a successful project build plus focused tests:</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>`SwiftTagTests/tagEditorViewModelNavigationMetadataShowsDeletedAssociatedDocumentState()`</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>`SwiftTagDocumentTests/swiftTagDocumentReaderLoadsWrittenPackage()`</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>`SwiftTagDocumentTests/tagEditorViewModelRefreshesRenamedAssociatedSwiftTagDocumentReference()`</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>`SwiftTagDocumentTests/tagEditorViewModelRefreshMarksDeletedAssociatedSwiftTagDocumentState()`</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>`SwiftTagDocumentTests/swiftTagDocumentMonitorTracksAssociatedDocumentRename()`</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>`SaveNotificationCoordinatorTests/testEditorWindowCoordinatorRoutesMovedSwiftTagDocumentByDocumentID()`</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>`SaveNotificationCoordinatorTests/testSwiftTagDocumentOpenFocusesExistingAssociatedSession()`</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>`SwiftTagDocumentTests/tagEditorViewModelLoadsSwiftTagDocumentAsCleanEditableSession()`</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre></pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>[ 2026-04-09T23:51:56Z (17m 53s since Assistant start) ]</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre></pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>## User 2026-04-10T00:19:09Z (45m 6s since previous Assistant start) </pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre></pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>[ switched to GPT-5.4 Extra High ]</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre></pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>When a referenced .swifttag document is renamed or moved the editor can no longer save changes to document due to permissions. Consult Apple’s documentation on bookmark security as needed, add a UI test and fix issue.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre></pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>## Assistant 2026-04-10T00:19:09Z (0s since User start)</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre></pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>I’m tracing the referenced-document save path and the new bookmark refresh logic first, then I’ll check Apple’s bookmark/security-scope docs through Xcode documentation search to confirm the intended behavior before patching it.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre></pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>Apple’s docs are helpful here: the key detail is that a path string copied out of a security-scoped URL does not itself carry security scope, and access has to be re-established by resolving the bookmark and calling startAccessingSecurityScopedResource() on the resolved URL before use. I’m checking our rename-refresh path and save path against that now, then I’ll add a UI test around the failing move/rename flow.</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre></pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre></pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>I’m tracing the rename/move save path against the security-scoped bookmark rules now, then I’ll patch the access flow and add a UI test that reproduces the moved .swifttag case end to end.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre></pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>The likely failure matches Apple’s bookmark note exactly: our monitor hands us a plain path string after the rename, and that string is useful for discovery but not for sandbox access. I’m reading the save and refresh helpers in detail now so we can preserve the security-scoped URL across the move and re-enter scope during save.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre></pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>’Ive confirmed the suspicious spot: when bookmark resolution succeeds, we currently swap the resolved security-scoped URL back out for a plain URL(fileURLWithPath: currentPath) from the file-monitor callback. That keeps the display path up to date, but it throws away the scope Apple says we still need for write access after a move.</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre></pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>I found an easier UI-test route than adding more hidden launch flags: the app already exposes a file-action control channel for UI tests, so we can rename the saved .swifttag package from outside the editor after the first save. I’m wiring the fix first, then I’ll use that channel to prove the editor can still save after the move.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre></pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>I’ve still got the prior bookmark-worktree changes in place, so I’m patching on top of that rather than disturbing the user’s edits. I’m also checking existing test helpers so the new UI coverage fits the current suite instead of inventing a parallel harness.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre></pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>I’ve got the minimal fix shape now: keep the bookmark-derived URL as the source of truth after a move, and re-enter that security scope right before writing the .swifttag package. I’m patching those two points first, then I’ll add the regression UI test around an external move to a new directory.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre></pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>The fix is in place in code now. I’m reviewing the exact diff for the save helper and the new regression test next so we can catch any small syntax or behavior issues before I run Xcode’s build and targeted tests.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre></pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>The code path is patched and the regression test is written. I’m moving into verification now with a build first, then a focused unit test around renamed document refresh and the new UI test that physically moves the saved package before saving again.</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre></pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>The focused build and first two targeted checks passed, including the new UI regression. I’m running one more existing monitor-specific test so we also verify the rename notification path that updates the document URL before save.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre></pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>The moved-document save regression is fixed. Following Apple’s security-scoped bookmark guidance, the save path now resolves the stored bookmark and calls `startAccessingSecurityScopedResource()` before rewriting a referenced `.swifttag` package, instead of trusting the post-move path string alone. That change is in [ContentView.swift](Swift/SwiftTag/SwiftTag/ContentView.swift#L1358), and the rename refresh path in [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift#L2086) now keeps the bookmark-resolved document URL as the source of truth after a move.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre></pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>I also added a UI regression in [SwiftTagUITests.swift](Swift/SwiftTag/SwiftTagUITests/SwiftTagUITests.swift#L893) that saves a referenced document, moves it to a new directory externally, edits metadata, and verifies `Control-S` still updates the moved package without showing a save error.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre></pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>Verification passed: project build, `SwiftTagDocumentTests/tagEditorViewModelRefreshesRenamedAssociatedSwiftTagDocumentReference()`, `SwiftTagDocumentTests/swiftTagDocumentMonitorTracksAssociatedDocumentRename()`, and `SwiftTagUITests/testControlSSavesMovedReferencedSwiftTagDocumentAfterExternalMove()`.</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre></pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>[ 2026-04-10T00:32:18Z (13m 9s since Assistant start) ]</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre></pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

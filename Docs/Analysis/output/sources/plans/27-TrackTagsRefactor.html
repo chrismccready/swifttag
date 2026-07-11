@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 27-TrackTagsRefactor</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 27-TrackTagsRefactor</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/27-TrackTagsRefactor.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Track Tags Refactor Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Refactor `Track.album`, `Track.albumArtist`, and `Track.totalTracks` so their source of truth is `Track.tags`, while keeping existing UI, scripting, and test call sites working through accessors.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Fix AppleScript read/write behavior so script properties and `tag` elements update the same underlying tag values in both directions.</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Make `Track.album`, `Track.albumArtist`, and `Track.totalTracks` tag-backed accessors instead of stored fields.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Preserve current accessor names where practical to minimize call-site churn.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Normalize tag aliases consistently:</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>  - `album` maps to `ALBUM`.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>  - `albumArtist` maps to `ALBUMARTIST`.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>  - `totalTracks` reads `TOTALTRACKS`, then `TRACKTOTAL`.</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>  - `totalTracks` writes canonical in-memory `TOTALTRACKS`; `TRACKTOTAL` remains a read alias and save-strategy output key only.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Update UI bindings, document export/import, FLAC write mapping, external-difference logic, and AppleScript bridge code to rely on accessors or direct tags without dual storage.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Keep current `SwiftTag.sdef` terms and four-character codes stable.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Add focused regression coverage for UI bindings and AppleScript property/tag-element two-way mutation.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre></pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Renaming AppleScript terms such as `album`, `album artist`, or `track count`.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- Replacing Cocoa scripting with another automation technology.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Changing `.swifttag` package schema beyond resulting tag payload normalization.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Changing save-scope, save-payload, or selected-track semantics.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- Broad UI refactors unrelated to tag storage.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre></pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- Latest numbered plan reviewed:</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>  - `Docs/Plans/26-AddAppleScriptSupport.md`</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>  - `AGENTS.md`</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>  - `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>  - `Docs/AppleDocsIndex/apple-docs-scout-agent.md`</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>  - `Docs/AppleDocsIndex/README.md`</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- Relevant implementation files reviewed:</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>  - `SwiftTag/Shared/Models/Track.swift`</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>  - `SwiftTag/Shared/Models/TagKey.swift`</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>  - `SwiftTag/Features/FlacImport/FlacImportMapper.swift`</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>  - `SwiftTag/Features/FlacImport/FlacWriteMapper.swift`</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>  - `SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift`</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>  - `SwiftTag/Shared/Utilities/SwiftTagDocumentSupport.swift`</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>  - `SwiftTag/Shared/Utilities/SwiftTagDocumentPackageReader.swift`</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>  - `SwiftTag/Shared/Utilities/SwiftTagDocumentPackageWriter.swift`</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>  - `SwiftTag/SwiftTag.sdef`</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>  - `SwiftTagTests/SwiftTagAppleScriptTests.swift`</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>  - `SwiftTagTests/SwiftTagDocumentTests.swift`</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>  - `SwiftTagTests/TrackStatusViewInspectorTests.swift`</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>  - `SwiftTagUITests/SwiftTagUITests.swift`</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- Relevant fixtures inspected:</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>  - `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>    - has `ALBUM=Test Album`, `ALBUMARTIST=Test AlbumArtist`, `TOTALTRACKS=01`, and picture blocks.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>  - `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>    - has same core Vorbis comments plus padding for writeback-oriented tests.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>- Apple documentation reviewed:</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>  - Xcode DocumentationSearch for `NSScriptCommand`, `NSScriptSuiteRegistry`, `NSSetCommand`, `NSGetCommand`, `NSCreateCommand`, `NSScriptObjectSpecifier`, `NSUniqueIDSpecifier`, and KVC to-many collection behavior.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>  - `Docs/AppleDocsIndex/Generated` exists, but local exact search found no Cocoa scripting / KVC scripting hits.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre></pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- `Track` currently stores:</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>  - `var album: String`</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>  - `var albumArtist: String`</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>  - `var totalTracks: String`</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>  - `var tags: [String: String]`</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- `Track.init(...)` derives the stored fields from explicit initializer arguments or from tags.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- UI code reads and writes the stored fields through key paths:</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>  - `selectedAlbumBinding()`</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>  - `selectedAlbumArtistBinding()`</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  - `selectedTotalTracksBinding()`</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>  - `TagEditorViewModel.album`</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>  - `TagEditorViewModel.albumArtist`</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>  - `setTrackTotal(_:)`</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- `TagEditorViewModel.selectedTrackValueBinding(_:)` currently special-cases album and album artist to also write `tags`, but does not do the same generic sync for total tracks.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- `swiftTagDocumentTags(forTrackAt:)`, `currentEditorTagsForExternalComparison(...)`, and `FlacWriteMapper` re-overlay stored fields onto tag dictionaries before saving/exporting/comparing.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- `SwiftTagScriptTrack.album`, `albumArtist`, and `trackCount` already expose stable KVC properties and call `updateTagValue(...)` on set.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- `SwiftTagAppleScriptTagKey.snapshots(for:)` currently injects stored `track.totalTracks` into the script tag collection, which can mask stale or missing tag storage.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- Deleting an AppleScript tag can remove `tags[ALBUM]` while stored `track.album` remains non-empty, which is current stale-dual-storage bug.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>## Apple Documentation Review</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- Current Apple guidance still supports Cocoa scripting through:</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>  - bundled SDEF terminology</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>  - `NSScriptSuiteRegistry`</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>  - `NSScriptCommand` and standard command subclasses</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>  - KVC/KVO-visible scriptable `NSObject` wrappers</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>  - object specifiers and KVC to-many collection methods</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- `NSGetCommand` and `NSSetCommand` work through KVC; script-facing properties must remain KVC-visible on wrapper objects.</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- `NSSetCommand` uses scripting class descriptions to choose property set versus to-many replacement, then calls KVC setters or `replaceValue(at:inPropertyWithKey:withValue:)`.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- `NSCreateCommand` can create objects and insert them into to-many relationships with `insertValue(_:at:inPropertyWithKey:)`.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- SwiftTag&#x27;s current `tags` element shape matches the Apple pattern:</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>  - `tags`</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>  - `countOfTags`</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>  - `objectInTagsAtIndex`</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>  - `valueInTagsWithUniqueID`</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>  - insert/remove/replace mutators</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- There is no newer SwiftUI-native AppleScript object model in reviewed docs. Keep AppKit/Foundation Cocoa scripting bridge.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- `album`, `albumArtist`, and `totalTracks` belong in `Track.tags`.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- Existing convenience accessors should remain available for UI/tests/scripts.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>- Current `SwiftTag.sdef` design goals from `26-AddAppleScriptSupport.md` remain valid.</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>- Keep AppleScript terms and Cocoa keys stable:</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>  - `album` / `album`</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>  - `album artist` / `albumArtist`</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>  - `track count` / `trackCount`</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>  - `tag` elements under `track.tags`</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>- AppleScript property syntax and tag-element syntax must mutate the same tag storage.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- Existing UI, scripting, and test layers should see minimal collateral change.</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- Canonical in-memory total-track key is `TOTALTRACKS`; `TRACKTOTAL` is a read alias and save-strategy output key only.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- AppleScript `set album of track 1 to &quot;&quot;` does not delete `ALBUM`; it sets `ALBUM` to an empty string.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- AppleScript empty-string set behavior applies to all writable tag-backed script properties and `tag.value`.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- AppleScript `delete album of track 1` and `delete tag id &quot;ALBUM&quot;` remove the tag key.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- UI reads an empty scripted tag value as empty string and shows the existing empty/secondary/default presentation.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- Compatibility initializer arguments for `album`, `albumArtist`, and `totalTracks` remain available as migration/test convenience inputs.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre></pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- `Track` is a Swift struct, not script-facing directly. AppleScript talks to `NSObject` wrappers in `SwiftTagAppleScriptSupport.swift`.</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- `WritableKeyPath&lt;Track, String&gt;` should continue to work with computed get/set accessors, preserving current SwiftUI binding code shape.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- Assignment order matters once accessors are tag-backed:</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>  - assigning `album` before assigning `tags` can be overwritten by later `tags` assignment.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>  - refresh/import paths must set base tags first or use one helper that normalizes tags and overlay values together.</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- `TOTALTRACKS` and `TRACKTOTAL` are aliases in FLAC-world input, but current script tag normalization exposes canonical `TOTALTRACKS`.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- Save settings still determine whether writeback emits `TOTALTRACKS`, `TRACKTOTAL`, both, or neither.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- Existing `TagWriteOptions` behavior must remain owner of file-write key strategy.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- Existing locked-track behavior must continue to block scripted and UI tag mutation.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Existing selected-track semantics remain source of truth:</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>  - UI selected track IDs drive selected field bindings.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>  - `editor window.selected tracks` remains the script-facing selection state.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>## Destructive / Write-Back Behavior</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>Preserved data:</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>- Unrelated tag keys and values are preserved in `Track.tags`.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>- Picture data and picture metadata are preserved.</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- FLAC audio bytes are unchanged except through existing save paths.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- `.swifttag` document references, bookmarks, and fingerprints keep existing semantics.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- SDEF terms and Apple event codes remain stable.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre></pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>Replaced data:</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- Stored duplicate values for `album`, `albumArtist`, and `totalTracks` are replaced by computed accessors over `tags`.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>- Setting `album` replaces `tags[ALBUM]`.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>- Setting `albumArtist` replaces `tags[ALBUMARTIST]`.</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>- Setting `totalTracks` replaces canonical in-memory `tags[TOTALTRACKS]`.</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>- AppleScript setting any writable tag-backed property or `tag.value` to `&quot;&quot;` replaces the value with an empty string and preserves the key.</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre></pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>Removed data:</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>- AppleScript `delete` removes the targeted tag key.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>- Setting `totalTracks` to a non-empty value removes stale `TRACKTOTAL` in memory and writes `TOTALTRACKS`.</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- Normalization may remove stale `TRACKTOTAL` after canonical `TOTALTRACKS` is written, but scripted empty-string assignment preserves `TOTALTRACKS` with an empty value.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- File writeback can still omit or emit total-track keys according to `TagWriteOptions`.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre></pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>Partial-save behavior:</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>- Tags-only saves write the normalized tag map through existing FLAC write paths.</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>- Pictures-only saves should not be affected.</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>- Tags-and-pictures saves combine existing picture behavior with normalized tags.</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre></pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>- Tests currently encode stale dual-storage behavior, for example deleting `ALBUM` while `track.album` still returns old stored value. Expected behavior must flip.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>- Canonical in-memory `TOTALTRACKS` may surprise scripts or tests that start with only `TRACKTOTAL`; plan keeps `TRACKTOTAL` as read alias and save-strategy output, not primary in-memory key.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>- Empty-string behavior must stay distinct from delete:</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>  - AppleScript `set ... to &quot;&quot;` preserves the tag key with an empty value.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>  - AppleScript `delete ...` removes the tag key.</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>- Misc tag UI must continue excluding explicit/core tags, including album, album artist, and total-track aliases.</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- Existing document export/import tests may need expected tag payload updates where duplicate fields used to override tag dictionaries.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre></pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>### Tooling / Environment / Filesystem Risks</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- AppleScript wrappers can compile while failing at runtime if KVC method names or SDEF Cocoa keys drift.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>- `NSSetCommand` and `NSGetCommand` depend on KVC-visible wrapper properties; moving storage must not remove `@objc` wrapper properties.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>- AppleScript UI tests remain brittle; use unit bridge tests first and targeted UI harness only for end-to-end coverage.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>- Xcode MCP test timeouts are possible; run targeted tests before broader suites.</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre></pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>1. Add tag-backed accessor helpers on `Track`</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>- Add a central helper for normalized tag reads/writes, likely in `Track.swift`.</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>- Keep initializer arguments `album`, `albumArtist`, and `totalTracks` as compatibility inputs.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- In `Track.init(...)`, build `self.tags` first, then apply optional overlay arguments through the same helpers.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>- Convert stored fields into computed properties:</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>  - `album`</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>  - `albumArtist`</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>  - `totalTracks`</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>- Ensure numeric normalization matches existing behavior:</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>  - trim whitespace.</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>  - collapse integer strings with `Int(...).map(String.init)`.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>  - leave non-integer strings trimmed.</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>- Preserve explicit empty tag values where AppleScript set paths create them; do not collapse those writes into deletes.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>- Add small helpers if useful:</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>  - `tagValue(for:)`</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>  - `setTagValue(_:for:)`</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>  - `totalTracksValue`</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>  - `setTotalTracksValue(_:)`</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre></pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>2. Update model and mapper dependencies</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>- Update `FlacWriteMapper.makeTags(...)` so it relies on computed accessors and current `TagWriteOptions`.</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>- Remove any duplicated overlay logic that only exists to work around stored field drift.</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- Update import and refresh assignment order in `TagEditorViewModel`:</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>  - construct mapped tags first.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>  - initialize `Track` with tags plus optional overlay arguments, or assign `tags` before accessors.</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>  - avoid setting computed accessors and then overwriting `tags`.</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>- Update `.swifttag` export/import paths so exported tags are normalized from one source of truth.</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>- Keep `currentEditorTagsForExternalComparison(...)` and `expectedFileTags(...)` semantically unchanged but tag-backed.</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre></pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>3. Update UI binding paths</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>- Keep current selected field bindings if `WritableKeyPath&lt;Track, String&gt;` works with computed setters.</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>- Remove album/albumArtist special-case tag writes around `selectedTrackValueBinding(_:)` once accessors handle storage.</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>- Ensure selected total-tracks binding writes/removes `TOTALTRACKS` and `TRACKTOTAL` consistently.</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>- Ensure `TagEditorViewModel.album`, `albumArtist`, and `setTrackTotal(_:)` update tag-backed accessors and clear external differences.</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>- Verify `reloadMiscTagRowsFromSelection()` still treats explicit tags as explicit, not misc rows.</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre></pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>4. Update AppleScript bridge</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>- Keep `SwiftTag.sdef` unchanged unless tests reveal a terminology mismatch.</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>- Keep `SwiftTagScriptTrack` `@objc` properties unchanged:</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>  - `album`</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>  - `albumArtist`</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>  - `trackCount`</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>- Keep `scriptPropertyTagKeys` entries for delete/set routing.</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre>- Update `SwiftTagAppleScriptTagKey.snapshots(for:)` to derive from `track.tags` only.</pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>- Preserve alias normalization:</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre>  - `TRACKTOTAL` appears as canonical script tag `TOTALTRACKS`.</pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>  - `DISCTOTAL` appears as canonical script tag `TOTALDISCS`.</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>- Ensure property setters and tag element setters both call the same `appleScriptUpsertTag(...)` bridge path.</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>- Ensure `appleScriptUpsertTag(...)` preserves empty string values instead of deleting keys.</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>- Ensure property deletion and tag deletion both call the same `appleScriptDeleteTag(...)` bridge path.</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>- Remove stale fallback reads from stored fields, especially `trackCount` fallback to `\.totalTracks` if redundant.</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre></pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>5. Update tests</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>- Add or update pure model tests for `Track`:</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>  - initializer maps explicit album values into tags.</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>  - computed setters update tags.</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>  - computed setters can preserve empty values when caller explicitly writes an empty value.</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>  - `TRACKTOTAL` reads as `totalTracks`.</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>  - setting `totalTracks` writes `TOTALTRACKS` and removes `TRACKTOTAL`.</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>- Update `SwiftTagAppleScriptTests`:</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>  - setting `scriptTrack.album` updates `tags[ALBUM]` and `scriptTrack.valueInTags(...)`.</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>  - setting `scriptTrack.album` to `&quot;&quot;` preserves `ALBUM` with empty `tag.value`.</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>  - setting `ALBUM` tag updates `scriptTrack.album`.</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>  - deleting `ALBUM` clears `scriptTrack.album`.</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>  - setting `scriptTrack.albumArtist` updates `ALBUMARTIST`.</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>  - setting `ALBUMARTIST` tag value to `&quot;&quot;` preserves the tag wrapper and shows empty property text.</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>  - setting `scriptTrack.trackCount` updates canonical `TOTALTRACKS`.</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre>  - setting `TOTALTRACKS` tag value to `&quot;&quot;` preserves the tag wrapper and returns nil/empty property presentation as appropriate for typed integer coercion.</pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>  - deleting `TOTALTRACKS` clears `scriptTrack.trackCount`.</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>- Update `SwiftTagDocumentTests`:</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>  - export uses tag-backed edited values.</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>  - no stale stored value overrides deleted/missing tag values.</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>- Add a `TagEditorViewModel` or ViewInspector-focused test:</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>  - selected album/album artist/total-tracks bindings write tags through accessors.</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>- Add fixture-backed service test if writeback behavior changes:</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>  - copy `SwiftTagTestFiles/test-with_padding.flac`.</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>  - update album artist and total tracks.</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>  - save tags-only.</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>  - re-read tags and confirm expected `ALBUMARTIST` and save-strategy total-track key output.</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>- Keep UI AppleScript tests targeted:</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>  - property/tag read-write through in-process `NSAppleScript` only if unit bridge coverage cannot prove runtime KVC behavior.</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre></pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>6. Verification</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>- Use Xcode MCP first:</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>  - `XcodeRefreshCodeIssuesInFile` on edited Swift files.</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>  - `BuildProject`.</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>  - targeted `RunSomeTests` for model/mapper tests once named tests exist.</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>  - targeted `RunSomeTests` for `SwiftTagAppleScriptTests`.</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>  - targeted `RunSomeTests` for `SwiftTagDocumentTests`.</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>- Use external shell fallback only when Xcode MCP is unavailable or insufficient:</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre>  - `xcodebuild -scheme SwiftTag -destination &#x27;platform=macOS&#x27; test -only-testing:SwiftTagTests/SwiftTagAppleScriptTests`</pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre>- Run full suite only near end or when targeted changes touch shared save/import behavior broadly.</pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre></pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>- `Track` no longer stores independent `album`, `albumArtist`, or `totalTracks` values.</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>- Existing app code can still call `track.album`, `track.albumArtist`, and `track.totalTracks`.</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>- UI edits to album, album artist, and total tracks update `Track.tags`.</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>- AppleScript property writes update tag elements.</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>- AppleScript tag-element writes update property reads.</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>- AppleScript empty-string writes preserve tag keys with empty values.</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>- AppleScript deletes clear both property reads and tag-element reads.</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>- `SwiftTag.sdef` terms and codes remain stable.</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>- FLAC tag writeback still honors `TagWriteOptions`.</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>- `.swifttag` export/import no longer depends on stale duplicate fields.</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre>- Targeted tests cover model accessors, AppleScript bridge two-way mutation, document export, and selected UI bindings.</pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre></pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>- None.</pre></td></tr></table></main></body></html>

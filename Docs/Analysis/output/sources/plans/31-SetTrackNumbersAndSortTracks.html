@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 31-SetTrackNumbersAndSortTracks</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 31-SetTrackNumbersAndSortTracks</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/31-SetTrackNumbersAndSortTracks.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Set Track Numbers And Sort Tracks Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre></pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>Add whole-table track-number commands, a visible track-table sort toggle, and an</pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>AppleScript `track sort order` editor-window property that all use the same</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>current table-order logic.</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre></pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre></pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>### In Scope</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre></pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Add `Set Track Numbers` to the `File` menu before `Set Track Total (...)`.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Add `Set Track Numbers by Disc` immediately after `Set Track Numbers`.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Add both track-number commands to the track-table context menu before</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>  `Set Track Total (...)`.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Add `Sort Tracks by Filename` / `Sort Tracks by Number` below</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>  `Toggle Selected Tracks Lock` in the `File` menu and track-table context</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>  menu.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Add a two-mode track-table sort state:</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>  - number mode, current default behavior</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>  - filename mode</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- Make track-number commands use a snapshot of the current visible table order.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Make track-number commands skip locked tracks.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Make by-disc numbering skip tracks with no valid `DISCNUMBER`.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- Add AppleScript `track sort options` enumeration and `track sort order`</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>  editor-window property to `SwiftTag/SwiftTag.sdef`.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- Route AppleScript sorting through the same model behavior as the UI sort</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>  command.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- Keep AppleScript track index specifiers aligned with current table sort mode.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Add focused unit, source-order/ViewInspector, and AppleScript tests.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- Update user documentation for menu and AppleScript behavior.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>### Out Of Scope</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- Persisting track-table sort mode across app launches or `.swifttag` documents.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- Adding AppleScript commands for setting track numbers.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- Changing FLAC parser, writer, padding, or picture behavior.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- Changing save scope or payload behavior.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- Changing existing `Set Track Total (...)` or `Set Track Total by Disc (...)`</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>  semantics except for menu placement around new items.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre></pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre></pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- Latest numbered plan reviewed:</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>  - `Docs/Plans/30-AutoUpdateTrackTotalByDisc.md`</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>  - `AGENTS.md`</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>  - `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>  - `Docs/AppleDocsIndex/apple-docs-scout-agent.md`</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- Apple Docs Scout review completed:</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>  - Cocoa scripting still supports `.sdef` commands/enumerations dispatched to</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>    `NSScriptCommand` handlers.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>  - `NSScriptCommand.evaluatedArguments` is right input source for command</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>    parameters.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>  - enum arguments should be parsed by Apple event descriptor/FourChar code, not</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>    display strings.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>  - Primary evidence: Foundation `NSScriptCommand`,</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>    `NSScriptCommandDescription`, `NSScriptClassDescription`,</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>    `NSScriptSuiteRegistry`, and `NSAppleEventDescriptor` docs/headers.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- Relevant app files reviewed:</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>  - `SwiftTag/SwiftTagApp.swift`</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>  - `SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>  - `SwiftTag/SwiftTag.sdef`</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>  - `SwiftTag/Shared/Models/Track.swift`</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>  - `SwiftTag/Shared/Models/TagKey.swift`</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorView.swift`</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift`</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift`</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>  - `SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift`</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- Relevant tests reviewed:</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>  - `SwiftTagTests/SwiftTagTests.swift`</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>  - `SwiftTagTests/TrackStatusViewInspectorTests.swift`</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>  - `SwiftTagTests/SwiftTagAppleScriptTests.swift`</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>  - `SwiftTagUITests/SwiftTagUITests.swift`</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- Relevant fixtures reviewed:</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>  - `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>  - `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>  - `SwiftTagTestFiles/test.swifttag`</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre></pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- `TagEditorTrackFileView` currently sorts rows via</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>  `trackItems.sortedForTrackTableDisplay()`.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- `sortedForTrackTableDisplay()` sorts by numeric `TRACKNUMBER`, then filename.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- `ContentView` owns menu labels, enablement, focused scene values, and action</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>  wrappers for existing track-total commands.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- `SwiftTagApp.AppCommands` consumes focused values for `File` menu commands.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- Track-table context menu already contains:</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>  - add commands</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>  - `Toggle Selected Tracks Lock`</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>  - `Set Track Total (...)`</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>  - `Set Track Total by Disc (...)`</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>  - reload/remove commands</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>  - optional column commands</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>- `TagEditorViewModel.setTrackTotal(...)` skips deleted and locked tracks.</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>- `TagEditorViewModel.setTrackTotalToCurrentDiscCounts()` skips deleted,</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>  locked, and invalid-disc tracks.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- `SwiftTagAppleScriptController.tracks(forSessionID:)`,</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>  `selectedTrackObjects(forSessionID:)`, and `indexOfTrack(...)` currently sort</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>  with `sortedForTrackTableDisplay()`.</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- AppleScript command handlers already use `NSScriptCommand.evaluatedArguments`</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>  and parse enum-like options from FourChar values for save/close commands.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>- `SwiftTagAppleScriptSessionBridge` is the live-window seam for mutating an</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>  editor session from AppleScript.</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre></pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre></pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- Initial sort mode is number mode, matching current table behavior.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- Track-table sort mode is scoped per editor window.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- New/opened editor windows always default to number mode: numeric</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>  `TRACKNUMBER`, then filename.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- Sort command changes visible table ordering only; it does not rewrite tags or</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>  reorder the stored `trackItems` array.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>- `Sort Tracks by Filename` appears while current sort mode is number mode.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- `Sort Tracks by Number` appears while current sort mode is filename mode.</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- `Set Track Numbers` acts on all tracks in the key editor window, not selected</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>  tracks.</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>- Track table visible order is source of truth for new numbering commands.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- Numbering commands snapshot visible order before mutating `TRACKNUMBER`, so</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>  row re-sorting during mutation cannot change assigned values mid-command.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- Locked tracks keep their existing values but still occupy visible positions.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- For by-disc numbering, locked tracks with valid `DISCNUMBER` still occupy</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>  their disc sequence positions.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Tracks with missing, blank, zero, or non-numeric `DISCNUMBER` are not modified</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>  by `Set Track Numbers by Disc` and do not occupy any disc sequence.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Deleted-in-table tracks remain visible table rows, so the planned behavior is</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>  to include them in visible position calculations and allow non-locked deleted</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>  rows to receive editor-state `TRACKNUMBER` changes. Saving still cannot write</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>  deleted file-backed rows.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre></pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>## Product Behavior</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre></pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>### File Menu</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre></pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>1. Existing `Toggle Selected Tracks Lock` stays in place.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>2. Immediately below it, show:</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>   - `Sort Tracks by Filename` when current sort mode is number.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>   - `Sort Tracks by Number` when current sort mode is filename.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>3. After a divider, show:</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>   - `Set Track Numbers`</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>   - `Set Track Numbers by Disc`</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>   - existing `Set Track Total (...)`</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>   - existing `Set Track Total by Disc (...)`</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>4. `Set Track Numbers` and `Set Track Numbers by Disc` are disabled when:</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>   - save operation is running</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>   - there are no tracks in the editor window</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>5. Sort command is disabled when there are no tracks in the editor window.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre></pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>### Track Table Context Menu</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre></pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>1. Existing add commands stay first.</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>2. Existing lock command remains before table-management commands.</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>3. Sort command appears immediately below lock command.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>4. Track-number commands appear before existing track-total commands.</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>5. Enablement and labels match the `File` menu.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre></pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>### Set Track Numbers</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre></pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>1. Build current visible row order using active sort mode.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>2. Assign `TRACKNUMBER` to each non-locked track as `visibleIndex + 1`.</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>3. Keep locked track values unchanged.</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>4. Clear external differences for `TRACKNUMBER` on changed non-locked tracks,</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>   matching existing tag-edit patterns.</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre></pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>### Set Track Numbers By Disc</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre></pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>1. Build current visible row order using active sort mode.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>2. Walk rows in visible order.</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>3. Maintain per-disc counters keyed by valid positive integer `DISCNUMBER`.</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>4. Skip tracks with invalid or missing `DISCNUMBER`.</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>5. Increment a disc counter for each visible valid-disc row, including locked</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>   rows.</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>6. Assign `TRACKNUMBER` to each non-locked valid-disc row using that disc</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>   counter.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>7. Keep locked and invalid-disc track values unchanged.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>8. Clear external differences for `TRACKNUMBER` on changed non-locked tracks.</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre></pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>### Sort Tracks</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre></pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>1. Number mode sorts by numeric `TRACKNUMBER`, then filename, matching current</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>   behavior.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>2. Filename mode sorts by filename, then numeric `TRACKNUMBER`.</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>3. Missing/non-numeric track numbers sort after numeric values in number mode.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>4. Filename comparison uses `localizedStandardCompare`, matching current</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>   filename tie-break behavior.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>5. Sort mode is per editor window; changing sort in one editor window does not</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>   affect any other open editor window.</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>6. New or opened editor windows always start in number mode, using numeric</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>   `TRACKNUMBER`, then filename.</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>7. Active sort mode affects:</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>   - table display</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>   - `Set Track Numbers`</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>   - `Set Track Numbers by Disc`</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>   - AppleScript `tracks` element order</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>   - AppleScript index specifier resolution</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre></pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>### AppleScript</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre></pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>1. Add requested `track sort options` enumeration to `SwiftTag Suite`.</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>2. Add requested read-write `track sort order` property to `editor window`.</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>3. Property examples:</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre></pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>    set track sort order of front editor window to filename order</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>    set track sort order of front editor window to track number order</pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>```</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre></pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>4. Invalid property values return script error when AppleScript supplies them.</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>5. Sorting is non-mutating tag behavior, so it can run during save unless</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>   implementation finds a concrete UI consistency issue.</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre></pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre>## Destructive / Write-Back Behavior</pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre></pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre>- Existing data preserved:</pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>  - all tags other than `TRACKNUMBER`</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>  - all locked-track `TRACKNUMBER` values</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>  - invalid-disc track values for by-disc numbering</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>  - picture data and picture metadata</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>- Existing data replaced:</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre>  - `TRACKNUMBER` editor value on applicable non-locked tracks</pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>- Existing data removed:</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>  - none</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>- Save behavior:</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>  - tag-only saves write new `TRACKNUMBER` values for saved, editable tracks</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>  - picture-only saves do not write tag changes</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>  - tags-and-pictures saves write new `TRACKNUMBER` values for saved, editable</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>    tracks</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>- Selection behavior:</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>  - track-number commands ignore current selection and operate on whole editor</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>    table</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>  - lock command continues to use selected track IDs</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>  - save scope remains independent and only affects later save commands</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre></pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre></pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre>### Product / Behavior Risks</pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre></pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>- Numbering while sorted by number can change sort keys; implementation must</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>  snapshot ordered IDs first.</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>- Locked tracks must keep values while still occupying visible positions.</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>- Filename sort needs deterministic tie-breaks to keep AppleScript index</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>  specifiers stable.</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>- Deleted-row semantics are editor-state only; users may see changed values on</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>  rows that cannot save back because source file is deleted.</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>- Sorting during save is low risk but should not disturb save progress or track</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>  save-status presentation.</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre></pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>### Tooling / Environment Risks</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre></pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>- AppleScript UI tests can be brittle because Apple events depend on runner</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>  entitlements and timing.</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>- Prefer unit tests for SDEF parsing, enum-code parsing, and bridge routing.</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>- Use targeted in-process `NSAppleScript` UI tests only if unit coverage cannot</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>  prove command integration.</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>- Xcode MCP test runs can time out; run targeted tests before broader suites.</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>- No FLAC fixture mutation is needed for pure table-sort and numbering logic.</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre></pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>## Proposed Implementation</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre></pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre>### 1. Sort Model</pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre></pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre>- Add `TrackTableSortMode` with cases:</pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>  - `.number`</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>  - `.filename`</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>- Add display helpers:</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>  - `nextSortMenuTitle`</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>  - target mode for toggle command</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>- Replace `Array&lt;Track&gt;.sortedForTrackTableDisplay()` with overload:</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>  - `sortedForTrackTableDisplay(sortMode:)`</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>- Keep no-argument overload as `.number` compatibility shim if it reduces test</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>  churn.</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre></pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre>### 2. View Model</pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre></pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>- Add `@Published` or stored `trackTableSortMode` in `TagEditorViewModel`.</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>- Add helpers:</pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre>  - `sortedTrackItemsForTable()`</pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>  - `orderedTrackIDsForCurrentSortMode()`</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre>  - `canSortTracks`</pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>  - `sortTracks(by:)`</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre>  - `toggleTrackTableSortMode()`</pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>  - `setTrackNumbersToCurrentTableOrder()`</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre>  - `setTrackNumbersByDiscToCurrentTableOrder()`</pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre>- Track-number setters should:</pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre>  - snapshot ordered IDs</pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre>  - mutate by ID lookup</pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre>  - skip locked rows</pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre>  - clear `TRACKNUMBER` external differences for changed rows</pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre></pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>### 3. SwiftUI Table And Menus</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre></pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>- Pass current sort mode or sorted rows into `TagEditorTrackFileView`.</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre>- Keep `TagEditorTrackFileView` display logic simple; avoid duplicating sort</pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>  rules in view code.</pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre>- Add track-number and sort closures/titles/enablement through:</pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>  - `ContentView`</pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre>  - `TagEditorView`</pre></td></tr>
+<tr id="L302"><th><a href="#L302">302</a></th><td><pre>  - `TagEditorTrackFileView`</pre></td></tr>
+<tr id="L303"><th><a href="#L303">303</a></th><td><pre>- Add focused values for:</pre></td></tr>
+<tr id="L304"><th><a href="#L304">304</a></th><td><pre>  - `performSetTrackNumbers`</pre></td></tr>
+<tr id="L305"><th><a href="#L305">305</a></th><td><pre>  - `setTrackNumbersTitle`</pre></td></tr>
+<tr id="L306"><th><a href="#L306">306</a></th><td><pre>  - `canPerformSetTrackNumbers`</pre></td></tr>
+<tr id="L307"><th><a href="#L307">307</a></th><td><pre>  - `performSetTrackNumbersByDisc`</pre></td></tr>
+<tr id="L308"><th><a href="#L308">308</a></th><td><pre>  - `setTrackNumbersByDiscTitle`</pre></td></tr>
+<tr id="L309"><th><a href="#L309">309</a></th><td><pre>  - `canPerformSetTrackNumbersByDisc`</pre></td></tr>
+<tr id="L310"><th><a href="#L310">310</a></th><td><pre>  - `performSortTracks`</pre></td></tr>
+<tr id="L311"><th><a href="#L311">311</a></th><td><pre>  - `sortTracksTitle`</pre></td></tr>
+<tr id="L312"><th><a href="#L312">312</a></th><td><pre>  - `canPerformSortTracks`</pre></td></tr>
+<tr id="L313"><th><a href="#L313">313</a></th><td><pre>- Add matching `@FocusedValue` reads and `Button`s in `SwiftTagApp.AppCommands`.</pre></td></tr>
+<tr id="L314"><th><a href="#L314">314</a></th><td><pre></pre></td></tr>
+<tr id="L315"><th><a href="#L315">315</a></th><td><pre>### 4. AppleScript SDEF</pre></td></tr>
+<tr id="L316"><th><a href="#L316">316</a></th><td><pre></pre></td></tr>
+<tr id="L317"><th><a href="#L317">317</a></th><td><pre>- Insert requested `track sort options` enumeration in `SwiftTag Suite`.</pre></td></tr>
+<tr id="L318"><th><a href="#L318">318</a></th><td><pre>- Insert requested `track sort order` property in `editor window`.</pre></td></tr>
+<tr id="L319"><th><a href="#L319">319</a></th><td><pre>- Do not expose `sort tracks` command.</pre></td></tr>
+<tr id="L320"><th><a href="#L320">320</a></th><td><pre></pre></td></tr>
+<tr id="L321"><th><a href="#L321">321</a></th><td><pre>### 5. AppleScript Runtime</pre></td></tr>
+<tr id="L322"><th><a href="#L322">322</a></th><td><pre></pre></td></tr>
+<tr id="L323"><th><a href="#L323">323</a></th><td><pre>- Add `SwiftTagAppleScriptTrackSortOption` parser:</pre></td></tr>
+<tr id="L324"><th><a href="#L324">324</a></th><td><pre>  - accepts `NSAppleEventDescriptor.enumCodeValue`</pre></td></tr>
+<tr id="L325"><th><a href="#L325">325</a></th><td><pre>  - accepts FourChar `NSNumber`</pre></td></tr>
+<tr id="L326"><th><a href="#L326">326</a></th><td><pre>  - maps `tnum` to `.number`</pre></td></tr>
+<tr id="L327"><th><a href="#L327">327</a></th><td><pre>  - maps `tfil` to `.filename`</pre></td></tr>
+<tr id="L328"><th><a href="#L328">328</a></th><td><pre>- Add `invalidTrackSortOptionValue` command error.</pre></td></tr>
+<tr id="L329"><th><a href="#L329">329</a></th><td><pre>- Extend `SwiftTagAppleScriptSessionSnapshot` with current sort mode.</pre></td></tr>
+<tr id="L330"><th><a href="#L330">330</a></th><td><pre>- Extend `SwiftTagAppleScriptSessionBridge` with `sortTracks` closure.</pre></td></tr>
+<tr id="L331"><th><a href="#L331">331</a></th><td><pre>- In `ContentView.configureWindowRouting`, route `sortTracks` to the view-model</pre></td></tr>
+<tr id="L332"><th><a href="#L332">332</a></th><td><pre>  sort method.</pre></td></tr>
+<tr id="L333"><th><a href="#L333">333</a></th><td><pre>- Add controller method:</pre></td></tr>
+<tr id="L334"><th><a href="#L334">334</a></th><td><pre>  - `trackSortOrder(forSessionID:)`</pre></td></tr>
+<tr id="L335"><th><a href="#L335">335</a></th><td><pre>  - `sortTracks(forSessionID:by:)`</pre></td></tr>
+<tr id="L336"><th><a href="#L336">336</a></th><td><pre>- Add script property:</pre></td></tr>
+<tr id="L337"><th><a href="#L337">337</a></th><td><pre>  - `TrackSortOrder`</pre></td></tr>
+<tr id="L338"><th><a href="#L338">338</a></th><td><pre>- Update AppleScript track ordering:</pre></td></tr>
+<tr id="L339"><th><a href="#L339">339</a></th><td><pre>  - `tracks(forSessionID:)`</pre></td></tr>
+<tr id="L340"><th><a href="#L340">340</a></th><td><pre>  - `selectedTrackObjects(forSessionID:)`</pre></td></tr>
+<tr id="L341"><th><a href="#L341">341</a></th><td><pre>  - `indexOfTrack(trackID:forSessionID:)`</pre></td></tr>
+<tr id="L342"><th><a href="#L342">342</a></th><td><pre>  to use snapshot sort mode.</pre></td></tr>
+<tr id="L343"><th><a href="#L343">343</a></th><td><pre></pre></td></tr>
+<tr id="L344"><th><a href="#L344">344</a></th><td><pre>### 6. Documentation</pre></td></tr>
+<tr id="L345"><th><a href="#L345">345</a></th><td><pre></pre></td></tr>
+<tr id="L346"><th><a href="#L346">346</a></th><td><pre>- Update `Docs/UserDocumentation/workflows/tags.html`:</pre></td></tr>
+<tr id="L347"><th><a href="#L347">347</a></th><td><pre>  - track-number commands</pre></td></tr>
+<tr id="L348"><th><a href="#L348">348</a></th><td><pre>  - sort command</pre></td></tr>
+<tr id="L349"><th><a href="#L349">349</a></th><td><pre>  - locked-track behavior</pre></td></tr>
+<tr id="L350"><th><a href="#L350">350</a></th><td><pre>  - current-sort-order effect</pre></td></tr>
+<tr id="L351"><th><a href="#L351">351</a></th><td><pre>- Update AppleScript docs:</pre></td></tr>
+<tr id="L352"><th><a href="#L352">352</a></th><td><pre>  - `automation/applescript-enumerations.html`</pre></td></tr>
+<tr id="L353"><th><a href="#L353">353</a></th><td><pre>  - `automation/applescript-windows.html`</pre></td></tr>
+<tr id="L354"><th><a href="#L354">354</a></th><td><pre>  - `automation/applescript-application.html`</pre></td></tr>
+<tr id="L355"><th><a href="#L355">355</a></th><td><pre>  - remove command page for `sort tracks`</pre></td></tr>
+<tr id="L356"><th><a href="#L356">356</a></th><td><pre>  - update examples to set `track sort order`</pre></td></tr>
+<tr id="L357"><th><a href="#L357">357</a></th><td><pre></pre></td></tr>
+<tr id="L358"><th><a href="#L358">358</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L359"><th><a href="#L359">359</a></th><td><pre></pre></td></tr>
+<tr id="L360"><th><a href="#L360">360</a></th><td><pre>### Unit Tests</pre></td></tr>
+<tr id="L361"><th><a href="#L361">361</a></th><td><pre></pre></td></tr>
+<tr id="L362"><th><a href="#L362">362</a></th><td><pre>- `TrackTableSortMode` sorting:</pre></td></tr>
+<tr id="L363"><th><a href="#L363">363</a></th><td><pre>  - number mode preserves current numeric ordering and filename tie-break</pre></td></tr>
+<tr id="L364"><th><a href="#L364">364</a></th><td><pre>  - filename mode sorts by filename and uses number tie-break</pre></td></tr>
+<tr id="L365"><th><a href="#L365">365</a></th><td><pre>  - nil/non-numeric track numbers are deterministic</pre></td></tr>
+<tr id="L366"><th><a href="#L366">366</a></th><td><pre>- `TagEditorViewModel.setTrackNumbersToCurrentTableOrder()`:</pre></td></tr>
+<tr id="L367"><th><a href="#L367">367</a></th><td><pre>  - assigns 1-based visible positions in number mode</pre></td></tr>
+<tr id="L368"><th><a href="#L368">368</a></th><td><pre>  - assigns 1-based visible positions after sorting by filename</pre></td></tr>
+<tr id="L369"><th><a href="#L369">369</a></th><td><pre>  - skips locked tracks but counts their visible positions</pre></td></tr>
+<tr id="L370"><th><a href="#L370">370</a></th><td><pre>- `TagEditorViewModel.setTrackNumbersByDiscToCurrentTableOrder()`:</pre></td></tr>
+<tr id="L371"><th><a href="#L371">371</a></th><td><pre>  - assigns per-disc visible positions</pre></td></tr>
+<tr id="L372"><th><a href="#L372">372</a></th><td><pre>  - skips invalid/missing disc tracks</pre></td></tr>
+<tr id="L373"><th><a href="#L373">373</a></th><td><pre>  - skips locked tracks but counts them within disc sequence</pre></td></tr>
+<tr id="L374"><th><a href="#L374">374</a></th><td><pre>- Combination test:</pre></td></tr>
+<tr id="L375"><th><a href="#L375">375</a></th><td><pre>  - start in number mode</pre></td></tr>
+<tr id="L376"><th><a href="#L376">376</a></th><td><pre>  - switch to filename mode</pre></td></tr>
+<tr id="L377"><th><a href="#L377">377</a></th><td><pre>  - set track numbers</pre></td></tr>
+<tr id="L378"><th><a href="#L378">378</a></th><td><pre>  - verify assigned `TRACKNUMBER` values match filename order</pre></td></tr>
+<tr id="L379"><th><a href="#L379">379</a></th><td><pre>  - switch back to number mode and verify table order follows new numbers</pre></td></tr>
+<tr id="L380"><th><a href="#L380">380</a></th><td><pre></pre></td></tr>
+<tr id="L381"><th><a href="#L381">381</a></th><td><pre>### SwiftUI / Source-Order Tests</pre></td></tr>
+<tr id="L382"><th><a href="#L382">382</a></th><td><pre></pre></td></tr>
+<tr id="L383"><th><a href="#L383">383</a></th><td><pre>- `SwiftTagApp.swift` source-order test:</pre></td></tr>
+<tr id="L384"><th><a href="#L384">384</a></th><td><pre>  - lock command before sort command</pre></td></tr>
+<tr id="L385"><th><a href="#L385">385</a></th><td><pre>  - sort command before track-number commands</pre></td></tr>
+<tr id="L386"><th><a href="#L386">386</a></th><td><pre>  - track-number commands before track-total commands</pre></td></tr>
+<tr id="L387"><th><a href="#L387">387</a></th><td><pre>- `TagEditorTrackFileView.swift` source-order test with same context-menu order.</pre></td></tr>
+<tr id="L388"><th><a href="#L388">388</a></th><td><pre>- ViewInspector/actual-view tests for:</pre></td></tr>
+<tr id="L389"><th><a href="#L389">389</a></th><td><pre>  - passed sort title</pre></td></tr>
+<tr id="L390"><th><a href="#L390">390</a></th><td><pre>  - enablement during save</pre></td></tr>
+<tr id="L391"><th><a href="#L391">391</a></th><td><pre>  - no-track disablement</pre></td></tr>
+<tr id="L392"><th><a href="#L392">392</a></th><td><pre>  - closure forwarding for track-number and sort actions</pre></td></tr>
+<tr id="L393"><th><a href="#L393">393</a></th><td><pre></pre></td></tr>
+<tr id="L394"><th><a href="#L394">394</a></th><td><pre>### AppleScript Tests</pre></td></tr>
+<tr id="L395"><th><a href="#L395">395</a></th><td><pre></pre></td></tr>
+<tr id="L396"><th><a href="#L396">396</a></th><td><pre>- SDEF/class-description tests:</pre></td></tr>
+<tr id="L397"><th><a href="#L397">397</a></th><td><pre>  - editor window exposes read-write `track sort order`</pre></td></tr>
+<tr id="L398"><th><a href="#L398">398</a></th><td><pre>  - `sort tracks` command is not exposed</pre></td></tr>
+<tr id="L399"><th><a href="#L399">399</a></th><td><pre>- Parser tests:</pre></td></tr>
+<tr id="L400"><th><a href="#L400">400</a></th><td><pre>  - `tnum` maps to number</pre></td></tr>
+<tr id="L401"><th><a href="#L401">401</a></th><td><pre>  - `tfil` maps to filename</pre></td></tr>
+<tr id="L402"><th><a href="#L402">402</a></th><td><pre>  - invalid FourChar throws script error</pre></td></tr>
+<tr id="L403"><th><a href="#L403">403</a></th><td><pre>- Controller/bridge tests:</pre></td></tr>
+<tr id="L404"><th><a href="#L404">404</a></th><td><pre>  - property setter calls bridge sort closure with target session and requested mode</pre></td></tr>
+<tr id="L405"><th><a href="#L405">405</a></th><td><pre>  - missing editor window returns existing no-window style error</pre></td></tr>
+<tr id="L406"><th><a href="#L406">406</a></th><td><pre>  - sort during save does not mutate tags or save state</pre></td></tr>
+<tr id="L407"><th><a href="#L407">407</a></th><td><pre>- Track ordering tests:</pre></td></tr>
+<tr id="L408"><th><a href="#L408">408</a></th><td><pre>  - AppleScript `tracks` order follows number mode</pre></td></tr>
+<tr id="L409"><th><a href="#L409">409</a></th><td><pre>  - after sort by filename, `tracks` order and index specifiers follow filename</pre></td></tr>
+<tr id="L410"><th><a href="#L410">410</a></th><td><pre>    mode</pre></td></tr>
+<tr id="L411"><th><a href="#L411">411</a></th><td><pre></pre></td></tr>
+<tr id="L412"><th><a href="#L412">412</a></th><td><pre>### Verification Commands</pre></td></tr>
+<tr id="L413"><th><a href="#L413">413</a></th><td><pre></pre></td></tr>
+<tr id="L414"><th><a href="#L414">414</a></th><td><pre>Prefer Xcode MCP:</pre></td></tr>
+<tr id="L415"><th><a href="#L415">415</a></th><td><pre></pre></td></tr>
+<tr id="L416"><th><a href="#L416">416</a></th><td><pre>1. `XcodeRefreshCodeIssuesInFile` for changed Swift files.</pre></td></tr>
+<tr id="L417"><th><a href="#L417">417</a></th><td><pre>2. `BuildProject`.</pre></td></tr>
+<tr id="L418"><th><a href="#L418">418</a></th><td><pre>3. `RunSomeTests` for:</pre></td></tr>
+<tr id="L419"><th><a href="#L419">419</a></th><td><pre>   - `SwiftTagTests/SwiftTagTests`</pre></td></tr>
+<tr id="L420"><th><a href="#L420">420</a></th><td><pre>   - `SwiftTagTests/TrackStatusViewInspectorTests`</pre></td></tr>
+<tr id="L421"><th><a href="#L421">421</a></th><td><pre>   - `SwiftTagTests/SwiftTagAppleScriptTests`</pre></td></tr>
+<tr id="L422"><th><a href="#L422">422</a></th><td><pre>4. Targeted `SwiftTagUITests` AppleScript harness only if unit/SDEF coverage is</pre></td></tr>
+<tr id="L423"><th><a href="#L423">423</a></th><td><pre>   not enough for command integration.</pre></td></tr>
+<tr id="L424"><th><a href="#L424">424</a></th><td><pre></pre></td></tr>
+<tr id="L425"><th><a href="#L425">425</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L426"><th><a href="#L426">426</a></th><td><pre></pre></td></tr>
+<tr id="L427"><th><a href="#L427">427</a></th><td><pre>- `File` menu has requested labels and ordering.</pre></td></tr>
+<tr id="L428"><th><a href="#L428">428</a></th><td><pre>- Track-table context menu has requested labels and ordering.</pre></td></tr>
+<tr id="L429"><th><a href="#L429">429</a></th><td><pre>- Track-number commands are disabled during save and when table is empty.</pre></td></tr>
+<tr id="L430"><th><a href="#L430">430</a></th><td><pre>- Sort command is disabled when table is empty.</pre></td></tr>
+<tr id="L431"><th><a href="#L431">431</a></th><td><pre>- `Set Track Numbers` uses current visible table order.</pre></td></tr>
+<tr id="L432"><th><a href="#L432">432</a></th><td><pre>- `Set Track Numbers by Disc` uses current visible table order per valid disc.</pre></td></tr>
+<tr id="L433"><th><a href="#L433">433</a></th><td><pre>- Locked tracks are never modified by new numbering commands.</pre></td></tr>
+<tr id="L434"><th><a href="#L434">434</a></th><td><pre>- Sort mode toggles visible table order between number and filename.</pre></td></tr>
+<tr id="L435"><th><a href="#L435">435</a></th><td><pre>- AppleScript `track sort order` values `track number order` and `filename order`</pre></td></tr>
+<tr id="L436"><th><a href="#L436">436</a></th><td><pre>  match UI sort behavior.</pre></td></tr>
+<tr id="L437"><th><a href="#L437">437</a></th><td><pre>- AppleScript track element order and index specifiers match current table sort</pre></td></tr>
+<tr id="L438"><th><a href="#L438">438</a></th><td><pre>  mode.</pre></td></tr>
+<tr id="L439"><th><a href="#L439">439</a></th><td><pre>- Tests cover sort plus numbering combination.</pre></td></tr>
+<tr id="L440"><th><a href="#L440">440</a></th><td><pre>- Build passes.</pre></td></tr>
+<tr id="L441"><th><a href="#L441">441</a></th><td><pre></pre></td></tr>
+<tr id="L442"><th><a href="#L442">442</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L443"><th><a href="#L443">443</a></th><td><pre></pre></td></tr>
+<tr id="L444"><th><a href="#L444">444</a></th><td><pre>- None. Deleted-in-table semantics are explicitly planned above; adjust before</pre></td></tr>
+<tr id="L445"><th><a href="#L445">445</a></th><td><pre>  implementation if deleted rows should instead be skipped like existing</pre></td></tr>
+<tr id="L446"><th><a href="#L446">446</a></th><td><pre>  track-total commands.</pre></td></tr></table></main></body></html>

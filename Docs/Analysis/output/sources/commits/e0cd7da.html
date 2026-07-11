@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(save-status): add save progress overlay and save-state UI guards</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(save-status): add save progress overlay and save-state UI guards</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-03-12</p>
+<p><code>e0cd7da70c303f9524054cf6e150d7fbfca3d9d1</code></p>
+<p>feat(save-status): add save progress overlay and save-state UI guards</p>
+<h2>Body</h2><pre>- add a per-window save status overlay with album or track progress details
+- disable tag editor and album art interactions while saves are running
+- show the overlay inside the album art sheet during saves
+- add targeted unit and UI coverage for save progress and save-state behavior
+- update the save status implementation plan to match the final behavior</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>65.1 High</span></div>
+  <div><strong>Weight Coverage</strong><span>70%</span></div>
+  <div><strong>Elapsed</strong><span>Unavailable</span></div>
+  <div><strong>Assistant</strong><span>Unavailable</span></div>
+  <div><strong>User Response</strong><span>Unavailable</span></div>
+  <div><strong>Back/Forth</strong><span>21.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/7.html">Plan 7: Add Save Status View Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L1">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L13">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-001</td><td>work</td><td>1.000</td><td>20.5</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L33">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-002</td><td>work</td><td>1.000</td><td>14.3</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L47">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-003</td><td>work</td><td>1.000</td><td>26.6</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L73">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-004</td><td>work</td><td>1.000</td><td>14.3</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L87">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-005</td><td>work</td><td>1.000</td><td>12.3</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L99">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-006</td><td>work</td><td>1.000</td><td>16.4</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L115">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-007</td><td>work</td><td>1.000</td><td>26.6</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L141">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-008</td><td>work</td><td>1.000</td><td>19.5</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L160">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-009</td><td>work</td><td>1.000</td><td>51.2</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L210">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-010</td><td>work</td><td>1.000</td><td>24.6</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L234">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-011</td><td>work</td><td>1.000</td><td>10.2</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L244">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-012</td><td>work</td><td>1.000</td><td>12.3</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L256">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-013</td><td>work</td><td>1.000</td><td>20.5</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L276">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-014</td><td>work</td><td>1.000</td><td>22.5</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L298">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-015</td><td>work</td><td>1.000</td><td>47.1</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L344">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-016</td><td>work</td><td>1.000</td><td>34.8</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L378">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-017</td><td>work</td><td>1.000</td><td>64.6</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L441">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-018</td><td>work</td><td>1.000</td><td>25.6</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L466">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-019</td><td>work</td><td>1.000</td><td>32.8</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L498">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-020</td><td>work</td><td>1.000</td><td>22.5</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.html#L520">transcript-2026-03-12-1-7-AddSaveStatusViewPlan</a></td><td>transcript-2026-03-12-1-7-AddSaveStatusViewPlan:segment-021</td><td>work</td><td>1.000</td><td>16.4</td><td>Unavailable</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/7-AddSaveStatusViewPlan.md</td><td>197</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.md</td><td>536</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>207</td><td>57</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift</td><td>60</td><td>28</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtWellView.swift</td><td>5</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorAlbumView.swift</td><td>6</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorView.swift</td><td>3</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>30</td><td>4</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SaveStatusView.swift</td><td>151</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTagApp.swift</td><td>1</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>102</td><td>10</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>131</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>554.00</td></tr>
+<tr><td>transcript_lines</td><td>536.00</td></tr>
+<tr><td>plan_lines</td><td>197.00</td></tr>
+<tr><td>elapsed_time</td><td>Unavailable</td></tr>
+<tr><td>assistant_processing_time</td><td>Unavailable</td></tr>
+<tr><td>back_and_forth_count</td><td>21.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<ul><li><a href="../../transcripts-without-timestamps-notes.html">Transcript timing unavailable notes</a></li></ul></main></body></html>

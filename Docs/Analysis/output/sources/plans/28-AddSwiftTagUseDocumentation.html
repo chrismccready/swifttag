@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 28-AddSwiftTagUseDocumentation</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 28-AddSwiftTagUseDocumentation</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/28-AddSwiftTagUseDocumentation.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add SwiftTag Use Documentation Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre></pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>Add user-facing HTML documentation for SwiftTag that opens with a Quick Start for basic app use and links to deeper reference material, workflows, examples, and AppleScript automation guidance.</pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre></pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>The documentation should help a new user answer:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre></pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- How do I add FLAC files and edit common tags?</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- How do I edit album-level data, track-level data, misc tags, and album art?</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- What is saved by Save, Save Tags, Save Pictures, and Save SwiftTag Document?</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- What do status icons, locked tracks, external changes, and settings mean?</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- How do I automate SwiftTag through AppleScript?</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Where are concrete examples for common use cases?</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre></pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre></pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>### In Scope</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre></pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Create a static HTML documentation source tree for SwiftTag user documentation.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Add a Quick Start as the first entry point.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Add deeper pages linked from Quick Start for:</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>  - adding and replacing FLAC files</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>  - editing album, core, track, and misc tags</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>  - managing album art and picture records</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>  - saving FLAC metadata and saving `.swifttag` documents</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>  - understanding settings, status icons, diffs, and locked tracks</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>  - using TOML preview and Quick Look where relevant</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>  - AppleScript automation</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>  - examples and use cases</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>  - troubleshooting</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- Keep pages static, local, and dependency-free so they can work in a browser and in macOS Help Viewer.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- Add local cross-links, stable anchors, and copy-friendly code blocks.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Include AppleScript examples backed by current `SwiftTag.sdef`, tests, and transcript findings.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- Add verification for links, anchors, required pages, required examples, and app bundling if Help Book integration is implemented.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- Integrate docs into app Help if chosen during implementation, using standard macOS Help Book bundle keys.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre></pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>### Out Of Scope</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- Redesigning SwiftTag UI.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Changing FLAC import, writeback, `.swifttag`, or AppleScript behavior.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- Replacing existing developer docs or plans.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- Adding hosted website deployment.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- Adding localization.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- Rewriting historical transcripts into user docs.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- Documenting provisional or obsolete files such as `Docs/Plans/_SwiftTag.sdef`.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- Latest numbered plan reviewed:</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>  - `Docs/Plans/27-TrackTagsRefactor.md`</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- Relevant plans reviewed:</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>  - `Docs/Plans/26-AddAppleScriptSupport.md`</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>  - `Docs/Plans/25-AddPictureDescriptionEdit.md`</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>  - `Docs/Plans/23-AddSwiftTagDocumentQuickLook.md`</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>  - `Docs/Plans/22-AddSwiftTagDocumentSaveOptions.md`</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>  - `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>  - `Docs/Guides/git-commit-message-guide.md`</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- Existing documentation reviewed:</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>  - `Docs/README.md`</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>  - generated Apple documentation index presence under `Docs/AppleDocsIndex/Generated`</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- App implementation reviewed:</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>  - `SwiftTag/SwiftTagApp.swift`</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>  - `SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>  - `SwiftTag/Info.plist`</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>  - `SwiftTag/SwiftTag.sdef`</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>  - `SwiftTag/Features/TagEditor/*`</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>  - `SwiftTag/Features/AlbumArt/*`</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  - `SwiftTag/Features/Settings/*`</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>  - `SwiftTag/Features/FlacImport/*`</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>  - `SwiftTag/Features/SwiftTagDocument/*`</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>  - `SwiftTag/Shared/Models/*`</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- Tests reviewed:</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>  - Active test plan exposes 410 enabled tests.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>  - Unit tests cover FLAC import/write mapping, settings, document packages, status/diff behavior, Quick Look, and AppleScript bridge model behavior.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>  - UI tests cover app workflows, settings, save flow, album art, document behavior, and AppleScript harness flows.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- Transcripts reviewed:</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>  - AppleScript support transcripts in `Docs/Plans/Transcripts` were inspected because this task explicitly asked for transcript review.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>  - Key findings came from transcripts around selected tracks, picture IDs, settings windows, `whose its file is ...`, Base64 picture creation, empty tag values, and sandbox-limited external `osascript`.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- Apple documentation lookup:</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>  - Xcode Documentation Search found Bundle Resources keys `CFBundleHelpBookName`, `CFBundleHelpBookFolder`, `CFAppleHelpAnchor`.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>  - Xcode Documentation Search found `NSHelpManager` as AppKit help-display API.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>  - Local generated index did not provide richer Help Book guidance beyond general HTML/WebKit records.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- Fixture review:</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>  - This plan does not add FLAC write behavior.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>  - Implementation examples and optional AppleScript smoke checks can use copied fixtures from `SwiftTagTestFiles`, especially `test.flac`, without modifying originals.</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre></pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>### App Workflows</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre></pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- App opens with an editor window.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- Users add FLAC files through menu commands, file import panels, drag/drop, or AppleScript.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- Import can append to existing tracks or replace current tracks.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- Import can use read-only lock mode so tracks do not write back accidentally.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>- Editor surface combines:</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>  - Album fields</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>  - Track table</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>  - Core tag fields</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>  - Misc tag table</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>  - Album art browser and front-cover image well</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>  - Save status and notification feedback</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>- Track rows expose status icons, track number, title, duration/fingerprint columns when enabled, filename, and context menu actions.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>- Selected tracks are the source of truth for selection-scoped edits and saves.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>- Locked tracks block writeback.</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>- External file changes and internal/external diffs are tracked and surfaced by status/diff UI.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre></pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>### Menu And Command Surface</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre></pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>Current user-visible commands include:</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre></pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- Add FLAC files...</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- Add FLAC files (replace existing)...</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>- Add FLAC files (read-only)...</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>- Add FLAC files (read-only)(replace existing)...</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- Open SwiftTag Document...</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- Close Window</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- Toggle Selected Tracks Lock</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>- Set Track Total</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- Reload Selected Tracks</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- Remove Selected Tracks</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- Show TOML...</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- Show Picture Browser / Hide Picture Browser</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- Save</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Save Tags</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- Save Pictures</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Save SwiftTag Document...</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>Documentation must use current command names and describe alternate commands where they appear in menus.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre></pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>### Tag Editing</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- Album fields write album-level tags across track state.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- Track title and track number can be edited in the table.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Core tags include artist, album artist, composer, conductor, genre, date, location, description, disc number/count, track number/count, and compilation.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Misc tags allow custom key/value pairs.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- Empty values and deleted tags are distinct behavior in the model and in AppleScript.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- FLAC import maps common aliases and normalizes certain fields.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>- FLAC writeback applies settings for zero padding, total tag key strategies, and compilation normalization.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre></pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>### Album Art</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre></pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>- Album art supports FLAC picture records with type, MIME type, description, dimensions, color depth, color count, and data.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>- Front cover is surfaced prominently in the album section.</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>- Picture browser supports more complete picture management.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>- Settings control whether front cover or all pictures are applied to all tracks.</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- Picture identity has stable IDs and pool IDs so repeated pictures can be tracked safely.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- Docs must distinguish picture type, picture data, picture description, and per-track versus shared album behavior.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre></pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>### Saving And Documents</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre></pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>- `Save` writes FLAC metadata using current default save payload and save scope settings.</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>- `Save Tags` writes tag payload only.</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- `Save Pictures` writes picture payload only.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- Save scope can be all tracks or selected tracks.</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- `.swifttag` document save stores a package manifest, references to FLAC files, security-scoped bookmark data, tags, pictures, and document metadata.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>- `.swifttag` document save is not the same operation as FLAC metadata writeback.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>- Settings can ask whether to save a new `.swifttag` document after FLAC save.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>- Settings can save referenced documents after FLAC save.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre></pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>### Settings</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre></pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- General settings include default save payload, default save scope, save referenced document, and ask-to-save-new-document behavior.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>- Tags settings include zero-padding, total-track/disc key strategy, automatic track-total update, compilation propagation, and picture propagation.</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>- Feedback settings include save notifications, status theme, and diff color controls.</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- Documentation should include defaults and describe impact before users save files.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre></pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>### AppleScript Functionality</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre></pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>Current SDEF exposes:</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre></pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>- Standard app/document/window commands and elements.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>- Application properties for settings and editor/settings windows.</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>- Editor window elements and properties, including tracks, document, selected tracks, and modified state.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- Track elements and many tag-backed properties.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>- Tag elements with key and value.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>- Picture elements with IDs, pool IDs, type, MIME type, description, dimensions, colors, and data.</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>- Commands:</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>  - `add`</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>  - `open settings window`</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>  - standard `save`, `delete`, `make`, `close`, and related commands</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>- Enumerations for:</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>  - save scope</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>  - save payload</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>  - picture type</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>  - settings choices</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>  - status themes and diff colors</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre></pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>Docs should treat `SwiftTag/SwiftTag.sdef` as the AppleScript source of truth.</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre></pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>## Documentation Review Findings</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre></pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>- `Docs/README.md` has useful developer-facing product notes but is not a complete user manual.</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- There is no existing static HTML user documentation tree.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>- `SwiftTag/Info.plist` currently enables AppleScript and points to `SwiftTag.sdef`, but no Help Book keys are present.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>- AppleScript transcripts contain user-facing knowledge that should be distilled into stable docs:</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>  - `selected tracks` returns a list; scripts often need `item 1 of selected tracks`.</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>  - File comparisons in `whose` filters need syntax like `whose its file is POSIX file ...`.</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>  - Creating picture data is most reliable when using Base64 text converted through Foundation data.</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>  - `make new picture with properties {data:...}` is the supported picture creation path.</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>  - Setting a tag value to empty string is different from deleting the tag.</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>  - Picture IDs and pool IDs should be described separately.</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>  - Settings window can be opened and closed by AppleScript.</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>  - External `osascript` can hit sandbox/TCC limits during tests; user docs should focus on normal Script Editor or automation use, while developer notes can mention test harness constraints.</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre></pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>## Apple Documentation Review</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre></pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>- macOS Help Book integration uses bundle resource keys:</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>  - `CFBundleHelpBookName`</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>  - `CFBundleHelpBookFolder`</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>  - optional `CFAppleHelpAnchor`</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>- AppKit provides `NSHelpManager` for showing app help.</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>- Static HTML is compatible with Help Viewer expectations.</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>- JavaScript-heavy docs should be avoided for bundled app help.</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre>- Local links and anchors must remain stable after resource bundling.</pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre></pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre></pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>- Plan file name is `Docs/Plans/28-AddSwiftTagUseDocumentation.md`.</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>- Documentation format is HTML.</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>- Documentation must start from a Quick Start for basic app use.</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>- Quick Start must link to deeper and more comprehensive pages.</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre>- Examples and use cases are required.</pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>- AppleScript functionality must be covered from current app code, SDEF, tests, plans, and transcripts.</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>- Historical transcripts are input material only; final user docs should be distilled, current, and task-oriented.</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre></pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>## Documentation Architecture</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre></pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>### Recommended Source Tree</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre></pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>Create:</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre></pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>```text</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>Docs/UserDocumentation/</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>  index.html</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>  quick-start.html</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>  workflows/</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>    adding-flac-files.html</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre>    tags.html</pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>    pictures.html</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>    saving.html</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>    swifttag-documents.html</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>    settings.html</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>    status-and-diffs.html</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>  automation/</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>    applescript.html</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>    applescript-examples.html</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>  examples/</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>    clean-up-album.html</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>    batch-edit-tags.html</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>    manage-cover-art.html</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>    re-tag-with-applescript.html</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>    create-session-document.html</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>  troubleshooting.html</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>  assets/</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>    swifttag-docs.css</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>```</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre></pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>If Help Book integration is implemented in the same change, bundle this tree or a copied build output as app resources under a stable Help Book folder name such as `SwiftTagHelp`.</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre></pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>### Navigation Requirements</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre></pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre>- Every page includes:</pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>  - SwiftTag documentation title</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre>  - current section label</pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>  - link to Quick Start</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>  - link to AppleScript documentation</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>  - link to Examples</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>  - link to Troubleshooting</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>- `index.html` should make Quick Start the primary path.</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>- Quick Start should link to deeper pages at each step.</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>- Deep pages should link back to relevant examples.</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>- AppleScript examples should link to exact concept pages where possible.</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>- Links should be relative so the docs work in browser, repository preview, and bundled Help Viewer.</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre></pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre>### Style Requirements</pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre></pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>- Use plain HTML and CSS.</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>- No external fonts, scripts, CDNs, or remote assets.</pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre>- Use readable page width, responsive layout, and accessible contrast.</pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>- Use semantic headings and landmarks.</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre>- Use code blocks with language labels.</pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>- Use short callouts for destructive or writeback behavior.</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre>- Keep visual design calm and utility-focused.</pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre></pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre>## Content Plan</pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre></pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre>### Index And Quick Start</pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre></pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre>Quick Start should cover:</pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre></pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre>1. Open SwiftTag.</pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>2. Add FLAC files.</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre>3. Select one or more tracks.</pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>4. Edit album fields.</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre>5. Edit track title, track number, core tags, and misc tags.</pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>6. Add or change front cover art.</pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre>7. Review status icons and locked state.</pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>8. Choose Save, Save Tags, Save Pictures, or Save SwiftTag Document.</pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre>9. Confirm successful save feedback.</pre></td></tr>
+<tr id="L302"><th><a href="#L302">302</a></th><td><pre>10. Continue to deep pages for advanced cases.</pre></td></tr>
+<tr id="L303"><th><a href="#L303">303</a></th><td><pre></pre></td></tr>
+<tr id="L304"><th><a href="#L304">304</a></th><td><pre>Required Quick Start links:</pre></td></tr>
+<tr id="L305"><th><a href="#L305">305</a></th><td><pre></pre></td></tr>
+<tr id="L306"><th><a href="#L306">306</a></th><td><pre>- Add FLAC Files</pre></td></tr>
+<tr id="L307"><th><a href="#L307">307</a></th><td><pre>- Edit Tags</pre></td></tr>
+<tr id="L308"><th><a href="#L308">308</a></th><td><pre>- Manage Album Art</pre></td></tr>
+<tr id="L309"><th><a href="#L309">309</a></th><td><pre>- Save Changes</pre></td></tr>
+<tr id="L310"><th><a href="#L310">310</a></th><td><pre>- SwiftTag Documents</pre></td></tr>
+<tr id="L311"><th><a href="#L311">311</a></th><td><pre>- Settings</pre></td></tr>
+<tr id="L312"><th><a href="#L312">312</a></th><td><pre>- AppleScript</pre></td></tr>
+<tr id="L313"><th><a href="#L313">313</a></th><td><pre>- Examples</pre></td></tr>
+<tr id="L314"><th><a href="#L314">314</a></th><td><pre>- Troubleshooting</pre></td></tr>
+<tr id="L315"><th><a href="#L315">315</a></th><td><pre></pre></td></tr>
+<tr id="L316"><th><a href="#L316">316</a></th><td><pre>### Workflow Reference Pages</pre></td></tr>
+<tr id="L317"><th><a href="#L317">317</a></th><td><pre></pre></td></tr>
+<tr id="L318"><th><a href="#L318">318</a></th><td><pre>Add FLAC Files:</pre></td></tr>
+<tr id="L319"><th><a href="#L319">319</a></th><td><pre></pre></td></tr>
+<tr id="L320"><th><a href="#L320">320</a></th><td><pre>- Add versus replace behavior.</pre></td></tr>
+<tr id="L321"><th><a href="#L321">321</a></th><td><pre>- Read-only import and locked tracks.</pre></td></tr>
+<tr id="L322"><th><a href="#L322">322</a></th><td><pre>- Drag/drop behavior if documented from app UI.</pre></td></tr>
+<tr id="L323"><th><a href="#L323">323</a></th><td><pre>- Folder/file behavior as supported by current importer.</pre></td></tr>
+<tr id="L324"><th><a href="#L324">324</a></th><td><pre>- External file access expectations.</pre></td></tr>
+<tr id="L325"><th><a href="#L325">325</a></th><td><pre></pre></td></tr>
+<tr id="L326"><th><a href="#L326">326</a></th><td><pre>Edit Tags:</pre></td></tr>
+<tr id="L327"><th><a href="#L327">327</a></th><td><pre></pre></td></tr>
+<tr id="L328"><th><a href="#L328">328</a></th><td><pre>- Album section.</pre></td></tr>
+<tr id="L329"><th><a href="#L329">329</a></th><td><pre>- Track table edits.</pre></td></tr>
+<tr id="L330"><th><a href="#L330">330</a></th><td><pre>- Core tags.</pre></td></tr>
+<tr id="L331"><th><a href="#L331">331</a></th><td><pre>- Misc tags.</pre></td></tr>
+<tr id="L332"><th><a href="#L332">332</a></th><td><pre>- Multi-selection behavior.</pre></td></tr>
+<tr id="L333"><th><a href="#L333">333</a></th><td><pre>- Empty value versus removed tag where user-visible.</pre></td></tr>
+<tr id="L334"><th><a href="#L334">334</a></th><td><pre>- Track total and disc total behavior.</pre></td></tr>
+<tr id="L335"><th><a href="#L335">335</a></th><td><pre>- Compilation behavior.</pre></td></tr>
+<tr id="L336"><th><a href="#L336">336</a></th><td><pre></pre></td></tr>
+<tr id="L337"><th><a href="#L337">337</a></th><td><pre>Album Art:</pre></td></tr>
+<tr id="L338"><th><a href="#L338">338</a></th><td><pre></pre></td></tr>
+<tr id="L339"><th><a href="#L339">339</a></th><td><pre>- Front cover quick edit.</pre></td></tr>
+<tr id="L340"><th><a href="#L340">340</a></th><td><pre>- Picture browser.</pre></td></tr>
+<tr id="L341"><th><a href="#L341">341</a></th><td><pre>- Picture type, MIME type, description, dimensions, and data.</pre></td></tr>
+<tr id="L342"><th><a href="#L342">342</a></th><td><pre>- Per-track picture records.</pre></td></tr>
+<tr id="L343"><th><a href="#L343">343</a></th><td><pre>- Settings that propagate cover art or all pictures.</pre></td></tr>
+<tr id="L344"><th><a href="#L344">344</a></th><td><pre>- Difference between replacing a cover and adding additional picture records.</pre></td></tr>
+<tr id="L345"><th><a href="#L345">345</a></th><td><pre></pre></td></tr>
+<tr id="L346"><th><a href="#L346">346</a></th><td><pre>Save Changes:</pre></td></tr>
+<tr id="L347"><th><a href="#L347">347</a></th><td><pre></pre></td></tr>
+<tr id="L348"><th><a href="#L348">348</a></th><td><pre>- `Save`.</pre></td></tr>
+<tr id="L349"><th><a href="#L349">349</a></th><td><pre>- `Save Tags`.</pre></td></tr>
+<tr id="L350"><th><a href="#L350">350</a></th><td><pre>- `Save Pictures`.</pre></td></tr>
+<tr id="L351"><th><a href="#L351">351</a></th><td><pre>- Save scope: selected tracks versus all tracks.</pre></td></tr>
+<tr id="L352"><th><a href="#L352">352</a></th><td><pre>- Save payload: tags, pictures, tags and pictures.</pre></td></tr>
+<tr id="L353"><th><a href="#L353">353</a></th><td><pre>- Locked tracks.</pre></td></tr>
+<tr id="L354"><th><a href="#L354">354</a></th><td><pre>- File changes outside SwiftTag.</pre></td></tr>
+<tr id="L355"><th><a href="#L355">355</a></th><td><pre>- Save notifications and status feedback.</pre></td></tr>
+<tr id="L356"><th><a href="#L356">356</a></th><td><pre>- What existing data is preserved, replaced, and removed by each save type.</pre></td></tr>
+<tr id="L357"><th><a href="#L357">357</a></th><td><pre></pre></td></tr>
+<tr id="L358"><th><a href="#L358">358</a></th><td><pre>SwiftTag Documents:</pre></td></tr>
+<tr id="L359"><th><a href="#L359">359</a></th><td><pre></pre></td></tr>
+<tr id="L360"><th><a href="#L360">360</a></th><td><pre>- What a `.swifttag` package stores.</pre></td></tr>
+<tr id="L361"><th><a href="#L361">361</a></th><td><pre>- Relationship to referenced FLAC files.</pre></td></tr>
+<tr id="L362"><th><a href="#L362">362</a></th><td><pre>- Difference between saving FLAC metadata and saving the document.</pre></td></tr>
+<tr id="L363"><th><a href="#L363">363</a></th><td><pre>- Security-scoped bookmarks at user level: files may need access if moved or unavailable.</pre></td></tr>
+<tr id="L364"><th><a href="#L364">364</a></th><td><pre>- Quick Look behavior.</pre></td></tr>
+<tr id="L365"><th><a href="#L365">365</a></th><td><pre>- When to use a `.swifttag` document as a session file.</pre></td></tr>
+<tr id="L366"><th><a href="#L366">366</a></th><td><pre></pre></td></tr>
+<tr id="L367"><th><a href="#L367">367</a></th><td><pre>Settings:</pre></td></tr>
+<tr id="L368"><th><a href="#L368">368</a></th><td><pre></pre></td></tr>
+<tr id="L369"><th><a href="#L369">369</a></th><td><pre>- General tab.</pre></td></tr>
+<tr id="L370"><th><a href="#L370">370</a></th><td><pre>- Tags tab.</pre></td></tr>
+<tr id="L371"><th><a href="#L371">371</a></th><td><pre>- Feedback tab.</pre></td></tr>
+<tr id="L372"><th><a href="#L372">372</a></th><td><pre>- Defaults.</pre></td></tr>
+<tr id="L373"><th><a href="#L373">373</a></th><td><pre>- Consequences of total key strategy choices.</pre></td></tr>
+<tr id="L374"><th><a href="#L374">374</a></th><td><pre>- Consequences of propagation settings.</pre></td></tr>
+<tr id="L375"><th><a href="#L375">375</a></th><td><pre>- Consequences of save referenced document settings.</pre></td></tr>
+<tr id="L376"><th><a href="#L376">376</a></th><td><pre></pre></td></tr>
+<tr id="L377"><th><a href="#L377">377</a></th><td><pre>Status And Diffs:</pre></td></tr>
+<tr id="L378"><th><a href="#L378">378</a></th><td><pre></pre></td></tr>
+<tr id="L379"><th><a href="#L379">379</a></th><td><pre>- Current status icons and what they mean.</pre></td></tr>
+<tr id="L380"><th><a href="#L380">380</a></th><td><pre>- Locked state.</pre></td></tr>
+<tr id="L381"><th><a href="#L381">381</a></th><td><pre>- Modified state.</pre></td></tr>
+<tr id="L382"><th><a href="#L382">382</a></th><td><pre>- External differences.</pre></td></tr>
+<tr id="L383"><th><a href="#L383">383</a></th><td><pre>- Duplicate picture or mismatch indicators where surfaced.</pre></td></tr>
+<tr id="L384"><th><a href="#L384">384</a></th><td><pre>- Reload selected tracks.</pre></td></tr>
+<tr id="L385"><th><a href="#L385">385</a></th><td><pre>- Remove selected tracks.</pre></td></tr>
+<tr id="L386"><th><a href="#L386">386</a></th><td><pre></pre></td></tr>
+<tr id="L387"><th><a href="#L387">387</a></th><td><pre>Troubleshooting:</pre></td></tr>
+<tr id="L388"><th><a href="#L388">388</a></th><td><pre></pre></td></tr>
+<tr id="L389"><th><a href="#L389">389</a></th><td><pre>- FLAC file missing, renamed, or moved.</pre></td></tr>
+<tr id="L390"><th><a href="#L390">390</a></th><td><pre>- Cannot save due to lock state.</pre></td></tr>
+<tr id="L391"><th><a href="#L391">391</a></th><td><pre>- Save affected more or fewer tracks than expected.</pre></td></tr>
+<tr id="L392"><th><a href="#L392">392</a></th><td><pre>- Album art did not propagate as expected.</pre></td></tr>
+<tr id="L393"><th><a href="#L393">393</a></th><td><pre>- AppleScript cannot find a track or file.</pre></td></tr>
+<tr id="L394"><th><a href="#L394">394</a></th><td><pre>- AppleScript automation permission prompts.</pre></td></tr>
+<tr id="L395"><th><a href="#L395">395</a></th><td><pre>- `.swifttag` document references unavailable files.</pre></td></tr>
+<tr id="L396"><th><a href="#L396">396</a></th><td><pre></pre></td></tr>
+<tr id="L397"><th><a href="#L397">397</a></th><td><pre>### AppleScript Documentation</pre></td></tr>
+<tr id="L398"><th><a href="#L398">398</a></th><td><pre></pre></td></tr>
+<tr id="L399"><th><a href="#L399">399</a></th><td><pre>AppleScript docs should be split into overview and examples.</pre></td></tr>
+<tr id="L400"><th><a href="#L400">400</a></th><td><pre></pre></td></tr>
+<tr id="L401"><th><a href="#L401">401</a></th><td><pre>Overview page:</pre></td></tr>
+<tr id="L402"><th><a href="#L402">402</a></th><td><pre></pre></td></tr>
+<tr id="L403"><th><a href="#L403">403</a></th><td><pre>- Enablement: SwiftTag is scriptable through AppleScript.</pre></td></tr>
+<tr id="L404"><th><a href="#L404">404</a></th><td><pre>- Object model:</pre></td></tr>
+<tr id="L405"><th><a href="#L405">405</a></th><td><pre>  - application</pre></td></tr>
+<tr id="L406"><th><a href="#L406">406</a></th><td><pre>  - editor windows</pre></td></tr>
+<tr id="L407"><th><a href="#L407">407</a></th><td><pre>  - settings windows</pre></td></tr>
+<tr id="L408"><th><a href="#L408">408</a></th><td><pre>  - tracks</pre></td></tr>
+<tr id="L409"><th><a href="#L409">409</a></th><td><pre>  - tags</pre></td></tr>
+<tr id="L410"><th><a href="#L410">410</a></th><td><pre>  - pictures</pre></td></tr>
+<tr id="L411"><th><a href="#L411">411</a></th><td><pre>  - documents</pre></td></tr>
+<tr id="L412"><th><a href="#L412">412</a></th><td><pre>- Core command summary:</pre></td></tr>
+<tr id="L413"><th><a href="#L413">413</a></th><td><pre>  - `add`</pre></td></tr>
+<tr id="L414"><th><a href="#L414">414</a></th><td><pre>  - `save`</pre></td></tr>
+<tr id="L415"><th><a href="#L415">415</a></th><td><pre>  - `make`</pre></td></tr>
+<tr id="L416"><th><a href="#L416">416</a></th><td><pre>  - `delete`</pre></td></tr>
+<tr id="L417"><th><a href="#L417">417</a></th><td><pre>  - `open settings window`</pre></td></tr>
+<tr id="L418"><th><a href="#L418">418</a></th><td><pre>- Important properties:</pre></td></tr>
+<tr id="L419"><th><a href="#L419">419</a></th><td><pre>  - `selected tracks`</pre></td></tr>
+<tr id="L420"><th><a href="#L420">420</a></th><td><pre>  - `modified`</pre></td></tr>
+<tr id="L421"><th><a href="#L421">421</a></th><td><pre>  - `locked`</pre></td></tr>
+<tr id="L422"><th><a href="#L422">422</a></th><td><pre>  - `file`</pre></td></tr>
+<tr id="L423"><th><a href="#L423">423</a></th><td><pre>  - `picture type`</pre></td></tr>
+<tr id="L424"><th><a href="#L424">424</a></th><td><pre>  - `pool id`</pre></td></tr>
+<tr id="L425"><th><a href="#L425">425</a></th><td><pre>  - default save settings</pre></td></tr>
+<tr id="L426"><th><a href="#L426">426</a></th><td><pre>- Enumerations:</pre></td></tr>
+<tr id="L427"><th><a href="#L427">427</a></th><td><pre>  - save scope</pre></td></tr>
+<tr id="L428"><th><a href="#L428">428</a></th><td><pre>  - save payload</pre></td></tr>
+<tr id="L429"><th><a href="#L429">429</a></th><td><pre>  - picture type</pre></td></tr>
+<tr id="L430"><th><a href="#L430">430</a></th><td><pre>  - track/disc total key settings</pre></td></tr>
+<tr id="L431"><th><a href="#L431">431</a></th><td><pre>  - feedback settings</pre></td></tr>
+<tr id="L432"><th><a href="#L432">432</a></th><td><pre></pre></td></tr>
+<tr id="L433"><th><a href="#L433">433</a></th><td><pre>Examples page:</pre></td></tr>
+<tr id="L434"><th><a href="#L434">434</a></th><td><pre></pre></td></tr>
+<tr id="L435"><th><a href="#L435">435</a></th><td><pre>- Add FLAC files to front editor window.</pre></td></tr>
+<tr id="L436"><th><a href="#L436">436</a></th><td><pre>- Add FLAC files as locked/read-only.</pre></td></tr>
+<tr id="L437"><th><a href="#L437">437</a></th><td><pre>- Select tracks.</pre></td></tr>
+<tr id="L438"><th><a href="#L438">438</a></th><td><pre>- Read and set title, album, artist, album artist, track number, and genre.</pre></td></tr>
+<tr id="L439"><th><a href="#L439">439</a></th><td><pre>- Create, update, empty, and delete misc tags.</pre></td></tr>
+<tr id="L440"><th><a href="#L440">440</a></th><td><pre>- Save selected tracks with tags only.</pre></td></tr>
+<tr id="L441"><th><a href="#L441">441</a></th><td><pre>- Save all tracks with tags and pictures.</pre></td></tr>
+<tr id="L442"><th><a href="#L442">442</a></th><td><pre>- Create front cover art from Base64 data.</pre></td></tr>
+<tr id="L443"><th><a href="#L443">443</a></th><td><pre>- List pictures and read picture IDs/pool IDs.</pre></td></tr>
+<tr id="L444"><th><a href="#L444">444</a></th><td><pre>- Delete pictures by type or ID.</pre></td></tr>
+<tr id="L445"><th><a href="#L445">445</a></th><td><pre>- Open and close settings window.</pre></td></tr>
+<tr id="L446"><th><a href="#L446">446</a></th><td><pre>- Read and write default save settings.</pre></td></tr>
+<tr id="L447"><th><a href="#L447">447</a></th><td><pre></pre></td></tr>
+<tr id="L448"><th><a href="#L448">448</a></th><td><pre>AppleScript caveats:</pre></td></tr>
+<tr id="L449"><th><a href="#L449">449</a></th><td><pre></pre></td></tr>
+<tr id="L450"><th><a href="#L450">450</a></th><td><pre>- `selected tracks` is a list.</pre></td></tr>
+<tr id="L451"><th><a href="#L451">451</a></th><td><pre>- Use `item 1 of selected tracks` before reading scalar track properties from a selection.</pre></td></tr>
+<tr id="L452"><th><a href="#L452">452</a></th><td><pre>- Use `whose its file is POSIX file &quot;/path/to/file.flac&quot;` for file filters.</pre></td></tr>
+<tr id="L453"><th><a href="#L453">453</a></th><td><pre>- Use `make new picture with properties {data:...}` for image data examples.</pre></td></tr>
+<tr id="L454"><th><a href="#L454">454</a></th><td><pre>- Prefer Base64 text to pass binary picture data across AppleScript.</pre></td></tr>
+<tr id="L455"><th><a href="#L455">455</a></th><td><pre>- Empty tag values and deleted tags are different operations.</pre></td></tr>
+<tr id="L456"><th><a href="#L456">456</a></th><td><pre>- Save commands can write FLAC files; examples must make scope and payload explicit.</pre></td></tr>
+<tr id="L457"><th><a href="#L457">457</a></th><td><pre></pre></td></tr>
+<tr id="L458"><th><a href="#L458">458</a></th><td><pre>Representative example shapes:</pre></td></tr>
+<tr id="L459"><th><a href="#L459">459</a></th><td><pre></pre></td></tr>
+<tr id="L460"><th><a href="#L460">460</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L461"><th><a href="#L461">461</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L462"><th><a href="#L462">462</a></th><td><pre>    set addedTracks to add POSIX file &quot;/path/to/track.flac&quot; to front editor window with lock false</pre></td></tr>
+<tr id="L463"><th><a href="#L463">463</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L464"><th><a href="#L464">464</a></th><td><pre>```</pre></td></tr>
+<tr id="L465"><th><a href="#L465">465</a></th><td><pre></pre></td></tr>
+<tr id="L466"><th><a href="#L466">466</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L467"><th><a href="#L467">467</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L468"><th><a href="#L468">468</a></th><td><pre>    tell front editor window</pre></td></tr>
+<tr id="L469"><th><a href="#L469">469</a></th><td><pre>        set selected tracks to every track whose its file is POSIX file &quot;/path/to/track.flac&quot;</pre></td></tr>
+<tr id="L470"><th><a href="#L470">470</a></th><td><pre>        set selectedTrack to item 1 of selected tracks</pre></td></tr>
+<tr id="L471"><th><a href="#L471">471</a></th><td><pre>        set title of selectedTrack to &quot;New Title&quot;</pre></td></tr>
+<tr id="L472"><th><a href="#L472">472</a></th><td><pre>    end tell</pre></td></tr>
+<tr id="L473"><th><a href="#L473">473</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L474"><th><a href="#L474">474</a></th><td><pre>```</pre></td></tr>
+<tr id="L475"><th><a href="#L475">475</a></th><td><pre></pre></td></tr>
+<tr id="L476"><th><a href="#L476">476</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L477"><th><a href="#L477">477</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L478"><th><a href="#L478">478</a></th><td><pre>    save front editor window with scope selected with payload tags only</pre></td></tr>
+<tr id="L479"><th><a href="#L479">479</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L480"><th><a href="#L480">480</a></th><td><pre>```</pre></td></tr>
+<tr id="L481"><th><a href="#L481">481</a></th><td><pre></pre></td></tr>
+<tr id="L482"><th><a href="#L482">482</a></th><td><pre>## Example And Use Case Requirements</pre></td></tr>
+<tr id="L483"><th><a href="#L483">483</a></th><td><pre></pre></td></tr>
+<tr id="L484"><th><a href="#L484">484</a></th><td><pre>Add use cases that combine app UI steps with links to reference pages:</pre></td></tr>
+<tr id="L485"><th><a href="#L485">485</a></th><td><pre></pre></td></tr>
+<tr id="L486"><th><a href="#L486">486</a></th><td><pre>- Clean up a downloaded album:</pre></td></tr>
+<tr id="L487"><th><a href="#L487">487</a></th><td><pre>  - add files</pre></td></tr>
+<tr id="L488"><th><a href="#L488">488</a></th><td><pre>  - set album and album artist</pre></td></tr>
+<tr id="L489"><th><a href="#L489">489</a></th><td><pre>  - correct track numbers</pre></td></tr>
+<tr id="L490"><th><a href="#L490">490</a></th><td><pre>  - set total tracks</pre></td></tr>
+<tr id="L491"><th><a href="#L491">491</a></th><td><pre>  - save tags</pre></td></tr>
+<tr id="L492"><th><a href="#L492">492</a></th><td><pre>- Batch edit artist and genre across selected tracks.</pre></td></tr>
+<tr id="L493"><th><a href="#L493">493</a></th><td><pre>- Add front and back cover art.</pre></td></tr>
+<tr id="L494"><th><a href="#L494">494</a></th><td><pre>- Save pictures only after art edits.</pre></td></tr>
+<tr id="L495"><th><a href="#L495">495</a></th><td><pre>- Use read-only import to inspect metadata without writeback.</pre></td></tr>
+<tr id="L496"><th><a href="#L496">496</a></th><td><pre>- Save a `.swifttag` session before changing source FLAC files.</pre></td></tr>
+<tr id="L497"><th><a href="#L497">497</a></th><td><pre>- Script a repeatable metadata cleanup through AppleScript.</pre></td></tr>
+<tr id="L498"><th><a href="#L498">498</a></th><td><pre>- Script picture creation through AppleScript.</pre></td></tr>
+<tr id="L499"><th><a href="#L499">499</a></th><td><pre>- Recover after source files were moved or externally edited.</pre></td></tr>
+<tr id="L500"><th><a href="#L500">500</a></th><td><pre></pre></td></tr>
+<tr id="L501"><th><a href="#L501">501</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L502"><th><a href="#L502">502</a></th><td><pre></pre></td></tr>
+<tr id="L503"><th><a href="#L503">503</a></th><td><pre>- Static docs must remain valid when opened from the repository and from an app bundle.</pre></td></tr>
+<tr id="L504"><th><a href="#L504">504</a></th><td><pre>- If docs are bundled, Xcode project/resource membership must include the documentation folder or generated output.</pre></td></tr>
+<tr id="L505"><th><a href="#L505">505</a></th><td><pre>- If Help Book is bundled, `Info.plist` needs Help Book keys and resource paths must match those keys.</pre></td></tr>
+<tr id="L506"><th><a href="#L506">506</a></th><td><pre>- App Help integration may require AppKit bridging through `NSHelpManager` or a SwiftUI command that opens bundled docs.</pre></td></tr>
+<tr id="L507"><th><a href="#L507">507</a></th><td><pre>- Current AppleScript source of truth is `SwiftTag/SwiftTag.sdef`.</pre></td></tr>
+<tr id="L508"><th><a href="#L508">508</a></th><td><pre>- AppleScript examples must use terms supported by current SDEF and tested bridge behavior.</pre></td></tr>
+<tr id="L509"><th><a href="#L509">509</a></th><td><pre>- Save examples must not hide writeback effects.</pre></td></tr>
+<tr id="L510"><th><a href="#L510">510</a></th><td><pre>- Documentation should not depend on network access.</pre></td></tr>
+<tr id="L511"><th><a href="#L511">511</a></th><td><pre>- Verification should avoid full UI suite unless needed.</pre></td></tr>
+<tr id="L512"><th><a href="#L512">512</a></th><td><pre>- Developer-only testing limitations, such as sandboxed `osascript` in UI tests, should not dominate user docs.</pre></td></tr>
+<tr id="L513"><th><a href="#L513">513</a></th><td><pre></pre></td></tr>
+<tr id="L514"><th><a href="#L514">514</a></th><td><pre>## Destructive / Write-Back Documentation Requirements</pre></td></tr>
+<tr id="L515"><th><a href="#L515">515</a></th><td><pre></pre></td></tr>
+<tr id="L516"><th><a href="#L516">516</a></th><td><pre>The save documentation must explicitly state:</pre></td></tr>
+<tr id="L517"><th><a href="#L517">517</a></th><td><pre></pre></td></tr>
+<tr id="L518"><th><a href="#L518">518</a></th><td><pre>- Existing FLAC tags preserved by tag-only save.</pre></td></tr>
+<tr id="L519"><th><a href="#L519">519</a></th><td><pre>- Existing FLAC pictures preserved by picture-only save.</pre></td></tr>
+<tr id="L520"><th><a href="#L520">520</a></th><td><pre>- Tags that SwiftTag owns may be replaced or removed when saving tags.</pre></td></tr>
+<tr id="L521"><th><a href="#L521">521</a></th><td><pre>- Pictures that SwiftTag owns may be replaced or removed when saving pictures.</pre></td></tr>
+<tr id="L522"><th><a href="#L522">522</a></th><td><pre>- Locked tracks are skipped or protected according to current app behavior.</pre></td></tr>
+<tr id="L523"><th><a href="#L523">523</a></th><td><pre>- Selected-track save uses current editor selection.</pre></td></tr>
+<tr id="L524"><th><a href="#L524">524</a></th><td><pre>- All-track save applies to every loaded track eligible for saving.</pre></td></tr>
+<tr id="L525"><th><a href="#L525">525</a></th><td><pre>- `.swifttag` document save stores session metadata and references; it does not by itself rewrite FLAC tags unless paired with FLAC save behavior.</pre></td></tr>
+<tr id="L526"><th><a href="#L526">526</a></th><td><pre>- Picture propagation settings can cause an album-level art change to affect multiple tracks.</pre></td></tr>
+<tr id="L527"><th><a href="#L527">527</a></th><td><pre></pre></td></tr>
+<tr id="L528"><th><a href="#L528">528</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L529"><th><a href="#L529">529</a></th><td><pre></pre></td></tr>
+<tr id="L530"><th><a href="#L530">530</a></th><td><pre>### Product Or Behavioral Risks</pre></td></tr>
+<tr id="L531"><th><a href="#L531">531</a></th><td><pre></pre></td></tr>
+<tr id="L532"><th><a href="#L532">532</a></th><td><pre>- Docs may accidentally imply `Save` is always all tracks or always selected tracks; actual default depends on settings.</pre></td></tr>
+<tr id="L533"><th><a href="#L533">533</a></th><td><pre>- Users may confuse `.swifttag` document save with FLAC metadata writeback.</pre></td></tr>
+<tr id="L534"><th><a href="#L534">534</a></th><td><pre>- AppleScript examples may become stale if SDEF terms change.</pre></td></tr>
+<tr id="L535"><th><a href="#L535">535</a></th><td><pre>- Picture docs may blur per-track pictures, front cover shortcut behavior, and shared picture pool identity.</pre></td></tr>
+<tr id="L536"><th><a href="#L536">536</a></th><td><pre>- Examples may understate that scripts can write files.</pre></td></tr>
+<tr id="L537"><th><a href="#L537">537</a></th><td><pre>- Quick Start may become too long and stop serving as a quick path.</pre></td></tr>
+<tr id="L538"><th><a href="#L538">538</a></th><td><pre></pre></td></tr>
+<tr id="L539"><th><a href="#L539">539</a></th><td><pre>### Tooling, Environment, Sandbox, Or Filesystem Risks</pre></td></tr>
+<tr id="L540"><th><a href="#L540">540</a></th><td><pre></pre></td></tr>
+<tr id="L541"><th><a href="#L541">541</a></th><td><pre>- Help Book resource folder may not be copied into app bundle correctly.</pre></td></tr>
+<tr id="L542"><th><a href="#L542">542</a></th><td><pre>- Help Viewer may resolve anchors differently from a normal browser.</pre></td></tr>
+<tr id="L543"><th><a href="#L543">543</a></th><td><pre>- Link verification may miss case-sensitive path issues.</pre></td></tr>
+<tr id="L544"><th><a href="#L544">544</a></th><td><pre>- HTML validation tool may not be installed in local environment.</pre></td></tr>
+<tr id="L545"><th><a href="#L545">545</a></th><td><pre>- AppleScript smoke checks may need automation permissions or gated harness behavior.</pre></td></tr>
+<tr id="L546"><th><a href="#L546">546</a></th><td><pre>- Xcode build or targeted UI checks can time out.</pre></td></tr>
+<tr id="L547"><th><a href="#L547">547</a></th><td><pre></pre></td></tr>
+<tr id="L548"><th><a href="#L548">548</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L549"><th><a href="#L549">549</a></th><td><pre></pre></td></tr>
+<tr id="L550"><th><a href="#L550">550</a></th><td><pre>### Phase 1: Choose Docs Packaging</pre></td></tr>
+<tr id="L551"><th><a href="#L551">551</a></th><td><pre></pre></td></tr>
+<tr id="L552"><th><a href="#L552">552</a></th><td><pre>- Create `Docs/UserDocumentation` as source tree.</pre></td></tr>
+<tr id="L553"><th><a href="#L553">553</a></th><td><pre>- Decide whether first implementation also bundles docs as app Help Book.</pre></td></tr>
+<tr id="L554"><th><a href="#L554">554</a></th><td><pre>- If bundling:</pre></td></tr>
+<tr id="L555"><th><a href="#L555">555</a></th><td><pre>  - choose resource folder name, recommended `SwiftTagHelp`</pre></td></tr>
+<tr id="L556"><th><a href="#L556">556</a></th><td><pre>  - add Help Book keys to `SwiftTag/Info.plist`</pre></td></tr>
+<tr id="L557"><th><a href="#L557">557</a></th><td><pre>  - add docs resources to SwiftTag app target</pre></td></tr>
+<tr id="L558"><th><a href="#L558">558</a></th><td><pre>  - add or verify Help menu behavior</pre></td></tr>
+<tr id="L559"><th><a href="#L559">559</a></th><td><pre>- Keep source files readable without generated build steps unless a copy step is necessary for bundle layout.</pre></td></tr>
+<tr id="L560"><th><a href="#L560">560</a></th><td><pre></pre></td></tr>
+<tr id="L561"><th><a href="#L561">561</a></th><td><pre>### Phase 2: Build Information Architecture</pre></td></tr>
+<tr id="L562"><th><a href="#L562">562</a></th><td><pre></pre></td></tr>
+<tr id="L563"><th><a href="#L563">563</a></th><td><pre>- Add `index.html` and page skeletons.</pre></td></tr>
+<tr id="L564"><th><a href="#L564">564</a></th><td><pre>- Add shared stylesheet.</pre></td></tr>
+<tr id="L565"><th><a href="#L565">565</a></th><td><pre>- Add top navigation and footer links.</pre></td></tr>
+<tr id="L566"><th><a href="#L566">566</a></th><td><pre>- Add stable IDs for major sections.</pre></td></tr>
+<tr id="L567"><th><a href="#L567">567</a></th><td><pre>- Add page titles and metadata.</pre></td></tr>
+<tr id="L568"><th><a href="#L568">568</a></th><td><pre>- Ensure Quick Start is first page and primary entry.</pre></td></tr>
+<tr id="L569"><th><a href="#L569">569</a></th><td><pre></pre></td></tr>
+<tr id="L570"><th><a href="#L570">570</a></th><td><pre>### Phase 3: Write Basic App Use Docs</pre></td></tr>
+<tr id="L571"><th><a href="#L571">571</a></th><td><pre></pre></td></tr>
+<tr id="L572"><th><a href="#L572">572</a></th><td><pre>- Write Quick Start.</pre></td></tr>
+<tr id="L573"><th><a href="#L573">573</a></th><td><pre>- Write adding FLAC files page.</pre></td></tr>
+<tr id="L574"><th><a href="#L574">574</a></th><td><pre>- Write editing tags page.</pre></td></tr>
+<tr id="L575"><th><a href="#L575">575</a></th><td><pre>- Write album art page.</pre></td></tr>
+<tr id="L576"><th><a href="#L576">576</a></th><td><pre>- Write save behavior page.</pre></td></tr>
+<tr id="L577"><th><a href="#L577">577</a></th><td><pre>- Include concrete menu command names and current settings terms.</pre></td></tr>
+<tr id="L578"><th><a href="#L578">578</a></th><td><pre></pre></td></tr>
+<tr id="L579"><th><a href="#L579">579</a></th><td><pre>### Phase 4: Write Advanced Workflow Docs</pre></td></tr>
+<tr id="L580"><th><a href="#L580">580</a></th><td><pre></pre></td></tr>
+<tr id="L581"><th><a href="#L581">581</a></th><td><pre>- Write `.swifttag` documents page.</pre></td></tr>
+<tr id="L582"><th><a href="#L582">582</a></th><td><pre>- Write settings page.</pre></td></tr>
+<tr id="L583"><th><a href="#L583">583</a></th><td><pre>- Write status and diffs page.</pre></td></tr>
+<tr id="L584"><th><a href="#L584">584</a></th><td><pre>- Write troubleshooting page.</pre></td></tr>
+<tr id="L585"><th><a href="#L585">585</a></th><td><pre>- Add use-case pages and cross-link each use case to reference pages.</pre></td></tr>
+<tr id="L586"><th><a href="#L586">586</a></th><td><pre></pre></td></tr>
+<tr id="L587"><th><a href="#L587">587</a></th><td><pre>### Phase 5: Write AppleScript Docs</pre></td></tr>
+<tr id="L588"><th><a href="#L588">588</a></th><td><pre></pre></td></tr>
+<tr id="L589"><th><a href="#L589">589</a></th><td><pre>- Extract public terms from `SwiftTag/SwiftTag.sdef`.</pre></td></tr>
+<tr id="L590"><th><a href="#L590">590</a></th><td><pre>- Cross-check examples against AppleScript unit and UI tests.</pre></td></tr>
+<tr id="L591"><th><a href="#L591">591</a></th><td><pre>- Distill transcript caveats into current guidance.</pre></td></tr>
+<tr id="L592"><th><a href="#L592">592</a></th><td><pre>- Add command overview.</pre></td></tr>
+<tr id="L593"><th><a href="#L593">593</a></th><td><pre>- Add object model overview.</pre></td></tr>
+<tr id="L594"><th><a href="#L594">594</a></th><td><pre>- Add examples page.</pre></td></tr>
+<tr id="L595"><th><a href="#L595">595</a></th><td><pre>- Add warnings around writeback, selection lists, file filters, and binary picture data.</pre></td></tr>
+<tr id="L596"><th><a href="#L596">596</a></th><td><pre></pre></td></tr>
+<tr id="L597"><th><a href="#L597">597</a></th><td><pre>### Phase 6: Add Help Book Integration If Included</pre></td></tr>
+<tr id="L598"><th><a href="#L598">598</a></th><td><pre></pre></td></tr>
+<tr id="L599"><th><a href="#L599">599</a></th><td><pre>- Add resource membership.</pre></td></tr>
+<tr id="L600"><th><a href="#L600">600</a></th><td><pre>- Add `CFBundleHelpBookName` and `CFBundleHelpBookFolder` to `SwiftTag/Info.plist`.</pre></td></tr>
+<tr id="L601"><th><a href="#L601">601</a></th><td><pre>- Add `CFAppleHelpAnchor` if a stable default anchor is needed.</pre></td></tr>
+<tr id="L602"><th><a href="#L602">602</a></th><td><pre>- Add or adjust Help menu command only if the standard Help menu does not open the docs.</pre></td></tr>
+<tr id="L603"><th><a href="#L603">603</a></th><td><pre>- Verify bundled resource paths.</pre></td></tr>
+<tr id="L604"><th><a href="#L604">604</a></th><td><pre></pre></td></tr>
+<tr id="L605"><th><a href="#L605">605</a></th><td><pre>### Phase 7: Verification</pre></td></tr>
+<tr id="L606"><th><a href="#L606">606</a></th><td><pre></pre></td></tr>
+<tr id="L607"><th><a href="#L607">607</a></th><td><pre>- Run static link and anchor verification.</pre></td></tr>
+<tr id="L608"><th><a href="#L608">608</a></th><td><pre>- Verify every page links to Quick Start, Examples, AppleScript, and Troubleshooting.</pre></td></tr>
+<tr id="L609"><th><a href="#L609">609</a></th><td><pre>- Verify required pages exist.</pre></td></tr>
+<tr id="L610"><th><a href="#L610">610</a></th><td><pre>- Verify required examples exist.</pre></td></tr>
+<tr id="L611"><th><a href="#L611">611</a></th><td><pre>- Verify AppleScript code blocks use supported SDEF terms.</pre></td></tr>
+<tr id="L612"><th><a href="#L612">612</a></th><td><pre>- Run `BuildProject` if app resources or `Info.plist` changed.</pre></td></tr>
+<tr id="L613"><th><a href="#L613">613</a></th><td><pre>- Run targeted tests only when app behavior or Help integration code changes.</pre></td></tr>
+<tr id="L614"><th><a href="#L614">614</a></th><td><pre>- If Help Book integration is included, manually verify Help opens expected page in app bundle.</pre></td></tr>
+<tr id="L615"><th><a href="#L615">615</a></th><td><pre></pre></td></tr>
+<tr id="L616"><th><a href="#L616">616</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L617"><th><a href="#L617">617</a></th><td><pre></pre></td></tr>
+<tr id="L618"><th><a href="#L618">618</a></th><td><pre>### Static Documentation Checks</pre></td></tr>
+<tr id="L619"><th><a href="#L619">619</a></th><td><pre></pre></td></tr>
+<tr id="L620"><th><a href="#L620">620</a></th><td><pre>- Add or run a lightweight script/check that verifies:</pre></td></tr>
+<tr id="L621"><th><a href="#L621">621</a></th><td><pre>  - all local `href` targets exist</pre></td></tr>
+<tr id="L622"><th><a href="#L622">622</a></th><td><pre>  - all `#anchor` targets exist</pre></td></tr>
+<tr id="L623"><th><a href="#L623">623</a></th><td><pre>  - all image/CSS asset paths exist</pre></td></tr>
+<tr id="L624"><th><a href="#L624">624</a></th><td><pre>  - no links point to `Docs/Plans/Transcripts`</pre></td></tr>
+<tr id="L625"><th><a href="#L625">625</a></th><td><pre>  - no links point to obsolete `Docs/Plans/_SwiftTag.sdef`</pre></td></tr>
+<tr id="L626"><th><a href="#L626">626</a></th><td><pre>  - `index.html` links to Quick Start, Examples, AppleScript, and Troubleshooting</pre></td></tr>
+<tr id="L627"><th><a href="#L627">627</a></th><td><pre>- If `tidy`, `xmllint --html`, or another local HTML checker is available, run it.</pre></td></tr>
+<tr id="L628"><th><a href="#L628">628</a></th><td><pre>- If no HTML checker is available, document fallback verification used.</pre></td></tr>
+<tr id="L629"><th><a href="#L629">629</a></th><td><pre></pre></td></tr>
+<tr id="L630"><th><a href="#L630">630</a></th><td><pre>### Content Checks</pre></td></tr>
+<tr id="L631"><th><a href="#L631">631</a></th><td><pre></pre></td></tr>
+<tr id="L632"><th><a href="#L632">632</a></th><td><pre>- Check Quick Start includes:</pre></td></tr>
+<tr id="L633"><th><a href="#L633">633</a></th><td><pre>  - add FLAC files</pre></td></tr>
+<tr id="L634"><th><a href="#L634">634</a></th><td><pre>  - select tracks</pre></td></tr>
+<tr id="L635"><th><a href="#L635">635</a></th><td><pre>  - edit album/track/misc tags</pre></td></tr>
+<tr id="L636"><th><a href="#L636">636</a></th><td><pre>  - album art</pre></td></tr>
+<tr id="L637"><th><a href="#L637">637</a></th><td><pre>  - save command choice</pre></td></tr>
+<tr id="L638"><th><a href="#L638">638</a></th><td><pre>  - links to deeper pages</pre></td></tr>
+<tr id="L639"><th><a href="#L639">639</a></th><td><pre>- Check save docs include:</pre></td></tr>
+<tr id="L640"><th><a href="#L640">640</a></th><td><pre>  - selected versus all tracks</pre></td></tr>
+<tr id="L641"><th><a href="#L641">641</a></th><td><pre>  - tags versus pictures versus both</pre></td></tr>
+<tr id="L642"><th><a href="#L642">642</a></th><td><pre>  - locked tracks</pre></td></tr>
+<tr id="L643"><th><a href="#L643">643</a></th><td><pre>  - `.swifttag` document distinction</pre></td></tr>
+<tr id="L644"><th><a href="#L644">644</a></th><td><pre>- Check AppleScript docs include:</pre></td></tr>
+<tr id="L645"><th><a href="#L645">645</a></th><td><pre>  - `selected tracks` list caveat</pre></td></tr>
+<tr id="L646"><th><a href="#L646">646</a></th><td><pre>  - `whose its file is ...` file filter caveat</pre></td></tr>
+<tr id="L647"><th><a href="#L647">647</a></th><td><pre>  - Base64 picture creation guidance</pre></td></tr>
+<tr id="L648"><th><a href="#L648">648</a></th><td><pre>  - empty tag versus delete guidance</pre></td></tr>
+<tr id="L649"><th><a href="#L649">649</a></th><td><pre>  - writeback warning on save examples</pre></td></tr>
+<tr id="L650"><th><a href="#L650">650</a></th><td><pre></pre></td></tr>
+<tr id="L651"><th><a href="#L651">651</a></th><td><pre>### App Build And Integration Checks</pre></td></tr>
+<tr id="L652"><th><a href="#L652">652</a></th><td><pre></pre></td></tr>
+<tr id="L653"><th><a href="#L653">653</a></th><td><pre>- If only static docs are added outside app target:</pre></td></tr>
+<tr id="L654"><th><a href="#L654">654</a></th><td><pre>  - no app build is required, but running `BuildProject` is acceptable as final confidence.</pre></td></tr>
+<tr id="L655"><th><a href="#L655">655</a></th><td><pre>- If `Info.plist`, Xcode resources, or Help command code changes:</pre></td></tr>
+<tr id="L656"><th><a href="#L656">656</a></th><td><pre>  - run `BuildProject`</pre></td></tr>
+<tr id="L657"><th><a href="#L657">657</a></th><td><pre>  - inspect bundled app resources if needed</pre></td></tr>
+<tr id="L658"><th><a href="#L658">658</a></th><td><pre>  - verify Help menu opens docs</pre></td></tr>
+<tr id="L659"><th><a href="#L659">659</a></th><td><pre>- If AppleScript examples are executable during implementation:</pre></td></tr>
+<tr id="L660"><th><a href="#L660">660</a></th><td><pre>  - run a small gated smoke check against copied FLAC fixture</pre></td></tr>
+<tr id="L661"><th><a href="#L661">661</a></th><td><pre>  - avoid full AppleScript UI suite unless app code changes justify it</pre></td></tr>
+<tr id="L662"><th><a href="#L662">662</a></th><td><pre></pre></td></tr>
+<tr id="L663"><th><a href="#L663">663</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L664"><th><a href="#L664">664</a></th><td><pre></pre></td></tr>
+<tr id="L665"><th><a href="#L665">665</a></th><td><pre>- `Docs/UserDocumentation/index.html` exists and opens as a documentation entry point.</pre></td></tr>
+<tr id="L666"><th><a href="#L666">666</a></th><td><pre>- Quick Start appears as primary first path.</pre></td></tr>
+<tr id="L667"><th><a href="#L667">667</a></th><td><pre>- Quick Start covers basic app use from adding FLAC files through saving.</pre></td></tr>
+<tr id="L668"><th><a href="#L668">668</a></th><td><pre>- Quick Start links to deeper pages for workflows, settings, AppleScript, examples, and troubleshooting.</pre></td></tr>
+<tr id="L669"><th><a href="#L669">669</a></th><td><pre>- HTML docs include comprehensive workflow references for tags, album art, saving, `.swifttag` documents, settings, and status/diff behavior.</pre></td></tr>
+<tr id="L670"><th><a href="#L670">670</a></th><td><pre>- Examples/use cases show realistic SwiftTag tasks, not abstract placeholders.</pre></td></tr>
+<tr id="L671"><th><a href="#L671">671</a></th><td><pre>- AppleScript docs cover object model, key commands, settings, tracks, tags, pictures, save behavior, and known scripting caveats.</pre></td></tr>
+<tr id="L672"><th><a href="#L672">672</a></th><td><pre>- AppleScript examples match current `SwiftTag/SwiftTag.sdef` terms and tested behavior.</pre></td></tr>
+<tr id="L673"><th><a href="#L673">673</a></th><td><pre>- Save documentation distinguishes FLAC metadata writeback from `.swifttag` document save.</pre></td></tr>
+<tr id="L674"><th><a href="#L674">674</a></th><td><pre>- Documentation states writeback effects for tags, pictures, selected tracks, all tracks, and locked tracks.</pre></td></tr>
+<tr id="L675"><th><a href="#L675">675</a></th><td><pre>- No local documentation links or anchors are broken.</pre></td></tr>
+<tr id="L676"><th><a href="#L676">676</a></th><td><pre>- If Help Book integration is included, app bundle contains docs and Help opens the expected entry point.</pre></td></tr>
+<tr id="L677"><th><a href="#L677">677</a></th><td><pre>- Verification results are recorded in implementation summary.</pre></td></tr>
+<tr id="L678"><th><a href="#L678">678</a></th><td><pre></pre></td></tr>
+<tr id="L679"><th><a href="#L679">679</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L680"><th><a href="#L680">680</a></th><td><pre></pre></td></tr>
+<tr id="L681"><th><a href="#L681">681</a></th><td><pre>- Should first implementation bundle HTML docs as macOS Help Book immediately, or land repository HTML docs first and integrate app Help in a follow-up?</pre></td></tr>
+<tr id="L682"><th><a href="#L682">682</a></th><td><pre>- Should AppleScript examples include complete runnable scripts only, or a mix of snippets and full scripts?</pre></td></tr>
+<tr id="L683"><th><a href="#L683">683</a></th><td><pre>- Should documentation include screenshots after core HTML content lands?</pre></td></tr></table></main></body></html>

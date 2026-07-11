@@ -1,0 +1,1202 @@
+{
+  "archive_provenance_commit_ids": [
+    "11e4877420c3dc760f9be803b2734ea34a2031e0"
+  ],
+  "base_segments": [
+    {
+      "assistant_processing_seconds": 95.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 24,
+      "excerpt": "Add to `status-and-diffs.html` a section that covers the specific track status diffs that the app recognizes and formatting for. Give examples of the textual formats. Create relevant links to `settings.html`. Update `settings.html` section `Feedback` with the specific color control labels for diff color preferences and appropriate link back to `status-and-diffs.html`. Updating two docs. Need exact diff labels and formatter examples from app code first. Found exact controls: five Feedback color pickers plus six Diff Tools format toggles. Pulling hover/help text so docs examples match app wording. Edits scoped to docs. Adding recognized diff table, exact hover/overlay text examples, and feedback color labels with links both ways. Docs patched. Running link/anchor check plus tidy against changed HTML. Checks pass. Grabbing status and UTC stamp. Updated docs: - [status-and-diffs.html](Swift/SwiftTag/Docs/UserDocumentation/workflows/status-and-diffs.html): added `Diff Formatting` section with recognized diff types, formatting behavior, and example text. - [settings.html](Swift/SwiftTag/Docs/UserDocumentation/workflows/settings.html): expanded `Feedback` with exact diff color control lab",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-001",
+      "source_line_count": 30,
+      "source_line_end": 39,
+      "source_line_start": 10,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-001",
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-002"
+      ],
+      "user_response_seconds": 26305.0,
+      "valid_atomic_elapsed_seconds": 26400.0
+    },
+    {
+      "assistant_processing_seconds": 52.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 16,
+      "excerpt": "Expand information in `tags` section of `settings.html` Expanded [settings.html](Swift/SwiftTag/Docs/UserDocumentation/workflows/settings.html) Tags section. Added: - Value Preferences - Key Preferences table - Track Total And Compilation Management - Picture Management - Defaults and writeback consequences - Links to Save scope/payload, Diff Formatting, and Album Art propagation Verified: - Static link/anchor/assets check passed: 17 pages. - `tidy -qe Docs/UserDocumentation/workflows/settings.html` passed. [ 2026-05-14T06:12:28Z (52s since Assistant start) ]",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-002",
+      "source_line_count": 22,
+      "source_line_end": 61,
+      "source_line_start": 40,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-003",
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-004"
+      ],
+      "user_response_seconds": 47579.0,
+      "valid_atomic_elapsed_seconds": 47631.0
+    },
+    {
+      "assistant_processing_seconds": 105.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 23,
+      "excerpt": "Expand information in `examples/manage-cover-art.html`: - Go over Picture Browser use including FLAC picture type/slot selection - Picture import/export - Editing picture description - Using the picture pinning buttons to pin pictures across slots, etc. Create appropriate links to and from `workflows/album-art.html` Expanding cover-art example and reciprocal album-art links. Need exact Picture Browser labels and pin/scope behavior from current docs/code first. Picture pinning is slot-specific and track-scope-specific, not a magic all-slots action. Writing example with that distinction so docs match app behavior. Docs updated. Running link/anchor and tidy checks now. Checks pass. Capturing status and timestamp before wrap. Expanded [manage-cover-art.html](Swift/SwiftTag/Docs/UserDocumentation/examples/manage-cover-art.html) with Picture Browser workflow, slot selection, import/export, description editing, pinning/scope behavior, navigation, removal, and save guidance. Added reciprocal links from [album-art.html](Swift/SwiftTag/Docs/UserDocumentation/workflows/album-art.html) to relevant example sections. Verified: - Static link/anchor/assets check passed: 17 pages. - `tidy -qe` pass",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-003",
+      "source_line_count": 29,
+      "source_line_end": 90,
+      "source_line_start": 62,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-005",
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-006"
+      ],
+      "user_response_seconds": 18971.0,
+      "valid_atomic_elapsed_seconds": 19076.0
+    },
+    {
+      "assistant_processing_seconds": 61.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 10,
+      "excerpt": "Expand information in `album-art.html#metadata` with regard to how picture properties excluding `description` are auto-calculated. Keep it relatively brief. Updated [album-art.html](Swift/SwiftTag/Docs/UserDocumentation/workflows/album-art.html) metadata section. Added brief note: description is user-edited; type comes from selected slot; MIME type normalizes from JPEG/PNG data; width, height, depth, palette color count auto-calculate from image metadata before FLAC writeback. Verified: - Static link/anchor/assets check passed: 17 pages. - `tidy -qe Docs/UserDocumentation/workflows/album-art.html` passed. [ 2026-05-15T00:44:24Z (1m 1s since Assistant start) ]",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-004",
+      "source_line_count": 16,
+      "source_line_end": 106,
+      "source_line_start": 91,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-007",
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-008"
+      ],
+      "user_response_seconds": 12547.0,
+      "valid_atomic_elapsed_seconds": 12608.0
+    },
+    {
+      "assistant_processing_seconds": 184.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 32,
+      "excerpt": "Review 28-AddSwiftTagUseDocumentation.md Update `swifttag-documents.html` with a section on Creating/Saving and Settings with links back to `settings.html``General`. Read project code as needed for accuracy and conciseness of information. Reading plan and doc files now. Need code-backed wording, short and accurate. swifttag-documents.html already modified in worktree. Reading diff before edit, so existing user/work changes stay intact. Plan says .swifttag page must cover package contents, referenced FLAC files, FLAC writeback distinction, bookmarks, Quick Look, session use, and settings consequences. Existing edit has right direction, but malformed HTML around list. Making small doc edit now: fix malformed list, add Creating And Saving and Settings sections, and link settings.html#general from each setting mention. Edit done. Checking anchors and HTML parse now; no app build needed for static doc-only change. xmllint only complained about HTML5 semantic tags (header, nav, main, article, footer), same doc style issue, not new markup. Anchor check passed for settings.html#general. tiddy/link checks clean. Reviewing final diff once, then timestamp. Updated [swifttag-documents.html](Sw",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-005",
+      "source_line_count": 38,
+      "source_line_end": 144,
+      "source_line_start": 107,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-009",
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-010"
+      ],
+      "user_response_seconds": 1343.0,
+      "valid_atomic_elapsed_seconds": 1527.0
+    },
+    {
+      "assistant_processing_seconds": 67.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 22,
+      "excerpt": "Update `create-session-document.html` with relevant instructions and information. Be sure to include relevant links. Reading example page plus linked workflow docs. Need keep example task-focused, with writeback distinction clear. Updating example page only. It will become practical recipe: when to use, steps, settings impact, reopen/continue links. Example now has concrete workflow and links. Running HTML/link checks. Updated [create-session-document.html](Swift/SwiftTag/Docs/UserDocumentation/examples/create-session-document.html). Added: - When to use session document - Step-by-step workflow - FLAC writeback warning - General settings behavior - Stored data notes - Links to adding files, editing tags, album art, status/diffs, saving, settings, troubleshooting Verified: - `tidy -q -e Docs/UserDocumentation/examples/create-session-document.html` - Local href/anchor check: `links ok` [ 2026-05-15T04:40:05Z (1m 7s since Assistant start) ]",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-006",
+      "source_line_count": 28,
+      "source_line_end": 172,
+      "source_line_start": 145,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-011",
+        "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:turn-012"
+      ],
+      "user_response_seconds": 0.0,
+      "valid_atomic_elapsed_seconds": 67.0
+    }
+  ],
+  "candidate_commits": [
+    {
+      "archive_provenance": true,
+      "body": "",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation.md",
+        "Docs/UserDocumentation/examples/create-session-document.html",
+        "Docs/UserDocumentation/workflows/swifttag-documents.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "11e4877420c3dc760f9be803b2734ea34a2031e0",
+      "docs_line_count": 76,
+      "reasons": [
+        "archive provenance only",
+        "changed path mentioned",
+        "subject tokens: docs, document, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "11e4877",
+      "source_link": "../../sources/commits/11e4877.html",
+      "subject": "docs(user): .swifttag document updates",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/UserDocumentation/automation/applescript-document.html",
+        "Docs/UserDocumentation/automation/applescript-save.html",
+        "Docs/UserDocumentation/automation/applescript-tag.html",
+        "Docs/UserDocumentation/automation/applescript-track.html",
+        "Docs/UserDocumentation/examples/create-session-document.html",
+        "Docs/UserDocumentation/examples/save-tags-only.html",
+        "Docs/UserDocumentation/workflows/adding-flac-files.html",
+        "Docs/UserDocumentation/workflows/album-art.html",
+        "Docs/UserDocumentation/workflows/editing-tags.html",
+        "Docs/UserDocumentation/workflows/saving.html",
+        "Docs/UserDocumentation/workflows/settings.html",
+        "Docs/UserDocumentation/workflows/swifttag-documents.html",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "1df3dd0c798507ee9db2c2005d577ac499b3e933",
+      "docs_line_count": 184,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: docs, examples, links, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "1df3dd0",
+      "source_link": "../../sources/commits/1df3dd0.html",
+      "subject": "docs(user): more applescript examples and links",
+      "test_line_count": 67
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/UserDocumentation/automation/applescript-picture.html",
+        "Docs/UserDocumentation/examples/clean-up-album.html",
+        "Docs/UserDocumentation/examples/create-session-document.html",
+        "Docs/UserDocumentation/examples/save-tags-only.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "21aacef712ef78c44bd11f0a848276d3125a82a4",
+      "docs_line_count": 68,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: docs, examples, links, picture, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "21aacef",
+      "source_link": "../../sources/commits/21aacef.html",
+      "subject": "docs(user): applecript picture examples and links",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "- refresh album-art context from track records after AppleScript picture mutations\n- resolve script picture identity from track record order and matching picture data\n- add UI regression for Base64 picture restore updating track status icon\n- add unit coverage for record-order picture identity\n\ndocs(transcripts): add AppleScript support conversation transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-10-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 79,
+      "commit_hash": "2976159836a41160b0a462b26c952968c19a7923",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: album, art, conversation, data, docs, picture",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "2976159",
+      "source_link": "../../sources/commits/2976159.html",
+      "subject": "fix(applescript): refresh album-art state after picture imports",
+      "test_line_count": 159
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add implementation plan and transcript record for user documentation\n- add static HTML docs with Quick Start as primary entry point\n- add workflow pages for FLAC import, tag editing, album art, saving, settings, and status\n- add AppleScript overview, examples, troubleshooting, and shared CSS",
+      "changed_paths": [
+        "Docs/Plans/28-AddSwiftTagUseDocumentation.md",
+        "Docs/Plans/Transcripts/transcript-2026-05-12-1-28-AddSwiftTagUseDocumentation.md",
+        "Docs/UserDocumentation/assets/swifttag-docs.css",
+        "Docs/UserDocumentation/automation/applescript-examples.html",
+        "Docs/UserDocumentation/automation/applescript.html",
+        "Docs/UserDocumentation/examples/batch-edit-tags.html",
+        "Docs/UserDocumentation/examples/clean-up-album.html",
+        "Docs/UserDocumentation/examples/create-session-document.html",
+        "Docs/UserDocumentation/examples/manage-cover-art.html",
+        "Docs/UserDocumentation/examples/save-tags-only.html",
+        "Docs/UserDocumentation/index.html",
+        "Docs/UserDocumentation/quick-start.html",
+        "Docs/UserDocumentation/troubleshooting.html",
+        "Docs/UserDocumentation/workflows/adding-flac-files.html",
+        "Docs/UserDocumentation/workflows/album-art.html",
+        "Docs/UserDocumentation/workflows/editing-tags.html",
+        "Docs/UserDocumentation/workflows/saving.html",
+        "Docs/UserDocumentation/workflows/settings.html",
+        "Docs/UserDocumentation/workflows/status-and-diffs.html",
+        "Docs/UserDocumentation/workflows/swifttag-documents.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "452263137775f01b3d4877c28d37aad4dce7884d",
+      "docs_line_count": 1496,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: album, art, docs, documentation, editing, examples",
+        "path/topic overlap",
+        "commit before transcript within 1d"
+      ],
+      "score": 1.0,
+      "short_hash": "4522631",
+      "source_link": "../../sources/commits/4522631.html",
+      "subject": "docs(user): add SwiftTag user documentation",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/Plans/28-AddSwiftTagUseDocumentation.md",
+        "Docs/UserDocumentation/automation/applescript-delete.html",
+        "Docs/UserDocumentation/automation/applescript-make.html",
+        "Docs/UserDocumentation/automation/applescript-picture.html",
+        "Docs/UserDocumentation/examples/batch-edit-tags.html",
+        "Docs/UserDocumentation/examples/clean-up-album.html",
+        "Docs/UserDocumentation/examples/manage-cover-art.html",
+        "Docs/UserDocumentation/index.html",
+        "Docs/UserDocumentation/quick-start.html",
+        "Docs/UserDocumentation/workflows/{album-art.html => pictures.html}",
+        "Docs/UserDocumentation/workflows/saving.html",
+        "Docs/UserDocumentation/workflows/swifttag-documents.html",
+        "Docs/UserDocumentation/workflows/tags.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "477665910577c41766377204a1abfc8cc7f0dd6d",
+      "docs_line_count": 40,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: album, art, docs, link, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "4776659",
+      "source_link": "../../sources/commits/4776659.html",
+      "subject": "docs(user): album-art rename and link update",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/UserDocumentation/workflows/settings.html",
+        "Docs/UserDocumentation/workflows/status-and-diffs.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "50b8fd902d32fca1ed43570b89b6e097dd4e9fae",
+      "docs_line_count": 296,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: docs, general, settings, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "50b8fd9",
+      "source_link": "../../sources/commits/50b8fd9.html",
+      "subject": "docs(user): settings - General settings update",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add Save SwiftTag Document as... as shift alternate to Save SwiftTag Document...\n- enable Save As only when current editor has an associated SwiftTag document\n- save current editor state to a selected package and associate the window with it\n- create a new document ID when saving to a new destination\n- document Save As behavior and add unit and UI coverage",
+      "changed_paths": [
+        "Docs/UserDocumentation/workflows/swifttag-documents.html",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackageWriter.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 40,
+      "commit_hash": "58c447d0c8f8d603db83117199143fea38de98fb",
+      "docs_line_count": 9,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: behavior, create, current, document, documents, has",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "58c447d",
+      "source_link": "../../sources/commits/58c447d.html",
+      "subject": "feat(swifttag-document): add Save As command for session documents",
+      "test_line_count": 142
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/UserDocumentation/assets/exclamationmark.triangle.png",
+        "Docs/UserDocumentation/assets/fish.fill.png",
+        "Docs/UserDocumentation/assets/fish.png",
+        "Docs/UserDocumentation/assets/lock.fill.png",
+        "Docs/UserDocumentation/quick-start.html",
+        "Docs/UserDocumentation/workflows/adding-flac-files.html",
+        "Docs/UserDocumentation/workflows/status-and-diffs.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "7334db00fd1f68b65e90267ef0cde394804255cb",
+      "docs_line_count": 51,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: clean, docs, quick, start, user",
+        "path/topic overlap",
+        "commit before transcript within 1d"
+      ],
+      "score": 1.0,
+      "short_hash": "7334db0",
+      "source_link": "../../sources/commits/7334db0.html",
+      "subject": "docs(user): initial quick start clean up",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/Plans/28-AddSwiftTagUseDocumentation.md",
+        "Docs/UserDocumentation/automation/applescript-delete.html",
+        "Docs/UserDocumentation/automation/applescript-make.html",
+        "Docs/UserDocumentation/automation/applescript-tag.html",
+        "Docs/UserDocumentation/examples/batch-edit-tags.html",
+        "Docs/UserDocumentation/examples/clean-up-album.html",
+        "Docs/UserDocumentation/index.html",
+        "Docs/UserDocumentation/quick-start.html",
+        "Docs/UserDocumentation/workflows/adding-flac-files.html",
+        "Docs/UserDocumentation/workflows/saving.html",
+        "Docs/UserDocumentation/workflows/swifttag-documents.html",
+        "Docs/UserDocumentation/workflows/{editing-tags.html => tags.html}"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "7a19911399e2e3a8b7ff2d239319a658e793346c",
+      "docs_line_count": 24,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: docs, editing, link, tags, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "7a19911",
+      "source_link": "../../sources/commits/7a19911.html",
+      "subject": "docs(user): editing-tags rename and link update",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add auto update disc total defaults, settings toggle, and AppleScript property\n- calculate disc total from highest valid non-deleted DISCNUMBER\n- add Set Disc Total menu and track-table context menu actions with focused routing\n- disable total-disc editing while auto update disc total is enabled\n- update mismatch detection when disc totals exceed current disc-number range\n- document setting, command, and AppleScript application property\n- add plan, transcript, unit, ViewInspector, source-order, and AppleScript coverage",
+      "changed_paths": [
+        "Docs/Plans/32-AutoUpdateDiscTotal.md",
+        "Docs/Plans/Transcripts/transcript-2026-06-17-1-32-AutoUpdateDiscTotal.md",
+        "Docs/UserDocumentation/automation/applescript-application.html",
+        "Docs/UserDocumentation/workflows/settings.html",
+        "Docs/UserDocumentation/workflows/tags.html",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/Settings/SettingsView.swift",
+        "SwiftTag/Features/Settings/TagWriteSettingsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/SaveSettings.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagAppleScriptTests/test-settings.applescript",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift"
+      ],
+      "code_line_count": 189,
+      "commit_hash": "88d09498e62eed6f088450eb0cf1ec3129a7ad34",
+      "docs_line_count": 26,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: auto, calculate, current, defaults, document, editing",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "88d0949",
+      "source_link": "../../sources/commits/88d0949.html",
+      "subject": "feat(tags): add auto disc total setting and command",
+      "test_line_count": 262
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/Plans/28-AddSwiftTagUseDocumentation.md",
+        "Docs/UserDocumentation/examples/clean-up-album.html",
+        "Docs/UserDocumentation/examples/create-session-document.html",
+        "Docs/UserDocumentation/examples/{save-tags-only.html => re-tag-with-applescript.html}",
+        "Docs/UserDocumentation/workflows/saving.html",
+        "Docs/UserDocumentation/workflows/settings.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "a3d4895796afa545efc1d3c39379220da2c616f3",
+      "docs_line_count": 12,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: docs, example, tag, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "a3d4895",
+      "source_link": "../../sources/commits/a3d4895.html",
+      "subject": "docs(user): re-tag example rename",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add save setting, disabled Settings toggle, and AppleScript property\n- calculate disc counts for manual and automatic track-total updates\n- add File and context-menu commands for per-disc total updates\n- update mismatch warnings to accept table totals or matching disc totals\n- document behavior and add plan, transcript, unit, source, and AppleScript tests",
+      "changed_paths": [
+        "Docs/Plans/30-AutoUpdateTrackTotalByDisc.md",
+        "Docs/Plans/Transcripts/transcript-2026-06-15-1-30-AutoUpdateTrackTotalByDisc.md",
+        "Docs/UserDocumentation/automation/applescript-application.html",
+        "Docs/UserDocumentation/workflows/settings.html",
+        "Docs/UserDocumentation/workflows/tags.html",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/Settings/SettingsView.swift",
+        "SwiftTag/Features/Settings/TagWriteSettingsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/SaveSettings.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagAppleScriptTests/test-settings.applescript",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift"
+      ],
+      "code_line_count": 290,
+      "commit_hash": "d2843d58d7c77e0470d1b467eacf8a956665e2c9",
+      "docs_line_count": 23,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: behavior, calculate, document, file, save, setting",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "d2843d5",
+      "source_link": "../../sources/commits/d2843d5.html",
+      "subject": "feat(tags): add per-disc track total update mode",
+      "test_line_count": 224
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add qalw application property mapped to QuitAppOnLastWindowCloseSetting\n- persist AppleScript get/set through FeedbackSettingsKey.quitAppOnLastWindowClose\n- document setting in user workflow and AppleScript application reference\n- cover sdef metadata, UserDefaults bridging, and settings AppleScript script",
+      "changed_paths": [
+        "Docs/UserDocumentation/automation/applescript-application.html",
+        "Docs/UserDocumentation/workflows/settings.html",
+        "SwiftTag/Features/Settings/FeedbackSettingsView.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagAppleScriptTests/test-settings.applescript",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift"
+      ],
+      "code_line_count": 42,
+      "commit_hash": "d4616ef79d1f5f6f9afe47e139aa7a092e4b3085",
+      "docs_line_count": 27,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: app, cover, defaults, document, feedback, key",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "d4616ef",
+      "source_link": "../../sources/commits/d4616ef.html",
+      "subject": "feat(applescript): expose quit-on-last-window-close setting",
+      "test_line_count": 8
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-20-2-28-AddSwiftTagUseDocumentation.md",
+        "Docs/UserDocumentation/automation/applescript-picture.html",
+        "Docs/UserDocumentation/examples/batch-edit-tags.html",
+        "Docs/UserDocumentation/examples/clean-up-album.html",
+        "Docs/UserDocumentation/examples/manage-cover-art.html",
+        "Docs/UserDocumentation/quick-start.html",
+        "Docs/UserDocumentation/troubleshooting.html",
+        "Docs/UserDocumentation/workflows/album-art.html",
+        "Docs/UserDocumentation/workflows/editing-tags.html",
+        "Docs/UserDocumentation/workflows/saving.html",
+        "Docs/UserDocumentation/workflows/settings.html",
+        "Docs/UserDocumentation/workflows/status-and-diffs.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "e534c8366925af29f7c8f9ab67a908c5d6941650",
+      "docs_line_count": 195,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: content, docs, links, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "e534c83",
+      "source_link": "../../sources/commits/e534c83.html",
+      "subject": "docs(user): content and links cleanup",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/UserDocumentation/workflows/adding-flac-files.html",
+        "Docs/UserDocumentation/workflows/album-art.html",
+        "Docs/UserDocumentation/workflows/editing-tags.html",
+        "Docs/UserDocumentation/workflows/settings.html",
+        "Docs/UserDocumentation/workflows/status-and-diffs.html"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+      "docs_line_count": 161,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: diff, docs, links, status, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "f156647",
+      "source_link": "../../sources/commits/f156647.html",
+      "subject": "docs(user): status and diff expansion, emphasis and links",
+      "test_line_count": 0
+    }
+  ],
+  "candidate_plans": [
+    {
+      "creation_commit_id": "452263137775f01b3d4877c28d37aad4dce7884d",
+      "current_source_path": "Docs/Plans/28-AddSwiftTagUseDocumentation.md",
+      "display_title": "Add SwiftTag Use Documentation Plan",
+      "plan_id": "28",
+      "revision_commit_ids": [
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+        "a3d4895796afa545efc1d3c39379220da2c616f3",
+        "7a19911399e2e3a8b7ff2d239319a658e793346c",
+        "477665910577c41766377204a1abfc8cc7f0dd6d"
+      ],
+      "section_names": "Goal; Scope; Plan Input Checklist Coverage; Current Implementation Snapshot; Documentation Review Findings; Apple Documentation Review; Confirmed Decisions; Documentation Architecture; Content Plan; Example And Use Case Requirements; Dependencies And Constraints; Destructive / Write-Back Documentation Requirements; High-Risk Concerns; Implementation Phases; Test Strategy; Acceptance Criteria; Open Questions",
+      "source_link": "../../sources/plans/28-AddSwiftTagUseDocumentation.html#L1"
+    }
+  ],
+  "candidate_themes": [
+    {
+      "accepted_commit_ids": [
+        "11e4877420c3dc760f9be803b2734ea34a2031e0"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "AppleScript",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "11e4877420c3dc760f9be803b2734ea34a2031e0",
+          "entity_type": "commit",
+          "evidence_source": "keywords: script",
+          "relationship_type": "include",
+          "theme_id": "applescript"
+        }
+      ],
+      "theme_id": "applescript"
+    },
+    {
+      "accepted_commit_ids": [
+        "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Diff",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "diff"
+        }
+      ],
+      "theme_id": "diff"
+    },
+    {
+      "accepted_commit_ids": [
+        "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+        "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Picture",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+          "entity_type": "commit",
+          "evidence_source": "alias: album-art",
+          "relationship_type": "include",
+          "theme_id": "picture"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27",
+          "entity_type": "commit",
+          "evidence_source": "alias: album art, album-art",
+          "relationship_type": "include",
+          "theme_id": "picture"
+        }
+      ],
+      "theme_id": "picture"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Save",
+      "positive_and_negative_edges": [],
+      "theme_id": "save"
+    },
+    {
+      "accepted_commit_ids": [
+        "9273900261be4959eb466c7c8dd5bce9283d6da8",
+        "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+        "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Settings",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+          "entity_type": "commit",
+          "evidence_source": "alias: settings",
+          "relationship_type": "include",
+          "theme_id": "settings"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "9273900261be4959eb466c7c8dd5bce9283d6da8",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "settings"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27",
+          "entity_type": "commit",
+          "evidence_source": "alias: settings",
+          "relationship_type": "include",
+          "theme_id": "settings"
+        }
+      ],
+      "theme_id": "settings"
+    },
+    {
+      "accepted_commit_ids": [
+        "11e4877420c3dc760f9be803b2734ea34a2031e0",
+        "32babc084a6572ee51a860f636b385d6870c2b90",
+        "9273900261be4959eb466c7c8dd5bce9283d6da8",
+        "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+        "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27"
+      ],
+      "accepted_plan_ids": [
+        "28"
+      ],
+      "display_name": "SwiftTag Document",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+          "entity_type": "commit",
+          "evidence_source": "keywords: document",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "9273900261be4959eb466c7c8dd5bce9283d6da8",
+          "entity_type": "commit",
+          "evidence_source": "keywords: document",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27",
+          "entity_type": "commit",
+          "evidence_source": "keywords: document",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "32babc084a6572ee51a860f636b385d6870c2b90",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "11e4877420c3dc760f9be803b2734ea34a2031e0",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.75,
+          "entity_id": "28",
+          "entity_type": "plan",
+          "evidence_source": "Plan topic: document",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        }
+      ],
+      "theme_id": "swifttag-document"
+    },
+    {
+      "accepted_commit_ids": [
+        "11e4877420c3dc760f9be803b2734ea34a2031e0",
+        "32babc084a6572ee51a860f636b385d6870c2b90",
+        "9273900261be4959eb466c7c8dd5bce9283d6da8",
+        "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+        "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27"
+      ],
+      "accepted_plan_ids": [
+        "28"
+      ],
+      "display_name": "Tags",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+          "entity_type": "commit",
+          "evidence_source": "alias: tags",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "9273900261be4959eb466c7c8dd5bce9283d6da8",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27",
+          "entity_type": "commit",
+          "evidence_source": "keywords: album",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "32babc084a6572ee51a860f636b385d6870c2b90",
+          "entity_type": "commit",
+          "evidence_source": "keywords: tag",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "11e4877420c3dc760f9be803b2734ea34a2031e0",
+          "entity_type": "commit",
+          "evidence_source": "keywords: tag",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.75,
+          "entity_id": "28",
+          "entity_type": "plan",
+          "evidence_source": "Plan topic: tag",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        }
+      ],
+      "theme_id": "tags"
+    },
+    {
+      "accepted_commit_ids": [
+        "11e4877420c3dc760f9be803b2734ea34a2031e0",
+        "32babc084a6572ee51a860f636b385d6870c2b90",
+        "9273900261be4959eb466c7c8dd5bce9283d6da8",
+        "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+        "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27"
+      ],
+      "accepted_plan_ids": [
+        "28"
+      ],
+      "display_name": "User Docs",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "user-docs"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "9273900261be4959eb466c7c8dd5bce9283d6da8",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "user-docs"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "user-docs"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "32babc084a6572ee51a860f636b385d6870c2b90",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "user-docs"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "11e4877420c3dc760f9be803b2734ea34a2031e0",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "user-docs"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "28",
+          "entity_type": "plan",
+          "evidence_source": "explicit Plan Theme include",
+          "relationship_type": "include",
+          "theme_id": "user-docs"
+        }
+      ],
+      "theme_id": "user-docs"
+    }
+  ],
+  "conservation_preview": {
+    "commit_lens": {
+      "allocated_atomic_elapsed_seconds": 107309.0,
+      "allocated_back_and_forth": 6.0,
+      "allocated_lines": 173.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "header_note_lines": 10,
+    "plan_lens": {
+      "allocated_atomic_elapsed_seconds": 107309.0,
+      "allocated_back_and_forth": 6.0,
+      "allocated_lines": 173.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "segment_source_lines": 163,
+    "transcript_source_lines": 173
+  },
+  "current_review_status": {
+    "configured_content_digest": "900e75c9241e88264c886808ff022cd70d7e8a47f73d767fba4cd40cf824a7be",
+    "configured_review_input_digest": "faaebafb61f798b4478bdd7f5217170619f024922223bc6383d920a91fadc39b",
+    "message": "Reviewed allocation accepted",
+    "normalized_content_digest": "900e75c9241e88264c886808ff022cd70d7e8a47f73d767fba4cd40cf824a7be",
+    "review_input_digest": "faaebafb61f798b4478bdd7f5217170619f024922223bc6383d920a91fadc39b",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10T19:02:59Z",
+    "reviewed_by": "codex-semantic-review-c",
+    "transcript_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation"
+  },
+  "existing_review": {
+    "accepted_candidate_commit_ids": [
+      "11e4877420c3dc760f9be803b2734ea34a2031e0",
+      "32babc084a6572ee51a860f636b385d6870c2b90",
+      "9273900261be4959eb466c7c8dd5bce9283d6da8",
+      "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+      "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27"
+    ],
+    "accepted_candidate_plan_ids": [
+      "28"
+    ],
+    "evidence_note": "Reviewed against Plan 34, transcript source, packet segments, commits, and relevant Plans.",
+    "feature_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+        "confidence": 1.0,
+        "entry_id": "review-c:transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:feature:01",
+        "evidence_note": "Segment meaning matches f156647: docs(user): status and diff expansion, emphasis and links",
+        "included_in_rollup_totals": true,
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-001"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-001",
+            "source_line_end": 39,
+            "source_line_start": 10
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "9273900261be4959eb466c7c8dd5bce9283d6da8",
+        "confidence": 1.0,
+        "entry_id": "review-c:transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:feature:02",
+        "evidence_note": "Segment meaning matches 9273900: docs(user): more `tgas` info",
+        "included_in_rollup_totals": true,
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-002"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-002",
+            "source_line_end": 61,
+            "source_line_start": 40
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27",
+        "confidence": 1.0,
+        "entry_id": "review-c:transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:feature:03",
+        "evidence_note": "Segment meaning matches fdfa298: docs(user): more on album art",
+        "included_in_rollup_totals": true,
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-003",
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-004"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-003",
+            "source_line_end": 90,
+            "source_line_start": 62
+          },
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-004",
+            "source_line_end": 106,
+            "source_line_start": 91
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "32babc084a6572ee51a860f636b385d6870c2b90",
+        "confidence": 1.0,
+        "entry_id": "review-c:transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:feature:04",
+        "evidence_note": "Segment meaning matches 32babc0: docs(user): .swifttag document updates",
+        "included_in_rollup_totals": true,
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-005"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-005",
+            "source_line_end": 144,
+            "source_line_start": 107
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "11e4877420c3dc760f9be803b2734ea34a2031e0",
+        "confidence": 1.0,
+        "entry_id": "review-c:transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:feature:05",
+        "evidence_note": "Segment meaning matches 11e4877: docs(user): .swifttag document updates",
+        "included_in_rollup_totals": true,
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-006"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-006",
+            "source_line_end": 172,
+            "source_line_start": 145
+          }
+        ]
+      }
+    ],
+    "feature_unallocated_remainder": {
+      "assistant_processing": 0,
+      "back_and_forth": 0,
+      "lines": 0,
+      "user_response": 0
+    },
+    "normalized_content_digest": "900e75c9241e88264c886808ff022cd70d7e8a47f73d767fba4cd40cf824a7be",
+    "plan_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "entry_id": "review-c:transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:plan:01",
+        "evidence_note": "Implementation/verification governed by Plan.",
+        "included_in_direct_totals": false,
+        "included_in_rollup_totals": true,
+        "plan_id": "28",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-001",
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-002",
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-003",
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-004",
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-005",
+          "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-006"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-001",
+            "source_line_end": 39,
+            "source_line_start": 10
+          },
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-002",
+            "source_line_end": 61,
+            "source_line_start": 40
+          },
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-003",
+            "source_line_end": 90,
+            "source_line_start": 62
+          },
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-004",
+            "source_line_end": 106,
+            "source_line_start": 91
+          },
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-005",
+            "source_line_end": 144,
+            "source_line_start": 107
+          },
+          {
+            "segment_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation:segment-006",
+            "source_line_end": 172,
+            "source_line_start": 145
+          }
+        ]
+      }
+    ],
+    "plan_unallocated_remainder": {
+      "assistant_processing": 0,
+      "back_and_forth": 0,
+      "lines": 0,
+      "user_response": 0
+    },
+    "rejected_candidate_commit_ids": [
+      "1df3dd0c798507ee9db2c2005d577ac499b3e933",
+      "21aacef712ef78c44bd11f0a848276d3125a82a4",
+      "2976159836a41160b0a462b26c952968c19a7923",
+      "452263137775f01b3d4877c28d37aad4dce7884d",
+      "477665910577c41766377204a1abfc8cc7f0dd6d",
+      "50b8fd902d32fca1ed43570b89b6e097dd4e9fae",
+      "58c447d0c8f8d603db83117199143fea38de98fb",
+      "7334db00fd1f68b65e90267ef0cde394804255cb",
+      "7a19911399e2e3a8b7ff2d239319a658e793346c",
+      "88d09498e62eed6f088450eb0cf1ec3129a7ad34",
+      "a3d4895796afa545efc1d3c39379220da2c616f3",
+      "d2843d58d7c77e0470d1b467eacf8a956665e2c9",
+      "d4616ef79d1f5f6f9afe47e139aa7a092e4b3085",
+      "e534c8366925af29f7c8f9ab67a908c5d6941650"
+    ],
+    "rejected_candidate_plan_ids": [],
+    "review_input_digest": "faaebafb61f798b4478bdd7f5217170619f024922223bc6383d920a91fadc39b",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10T19:02:59Z",
+    "reviewed_by": "codex-semantic-review-c",
+    "transcript_digest": "900e75c9241e88264c886808ff022cd70d7e8a47f73d767fba4cd40cf824a7be",
+    "unallocated_reason": ""
+  },
+  "header": {
+    "agent": "GPT-5.5 Extra High (Codex app)",
+    "export_date": "2026-05-13",
+    "reference_type": "Plan",
+    "references": [
+      "28-AddSwiftTagUseDocumentation.md"
+    ]
+  },
+  "normalized_content_digest": "900e75c9241e88264c886808ff022cd70d7e8a47f73d767fba4cd40cf824a7be",
+  "path": "Docs/Plans/Transcripts/transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation.md",
+  "raw_metrics": {
+    "assistant_processing_seconds": 564.0,
+    "back_and_forth_count": 6,
+    "line_count": 173,
+    "turn_count": 12,
+    "user_response_seconds": 106745.0,
+    "valid_atomic_elapsed_seconds": 107309.0
+  },
+  "review_input_digest": "faaebafb61f798b4478bdd7f5217170619f024922223bc6383d920a91fadc39b",
+  "review_method_version": "plan-34-v1",
+  "schema_version": 1,
+  "source_link": "../../sources/transcripts/transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation.html#L1",
+  "transcript_id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation",
+  "unresolved_questions": [
+    "Accept or reject Commit ownership for every base segment.",
+    "Assign direct or implementation Plan role for every accepted Plan segment.",
+    "Explain any Commit-lens or Plan-lens unallocated remainder."
+  ]
+}

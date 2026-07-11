@@ -1,8 +1,7 @@
 <header class="site-header" role="banner">
 
   <div class="wrapper">
-    {%- assign default_paths = site.pages | map: "path" -%}
-    {%- assign page_paths = site.header_pages | default: default_paths -%}
+    {%- assign page_paths = "Docs/README.md,Docs/Analysis/README.md" | split: "," -%}
     <a class="site-title" rel="author" href="{{ "/" | relative_url }}">{{ site.title | escape }}</a>
 
     {%- if page_paths or site.extra_nav_links -%}

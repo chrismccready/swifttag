@@ -297,7 +297,7 @@ I added a regression in SwiftTagTests.swift that verifies album pinning expands 
 Verified with Build​Project and:
 - Swift​Tag​Tests​/album​Art​View​Model​Album​Pin​Toggle​Is​Reversible​Effective​State()
 
-[ 2026-03-23T23:52:35Z (-31s since Assistant start) ]
+[ 2026-03-24T00:10:37Z (31s since Assistant start) ]
 
 ## User 2026-03-24T00:10:51Z (45s since previous Assistant start) 
 
@@ -483,6 +483,8 @@ The first UI attempt failed at sheet presentation, so I’m removing that fragil
 The UI test is failing because the auto-opened sheet blocks the initial track-row click. I’m switching that test to open the sheet through the app command after selection, which keeps the same coverage but avoids the modal timing problem.
 
 The direct sheet automation is still too brittle here, so I’m collapsing the UI test to the behavior that actually matters: start from a real picture-pin diff generated in-app, run the real reload command, and assert the visible fish → fish.fill transition. The lower-level unit tests already prove the file pictures themselves get restored.
+
+[ 2026-03-24T05:49:45Z (15m 4s since Assistant start) ]
 
 ## User 2026-03-24T05:53:07Z (18m 26s since previous Assistant start) 
 

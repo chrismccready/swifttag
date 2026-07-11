@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation Source: Docs/UserDocumentation/examples/manage-cover-art.html</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Documentation Source: Docs/UserDocumentation/examples/manage-cover-art.html</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/UserDocumentation/examples/manage-cover-art.html</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>&lt;!doctype html&gt;</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre>&lt;html lang=&quot;en&quot;&gt;</pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>&lt;head&gt;</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>    &lt;meta charset=&quot;utf-8&quot;&gt;</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>    &lt;title&gt;Manage Pictures/Album Art - SwiftTag Documentation&lt;/title&gt;</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>    &lt;link rel=&quot;stylesheet&quot; href=&quot;../assets/swifttag-docs.css&quot;&gt;</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>&lt;/head&gt;</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>&lt;body&gt;</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>    &lt;header class=&quot;site-header&quot;&gt;</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>        &lt;div class=&quot;shell&quot;&gt;</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>            &lt;a class=&quot;site-title&quot; href=&quot;../index.html&quot;&gt;SwiftTag Documentation&lt;/a&gt;</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>            &lt;nav class=&quot;top-nav&quot; aria-label=&quot;Documentation&quot;&gt;</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>                &lt;a href=&quot;../quick-start.html&quot;&gt;Quick Start&lt;/a&gt;</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>                &lt;a href=&quot;../automation/applescript.html&quot;&gt;AppleScript&lt;/a&gt;</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>                &lt;a href=&quot;clean-up-album.html&quot;&gt;Examples&lt;/a&gt;</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>                &lt;a href=&quot;../troubleshooting.html&quot;&gt;Troubleshooting&lt;/a&gt;</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>            &lt;/nav&gt;</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>        &lt;/div&gt;</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>    &lt;/header&gt;</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>    &lt;main class=&quot;shell&quot;&gt;</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>        &lt;article&gt;</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>            &lt;p class=&quot;section-label&quot;&gt;Examples&lt;/p&gt;</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>            &lt;h1&gt;Manage Pictures/Album Art&lt;/h1&gt;</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>            &lt;p&gt;</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>                Use this workflow when an album needs front cover art, back cover art, liner notes,</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>                or other embedded FLAC picture records. For reference concepts, see</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>                &lt;a href=&quot;../workflows/pictures.html&quot;&gt;Pictures/Album Art&lt;/a&gt; overview.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>            &lt;/p&gt;</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre></pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>            &lt;section aria-labelledby=&quot;open-browser&quot;&gt;</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>                &lt;h2 id=&quot;open-browser&quot;&gt;Open Picture Browser&lt;/h2&gt;</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>                &lt;ol&gt;</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>                        Add FLAC files and select tracks that should receive the art. If no track is</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>                        selected, Picture Browser works against all loaded tracks.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>                        Choose &lt;strong&gt;View&lt;/strong&gt; &amp;gt; &lt;strong&gt;Show Picture Browser&lt;/strong&gt; (⌘1),</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>                        or double-click the front cover well.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>                        Use the left list to pick a FLAC picture type/slot, such as</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>                        &lt;strong&gt;Front Cover&lt;/strong&gt;, &lt;strong&gt;Back Cover&lt;/strong&gt;,</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>                        &lt;strong&gt;Leaflet&lt;/strong&gt;, &lt;strong&gt;Media&lt;/strong&gt;, &lt;strong&gt;Illustration&lt;/strong&gt;,</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>                        &lt;strong&gt;Band Logo&lt;/strong&gt;, or &lt;strong&gt;Other&lt;/strong&gt;.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>                &lt;/ol&gt;</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>                &lt;p&gt;</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>                    The full slot list and picture-record model are covered in</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>                    &lt;a href=&quot;../workflows/pictures.html#picture-browser&quot;&gt;Picture Browser&lt;/a&gt;.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>                &lt;/p&gt;</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>            &lt;/section&gt;</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre></pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>            &lt;section aria-labelledby=&quot;import-export&quot;&gt;</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>                &lt;h2 id=&quot;import-export&quot;&gt;Import And Export Pictures&lt;/h2&gt;</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>                &lt;ol&gt;</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>                        Select the target slot. Example: choose &lt;strong&gt;Front Cover&lt;/strong&gt; for</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>                        cover art, then &lt;strong&gt;Back Cover&lt;/strong&gt; for a rear scan.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>                        Click &lt;strong&gt;Import Picture&lt;/strong&gt;, click the image well, drag an image</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>                        onto the image well, or use the context menu command for that slot.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>                        Use &lt;strong&gt;Copy&lt;/strong&gt; and &lt;strong&gt;Paste&lt;/strong&gt; from the image well</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>                        context menu to reuse picture data between slots.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>                        Click &lt;strong&gt;Export Picture&lt;/strong&gt; or use the context menu to save the</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>                        current picture out as an image file.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>                &lt;/ol&gt;</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>                &lt;p&gt;</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>                    SwiftTag keeps picture type, MIME type, description, dimensions, color depth,</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>                    color count, and binary data. Export uses the current picture&#x27;s MIME type when</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>                    choosing the default file extension.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>                &lt;/p&gt;</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>            &lt;/section&gt;</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>            &lt;section aria-labelledby=&quot;description&quot;&gt;</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>                &lt;h2 id=&quot;description&quot;&gt;Edit Picture Description&lt;/h2&gt;</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>                &lt;ol&gt;</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>                    &lt;li&gt;Select the picture slot and navigate to the picture record.&lt;/li&gt;</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>                    &lt;li&gt;Open the image well context menu and choose &lt;strong&gt;Edit Description...&lt;/strong&gt;.&lt;/li&gt;</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>                    &lt;li&gt;Review &lt;strong&gt;Current Description&lt;/strong&gt;, enter &lt;strong&gt;New Description&lt;/strong&gt;, then click &lt;strong&gt;Done&lt;/strong&gt;.&lt;/li&gt;</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>                &lt;/ol&gt;</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>                &lt;p&gt;</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>                    Description text must fit inside the FLAC picture block after reserving space</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>                    for image data, MIME type, fixed FLAC picture fields, and SwiftTag&#x27;s safety</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>                    buffer. Total available space for metadata and picture block is 16 MiB. If the </pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>                    new description is too large, SwiftTag blocks the change.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>                    More detail: &lt;a href=&quot;../workflows/pictures.html#metadata&quot;&gt;Picture Metadata&lt;/a&gt;.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>                &lt;/p&gt;</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>            &lt;/section&gt;</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>            &lt;section aria-labelledby=&quot;pinning&quot;&gt;</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>                &lt;h2 id=&quot;pinning&quot;&gt;Pin Pictures To Tracks And Slots&lt;/h2&gt;</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>                &lt;p&gt;</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>                    The &lt;strong&gt;Pin Track Pictures&lt;/strong&gt; toolbar button pins the current picture</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>                    for the current slot to the current picture scope. The segmented scope control</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>                    switches between &lt;strong&gt;Selected Track Pictures&lt;/strong&gt; and</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>                    &lt;strong&gt;All Track Pictures&lt;/strong&gt;.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>                &lt;/p&gt;</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>                &lt;ol&gt;</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>                        Select tracks in the main editor if only some tracks should receive the</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>                        picture. Leave selection empty, or select all tracks, when the picture belongs</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>                        to the whole album.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>                        In Picture Browser, choose the slot, such as &lt;strong&gt;Front Cover&lt;/strong&gt;.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>                        Use the scope control to decide whether you are viewing selected-track</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>                        pictures or all-track pictures.</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>                        Turn on &lt;strong&gt;Pin Track Pictures&lt;/strong&gt; to keep the current picture on</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>                        the editable target tracks for that slot.</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>                        To reuse the same image in another slot, switch to that slot, paste or import</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>                        the image there, then pin that slot too.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>                &lt;/ol&gt;</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>                &lt;aside class=&quot;callout&quot;&gt;</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>                    Pinning is per slot and per track scope. It does not automatically copy one slot</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>                    to every other slot. Tags settings can force front-cover or all-picture propagation</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>                    during picture save.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>                &lt;/aside&gt;</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>                &lt;p&gt;</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>                    Related settings: &lt;a href=&quot;../workflows/settings.html#tags-picture-management&quot;&gt;Picture Management&lt;/a&gt;.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>                    Propagation behavior: &lt;a href=&quot;../workflows/pictures.html#propagation&quot;&gt;Album Art propagation&lt;/a&gt;.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>                &lt;/p&gt;</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>            &lt;/section&gt;</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre></pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>            &lt;section aria-labelledby=&quot;navigate-remove-save&quot;&gt;</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>                &lt;h2 id=&quot;navigate-remove-save&quot;&gt;Navigate, Remove, And Save&lt;/h2&gt;</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>                &lt;ol&gt;</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>                        Use &lt;strong&gt;First Picture&lt;/strong&gt;, &lt;strong&gt;Previous Picture&lt;/strong&gt;,</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>                        &lt;strong&gt;Next Picture&lt;/strong&gt;, and &lt;strong&gt;Last Picture&lt;/strong&gt; when a slot</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>                        has multiple records.</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>                        Use &lt;strong&gt;Remove Picture&lt;/strong&gt; to remove the current picture from the</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>                        editable target tracks for that slot.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>                    &lt;li&gt;</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>                        Choose &lt;strong&gt;Save Pictures&lt;/strong&gt; when only embedded images changed, or</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>                        &lt;strong&gt;Save&lt;/strong&gt; when current General settings include picture payload.</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>                    &lt;/li&gt;</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>                &lt;/ol&gt;</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>                &lt;p&gt;</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>                    Save behavior reference:</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>                    &lt;a href=&quot;../workflows/saving.html#preserve-replace-remove&quot;&gt;Preserve, Replace, Remove&lt;/a&gt;.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>                &lt;/p&gt;</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>            &lt;/section&gt;</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre></pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>            &lt;section aria-labelledby=&quot;applescript&quot;&gt;</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>                &lt;h2 id=&quot;applescript&quot;&gt;AppleScript&lt;/h2&gt;</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>                &lt;p&gt;</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>                    SwiftTag&#x27;s &lt;a href=&quot;../automation/applescript.html&quot;&gt;AppleScript&lt;/a&gt; support includes picture records. </pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>                    See Picture class &lt;a href=&quot;../automation/applescript-picture.html#examples&quot;&gt;examples&lt;/a&gt;.</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>                &lt;/p&gt;</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>            &lt;/section&gt;</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>        &lt;/article&gt;</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>    &lt;/main&gt;</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>    &lt;footer class=&quot;site-footer&quot;&gt;</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>        &lt;div class=&quot;shell&quot;&gt;</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>            &lt;nav class=&quot;footer-nav&quot; aria-label=&quot;Footer&quot;&gt;</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>                &lt;a href=&quot;../quick-start.html&quot;&gt;Quick Start&lt;/a&gt;</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>                &lt;a href=&quot;../automation/applescript.html&quot;&gt;AppleScript&lt;/a&gt;</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>                &lt;a href=&quot;clean-up-album.html&quot;&gt;Examples&lt;/a&gt;</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>                &lt;a href=&quot;../troubleshooting.html&quot;&gt;Troubleshooting&lt;/a&gt;</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>            &lt;/nav&gt;</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>        &lt;/div&gt;</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>    &lt;/footer&gt;</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>&lt;/body&gt;</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>&lt;/html&gt;</pre></td></tr></table></main></body></html>

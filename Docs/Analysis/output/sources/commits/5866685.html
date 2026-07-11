@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(stream-info): persist flac stream metadata across document round-trips</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(stream-info): persist flac stream metadata across document round-trips</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-20</p>
+<p><code>5866685bcbe463804d3efa4fb258029bf961207a</code></p>
+<p>feat(stream-info): persist flac stream metadata across document round-trips</p>
+<h2>Body</h2><pre>- extend flac bridge and metadata service with sample rate, total samples,
+  bits per sample, and channel count
+- store normalized stream metadata on Track and preserve it during import,
+  reload, and refresh flows
+- write stream metadata into document manifests and parse sample rate display
+  values when reading packages
+- add tests for metadata extraction, sample rate formatting, and document
+  round-trips</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>57.4 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>49m 7s</span></div>
+  <div><strong>Assistant</strong><span>12m 21s</span></div>
+  <div><strong>User Response</strong><span>36m 46s</span></div>
+  <div><strong>Back/Forth</strong><span>1.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/flac-lib.html">FLAC Lib</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/26.html">Plan 26: Add AppleScript Support Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-21-1-26-AddAppleScriptSupport.html#L1">transcript-2026-04-21-1-26-AddAppleScriptSupport</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-21-1-26-AddAppleScriptSupport.html#L12">transcript-2026-04-21-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-04-21-1-26-AddAppleScriptSupport:segment-001</td><td>work</td><td>1.000</td><td>54.6</td><td>49m 7s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>SwiftTag/FLACBridge/include/FlacMetadataBridge.h</td><td>2</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/FLACBridge/src/FlacMetadataBridge.c</td><td>6</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>24</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/FlacMetadataService.swift</td><td>33</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/Track.swift</td><td>32</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentPackageManifest.swift</td><td>8</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentPackageReader.swift</td><td>4</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentPackageWriter.swift</td><td>4</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentSupport.swift</td><td>98</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagDocumentTests.swift</td><td>112</td><td>1</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>8</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/TrackDurationTests.swift</td><td>50</td><td>2</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>213.00</td></tr>
+<tr><td>transcript_lines</td><td>54.60</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>2947.00</td></tr>
+<tr><td>assistant_processing_time</td><td>741.00</td></tr>
+<tr><td>back_and_forth_count</td><td>1.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

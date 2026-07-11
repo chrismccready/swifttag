@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: fix(album-art): reject oversized flac picture imports</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: fix(album-art): reject oversized flac picture imports</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-15</p>
+<p><code>0539816b5ba23a6e25ff44d6be08444b0f8dd6c7</code></p>
+<p>fix(album-art): reject oversized flac picture imports</p>
+<h2>Body</h2><pre>- add picture-data budget validation using current description bytes and reserved FLAC buffer
+- stop drop, paste, and file-import updates when picture data exceeds remaining payload budget
+- show a single-button &quot;Picture Too Large&quot; alert from album art sheet bindings
+- cover budget math and rejection flow in SwiftTagTests and TrackStatusViewInspectorTests
+
+docs(agents): add &quot;smart caveman&quot; response guidance to AGENTS.md</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>22.4 Low</span></div>
+  <div><strong>Weight Coverage</strong><span>70%</span></div>
+  <div><strong>Elapsed</strong><span>Unavailable</span></div>
+  <div><strong>Assistant</strong><span>Unavailable</span></div>
+  <div><strong>User Response</strong><span>Unavailable</span></div>
+  <div><strong>Back/Forth</strong><span>0.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p>None</p>
+<h2>Associated Transcripts</h2><p>None</p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>AGENTS.md</td><td>7</td><td>0</td><td>docs</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>9</td><td>3</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift</td><td>33</td><td>15</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift</td><td>116</td><td>28</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/FlacPictureUtilities.swift</td><td>33</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>73</td><td>2</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/TrackStatusViewInspectorTests.swift</td><td>8</td><td>2</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>238.00</td></tr>
+<tr><td>transcript_lines</td><td>0.00</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>Unavailable</td></tr>
+<tr><td>assistant_processing_time</td><td>Unavailable</td></tr>
+<tr><td>back_and_forth_count</td><td>0.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

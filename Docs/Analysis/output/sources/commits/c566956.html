@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(track-status): add file-monitor-based track status and lock-aware tag editor behavior</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(track-status): add file-monitor-based track status and lock-aware tag editor behavior</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-03-14</p>
+<p><code>c56695645a5579bac37f1f716650754ccc5750a1</code></p>
+<p>feat(track-status): add file-monitor-based track status and lock-aware tag editor behavior</p>
+<h2>Body</h2><pre>• add track status model and file monitor integration for external change, rename, and delete detection
+• update tag editor and album art views to surface status and preserve value visibility for locked tracks
+• keep locked tracks read-only while restoring editability when tracks are unlocked
+• add and update unit tests for rename handling, lock behavior, and track status presentation
+• add plan and transcript docs for AddTrackStatus implementation</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>95.5 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>10h 31m</span></div>
+  <div><strong>Assistant</strong><span>1h 2m</span></div>
+  <div><strong>User Response</strong><span>9h 28m</span></div>
+  <div><strong>Back/Forth</strong><span>16.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/8.html">Plan 8: Add Track Status Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L1">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L12">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-001</td><td>work</td><td>1.000</td><td>28.7</td><td>1h 1m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L40">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-002</td><td>work</td><td>1.000</td><td>35.8</td><td>1h 40m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L75">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-003</td><td>work</td><td>1.000</td><td>28.7</td><td>6m 54s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L103">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-004</td><td>work</td><td>1.000</td><td>54.2</td><td>2h 32m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L156">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-005</td><td>work</td><td>1.000</td><td>33.8</td><td>34m 36s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L189">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-006</td><td>work</td><td>1.000</td><td>16.4</td><td>8m 21s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L205">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-007</td><td>work</td><td>1.000</td><td>49.1</td><td>44m 14s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L253">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-008</td><td>work</td><td>1.000</td><td>29.7</td><td>1h 22m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L282">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-009</td><td>work</td><td>1.000</td><td>24.6</td><td>56m 54s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L306">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-010</td><td>work</td><td>1.000</td><td>20.5</td><td>17m 22s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L326">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-011</td><td>work</td><td>1.000</td><td>23.5</td><td>8m 58s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L349">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-012</td><td>work</td><td>1.000</td><td>31.7</td><td>5m 53s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L380">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-013</td><td>work</td><td>1.000</td><td>26.6</td><td>14m 24s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L406">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-014</td><td>work</td><td>1.000</td><td>42.0</td><td>10m 14s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L447">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-015</td><td>work</td><td>1.000</td><td>33.8</td><td>25m 6s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.html#L480">transcript-2026-03-13-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-13-1-8-AddTrackStatusPlan:segment-016</td><td>work</td><td>1.000</td><td>43.0</td><td>2m 15s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>AGENTS.md</td><td>2</td><td>0</td><td>docs</td></tr>
+<tr><td>Docs/Plans/8-AddTrackStatusPlan.md</td><td>276</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.md</td><td>154</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>361</td><td>159</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift</td><td>9</td><td>5</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtWellView.swift</td><td>6</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorAlbumView.swift</td><td>24</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift</td><td>66</td><td>13</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift</td><td>22</td><td>3</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift</td><td>43</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorView.swift</td><td>51</td><td>3</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>593</td><td>7</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/Track.swift</td><td>10</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/TrackStatus.swift</td><td>26</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/TrackFileMonitor.swift</td><td>216</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTagApp.swift</td><td>20</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>858</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>1640.00</td></tr>
+<tr><td>transcript_lines</td><td>522.00</td></tr>
+<tr><td>plan_lines</td><td>276.00</td></tr>
+<tr><td>elapsed_time</td><td>37893.00</td></tr>
+<tr><td>assistant_processing_time</td><td>3754.00</td></tr>
+<tr><td>back_and_forth_count</td><td>16.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

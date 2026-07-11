@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-02-27-1-1-FLACBridgeExecution</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-02-27-1-1-FLACBridgeExecution</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-02-27-1-1-FLACBridgeExecution.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-02-27  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: 1-FLACBridgeExecution.md  </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.3-Codex</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note: This file contains brief user/assistant conversation content related to building/linking libFLAC.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre></pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>## User</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>I would like to add and build metallic from git repo located at https://github.com/xiph/flac.git. Ideally I would like to have the metaflac build be a C library that is wrapped for consumption by this project, replacing the existing use of the bundled metaflac cli binary. Also I would like to have the metaflac lib be built with the build of this project. Please provide an execution plan.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre></pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>1. Clarify target architecture</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- metaflac is a CLI tool; the reusable C API is in libFLAC (metadata APIs).</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Plan to replace CLI calls with direct libFLAC metadata reads/writes in a C wrapper your Swift code calls.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre></pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>2. Add FLAC source as a pinned dependency</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Add https://github.com/xiph/flac.git as a git submodule (or vendored source folder) at a fixed tag/commit.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Record license files in app bundle/docs.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre></pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>3. Build libFLAC during app build</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Add an Xcode Run Script Build Phase (before Compile Sources) that:</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- Configures/builds libFLAC from submodule source for current SDK/arch (Debug/Release aware).</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- Outputs:</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>   - static lib: libFLAC.a</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>   - public headers copied to a deterministic build output dir.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- Cache by config+arch to avoid rebuilding every time.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>4. Create a thin C wrapper library</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- New local target (e.g. FlacMetadataBridge) exposing stable C functions like:</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- flac_read_tags(const char* path, FlacTagResult* out, char** error)</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- flac_free_result(...)</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- Internally use libFLAC/metadata.h APIs, not metaflac subprocesses.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- Normalize fields to your app model (TITLE, ARTIST, COMPOSER, etc.).</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre></pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>5. Expose wrapper to Swift</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- Add module map / bridging header so Swift can call wrapper functions.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Keep Swift-facing API in one file (e.g. FlacMetadataService.swift) that converts C structs to Track.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre></pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>6. Replace current subprocess path</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- Remove Process() + bundled metaflac resolution logic.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- Use wrapper calls inside your import flow (collect -&gt; parse -&gt; map -&gt; append) with same alphanumeric ordering.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre></pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>7. Error handling + UX parity</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- Map wrapper errors to user-friendly messages (same alert sheet behavior you already have).</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- Include low-level debug info in logs only.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre></pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>8. Validation and CI</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- Add tests for:</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>   - single file parse</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>   - folder import ordering</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>   - missing tags defaults</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>   - malformed file/error propagation</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- Ensure CI/build machine can build the FLAC submodule.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre></pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>9. Optional fallback strategy (recommended)</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- Keep CLI fallback behind a build flag for initial rollout (USE_LIBFLAC_BRIDGE), remove after confidence.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre></pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>If you want, next step I can draft the exact Xcode build-phase script + wrapper header/API shape so you can implement incrementally.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre></pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>## Assistant (after being asked to go forward)</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre></pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>After initial attempts to link against pre-built libFLAC using headers (sandbox errors), changed to building from FLAC repo source:</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>Completed. The project now builds FLAC from source checkout and uses a Swift-&gt;C wrapper with direct libFLAC calls (no CLI in the runtime read path).</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre></pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>What I changed:</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre></pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- Added local FLAC source checkout:</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>   - ThirdParty/flac (cloned from https://github.com/xiph/flac.git)</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- Switched C bridge to direct libFLAC API usage:</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>   - FlacMetadataBridge.c</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>   - uses FLAC__metadata_get_tags and FLAC__metadata_object_delete</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>   - no dlopen, no popen, no metaflac subprocess</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- Kept bridge headers self-contained via vendored FLAC headers:</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>   - SwiftTag/FLACBridge/vendor/FLAC/*.h</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- Linked app target against libFLAC:</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>   - Added OTHER_LDFLAGS with -lFLAC (Debug/Release) in project.pbxproj</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- Existing build phase already builds/stages FLAC artifacts from source when available (uses ThirdParty/flac).</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>Validation:</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre></pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- Full project build succeeded.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre></pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- This environment blocked git submodule add (.git/index.lock denied), so I used a vendored checkout at ThirdParty/flac. Functionally equivalent for now.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- If you want, I can next convert this vendored checkout to an actual submodule on your machine outside the sandbox restriction.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>End of Transcript</pre></td></tr></table></main></body></html>

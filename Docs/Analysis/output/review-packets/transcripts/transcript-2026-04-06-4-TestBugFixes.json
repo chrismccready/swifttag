@@ -1,0 +1,852 @@
+{
+  "archive_provenance_commit_ids": [
+    "19369540b1a2f92b3ab4fd1cedb4db7cefe41498"
+  ],
+  "base_segments": [
+    {
+      "assistant_processing_seconds": 80.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 20,
+      "excerpt": "Fix `testFinderOpenQueuesFilesUntilNewSessionRegistersHandler`. I’m reproducing that specific coordinator test first and then tracing the pending-file bootstrap path around it so we can fix the failure at the right seam instead of papering over it. The failure is clear now: inactive Finder opens are currently treated as “bootstrap later” whenever no sessions are registered, even if the app already has an open-window action ready to create a new editor immediately. I’m checking the neighboring tests to preserve the intended bootstrapping case while making this queued-new-session case work again. I found the behavioral split: “inactive and no registered sessions” is serving two different cases right now. For launch/bootstrap there really is nowhere to open yet, but in this test there is already an open-window action available, so we should create the new editor immediately and queue the files on that session. I’ve patched the coordinator so bootstrap queuing only happens when there truly isn’t any window-opening action available yet. I’m rerunning the failing test plus the neighboring bootstrap case to make sure we fixed the regression without breaking launch-time Finder opens. The f",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-001",
+      "source_line_count": 26,
+      "source_line_end": 37,
+      "source_line_start": 12,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-06-4-TestBugFixes:turn-001",
+        "transcript-2026-04-06-4-TestBugFixes:turn-002"
+      ],
+      "user_response_seconds": 769.0,
+      "valid_atomic_elapsed_seconds": 849.0
+    },
+    {
+      "assistant_processing_seconds": 327.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 38,
+      "excerpt": "First text change applied to track name in tracks table causes a loss of focus on track name editing. Create a UI test that confirms the issue and fix. I’m tracing the track-name editing flow and the existing UI-test harness first so we can capture the focus-loss bug in a failing test before touching the view code. After that I’ll patch the editor state handling and rerun a focused UI pass. I found the likely hotspot: the track table’s Title column is using inline TextFields inside a sorted Table, and there’s no explicit focus or stable edit identity there right now. I’m reading that view and the title-binding path next, because this kind of “first edit kicks you out” usually comes from row identity or resort/rebuild behavior after the first mutation. I’ve got a stronger suspect now: the track table view is wrapped in .id(statusRefreshID), which forces SwiftUI to recreate the entire Table whenever that refresh token changes. If the token changes after the first title mutation, that would explain an immediate focus drop even though the row itself didn’t move. I’m tracing where statusRefreshID is computed and whether title edits currently tick it. Plan: 1. Add a focused UI regression",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-002",
+      "source_line_count": 44,
+      "source_line_end": 81,
+      "source_line_start": 38,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-06-4-TestBugFixes:turn-003",
+        "transcript-2026-04-06-4-TestBugFixes:turn-004"
+      ],
+      "user_response_seconds": 245.0,
+      "valid_atomic_elapsed_seconds": 572.0
+    },
+    {
+      "assistant_processing_seconds": 88.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 19,
+      "excerpt": "Fix `Extra argument 'statusRefreshID' in call` error in tests. I’m searching for the remaining TagEditorTrackFileView call sites now, because that error means one of them still passes the old statusRefreshID argument after the initializer change. I found the stale calls: they’re all in TrackStatusViewInspectorTests.swift, still constructing TagEditorTrackFileView with the removed statusRefreshID parameter. I’m updating those initializers now and then I’ll rerun a focused build/tests pass. I found one more thing beyond the initializer arguments: one inspector test also asserts inspectedView.statusRefreshID, which no longer exists. I’m removing both the stale arguments and that dead assertion in one pass. The stale test API usage is patched. I’m running a focused build plus the affected inspector tests now to make sure we cleared the compile/runtime fallout cleanly. Fixed the stale test call sites in [TrackStatusViewInspectorTests.swift](Swift/SwiftTag/SwiftTagTests/TrackStatusViewInspectorTests.swift) by removing the old `statusRefreshID` argument from `TagEditorTrackFileView` construction, and I removed the dead assertion that inspected `statusRefreshID` directly. Verification: `Bu",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-003",
+      "source_line_count": 25,
+      "source_line_end": 106,
+      "source_line_start": 82,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-06-4-TestBugFixes:turn-005",
+        "transcript-2026-04-06-4-TestBugFixes:turn-006"
+      ],
+      "user_response_seconds": 155.0,
+      "valid_atomic_elapsed_seconds": 243.0
+    },
+    {
+      "assistant_processing_seconds": 89.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 16,
+      "excerpt": "Fix Warning on line 313 of SwiftTagDocumentTests. I’m checking the warning at that exact test location first so we can make the smallest safe fix and verify it doesn’t hide anything else nearby. The file-level diagnostics are clean in the current build, so this looks like one of those source warnings Xcode can show from a specific expression shape rather than a failing compile. I’m reading the local test setup around sharedPicture next so I can target the exact expression on line 313. I’ve narrowed it to that array-equality assertion. Since the file builds cleanly, this is likely the expression shape Xcode dislikes rather than a behavioral problem, so I’m switching it to smaller, explicit checks against the first picture and count. I confirmed FlacWritablePictureRecord is already Equatable, so we can keep the same intent while breaking the expression into simpler expectations. I’m patching that test now to compare count plus the first loaded picture explicitly. The warning-prone assertion is split now. I’m doing a quick build plus the nearby document reader test so we know the behavior is unchanged and the test still reads cleanly. Updated [SwiftTagDocumentTests.swift](Swift/SwiftT",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-004",
+      "source_line_count": 22,
+      "source_line_end": 128,
+      "source_line_start": 107,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-06-4-TestBugFixes:turn-007",
+        "transcript-2026-04-06-4-TestBugFixes:turn-008"
+      ],
+      "user_response_seconds": 323.0,
+      "valid_atomic_elapsed_seconds": 412.0
+    },
+    {
+      "assistant_processing_seconds": 99.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 14,
+      "excerpt": "The warning: `Main actor-isolated conformance of 'FlacWritablePictureRecord' to 'Equatable' cannot be used in nonisolated context; this is an error in the Swift 6 language mode` is still there. I’m tracing that specific actor-isolation warning at the type level now, because the issue is likely the Equatable conformance itself rather than the test expression we just changed. After that I’ll patch the model declaration and rerun a focused build/test check. The warning is coming from using Equatable on FlacWritablePictureRecord in the test, not from the reader behavior itself. I’m removing that protocol-based comparison entirely and switching the test to field-by-field expectations so the warning goes away without changing the model’s concurrency surface. I’ve removed the last Equatable use from that test. I’m rebuilding with warnings surfaced and rerunning the document test so we can confirm the actor-isolation warning is actually gone now. The warning is gone now. The build log is clean for SwiftTagDocumentTests, and the round-trip reader test still passes with the explicit field checks. Updated [SwiftTagDocumentTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagDocumentTests.swift) ",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-005",
+      "source_line_count": 20,
+      "source_line_end": 148,
+      "source_line_start": 129,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-06-4-TestBugFixes:turn-009",
+        "transcript-2026-04-06-4-TestBugFixes:turn-010"
+      ],
+      "user_response_seconds": 0.0,
+      "valid_atomic_elapsed_seconds": 99.0
+    }
+  ],
+  "candidate_commits": [
+    {
+      "archive_provenance": false,
+      "body": "- add picture-data budget validation using current description bytes and reserved FLAC buffer\n- stop drop, paste, and file-import updates when picture data exceeds remaining payload budget\n- show a single-button \"Picture Too Large\" alert from album art sheet bindings\n- cover budget math and rejection flow in SwiftTagTests and TrackStatusViewInspectorTests\n\ndocs(agents): add \"smart caveman\" response guidance to AGENTS.md",
+      "changed_paths": [
+        "AGENTS.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Shared/Utilities/FlacPictureUtilities.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift"
+      ],
+      "code_line_count": 238,
+      "commit_hash": "0539816b5ba23a6e25ff44d6be08444b0f8dd6c7",
+      "docs_line_count": 7,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: current, docs, drop, file, flac, flow",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "0539816",
+      "source_link": "../../sources/commits/0539816.html",
+      "subject": "fix(album-art): reject oversized flac picture imports",
+      "test_line_count": 85
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add SwiftTag Suite application properties for Diff Tools formatting toggles\n- map new AppleScript properties to UserDefaults-backed feedback settings\n- assert AppleScript read/write behavior in unit and UI harness coverage\n- add Diff Tools toggle accessibility values for UI assertions\n\ndocs: add transcript for AppleScript support feature branch",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-02-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/Features/Settings/DiffToolsView.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 97,
+      "commit_hash": "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: behavior, branch, coverage, diff, docs, harness",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "063c138",
+      "source_link": "../../sources/commits/063c138.html",
+      "subject": "feat(applescript): expose diff tools settings",
+      "test_line_count": 71
+    },
+    {
+      "archive_provenance": false,
+      "body": "- expose track tags and tag objects in SwiftTag.sdef for standard suite collection access\n- add session bridge and view-model tag upsert/delete flows with script errors for invalid targets\n- normalize related FLAC tag keys during AppleScript lookup, rename, replacement, and deletion\n- add AppleScript tests for canonical tag access and update plan and transcript artifacts\n\ndocs(transcript): add additional track properties and tag class implementation transcripts",
+      "changed_paths": [
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-21-1-26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-22-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift"
+      ],
+      "code_line_count": 695,
+      "commit_hash": "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: docs, flac, lookup, model, related, replacement",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "0c2d385",
+      "source_link": "../../sources/commits/0c2d385.html",
+      "subject": "feat(applescript): support standard track tag scripting",
+      "test_line_count": 120
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add picture terminology, FLAC picture type enum, and track picture elements to SDEF\n- add SwiftTagScriptPicture wrappers with picture filtering and NSData descriptors\n- route scripted picture description edits through editor state and album-art refresh\n- cover picture reads, description updates, album-art refresh, and UI AppleScript harness\n\ndocs(plan): update AppleScript support plan 26 and add implementation transcript",
+      "changed_paths": [
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-28-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 435,
+      "commit_hash": "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: docs, editor, edits, flac, harness, picture",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "11ba785",
+      "source_link": "../../sources/commits/11ba785.html",
+      "subject": "feat(applescript): expose FLAC pictures to scripts",
+      "test_line_count": 283
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add SwiftTag document package type registration with `.swifttag` extension and `<id>-<hash>.<extension>` pooled image assets\n- add `Save SwiftTag Document...` File menu command through focused-scene command system to serialize current frontmost-editor track list, tags, etc.\n- add image dimension/colors data will now surface as saveable file differences\n\ndocs(plan): add plan 15 for SwiftTag document creation support",
+      "changed_paths": [
+        "Docs/Plans/15-AddSwiftTagDocumentCreation.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/FLACBridge/include/FlacMetadataBridge.h",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/FlacMetadataService.swift",
+        "SwiftTag/Info.plist",
+        "SwiftTag/Shared/Utilities/PictureDataUtilities.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 931,
+      "commit_hash": "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: current, docs, document, editor, file, focused",
+        "path/topic overlap",
+        "commit before transcript within 7d"
+      ],
+      "score": 1.0,
+      "short_hash": "1276536",
+      "source_link": "../../sources/commits/1276536.html",
+      "subject": "feat(package): add SwiftTag document creation and serialization",
+      "test_line_count": 298
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add application terminology for save, tag write, notification, theme, and diff settings\n- add KVC settings bridge through UserDefaults and enum Apple event codes\n- add RGBA color object support with component write-back\n- add unit and UI AppleScript coverage for settings read/write behavior",
+      "changed_paths": [
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 877,
+      "commit_hash": "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: back, behavior, coverage, diff, tag, user",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "17b6c10",
+      "source_link": "../../sources/commits/17b6c10.html",
+      "subject": "feat(applescript): expose settings preferences",
+      "test_line_count": 184
+    },
+    {
+      "archive_provenance": true,
+      "body": "- keep the track title field focused while editing table rows\n- remove the table status refresh identity reset and related view plumbing\n- allow inactive finder opens to create a new session when a window action already exists\n- update track file inspector tests for the removed track view initializer argument\n- compare loaded picture fields explicitly in the document reader test to avoid actor isolation warnings\n\ntest(ui): add regression for track title focus loss\n\n- verify renaming a track in the table keeps the edited value after the first text change\n\ndocs(transcript): add transcript for test bug fixes\n\n- add the April 6 transcript covering the staged test and editor fixes",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-06-4-TestBugFixes.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 27,
+      "commit_hash": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+      "docs_line_count": 0,
+      "reasons": [
+        "archive provenance only",
+        "changed path mentioned",
+        "subject tokens: action, actor, after, already, argument, bug",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "1936954",
+      "source_link": "../../sources/commits/1936954.html",
+      "subject": "fix(editor): preserve track title editing and queued finder opens",
+      "test_line_count": 29
+    },
+    {
+      "archive_provenance": false,
+      "body": "- Add `Open SwiftTag Document...` command to the File menu.\n- Add `SwiftTagDocumentPackageReader` to read `.swifttag` packages.\n- Update `EditorWindowCoordinator` to route `.swifttag` documents to existing unused windows or new windows.\n- Update `TagEditorViewModel` to load the `SwiftTagDocumentImportResult` into editable track state.\n- Retain the loaded document URL and ID for saving.\n- Include unit and UI tests for document read operations and routing.\n\ndocs(plan): add plan and transcript for SwiftTag document read",
+      "changed_paths": [
+        "Docs/Plans/16-AddSwiftTagDocumentRead.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-04-1-16-AddSwiftTagDocumentRead.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 479,
+      "commit_hash": "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: coordinator, docs, document, editor, existing, file",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "1c2bb82",
+      "source_link": "../../sources/commits/1c2bb82.html",
+      "subject": "feat(document): add support for opening .swifttag documents",
+      "test_line_count": 282
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift"
+      ],
+      "code_line_count": 293,
+      "commit_hash": "1e4ea8e60ed212c41a1f3f43a972ccad5855a07a",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: picture, track",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "1e4ea8e",
+      "source_link": "../../sources/commits/1e4ea8e.html",
+      "subject": "feat(ui): track picture info overlay and navigation enhancements",
+      "test_line_count": 249
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "SwiftTag/ContentView.swift"
+      ],
+      "code_line_count": 135,
+      "commit_hash": "2302109d0c43a41cb71c36e47cf2b4b8973a63d6",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: binding, count, explicit, fields, handling, new",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "2302109",
+      "source_link": "../../sources/commits/2302109.html",
+      "subject": "Refine track metadata ​UI and import mapping for discs​/genres​/misc tags - add dictionary-backed handling for new explicit fields: DISC and GENRE - add Disc of total​Discs controls with selected-track binding and numeric validation - style total​Discs in bold red when non-empty TOTALDISCS tags mismatch entered value - add hover help messaging for total tracks/discs consistency indicators - convert total tracks display to read-only track-count text with mismatch highlighting and help",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "- resolve create command targets from tell-context receivers when at is omitted\n- create tag wrappers from track tag collections and attach inserted tags to tracks\n- expose tag specifier descriptors so make returns scriptable tag results\n- add UI coverage for make new tag inside tell first track\n\nfix(misc-tags): refresh misc tag rows after selection and reload changes\n\n- clear misc tag row values when no tracks are selected\n- reload misc tag rows after selected track reload replaces track data\n- add misc value field and destructive action accessibility identifiers\n- add unit and UI coverage for placeholder values and reload restoration\n\ndocs(transcripts): add AppleScript support session plan 26 and bug fix transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-29-2-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 170,
+      "commit_hash": "24428a1548324e06268c9174e358e22e9559801b",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: action, after, bug, changes, clear, context",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "24428a1",
+      "source_link": "../../sources/commits/24428a1.html",
+      "subject": "fix(applescript): support making tags from track tell contexts",
+      "test_line_count": 295
+    },
+    {
+      "archive_provenance": false,
+      "body": "- remove only the deleted album art reference instead of discarding all track picture state\n- resolve attached script pictures through captured stable IDs after index shifts\n- add unit and UI AppleScript coverage for same-type picture deletion",
+      "changed_paths": [
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 131,
+      "commit_hash": "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: after, all, attached, coverage, instead, only",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "25fde2c",
+      "source_link": "../../sources/commits/25fde2c.html",
+      "subject": "fix(applescript): preserve picture IDs after deleting same-type pictures",
+      "test_line_count": 250
+    },
+    {
+      "archive_provenance": false,
+      "body": "• add metadata write support in the FLAC bridge and Swift service for tags, pictures, or both\n• add save actions to the app commands and route editor saves through persisted save settings\n• add write mapping for canonical tag output, count-key strategies, and number zero padding\n• add settings views and save preference models for payload, scope, and tag write defaults\n• add unit and UI coverage for save behavior, persisted settings, and FLAC fixture workflows\n• update docs with current app behavior and renumber plan files under Docs​/​Plans/",
+      "changed_paths": [
+        "Docs/Plans/{FLACBridgeExecution.md => 1-FLACBridgeExecution.md}",
+        "Docs/Plans/{ContentViewReorganizationPlan.md => 2-ContentViewReorganizationPlan.md}",
+        "Docs/Plans/{FlacPictureImportAlbumArtPlan.md => 3-FlacPictureImportAlbumArtPlan.md}",
+        "Docs/Plans/4-FlacWriteTagsAndPicturesPlan.md",
+        "Docs/README.md",
+        "SwiftTag.xcodeproj/project.pbxproj",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/FLACBridge/include/FlacMetadataBridge.h",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/Features/AlbumArt/AlbumArtTypes.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/FlacImport/FlacWriteMapper.swift",
+        "SwiftTag/Features/Settings/GeneralSettingsView.swift",
+        "SwiftTag/Features/Settings/SettingsView.swift",
+        "SwiftTag/Features/Settings/TagWriteSettingsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/FlacMetadataService.swift",
+        "SwiftTag/Shared/Models/SaveSettings.swift",
+        "SwiftTag/Shared/Models/TagKey.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/TagNormalization.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 1579,
+      "commit_hash": "27b32d888ac16fcaa31f6735b29d960131a8315c",
+      "docs_line_count": 107,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: app, behavior, both, count, coverage, current",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "27b32d8",
+      "source_link": "../../sources/commits/27b32d8.html",
+      "subject": "feat(save): add FLAC tag and picture writing workflow",
+      "test_line_count": 874
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add default-off save settings and a window-scoped follow-on Command-S flow for referenced or new\n  SwiftTag documents\n- reuse the SwiftTag document save path after successful FLAC saves and report follow-on document\n  errors without treating the FLAC save as failed\n- add decision tests and focused macOS UI coverage for auto-save, prompting, suppression, and\n  follow-on save failures\n\ndocs(plan): add plan 19 and transcript documents and ignore VS Code workspace settings",
+      "changed_paths": [
+        ".gitignore",
+        "Docs/Plans/19-AddSwiftTagDocumentSaveOptions.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-07-3-19-AddSwiftTagDocumentSaveOptions.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/Settings/GeneralSettingsView.swift",
+        "SwiftTag/Shared/Models/SaveSettings.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 233,
+      "commit_hash": "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: after, code, coverage, docs, document, flac",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "27b4d85",
+      "source_link": "../../sources/commits/27b4d85.html",
+      "subject": "feat(save): add SwiftTag document follow-on save options",
+      "test_line_count": 447
+    },
+    {
+      "archive_provenance": false,
+      "body": "- Add persisted rename settings, config sheet, and focused File menu commands.\n- Support selected-track and all-track rename scopes for loaded FLAC files.\n- Render names from tag placeholders with aliases, zero padding, and sanitizing.\n- Validate conflicts before coordinated moves, then refresh bookmarks and export references.\n- Update workflow docs, add implementation plan and transcript, and cover rename paths.",
+      "changed_paths": [
+        "Docs/Plans/33-AddTrackFileRename.md",
+        "Docs/Plans/Transcripts/transcript-2026-06-18-1-33-AddTrackFileRename.md",
+        "Docs/UserDocumentation/workflows/tags.html",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Features/TagEditor/TrackFileRenameSheetView.swift",
+        "SwiftTag/Shared/Models/TrackFileRenameSettings.swift",
+        "SwiftTag/Shared/Utilities/TrackFileRenameFormatter.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift"
+      ],
+      "code_line_count": 1350,
+      "commit_hash": "29444d740b06ee147a5690f1070d56abfa8be162",
+      "docs_line_count": 39,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: all, before, docs, editor, file, files",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "29444d7",
+      "source_link": "../../sources/commits/29444d7.html",
+      "subject": "feat(tag-editor): add track file rename workflow",
+      "test_line_count": 418
+    },
+    {
+      "archive_provenance": false,
+      "body": "- refresh album-art context from track records after AppleScript picture mutations\n- resolve script picture identity from track record order and matching picture data\n- add UI regression for Base64 picture restore updating track status icon\n- add unit coverage for record-order picture identity\n\ndocs(transcripts): add AppleScript support conversation transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-10-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITestSuites.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 79,
+      "commit_hash": "2976159836a41160b0a462b26c952968c19a7923",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: after, context, conversation, coverage, docs, icon",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "2976159",
+      "source_link": "../../sources/commits/2976159.html",
+      "subject": "fix(applescript): refresh album-art state after picture imports",
+      "test_line_count": 159
+    }
+  ],
+  "candidate_plans": [],
+  "candidate_themes": [
+    {
+      "accepted_commit_ids": [
+        "19369540b1a2f92b3ab4fd1cedb4db7cefe41498"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "AppleScript",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+          "entity_type": "commit",
+          "evidence_source": "keywords: script",
+          "relationship_type": "include",
+          "theme_id": "applescript"
+        }
+      ],
+      "theme_id": "applescript"
+    },
+    {
+      "accepted_commit_ids": [
+        "19369540b1a2f92b3ab4fd1cedb4db7cefe41498"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Diff",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+          "entity_type": "commit",
+          "evidence_source": "alias: status",
+          "relationship_type": "include",
+          "theme_id": "diff"
+        }
+      ],
+      "theme_id": "diff"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "FLAC Lib",
+      "positive_and_negative_edges": [],
+      "theme_id": "flac-lib"
+    },
+    {
+      "accepted_commit_ids": [
+        "19369540b1a2f92b3ab4fd1cedb4db7cefe41498"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Picture",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+          "entity_type": "commit",
+          "evidence_source": "alias: picture",
+          "relationship_type": "include",
+          "theme_id": "picture"
+        }
+      ],
+      "theme_id": "picture"
+    },
+    {
+      "accepted_commit_ids": [
+        "19369540b1a2f92b3ab4fd1cedb4db7cefe41498"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Project",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "project"
+        }
+      ],
+      "theme_id": "project"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Save",
+      "positive_and_negative_edges": [],
+      "theme_id": "save"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Settings",
+      "positive_and_negative_edges": [],
+      "theme_id": "settings"
+    },
+    {
+      "accepted_commit_ids": [
+        "19369540b1a2f92b3ab4fd1cedb4db7cefe41498"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "SwiftTag Document",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.61,
+          "entity_id": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+          "entity_type": "commit",
+          "evidence_source": "keywords: document, session",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        }
+      ],
+      "theme_id": "swifttag-document"
+    },
+    {
+      "accepted_commit_ids": [
+        "19369540b1a2f92b3ab4fd1cedb4db7cefe41498"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Tags",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+          "entity_type": "commit",
+          "evidence_source": "keywords: tag",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        }
+      ],
+      "theme_id": "tags"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "User Docs",
+      "positive_and_negative_edges": [],
+      "theme_id": "user-docs"
+    }
+  ],
+  "conservation_preview": {
+    "commit_lens": {
+      "allocated_atomic_elapsed_seconds": 2175.0,
+      "allocated_back_and_forth": 5.0,
+      "allocated_lines": 149.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "header_note_lines": 12,
+    "plan_lens": {
+      "allocated_atomic_elapsed_seconds": 0,
+      "allocated_back_and_forth": 0,
+      "allocated_lines": 0,
+      "unallocated_remainder": {
+        "assistant_processing": 1.0,
+        "back_and_forth": 1.0,
+        "lines": 1.0,
+        "user_response": 1.0
+      }
+    },
+    "segment_source_lines": 137,
+    "transcript_source_lines": 149
+  },
+  "current_review_status": {
+    "configured_content_digest": "c3b951bdbbe608f312389fb1832bf41f2ff6d259860f9163cdf419e38d9dc7b6",
+    "configured_review_input_digest": "3470802470127bdcb2777bef63c1d89281e765086d9006d1e4c9e6558ced73c9",
+    "message": "Reviewed allocation accepted",
+    "normalized_content_digest": "c3b951bdbbe608f312389fb1832bf41f2ff6d259860f9163cdf419e38d9dc7b6",
+    "review_input_digest": "3470802470127bdcb2777bef63c1d89281e765086d9006d1e4c9e6558ced73c9",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10T18:59:40Z",
+    "reviewed_by": "Codex GPT-5",
+    "transcript_id": "transcript-2026-04-06-4-TestBugFixes"
+  },
+  "existing_review": {
+    "accepted_candidate_commit_ids": [
+      "19369540b1a2f92b3ab4fd1cedb4db7cefe41498"
+    ],
+    "accepted_candidate_plan_ids": [],
+    "evidence_note": "Reviewed against Plan 34 and local evidence.",
+    "feature_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+        "confidence": 1.0,
+        "entry_id": "b31-f1",
+        "evidence_note": "Commit body enumerates queued Finder opens, title focus, inspector cleanup, and actor-warning fixes in transcript.",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-04-06-4-TestBugFixes:segment-001",
+          "transcript-2026-04-06-4-TestBugFixes:segment-002",
+          "transcript-2026-04-06-4-TestBugFixes:segment-003",
+          "transcript-2026-04-06-4-TestBugFixes:segment-004",
+          "transcript-2026-04-06-4-TestBugFixes:segment-005"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-001",
+            "source_line_end": 37,
+            "source_line_start": 12
+          },
+          {
+            "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-002",
+            "source_line_end": 81,
+            "source_line_start": 38
+          },
+          {
+            "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-003",
+            "source_line_end": 106,
+            "source_line_start": 82
+          },
+          {
+            "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-004",
+            "source_line_end": 128,
+            "source_line_start": 107
+          },
+          {
+            "segment_id": "transcript-2026-04-06-4-TestBugFixes:segment-005",
+            "source_line_end": 148,
+            "source_line_start": 129
+          }
+        ]
+      }
+    ],
+    "feature_unallocated_remainder": 0.0,
+    "normalized_content_digest": "c3b951bdbbe608f312389fb1832bf41f2ff6d259860f9163cdf419e38d9dc7b6",
+    "plan_allocations": [],
+    "plan_unallocated_remainder": {
+      "assistant_processing": 1.0,
+      "back_and_forth": 1.0,
+      "lines": 1.0,
+      "user_response": 1.0
+    },
+    "rejected_candidate_commit_ids": [
+      "0539816b5ba23a6e25ff44d6be08444b0f8dd6c7",
+      "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+      "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "1e4ea8e60ed212c41a1f3f43a972ccad5855a07a",
+      "2302109d0c43a41cb71c36e47cf2b4b8973a63d6",
+      "24428a1548324e06268c9174e358e22e9559801b",
+      "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+      "27b32d888ac16fcaa31f6735b29d960131a8315c",
+      "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+      "29444d740b06ee147a5690f1070d56abfa8be162",
+      "2976159836a41160b0a462b26c952968c19a7923"
+    ],
+    "rejected_candidate_plan_ids": [],
+    "review_input_digest": "3470802470127bdcb2777bef63c1d89281e765086d9006d1e4c9e6558ced73c9",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10T18:59:40Z",
+    "reviewed_by": "Codex GPT-5",
+    "transcript_digest": "c3b951bdbbe608f312389fb1832bf41f2ff6d259860f9163cdf419e38d9dc7b6",
+    "unallocated_reason": "Miscellaneous regression fixes have no numbered Plan owner."
+  },
+  "header": {
+    "agent": "GPT-5.4 High (Codex app)",
+    "export_date": "2026-04-06",
+    "reference_type": "Bug, Test",
+    "references": [
+      "Test files"
+    ]
+  },
+  "normalized_content_digest": "c3b951bdbbe608f312389fb1832bf41f2ff6d259860f9163cdf419e38d9dc7b6",
+  "path": "Docs/Plans/Transcripts/transcript-2026-04-06-4-TestBugFixes.md",
+  "raw_metrics": {
+    "assistant_processing_seconds": 683.0,
+    "back_and_forth_count": 5,
+    "line_count": 149,
+    "turn_count": 10,
+    "user_response_seconds": 1492.0,
+    "valid_atomic_elapsed_seconds": 2175.0
+  },
+  "review_input_digest": "3470802470127bdcb2777bef63c1d89281e765086d9006d1e4c9e6558ced73c9",
+  "review_method_version": "plan-34-v1",
+  "schema_version": 1,
+  "source_link": "../../sources/transcripts/transcript-2026-04-06-4-TestBugFixes.html#L1",
+  "transcript_id": "transcript-2026-04-06-4-TestBugFixes",
+  "unresolved_questions": [
+    "Accept or reject Commit ownership for every base segment.",
+    "Assign direct or implementation Plan role for every accepted Plan segment.",
+    "Explain any Commit-lens or Plan-lens unallocated remainder."
+  ]
+}

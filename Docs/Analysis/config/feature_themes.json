@@ -1,0 +1,349 @@
+{
+  "schema_version": 2,
+  "themes": {
+    "applescript": {
+      "aliases": [
+        "applescript",
+        "Apple Script",
+        "scripting",
+        "automation",
+        "apple event",
+        "Cocoa scripting",
+        "SwiftTag scripting",
+        "SDEF",
+        "SwiftTag.sdef",
+        "osascript"
+      ],
+      "description": "Scripting dictionary, AppleScript classes, commands, enumerations, automation docs, and UI automation harness.",
+      "display_name": "AppleScript",
+      "documentation_paths": [
+        "Docs/UserDocumentation/automation/applescript.html",
+        "Docs/UserDocumentation/examples/re-tag-with-applescript.html"
+      ],
+      "keywords": [
+        "applescript",
+        "script",
+        "scripting",
+        "sdef",
+        "automation",
+        "appleevent",
+        "apple event",
+        "osascript",
+        "tell application",
+        "NSScriptCommand",
+        "SwiftTagAppleScriptSupport",
+        "application class",
+        "editor window",
+        "settings window",
+        "selected tracks",
+        "track sort order",
+        "save scope",
+        "save payload",
+        "make new tag",
+        "make new picture",
+        "picture type",
+        "base64",
+        "record type",
+        "enumeration"
+      ]
+    },
+    "diff": {
+      "aliases": [
+        "diff",
+        "difference",
+        "status",
+        "Diff Tools",
+        "Diff Formatting",
+        "track/file diff",
+        "internal diff",
+        "external diff"
+      ],
+      "description": "Internal and external difference detection, file status, tag diffs, and picture diffs.",
+      "display_name": "Diff",
+      "documentation_paths": [
+        "Docs/UserDocumentation/workflows/status-and-diffs.html"
+      ],
+      "keywords": [
+        "diff",
+        "difference",
+        "differences",
+        "status",
+        "external",
+        "internal",
+        "modified",
+        "Diff Tools",
+        "Diff Formatting",
+        "Track to File Diff",
+        "Track to Track Diff",
+        "Externally Modified Diff",
+        "Track Total Mismatch",
+        "Disc Total Mismatch",
+        "Duplicate Picture",
+        "Picture Status Overlay",
+        "TagDiffFormatting",
+        "DiffToolsView",
+        "TrackStatus",
+        "TrackFileMonitor",
+        "unsaved differences",
+        "editor-vs-file"
+      ]
+    },
+    "flac-lib": {
+      "aliases": [
+        "FLAC Lib",
+        "libFLAC",
+        "FLAC bridge",
+        "FLAC C bridge"
+      ],
+      "auto_keyword_match": false,
+      "description": "libFLAC build integration, FLAC bridge headers and C bridge, and FLAC metadata service changes.",
+      "display_name": "FLAC Lib",
+      "documentation_paths": [],
+      "include_commit_hashes": [
+        "6cf4772cd3482a0a7ca38f2f613ca64a86da22a1",
+        "1fcd08274065e59e148cb05d16e592e98f02bced"
+      ],
+      "include_commit_paths": [
+        "BuildScripts/build-libflac.sh",
+        "SwiftTag/BuildScripts/build-libflac.sh",
+        "SwiftTag/FLACBridge/include/FlacMetadataBridge.h",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/FlacMetadataService.swift"
+      ],
+      "keywords": [
+        "libflac",
+        "flac bridge",
+        "c bridge",
+        "build-libflac",
+        "FlacMetadataBridge",
+        "FlacMetadataService"
+      ]
+    },
+    "picture": {
+      "aliases": [
+        "picture",
+        "pictures",
+        "album art",
+        "album-art",
+        "cover art",
+        "front cover",
+        "embedded pictures",
+        "FLAC pictures",
+        "Picture Browser"
+      ],
+      "description": "FLAC picture records, album art, picture browser, descriptions, import, and writeback.",
+      "display_name": "Picture",
+      "documentation_paths": [
+        "Docs/UserDocumentation/workflows/pictures.html",
+        "Docs/UserDocumentation/examples/manage-cover-art.html",
+        "Docs/UserDocumentation/automation/applescript-picture.html"
+      ],
+      "keywords": [
+        "picture",
+        "pictures",
+        "album art",
+        "album-art",
+        "cover",
+        "covers",
+        "browser",
+        "image",
+        "FLAC picture",
+        "picture type",
+        "picture metadata",
+        "MIME type",
+        "description",
+        "picture data",
+        "pool id",
+        "pin track pictures",
+        "save pictures",
+        "import picture",
+        "export picture",
+        "copy",
+        "paste",
+        "make new picture",
+        "delete picture",
+        "base64",
+        "JPEG",
+        "PNG",
+        "duplicate picture",
+        "picture overlay"
+      ]
+    },
+    "project": {
+      "aliases": [
+        "project",
+        "maintenance",
+        "xcode",
+        "release",
+        "version",
+        "icons",
+        "readme",
+        "tests"
+      ],
+      "auto_keyword_match": false,
+      "description": "Project maintenance, tests, Xcode configuration, release, versioning, icons, README, and agent documentation work.",
+      "display_name": "Project",
+      "documentation_paths": [],
+      "include_commit_hashes": [
+        "ae13badc1a2a880e7b374fa67010992d398fa737",
+        "4f2a9e8f1b624f200c4d62747f38f83200dbaf88",
+        "759876b5751c03c882cad89d885311f3073fe8cc",
+        "f7f7e4be43044e840ea69ce6c03d1217b38913ad",
+        "05c75465e894b197009e4fa12fcee8a2f232be65",
+        "c6c7c445aae308a598d41e9f839c9bfd0e495e88",
+        "abe9194d5f3d791d34010e12ea51acb0054ae4ce",
+        "c499b7aead381ce46c275a2b7e1571e2a49a4cc8",
+        "149bf183fe3edf4d14481d354a078cb50f628aee",
+        "c0f71285faefcb501480a4ad69f63e5e7dc0df1e",
+        "d42524c80ead7c678062531b1a7e72fe58e29d72",
+        "e031a26f031d038fcc430fb7057600f67102ccbe",
+        "3c4cfff64ee127631152a551713977c1ad5a40dd",
+        "fdd51810b0f51c7b8ee798ecfa0eb42453627946",
+        "07da732fae63f277c83cb54cf56698ac80e2c851",
+        "0015089006f52550ef2f4ed4fdd0057bb9e521b9",
+        "866d179e6bed7ea2133bcda6ef1ea9f2f91c5a15",
+        "65538b7f93d2246cfc37625f018af76640c6aa40",
+        "004751dd893b3e1b96ba2e42f9a63fc000d75663",
+        "a28886ff5fcb92bf016b563a5df7785225f80a77",
+        "b5795c22e58a84982d07d6846e1929f9eba2166f",
+        "9fea9987c80b7709896d6a46e750b0a0c7925c30",
+        "639e6a21c2fa231ef59f0c8aab3d67494a0bce8a",
+        "2c8445cbde7892ceff58fb58780a79278bcf7d6e",
+        "a76f2110c364943a6a2b000cd575807b8f75a6e6"
+      ],
+      "keywords": [
+        "project",
+        "maintenance",
+        "xcode",
+        "release",
+        "version",
+        "icons",
+        "readme",
+        "tests",
+        "viewinspector",
+        "agents"
+      ]
+    },
+    "save": {
+      "aliases": [
+        "save",
+        "writeback"
+      ],
+      "description": "Save commands, writeback, save options, notifications, and save status.",
+      "display_name": "Save",
+      "documentation_paths": [
+        "Docs/UserDocumentation/workflows/saving.html"
+      ],
+      "keywords": [
+        "save",
+        "saving",
+        "write",
+        "writeback",
+        "notifications",
+        "payload",
+        "scope"
+      ]
+    },
+    "settings": {
+      "aliases": [
+        "settings",
+        "preferences",
+        "configuration"
+      ],
+      "description": "Settings UI, feedback settings, sandbox settings, and persisted configuration.",
+      "display_name": "Settings",
+      "documentation_paths": [
+        "Docs/UserDocumentation/workflows/settings.html"
+      ],
+      "keywords": [
+        "settings",
+        "preferences",
+        "configuration",
+        "feedback",
+        "sandbox"
+      ]
+    },
+    "swifttag-document": {
+      "aliases": [
+        "swifttag document",
+        ".swifttag",
+        "session document",
+        ".swifttag document",
+        "SwiftTag package document",
+        "referenced SwiftTag document",
+        "associated SwiftTag document"
+      ],
+      "description": "SwiftTag document creation, open/read, bookmarks, save options, Quick Look, and live source resolution.",
+      "display_name": "SwiftTag Document",
+      "documentation_paths": [
+        "Docs/UserDocumentation/workflows/swifttag-documents.html",
+        "Docs/UserDocumentation/examples/create-session-document.html",
+        "Docs/UserDocumentation/automation/applescript-document.html"
+      ],
+      "keywords": [
+        "swifttag document",
+        "document",
+        ".swifttag",
+        "bookmark",
+        "quick look",
+        "open document",
+        "session",
+        "Save SwiftTag Document",
+        "Open SwiftTag Document",
+        ".swifttag package",
+        "session package",
+        "security-scoped bookmark",
+        "referenced document",
+        "associated document",
+        "SwiftTagDocumentPackage",
+        "SwiftTagDocumentPackageWriter",
+        "SwiftTagDocumentPackageReader",
+        "SwiftTagDocumentMonitor",
+        "navigationDocument",
+        "QLPreview",
+        "track-list divergence"
+      ]
+    },
+    "tags": {
+      "aliases": [
+        "tags",
+        "metadata",
+        "tag editor"
+      ],
+      "description": "Tag editing, tag mapping, metadata fields, and tag value normalization.",
+      "display_name": "Tags",
+      "documentation_paths": [
+        "Docs/UserDocumentation/workflows/tags.html"
+      ],
+      "keywords": [
+        "tag",
+        "tags",
+        "metadata",
+        "artist",
+        "album",
+        "tracknumber",
+        "compilation",
+        "fingerprint"
+      ]
+    },
+    "user-docs": {
+      "aliases": [
+        "User Docs",
+        "User Documentation",
+        "SwiftTag user documentation"
+      ],
+      "auto_keyword_match": false,
+      "description": "User-facing SwiftTag documentation plan and commit history under Docs/UserDocumentation.",
+      "display_name": "User Docs",
+      "documentation_paths": [],
+      "include_commit_path_prefixes": [
+        "Docs/UserDocumentation/"
+      ],
+      "keywords": [
+        "user documentation",
+        "user docs",
+        "Docs/UserDocumentation"
+      ]
+    }
+  }
+}

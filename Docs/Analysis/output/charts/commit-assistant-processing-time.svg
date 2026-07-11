@@ -1,0 +1,1136 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="900pt" height="928.8pt" viewBox="0 0 900 928.8" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>SwiftTag project analysis</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 928.8 
+L 900 928.8 
+L 900 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 351 887.04 
+L 846 887.04 
+L 846 27.36 
+L 351 27.36 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 351 887.04 
+L 351 27.36 
+" clip-path="url(#p92eb13c672)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2">
+      <defs>
+       <path id="me9c26add9c" d="M 0 0 
+L 0 3.5 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#me9c26add9c" x="351" y="887.04" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="351" y="901.637656" transform="rotate(-0 351 901.637656)">0.0</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 418.912879 887.04 
+L 418.912879 27.36 
+" clip-path="url(#p92eb13c672)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#me9c26add9c" x="418.912879" y="887.04" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="418.912879" y="901.637656" transform="rotate(-0 418.912879 901.637656)">0.5</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 486.825759 887.04 
+L 486.825759 27.36 
+" clip-path="url(#p92eb13c672)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#me9c26add9c" x="486.825759" y="887.04" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="486.825759" y="901.637656" transform="rotate(-0 486.825759 901.637656)">1.0</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 554.738638 887.04 
+L 554.738638 27.36 
+" clip-path="url(#p92eb13c672)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#me9c26add9c" x="554.738638" y="887.04" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="554.738638" y="901.637656" transform="rotate(-0 554.738638 901.637656)">1.5</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_9">
+      <path d="M 622.651518 887.04 
+L 622.651518 27.36 
+" clip-path="url(#p92eb13c672)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <g>
+       <use xlink:href="#me9c26add9c" x="622.651518" y="887.04" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="622.651518" y="901.637656" transform="rotate(-0 622.651518 901.637656)">2.0</text>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_11">
+      <path d="M 690.564397 887.04 
+L 690.564397 27.36 
+" clip-path="url(#p92eb13c672)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#me9c26add9c" x="690.564397" y="887.04" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="690.564397" y="901.637656" transform="rotate(-0 690.564397 901.637656)">2.5</text>
+     </g>
+    </g>
+    <g id="xtick_7">
+     <g id="line2d_13">
+      <path d="M 758.477277 887.04 
+L 758.477277 27.36 
+" clip-path="url(#p92eb13c672)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14">
+      <g>
+       <use xlink:href="#me9c26add9c" x="758.477277" y="887.04" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="758.477277" y="901.637656" transform="rotate(-0 758.477277 901.637656)">3.0</text>
+     </g>
+    </g>
+    <g id="xtick_8">
+     <g id="line2d_15">
+      <path d="M 826.390156 887.04 
+L 826.390156 27.36 
+" clip-path="url(#p92eb13c672)" style="fill: none; stroke: #d9e1e2; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_16">
+      <g>
+       <use xlink:href="#me9c26add9c" x="826.390156" y="887.04" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: middle" x="826.390156" y="901.637656" transform="rotate(-0 826.390156 901.637656)">3.5</text>
+     </g>
+    </g>
+    <g id="text_9">
+     <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle" x="598.5" y="916.397422" transform="rotate(-0 598.5 916.397422)">Hours</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_17"/>
+     <g id="text_10">
+      <a xlink:href="../sources/commits/6811df9.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="40.331297" transform="rotate(-0 347.5 40.331297)">6811df9 feat(applescript): import track pictures from script data</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_18"/>
+     <g id="text_11">
+      <a xlink:href="../sources/commits/36c5b18.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="59.435297" transform="rotate(-0 347.5 59.435297)">36c5b18 feat(album-art): implement picture description editing</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_19"/>
+     <g id="text_12">
+      <a xlink:href="../sources/commits/f195e03.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="78.539297" transform="rotate(-0 347.5 78.539297)">f195e03 feat(quicklook): add .swifttag quick look preview extension</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_20"/>
+     <g id="text_13">
+      <a xlink:href="../sources/commits/546e43d.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="97.643297" transform="rotate(-0 347.5 97.643297)">546e43d feat(applescript): support selected tracks and track list f…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_21"/>
+     <g id="text_14">
+      <a xlink:href="../sources/commits/9e1ce62.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="116.747297" transform="rotate(-0 347.5 116.747297)">9e1ce62 feat(album-art): add scoped multi-picture browser and per-t…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_22"/>
+     <g id="text_15">
+      <a xlink:href="../sources/commits/41e60a8.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="135.851297" transform="rotate(-0 347.5 135.851297)">41e60a8 feat(tag-editor): add/update window title text</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_23"/>
+     <g id="text_16">
+      <a xlink:href="../sources/commits/ac6148b.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="154.955297" transform="rotate(-0 347.5 154.955297)">ac6148b fix(track-monitoring): refresh bookmark-backed filenames af…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_8">
+     <g id="line2d_24"/>
+     <g id="text_17">
+      <a xlink:href="../sources/commits/11ba785.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="174.059297" transform="rotate(-0 347.5 174.059297)">11ba785 feat(applescript): expose FLAC pictures to scripts</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_9">
+     <g id="line2d_25"/>
+     <g id="text_18">
+      <a xlink:href="../sources/commits/ac28a73.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="193.163297" transform="rotate(-0 347.5 193.163297)">ac28a73 feat(diff-tools): implement track/file diff states and mism…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_10">
+     <g id="line2d_26"/>
+     <g id="text_19">
+      <a xlink:href="../sources/commits/bc1eaf0.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="212.267297" transform="rotate(-0 347.5 212.267297)">bc1eaf0 fix(window): restore swifttag document reopen after closing…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_11">
+     <g id="line2d_27"/>
+     <g id="text_20">
+      <a xlink:href="../sources/commits/27b4d85.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="231.371297" transform="rotate(-0 347.5 231.371297)">27b4d85 feat(save): add SwiftTag document follow-on save options</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_12">
+     <g id="line2d_28"/>
+     <g id="text_21">
+      <a xlink:href="../sources/commits/f23c8a0.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="250.475297" transform="rotate(-0 347.5 250.475297)">f23c8a0 fix(album-art): show external picture diffs in reopened swi…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_13">
+     <g id="line2d_29"/>
+     <g id="text_22">
+      <a xlink:href="../sources/commits/95957dd.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="269.579297" transform="rotate(-0 347.5 269.579297)">95957dd feat(applescript): add enum-based save and close scripting…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_14">
+     <g id="line2d_30"/>
+     <g id="text_23">
+      <a xlink:href="../sources/commits/68e340f.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="288.683297" transform="rotate(-0 347.5 288.683297)">68e340f fix(tag-editor): canonicalize picture records for snapshot…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_15">
+     <g id="line2d_31"/>
+     <g id="text_24">
+      <a xlink:href="../sources/commits/c566956.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="307.787297" transform="rotate(-0 347.5 307.787297)">c566956 feat(track-status): add file-monitor-based track status and…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_16">
+     <g id="line2d_32"/>
+     <g id="text_25">
+      <a xlink:href="../sources/commits/29444d7.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="326.891297" transform="rotate(-0 347.5 326.891297)">29444d7 feat(tag-editor): add track file rename workflow</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_17">
+     <g id="line2d_33"/>
+     <g id="text_26">
+      <a xlink:href="../sources/commits/352ff8c.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="345.995297" transform="rotate(-0 347.5 345.995297)">352ff8c fix: preserve picture diff state across refresh flows</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_18">
+     <g id="line2d_34"/>
+     <g id="text_27">
+      <a xlink:href="../sources/commits/a41be8a.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="365.099297" transform="rotate(-0 347.5 365.099297)">a41be8a fix(routing): open unassociated swifttag documents in new w…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_19">
+     <g id="line2d_35"/>
+     <g id="text_28">
+      <a xlink:href="../sources/commits/bba775b.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="384.203297" transform="rotate(-0 347.5 384.203297)">bba775b feat(document): add finder-open support for flac files</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_20">
+     <g id="line2d_36"/>
+     <g id="text_29">
+      <a xlink:href="../sources/commits/9246055.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="403.307297" transform="rotate(-0 347.5 403.307297)">9246055 fix(sync): restore repeated external album updates across w…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_21">
+     <g id="line2d_37"/>
+     <g id="text_30">
+      <a xlink:href="../sources/commits/4e470f0.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="422.411297" transform="rotate(-0 347.5 422.411297)">4e470f0 feat(save): prompt to save referenced documents on track li…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_22">
+     <g id="line2d_38"/>
+     <g id="text_31">
+      <a xlink:href="../sources/commits/ec63010.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="441.515297" transform="rotate(-0 347.5 441.515297)">ec63010 fix(document): ignore equivalent multi-picture ordering aft…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_23">
+     <g id="line2d_39"/>
+     <g id="text_32">
+      <a xlink:href="../sources/commits/561817a.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="460.619297" transform="rotate(-0 347.5 460.619297)">561817a feat(swifttag-document): track referenced documents via boo…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_24">
+     <g id="line2d_40"/>
+     <g id="text_33">
+      <a xlink:href="../sources/commits/1276536.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="479.723297" transform="rotate(-0 347.5 479.723297)">1276536 feat(package): add SwiftTag document creation and serializa…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_25">
+     <g id="line2d_41"/>
+     <g id="text_34">
+      <a xlink:href="../sources/commits/24428a1.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="498.827297" transform="rotate(-0 347.5 498.827297)">24428a1 fix(applescript): support making tags from track tell conte…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_26">
+     <g id="line2d_42"/>
+     <g id="text_35">
+      <a xlink:href="../sources/commits/575c54b.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="517.931297" transform="rotate(-0 347.5 517.931297)">575c54b fix(track-status): preserve dirty status when adding flac f…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_27">
+     <g id="line2d_43"/>
+     <g id="text_36">
+      <a xlink:href="../sources/commits/82c43c9.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="537.035297" transform="rotate(-0 347.5 537.035297)">82c43c9 feat(sandbox): add persisted sandbox path settings</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_28">
+     <g id="line2d_44"/>
+     <g id="text_37">
+      <a xlink:href="../sources/commits/b70f662.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="556.139297" transform="rotate(-0 347.5 556.139297)">b70f662 feat(duration): add derived flac track duration support</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_29">
+     <g id="line2d_45"/>
+     <g id="text_38">
+      <a xlink:href="../sources/commits/777706c.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="575.243297" transform="rotate(-0 347.5 575.243297)">777706c feat(applescript): add AppleScript support for swifttag doc…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_30">
+     <g id="line2d_46"/>
+     <g id="text_39">
+      <a xlink:href="../sources/commits/68f7c7b.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="594.347297" transform="rotate(-0 347.5 594.347297)">68f7c7b feat(editor): add track management commands, safeguards, an…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_31">
+     <g id="line2d_47"/>
+     <g id="text_40">
+      <a xlink:href="../sources/commits/a0be45d.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="613.451297" transform="rotate(-0 347.5 613.451297)">a0be45d feat(tag-editor): scroll new misc tag rows into view</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_32">
+     <g id="line2d_48"/>
+     <g id="text_41">
+      <a xlink:href="../sources/commits/17b6c10.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="632.555297" transform="rotate(-0 347.5 632.555297)">17b6c10 feat(applescript): expose settings preferences</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_33">
+     <g id="line2d_49"/>
+     <g id="text_42">
+      <a xlink:href="../sources/commits/7228297.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="651.659297" transform="rotate(-0 347.5 651.659297)">7228297 feat(tracks): add sort order and track numbering controls</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_34">
+     <g id="line2d_50"/>
+     <g id="text_43">
+      <a xlink:href="../sources/commits/ce18655.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="670.763297" transform="rotate(-0 347.5 670.763297)">ce18655 fix(applescript): preserve empty tag objects for keyed look…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_35">
+     <g id="line2d_51"/>
+     <g id="text_44">
+      <a xlink:href="../sources/commits/9b05c92.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="689.867297" transform="rotate(-0 347.5 689.867297)">9b05c92 fix(applescript): accept base64 picture import payloads</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_36">
+     <g id="line2d_52"/>
+     <g id="text_45">
+      <a xlink:href="../sources/commits/4a07659.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="708.971297" transform="rotate(-0 347.5 708.971297)">4a07659 fix(tag-editor): show internal icon for picture description…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_37">
+     <g id="line2d_53"/>
+     <g id="text_46">
+      <a xlink:href="../sources/commits/d928e3b.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="728.075297" transform="rotate(-0 347.5 728.075297)">d928e3b feat(applescript): add settings window scripting support</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_38">
+     <g id="line2d_54"/>
+     <g id="text_47">
+      <a xlink:href="../sources/commits/fcee05c.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="747.179297" transform="rotate(-0 347.5 747.179297)">fcee05c fix(tag-editor): keep unsaved album edits as internal diffs</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_39">
+     <g id="line2d_55"/>
+     <g id="text_48">
+      <a xlink:href="../sources/commits/2298c43.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="766.283297" transform="rotate(-0 347.5 766.283297)">2298c43 feat(applescript): update tag normalization to invalidate w…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_40">
+     <g id="line2d_56"/>
+     <g id="text_49">
+      <a xlink:href="../sources/commits/0c2d385.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="785.387297" transform="rotate(-0 347.5 785.387297)">0c2d385 feat(applescript): support standard track tag scripting</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_41">
+     <g id="line2d_57"/>
+     <g id="text_50">
+      <a xlink:href="../sources/commits/2e24923.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="804.491297" transform="rotate(-0 347.5 804.491297)">2e24923 fix(applescript): support track file comparisons</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_42">
+     <g id="line2d_58"/>
+     <g id="text_51">
+      <a xlink:href="../sources/commits/83b8764.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="823.595297" transform="rotate(-0 347.5 823.595297)">83b8764 feat(applescript): add picture delete support</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_43">
+     <g id="line2d_59"/>
+     <g id="text_52">
+      <a xlink:href="../sources/commits/43b6483.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="842.699297" transform="rotate(-0 347.5 842.699297)">43b6483 feat(applescript): support deleting tracks from editor wind…</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_44">
+     <g id="line2d_60"/>
+     <g id="text_53">
+      <a xlink:href="../sources/commits/7602f5d.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="861.803297" transform="rotate(-0 347.5 861.803297)">7602f5d feat(applescript): accept base64 text when making pictures</text>
+      </a>
+     </g>
+    </g>
+    <g id="ytick_45">
+     <g id="line2d_61"/>
+     <g id="text_54">
+      <a xlink:href="../sources/commits/d2843d5.html" target="_blank">
+       <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: end" x="347.5" y="880.907297" transform="rotate(-0 347.5 880.907297)">d2843d5 feat(tags): add per-disc track total update mode</text>
+      </a>
+     </g>
+    </g>
+   </g>
+   <g id="patch_3">
+    <a xlink:href="../sources/commits/6811df9.html" target="_blank">
+     <path d="M 351 30.03456 
+L 822.428571 30.03456 
+L 822.428571 43.78944 
+L 351 43.78944 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_4">
+    <a xlink:href="../sources/commits/36c5b18.html" target="_blank">
+     <path d="M 351 49.13856 
+L 767.683245 49.13856 
+L 767.683245 62.89344 
+L 351 62.89344 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_5">
+    <a xlink:href="../sources/commits/f195e03.html" target="_blank">
+     <path d="M 351 68.24256 
+L 693.205454 68.24256 
+L 693.205454 81.99744 
+L 351 81.99744 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_6">
+    <a xlink:href="../sources/commits/546e43d.html" target="_blank">
+     <path d="M 351 87.34656 
+L 663.927457 87.34656 
+L 663.927457 101.10144 
+L 351 101.10144 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_7">
+    <a xlink:href="../sources/commits/9e1ce62.html" target="_blank">
+     <path d="M 351 106.45056 
+L 658.230321 106.45056 
+L 658.230321 120.20544 
+L 351 120.20544 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_8">
+    <a xlink:href="../sources/commits/41e60a8.html" target="_blank">
+     <path d="M 351 125.55456 
+L 610.917681 125.55456 
+L 610.917681 139.30944 
+L 351 139.30944 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_9">
+    <a xlink:href="../sources/commits/ac6148b.html" target="_blank">
+     <path d="M 351 144.65856 
+L 603.786829 144.65856 
+L 603.786829 158.41344 
+L 351 158.41344 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_10">
+    <a xlink:href="../sources/commits/11ba785.html" target="_blank">
+     <path d="M 351 163.76256 
+L 564.095524 163.76256 
+L 564.095524 177.51744 
+L 351 177.51744 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_11">
+    <a xlink:href="../sources/commits/ac28a73.html" target="_blank">
+     <path d="M 351 182.86656 
+L 543.533013 182.86656 
+L 543.533013 196.62144 
+L 351 196.62144 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_12">
+    <a xlink:href="../sources/commits/bc1eaf0.html" target="_blank">
+     <path d="M 351 201.97056 
+L 526.592523 201.97056 
+L 526.592523 215.72544 
+L 351 215.72544 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_13">
+    <a xlink:href="../sources/commits/27b4d85.html" target="_blank">
+     <path d="M 351 221.07456 
+L 525.724747 221.07456 
+L 525.724747 234.82944 
+L 351 234.82944 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_14">
+    <a xlink:href="../sources/commits/f23c8a0.html" target="_blank">
+     <path d="M 351 240.17856 
+L 512.745841 240.17856 
+L 512.745841 253.93344 
+L 351 253.93344 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_15">
+    <a xlink:href="../sources/commits/95957dd.html" target="_blank">
+     <path d="M 351 259.28256 
+L 509.010633 259.28256 
+L 509.010633 273.03744 
+L 351 273.03744 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_16">
+    <a xlink:href="../sources/commits/68e340f.html" target="_blank">
+     <path d="M 351 278.38656 
+L 500.1065 278.38656 
+L 500.1065 292.14144 
+L 351 292.14144 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_17">
+    <a xlink:href="../sources/commits/c566956.html" target="_blank">
+     <path d="M 351 297.49056 
+L 492.636083 297.49056 
+L 492.636083 311.24544 
+L 351 311.24544 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_18">
+    <a xlink:href="../sources/commits/29444d7.html" target="_blank">
+     <path d="M 351 316.59456 
+L 478.827131 316.59456 
+L 478.827131 330.34944 
+L 351 330.34944 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_19">
+    <a xlink:href="../sources/commits/352ff8c.html" target="_blank">
+     <path d="M 351 335.69856 
+L 465.999143 335.69856 
+L 465.999143 349.45344 
+L 351 349.45344 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_20">
+    <a xlink:href="../sources/commits/a41be8a.html" target="_blank">
+     <path d="M 351 354.80256 
+L 465.923684 354.80256 
+L 465.923684 368.55744 
+L 351 368.55744 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_21">
+    <a xlink:href="../sources/commits/bba775b.html" target="_blank">
+     <path d="M 351 373.90656 
+L 462.226205 373.90656 
+L 462.226205 387.66144 
+L 351 387.66144 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_22">
+    <a xlink:href="../sources/commits/9246055.html" target="_blank">
+     <path d="M 351 393.01056 
+L 457.585491 393.01056 
+L 457.585491 406.76544 
+L 351 406.76544 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_23">
+    <a xlink:href="../sources/commits/4e470f0.html" target="_blank">
+     <path d="M 351 412.11456 
+L 455.548105 412.11456 
+L 455.548105 425.86944 
+L 351 425.86944 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_24">
+    <a xlink:href="../sources/commits/ec63010.html" target="_blank">
+     <path d="M 351 431.21856 
+L 442.795575 431.21856 
+L 442.795575 444.97344 
+L 351 444.97344 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_25">
+    <a xlink:href="../sources/commits/561817a.html" target="_blank">
+     <path d="M 351 450.32256 
+L 436.45704 450.32256 
+L 436.45704 464.07744 
+L 351 464.07744 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_26">
+    <a xlink:href="../sources/commits/1276536.html" target="_blank">
+     <path d="M 351 469.42656 
+L 436.268393 469.42656 
+L 436.268393 483.18144 
+L 351 483.18144 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_27">
+    <a xlink:href="../sources/commits/24428a1.html" target="_blank">
+     <path d="M 351 488.53056 
+L 434.193277 488.53056 
+L 434.193277 502.28544 
+L 351 502.28544 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_28">
+    <a xlink:href="../sources/commits/575c54b.html" target="_blank">
+     <path d="M 351 507.63456 
+L 433.287772 507.63456 
+L 433.287772 521.38944 
+L 351 521.38944 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_29">
+    <a xlink:href="../sources/commits/82c43c9.html" target="_blank">
+     <path d="M 351 526.73856 
+L 433.099125 526.73856 
+L 433.099125 540.49344 
+L 351 540.49344 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_30">
+    <a xlink:href="../sources/commits/b70f662.html" target="_blank">
+     <path d="M 351 545.84256 
+L 432.985937 545.84256 
+L 432.985937 559.59744 
+L 351 559.59744 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_31">
+    <a xlink:href="../sources/commits/777706c.html" target="_blank">
+     <path d="M 351 564.94656 
+L 432.721832 564.94656 
+L 432.721832 578.70144 
+L 351 578.70144 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_32">
+    <a xlink:href="../sources/commits/68f7c7b.html" target="_blank">
+     <path d="M 351 584.05056 
+L 430.156234 584.05056 
+L 430.156234 597.80544 
+L 351 597.80544 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_33">
+    <a xlink:href="../sources/commits/a0be45d.html" target="_blank">
+     <path d="M 351 603.15456 
+L 426.571943 603.15456 
+L 426.571943 616.90944 
+L 351 616.90944 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_34">
+    <a xlink:href="../sources/commits/17b6c10.html" target="_blank">
+     <path d="M 351 622.25856 
+L 426.081461 622.25856 
+L 426.081461 636.01344 
+L 351 636.01344 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_35">
+    <a xlink:href="../sources/commits/7228297.html" target="_blank">
+     <path d="M 351 641.36256 
+L 424.91185 641.36256 
+L 424.91185 655.11744 
+L 351 655.11744 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_36">
+    <a xlink:href="../sources/commits/ce18655.html" target="_blank">
+     <path d="M 351 660.46656 
+L 416.837764 660.46656 
+L 416.837764 674.22144 
+L 351 674.22144 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_37">
+    <a xlink:href="../sources/commits/9b05c92.html" target="_blank">
+     <path d="M 351 679.57056 
+L 415.781341 679.57056 
+L 415.781341 693.32544 
+L 351 693.32544 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_38">
+    <a xlink:href="../sources/commits/4a07659.html" target="_blank">
+     <path d="M 351 698.67456 
+L 414.687189 698.67456 
+L 414.687189 712.42944 
+L 351 712.42944 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_39">
+    <a xlink:href="../sources/commits/d928e3b.html" target="_blank">
+     <path d="M 351 717.77856 
+L 414.121248 717.77856 
+L 414.121248 731.53344 
+L 351 731.53344 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_40">
+    <a xlink:href="../sources/commits/fcee05c.html" target="_blank">
+     <path d="M 351 736.88256 
+L 412.687532 736.88256 
+L 412.687532 750.63744 
+L 351 750.63744 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_41">
+    <a xlink:href="../sources/commits/2298c43.html" target="_blank">
+     <path d="M 351 755.98656 
+L 412.574344 755.98656 
+L 412.574344 769.74144 
+L 351 769.74144 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_42">
+    <a xlink:href="../sources/commits/0c2d385.html" target="_blank">
+     <path d="M 351 775.09056 
+L 411.857486 775.09056 
+L 411.857486 788.84544 
+L 351 788.84544 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_43">
+    <a xlink:href="../sources/commits/2e24923.html" target="_blank">
+     <path d="M 351 794.19456 
+L 409.706911 794.19456 
+L 409.706911 807.94944 
+L 351 807.94944 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_44">
+    <a xlink:href="../sources/commits/83b8764.html" target="_blank">
+     <path d="M 351 813.29856 
+L 408.876865 813.29856 
+L 408.876865 827.05344 
+L 351 827.05344 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_45">
+    <a xlink:href="../sources/commits/43b6483.html" target="_blank">
+     <path d="M 351 832.40256 
+L 407.405419 832.40256 
+L 407.405419 846.15744 
+L 351 846.15744 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_46">
+    <a xlink:href="../sources/commits/7602f5d.html" target="_blank">
+     <path d="M 351 851.50656 
+L 405.858515 851.50656 
+L 405.858515 865.26144 
+L 351 865.26144 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_47">
+    <a xlink:href="../sources/commits/d2843d5.html" target="_blank">
+     <path d="M 351 870.61056 
+L 403.858858 870.61056 
+L 403.858858 884.36544 
+L 351 884.36544 
+z
+" clip-path="url(#p92eb13c672)" style="fill: #2f6f73"/>
+    </a>
+   </g>
+   <g id="patch_48">
+    <path d="M 351 887.04 
+L 846 887.04 
+" style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_55">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="825.428571" y="39.249891" transform="rotate(-0 825.428571 39.249891)">3.5</text>
+   </g>
+   <g id="text_56">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="770.683245" y="58.353891" transform="rotate(-0 770.683245 58.353891)">3.1</text>
+   </g>
+   <g id="text_57">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="696.205454" y="77.457891" transform="rotate(-0 696.205454 77.457891)">2.5</text>
+   </g>
+   <g id="text_58">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="666.927457" y="96.561891" transform="rotate(-0 666.927457 96.561891)">2.3</text>
+   </g>
+   <g id="text_59">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="661.230321" y="115.665891" transform="rotate(-0 661.230321 115.665891)">2.3</text>
+   </g>
+   <g id="text_60">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="613.917681" y="134.769891" transform="rotate(-0 613.917681 134.769891)">1.9</text>
+   </g>
+   <g id="text_61">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="606.786829" y="153.873891" transform="rotate(-0 606.786829 153.873891)">1.9</text>
+   </g>
+   <g id="text_62">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="567.095524" y="172.977891" transform="rotate(-0 567.095524 172.977891)">1.6</text>
+   </g>
+   <g id="text_63">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="546.533013" y="192.081891" transform="rotate(-0 546.533013 192.081891)">1.4</text>
+   </g>
+   <g id="text_64">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="529.592523" y="211.185891" transform="rotate(-0 529.592523 211.185891)">1.3</text>
+   </g>
+   <g id="text_65">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="528.724747" y="230.289891" transform="rotate(-0 528.724747 230.289891)">1.3</text>
+   </g>
+   <g id="text_66">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="515.745841" y="249.393891" transform="rotate(-0 515.745841 249.393891)">1.2</text>
+   </g>
+   <g id="text_67">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="512.010633" y="268.497891" transform="rotate(-0 512.010633 268.497891)">1.2</text>
+   </g>
+   <g id="text_68">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="503.1065" y="287.601891" transform="rotate(-0 503.1065 287.601891)">1.1</text>
+   </g>
+   <g id="text_69">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="495.636083" y="306.705891" transform="rotate(-0 495.636083 306.705891)">1.0</text>
+   </g>
+   <g id="text_70">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="481.827131" y="325.809891" transform="rotate(-0 481.827131 325.809891)">0.9</text>
+   </g>
+   <g id="text_71">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="468.999143" y="344.913891" transform="rotate(-0 468.999143 344.913891)">0.8</text>
+   </g>
+   <g id="text_72">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="468.923684" y="364.017891" transform="rotate(-0 468.923684 364.017891)">0.8</text>
+   </g>
+   <g id="text_73">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="465.226205" y="383.121891" transform="rotate(-0 465.226205 383.121891)">0.8</text>
+   </g>
+   <g id="text_74">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="460.585491" y="402.225891" transform="rotate(-0 460.585491 402.225891)">0.8</text>
+   </g>
+   <g id="text_75">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="458.548105" y="421.329891" transform="rotate(-0 458.548105 421.329891)">0.8</text>
+   </g>
+   <g id="text_76">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="445.795575" y="440.433891" transform="rotate(-0 445.795575 440.433891)">0.7</text>
+   </g>
+   <g id="text_77">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="439.45704" y="459.537891" transform="rotate(-0 439.45704 459.537891)">0.6</text>
+   </g>
+   <g id="text_78">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="439.268393" y="478.641891" transform="rotate(-0 439.268393 478.641891)">0.6</text>
+   </g>
+   <g id="text_79">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="437.193277" y="497.745891" transform="rotate(-0 437.193277 497.745891)">0.6</text>
+   </g>
+   <g id="text_80">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="436.287772" y="516.849891" transform="rotate(-0 436.287772 516.849891)">0.6</text>
+   </g>
+   <g id="text_81">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="436.099125" y="535.953891" transform="rotate(-0 436.099125 535.953891)">0.6</text>
+   </g>
+   <g id="text_82">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="435.985937" y="555.057891" transform="rotate(-0 435.985937 555.057891)">0.6</text>
+   </g>
+   <g id="text_83">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="435.721832" y="574.161891" transform="rotate(-0 435.721832 574.161891)">0.6</text>
+   </g>
+   <g id="text_84">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="433.156234" y="593.265891" transform="rotate(-0 433.156234 593.265891)">0.6</text>
+   </g>
+   <g id="text_85">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="429.571943" y="612.369891" transform="rotate(-0 429.571943 612.369891)">0.6</text>
+   </g>
+   <g id="text_86">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="429.081461" y="631.473891" transform="rotate(-0 429.081461 631.473891)">0.6</text>
+   </g>
+   <g id="text_87">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="427.91185" y="650.577891" transform="rotate(-0 427.91185 650.577891)">0.5</text>
+   </g>
+   <g id="text_88">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="419.837764" y="669.681891" transform="rotate(-0 419.837764 669.681891)">0.5</text>
+   </g>
+   <g id="text_89">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="418.781341" y="688.785891" transform="rotate(-0 418.781341 688.785891)">0.5</text>
+   </g>
+   <g id="text_90">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="417.687189" y="707.889891" transform="rotate(-0 417.687189 707.889891)">0.5</text>
+   </g>
+   <g id="text_91">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="417.121248" y="726.993891" transform="rotate(-0 417.121248 726.993891)">0.5</text>
+   </g>
+   <g id="text_92">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="415.687532" y="746.097891" transform="rotate(-0 415.687532 746.097891)">0.5</text>
+   </g>
+   <g id="text_93">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="415.574344" y="765.201891" transform="rotate(-0 415.574344 765.201891)">0.5</text>
+   </g>
+   <g id="text_94">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="414.857486" y="784.305891" transform="rotate(-0 414.857486 784.305891)">0.4</text>
+   </g>
+   <g id="text_95">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="412.706911" y="803.409891" transform="rotate(-0 412.706911 803.409891)">0.4</text>
+   </g>
+   <g id="text_96">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="411.876865" y="822.513891" transform="rotate(-0 411.876865 822.513891)">0.4</text>
+   </g>
+   <g id="text_97">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="410.405419" y="841.617891" transform="rotate(-0 410.405419 841.617891)">0.4</text>
+   </g>
+   <g id="text_98">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="408.858515" y="860.721891" transform="rotate(-0 408.858515 860.721891)">0.4</text>
+   </g>
+   <g id="text_99">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start" x="406.858858" y="879.825891" transform="rotate(-0 406.858858 879.825891)">0.4</text>
+   </g>
+   <g id="text_100">
+    <text style="font-weight: 700; font-size: 16px; font-family: 'DejaVu Sans'; text-anchor: start" x="351" y="21.36" transform="rotate(-0 351 21.36)">Commit Allocated Assistant Time</text>
+   </g>
+  </g>
+  <g id="text_101">
+   <a xlink:href="../data/commits.csv" target="_blank">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #5d6668" x="9" y="924.156" transform="rotate(-0 9 924.156)">Data: data/commits.csv</text>
+   </a>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p92eb13c672">
+   <rect x="351" y="27.36" width="495" height="859.68"/>
+  </clipPath>
+ </defs>
+</svg>

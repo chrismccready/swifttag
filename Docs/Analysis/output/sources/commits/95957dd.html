@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(applescript): add enum-based save and close scripting support</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(applescript): add enum-based save and close scripting support</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-24</p>
+<p><code>95957dd6350042cf04715f42d75a708d22bd4af1</code></p>
+<p>feat(applescript): add enum-based save and close scripting support</p>
+<h2>Body</h2><pre>- add Standard Suite save and close enumerations and update save command parameters in sdef
+- route AppleScript save and close requests through typed FourChar enum parsing and close handlers
+- close editor windows with unsaved-change bypass support and unregister stale scripting sessions
+- sign UI tests for Apple Events and move AppleScript harness execution to in-process NSAppleScript
+- add save and close AppleScript tests
+
+docs(transcript): plan 26 implementation transcript
+
+docs(guide): AppleScript testing, sandbox, entitlement, and harness guidance</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>80.8 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>7h 17m</span></div>
+  <div><strong>Assistant</strong><span>1h 9m</span></div>
+  <div><strong>User Response</strong><span>6h 7m</span></div>
+  <div><strong>Back/Forth</strong><span>8.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/settings.html">Settings</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/26.html">Plan 26: Add AppleScript Support Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.html#L1">transcript-2026-04-24-1-26-AddAppleScriptSupport</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.html#L79">transcript-2026-04-24-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-04-24-1-26-AddAppleScriptSupport:segment-002</td><td>work</td><td>1.000</td><td>89.0</td><td>19m 44s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.html#L165">transcript-2026-04-24-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-04-24-1-26-AddAppleScriptSupport:segment-003</td><td>work</td><td>1.000</td><td>14.5</td><td>2m 33s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.html#L179">transcript-2026-04-24-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-04-24-1-26-AddAppleScriptSupport:segment-004</td><td>work</td><td>1.000</td><td>20.7</td><td>13m 43s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.html#L199">transcript-2026-04-24-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-04-24-1-26-AddAppleScriptSupport:segment-005</td><td>work</td><td>1.000</td><td>24.8</td><td>6m 50s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.html#L223">transcript-2026-04-24-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-04-24-1-26-AddAppleScriptSupport:segment-006</td><td>work</td><td>1.000</td><td>61.1</td><td>5h 9m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.html#L282">transcript-2026-04-24-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-04-24-1-26-AddAppleScriptSupport:segment-007</td><td>work</td><td>1.000</td><td>22.8</td><td>16m 29s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.html#L304">transcript-2026-04-24-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-04-24-1-26-AddAppleScriptSupport:segment-008</td><td>work</td><td>1.000</td><td>53.8</td><td>1h 7m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.html#L356">transcript-2026-04-24-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-04-24-1-26-AddAppleScriptSupport:segment-009</td><td>work</td><td>1.000</td><td>27.9</td><td>1m 26s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Guides/testing-guide.md</td><td>55</td><td>21</td><td>docs</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.md</td><td>392</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag.xcodeproj/project.pbxproj</td><td>2</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift</td><td>281</td><td>80</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/UnsavedChangesCoordinator.swift</td><td>4</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTag.sdef</td><td>45</td><td>10</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagAppleScriptTests.swift</td><td>168</td><td>8</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.entitlements</td><td>19</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>130</td><td>40</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>422.00</td></tr>
+<tr><td>transcript_lines</td><td>314.65</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>26252.00</td></tr>
+<tr><td>assistant_processing_time</td><td>4188.00</td></tr>
+<tr><td>back_and_forth_count</td><td>8.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

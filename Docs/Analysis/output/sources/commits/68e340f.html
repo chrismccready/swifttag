@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: fix(tag-editor): canonicalize picture records for snapshot and reload diff checks</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: fix(tag-editor): canonicalize picture records for snapshot and reload diff checks</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-03-24</p>
+<p><code>68e340f508e0f0f5b0ac2fbbcae259abf6155b6e</code></p>
+<p>fix(tag-editor): canonicalize picture records for snapshot and reload diff checks</p>
+<h2>Body</h2><pre>- store canonical picture record ordering in track file snapshots
+- compare current and snapshot picture records using canonicalized ordering
+- treat imported track picture records as authoritative even when the array is empty
+
+docs(plans): add v3 multi-picture support plan and transcript
+
+- add the 11-v3 plan covering destructive album pin behavior and related rules
+- add the transcript for the multi-picture support planning session</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>74.2 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>3h 43m</span></div>
+  <div><strong>Assistant</strong><span>1h 5m</span></div>
+  <div><strong>User Response</strong><span>2h 37m</span></div>
+  <div><strong>Back/Forth</strong><span>9.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/11.html">Plan 11: Add Multi Picture Per Track Support Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L1">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L352">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport:segment-011</td><td>work</td><td>1.000</td><td>35.6</td><td>41m 20s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L387">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport:segment-012</td><td>work</td><td>1.000</td><td>23.4</td><td>14m 38s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L410">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport:segment-013</td><td>work</td><td>1.000</td><td>16.3</td><td>20m 58s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L426">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport:segment-014</td><td>work</td><td>1.000</td><td>35.6</td><td>32m 8s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L461">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport:segment-015</td><td>work</td><td>1.000</td><td>28.5</td><td>18m 26s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L489">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport:segment-016</td><td>work</td><td>1.000</td><td>30.6</td><td>45m 2s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L519">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport:segment-017</td><td>work</td><td>1.000</td><td>28.5</td><td>17m 26s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L547">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport:segment-018</td><td>work</td><td>1.000</td><td>40.7</td><td>14m 49s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.html#L587">transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport:segment-019</td><td>work</td><td>1.000</td><td>74.4</td><td>18m 25s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/11-v3-AddMultiPicturePerTrackSupport.md</td><td>198</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.md</td><td>658</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>28</td><td>6</td><td>app_code</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>34.00</td></tr>
+<tr><td>transcript_lines</td><td>313.70</td></tr>
+<tr><td>plan_lines</td><td>198.00</td></tr>
+<tr><td>elapsed_time</td><td>13392.00</td></tr>
+<tr><td>assistant_processing_time</td><td>3952.00</td></tr>
+<tr><td>back_and_forth_count</td><td>9.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

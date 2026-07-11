@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-03-22-1-11-AddMultiPicturePerTrackSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-03-22-1-11-AddMultiPicturePerTrackSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-03-22-1-11-AddMultiPicturePerTrackSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-03-22  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: 11-v1-AddMultiPicturePerTrackSupport.md, 11-v2-AddMultiPicturePerTrackSupport.md  </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.4 </pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User 2026-03-22T07:54:14Z </pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>[ Changed agent to GPT-5.4 (new context) ]</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre></pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>Read 11-AddMultiPicturePerTrackSupport.md and fix the following issues and any other issues that you find. Ask questions for clarification. All existing code is new and can be changed to meet plan as needed. If there is radically different behavior implemented than what was called for in the plan, stop and as for clarity as to what to do.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- When a picture is added that matches a picture in the pool and the picture was added by a track that does yet have a reference to it, then the picture is not added to picture list for that track.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Adding a picture as front cover to a track that already has front cover and selecting “Add as First” does not do so - it is added as last (appended, not inserted as first). And likewise “Add as Last” does the opposite. First should be earlier/leftmost in list. Confirm that writing to file, the First font cover should be the last picture written.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- A track does show that it has changes after a picture is added until some other event happens that would cause an update in track change state.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>-  The previous and next buttons should be disabled when the first or last picture is in view, respectively.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>## Assistant 2026-03-22T07:54:14Z (0s since User start)</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre></pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>I’m checking the plan and the album-art/tag-editor implementation first so I can compare the intended behavior against what was built before changing anything. After that I’ll fix the listed regressions, verify whether the implementation diverges materially from plan 11, and call out any behavior that needs a user decision.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre></pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>I’ve got the plan and the current implementation. The code is broadly aligned with the planned model, but the bugs you listed are in the view-model behavior rather than a radical design mismatch, so I’m drilling into the picture insertion, navigation gating, and track-dirty propagation paths now.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre></pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>The main issue pattern is visible now: picture mutations are staying inside AlbumArtViewModel, while track dirty state and some write-order semantics still depend on TagEditorViewModel.trackItems. I’m tracing those handoff points so the fix updates both UI behavior and save/diff behavior together instead of masking one side.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre></pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>I’ve narrowed the fixes to three concrete areas: front-cover drop ordering/pooled-image insertion in AlbumArtViewModel, ordered-picture diffing and notification in TagEditorViewModel, and navigation button gating in AlbumArtSheetView/ContentView. I’m patching those now, then I’ll add targeted tests for the multi-picture dirty-state and navigation/order cases.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>I’ve finished the production-side changes. I’m updating the targeted tests now so the fixes are exercised where the regressions actually lived: ordered picture diffing, boundary navigation state, and pooled front-cover insertion semantics.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>The code changes are compiling except for one unnecessary call I added while trying to force immediate status refresh through the file monitor. That monitor isn’t involved in picture-dirty calculation, so I’m removing that and validating with tests/build next.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>Fixed the reported regressions in AlbumArtViewModel.swift, AlbumArtSheetView.swift, TagEditorViewModel.swift, and ContentView.swift.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre></pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>The main fixes were:</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- Existing pooled front-cover drops now respect conflict handling instead of forcing an insert-at-zero path, and Add as First / Add as Last now map to earlier/later position in the front-cover list. The write path still emits the first front cover last, per plan.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- Picture dirty-state now compares full ordered pictureRecords, not the legacy first-picture-per-type map, so adding another picture of the same type marks the track dirty immediately.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Navigation enablement is now boundary-aware: previous/first disable at the first image, next/last disable at the last image.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre></pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>I also updated tests in SwiftTagTests.swift and TrackStatusViewInspectorTests.swift. Targeted tests passed, and the full project build succeeded.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre></pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>One point to confirm: I treated “First” and “Last” as order within the front-cover sequence for that track, not absolute order across all picture types before the save-time front-cover reorder. If you intended cross-type global ordering instead, say so and I’ll adjust it.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre></pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>[ 2026-03-22T07:59:33Z (5m 19s since Assistant start) ]</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre></pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>## User 2026-03-22T08:11:43Z (17m 29s since previous Assistant start) </pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre></pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>At time of save for any track the list of front covers should be written last after all other picture types and going from last in the front cover list to first - the first front cover should be the last picture written.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre></pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>## Assistant 2026-03-22T08:11:43Z (0s since User start)</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre></pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>I’m updating the front-cover write ordering now. The current code only moves the first front cover to the end; it needs to emit all non-front-cover types first, then write the front-cover list in reverse so the first front cover is written last.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre></pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>I’ve made the write-order change in the album-art view model. Next I’m tightening the affected test so it verifies the full required save order, not just that one front cover lands at the end.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre></pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>Updated AlbumArtViewModel.swift so save-time picture ordering is now:</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre></pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- all non-front-cover picture types first, in their existing order</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- then all front covers, from last to first in the track’s front-cover list</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre></pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>That means the first front cover in the UI list is now the last picture written to the file, matching your requirement. I also tightened the regression test in SwiftTagTests.swift to verify the full write order. The targeted test passed.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre></pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>[ 2026-03-22T08:12:31Z (48s since Assistant start) ]</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre></pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>## User 2026-03-22T08:35:22Z (23m 39s since previous Assistant start) </pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre></pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>Not all pictures in the pool for a given type are being made available to any track to “see” and maybe pin.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>The desired result is that a user can browse any of the pictures based on type and then “pin” the picture(s) that they would like to be saved to a given track (selected or all). De-pinning a picture should not remove the picture from the available list of pictures it just means don’t save that picture to the track’s file. </pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>Also, when a track is loaded/added any pictures it has already in its file should be initially pinned. If when loading/adding a track the pictures coming from the file of that track already exists in the pool then that track gets a reference to the existing pooled picture and it is initially pinned as if natively contributed. In this way tracks loaded/added will not lose or gain pictures if no picture pinning changes have been made and the file is saved. It may be necessary to update the code to keep track of what pictures a given track file started with so that at time of save if effectively no changes were made that would change a track file’s picture content, then the pictures will not need to be rewritten.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre></pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>## Assistant 2026-03-22T08:35:22Z (0s since User start)</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre></pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>I’m checking how the browser derives its visible picture list versus pinned state, because the current behavior suggests it’s still filtering availability by active track references instead of by pool-plus-type. I’ll update that model so browsing is pool/type-driven, while pinning remains per-track and existing file pictures stay initially pinned.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre></pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>The state loss is coming from syncAlbumArtContext(): after a pin/de-pin, trackItems gets rewritten with save-output pictures only, then the album-art model rebuilds itself from that reduced set and drops browseable-but-unpinned references. I’m tracing the import/reload paths now so I can preserve session pool state for existing tracks while still correctly seeding newly loaded or reloaded tracks from file content.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>I’ve got a simpler correction path: keep per-track references alive across context refreshes, and make the browser’s available list come from all track references for that picture type, not just the active selection. That matches the behavior you described without introducing a second pool/catalog model unless it turns out we still need one.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>I’m adding regression coverage for the two behaviors that were missing from the model: global-by-type browsing across tracks, and de-pinned pictures remaining available after the view model is reconfigured from save-output track state.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre></pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>One test fixture used NSColor.teal, which isn’t available here. I’m swapping that to a supported color and rerunning the targeted suite.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre></pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>Updated the picture-browser model in AlbumArtViewModel.swift so available pictures are now browsed from all known track references for a given type, not just the active track selection. I also changed context refresh to merge track file pictures into the existing in-memory reference state instead of rebuilding from trackItems every time, which was the path that dropped de-pinned pictures from the available list.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre></pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>That gives you the behavior you described:</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- a track can browse pictures contributed by other tracks and pin them</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- de-pinning no longer removes a picture from the available list</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>- newly loaded/added tracks still seed their file pictures as pinned references, including when those pictures already exist in the pool</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>- reload now resyncs album-art context in ContentView.swift</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre></pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>I added targeted regressions in SwiftTagTests.swift for cross-track browsing/pinning and de-pinned-picture persistence across context refresh. Targeted tests passed, and the project build passed.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre></pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>One behavior point to confirm: I treated the browser’s per-type list/count as global across the loaded session, not limited to the active selection, because that matches your clarification. If you want the label/count to still show selection scope while the browser itself remains global, say so and I’ll separate those two behaviors.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>[ 2026-03-22T08:40:27Z (5m 5s since Assistant start) ]</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre></pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>## User 2026-03-22T09:16:53Z (41m 31s since previous Assistant start) </pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre></pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>I have changed my mind on the front cover reverse oder write, what is desired now is to write:</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- all non-front-cover picture types first, in their existing order</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>- then all front covers, in existing order (from first to last in the track’s front-cover list)</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>Update tests as well.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre></pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>## Assistant 2026-03-22T09:16:53Z (0s since User start)</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre></pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>I’m changing the front-cover write path back to preserve front-cover order while still writing all front covers after non-front-cover types. Then I’ll update the regression test to match the new rule and rerun it.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre></pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>Updated AlbumArtViewModel.swift so save-time picture ordering is now:</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre></pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- all non-front-cover picture types first, in existing order</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- then all front covers, also in existing order from first to last</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre></pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>I updated the write-order regression in SwiftTagTests.swift to match and reran it successfully.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre></pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>[ 2026-03-22T09:17:34Z (41s since Assistant start) ]</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre></pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>## User 2026-03-22T20:28:52Z (11h 12m 0s since previous Assistant start) </pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre></pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>Read 11-AddMultiPicturePerTrackSupport.md (do not modify this file) and create file named _AddMultiPicturePerTrackSupport.md that has the original plan from 11-AddMultiPicturePerTrackSupport.md plus the current implementation and all modifications. Then update _AddMultiPicturePerTrackSupport.md plan with the following design changes:</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- Add after AlbumArtSheetView’s NavigationStack’s “Pin Album Pictures” a segmented Picker labeled “Track Picture Scope” with two choices, the first is labeled “All Track Pictures” with icon “photo.stack.fill” is icon only and is the default, the second is labeled “Selected Track Pictures” with icon “photo.on.rectangle.angled.fill” and is icon only.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>    - When “All Track Pictures” is selected display the albumArtType.navigationLinkName uses the count of all pictures in the pool available for a given picture type.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>    - When “Selected Track Pictures” is selected display the albumArtType.navigationLinkName uses the count of all pictures in the pool that are referenced by the selected tracks for a given picture type.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>    - When “Pin Album Pictures” is On and “All Track Pictures” is selected then disable all AlbumArtSheetView’s navigationDestination &quot;Pin Track Pictures&quot; toggle for all picture types and show its value as On, but do not change its actual state so that way if “Pin Album Pictures” is toggled Off then the &quot;Pin Track Pictures&quot; is enabled and its original state is “restored”.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>    - When “Pin Album Pictures” is On and “Selected Track Pictures” is selected then disable selected tracks AlbumArtSheetView’s navigationDestination &quot;Pin Track Pictures&quot; toggle for all picture types and show its value as On, but do not change its actual state so that way if “Pin Album Pictures” is toggled Off then the &quot;Pin Track Pictures&quot; is enabled and its original state is “restored”.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Add after AlbumArtSheetView’s navigationDestination &quot;Pin Track Pictures&quot; a segmented Picker labeled “Type Picture Scope” with two choices, the first is labeled “All Track Pictures” with icon “photo.stack.fill” is icon only and is the default, the second is labeled “Selected Track Pictures” with icon “photo.on.rectangle.angled.fill” and is icon only.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>    - When “All Track Pictures” is selected then make all pictures in the pool available to the picture list for the given picture type.</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>    - When “Selected Track Pictures” is selected then make all pictures in the pool that are referenced by the selected tracks available to the picture list for the given picture type.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>    - The &quot;Pin Track Pictures&quot; is On/Off mechanism works as it is now, when On, those/pinned pictures of that type are written to all/selected track files at time of save operation and when Off, those/pinned pictures of that type are not written to all/selected track files at time of save operation.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>- When the &quot;Save Front Cover to all Tracks&quot; setting is On then the &quot;Pin Track Pictures&quot; is set to On and disabled and this is state takes precedence over any other setting or pin state changes.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>- When &quot;Save Front Cover to all Tracks&quot; setting is On there may be no front cover picture and when this is the case then &quot;Pin Track Pictures&quot; is set to Off and disabled and when a front cover becomes available via drop/import, etc. then the &quot;Pin Track Pictures&quot; is set to On and disabled.</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- When &quot;Save all Pictures to all Tracks&quot; setting is On then the “Pin Album Pictures” is set to On and disabled the &quot;Pin Track Pictures&quot; is set to On and disabled for all existing and subsequently added track pictures.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- When &quot;Save all Pictures to all Tracks&quot; setting is On there may be no picture for a given type and when this is the case then &quot;Pin Track Pictures&quot; is set to Off and disabled and when a picture of a given type becomes available via drop/import, etc. then the &quot;Pin Track Pictures&quot; for that type is set to On and disabled.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Remove from “chooseFrontCoverDropAction” “addFirst” and “addLast” cases and associated logic and refactor for simplification as appropriate.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Add to returned string of currentPictureMetadataText “In file: status“ where status is “Yes” if the picture presented is in all of the currently selected tracks files or “Mixed”  if the picture presented is in some of the currently selected tracks or “No” if the picture presented is in none of the currently selected tracks. Followed by the current presented pictures index in the list of that pictures type, followed by “ of “, followed by presented picture’s list type count for current selection. </pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>Ask questions for clarification.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre></pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>## Assistant 2026-03-22T20:28:52Z (0s since User start)</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre></pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>I’m reading the existing plan and the current album-art/save-settings implementation first so I can mirror the original plan accurately and isolate the points that need clarification before I write the new draft.</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre></pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>I have the original plan and enough of the current album-art implementation to draft the updated plan, but a few behavior points are still ambiguous and will materially change the plan wording. I’m stopping before writing so the draft can include the right confirmed decisions instead of inventing them.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre></pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>1. For the new scope pickers, what is the source of truth for write targets when Pin Track Pictures is toggled in a picture-type destination?</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>Is it:</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- Type Picture Scope (All Track Pictures means pin/unpin against all tracks, Selected Track Pictures means pin/unpin against selected tracks), or</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- the existing save-target behavior independent of that picker, with the picker only filtering which pictures are visible/countable?</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre></pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>2. For Save Front Cover to all Tracks, should the forced Pin Track Pictures behavior apply only to the Front Cover type, or to every picture type while that setting is on?</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre></pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>3. When a control is forced by settings or by Pin Album Pictures, should the UI show an effective temporary value only while preserving the underlying stored pin state for later restoration, or should the underlying pin state actually be rewritten?</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>I need this specifically for:</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- Pin Track Pictures forced by Pin Album Pictures</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- Pin Track Pictures forced by Save Front Cover to all Tracks</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- Pin Album Pictures and Pin Track Pictures forced by Save all Pictures to all Tracks</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre></pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>4. For currentPictureMetadataText, should In file: Yes/Mixed/No be evaluated against:</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>   - all currently selected tracks only,</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>   - all tracks when nothing is selected,</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>   - or all loaded tracks regardless of selection?</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre></pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>[ 2026-03-22T20:33:00Z (4m 8s since Assistant start) ]</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre></pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>## User 2026-03-22T20:47:10Z (18m 19s since previous Assistant start) </pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre></pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>1. For the new scope pickers, the source of truth for write targets when Pin Track Pictures is toggled in a picture-type destination is Type Picture Scope (All Track Pictures means pin/unpin against all tracks, Selected Track Pictures means pin/unpin against selected tracks).</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>2. For Save Front Cover to all Tracks, the forced Pin Track Pictures behavior should apply only to the Front Cover type.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>3. When a control is forced by settings or by Pin Album Pictures like:</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>- Pin Track Pictures forced by Pin Album Pictures</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>- Pin Track Pictures forced by Save Front Cover to all Tracks</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>- Pin Album Pictures and Pin Track Pictures forced by Save all Pictures to all Tracks</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>then the UI should show an effective temporary value while preserving the underlying stored pin state for later restoration, if the track is saved while a control is forced into a state, then the forced state should used to determine what is written not the underlying state that might be restored.</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>4. For currentPictureMetadataText, In file: Yes/Mixed/No should be evaluated against all currently selected tracks or all tracks when nothing is selected.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre></pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>## Assistant 2026-03-22T20:47:10Z (0s since User start)</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre></pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>I have the clarifications. I’m pulling a bit more implementation context from the tag-editor integration so the new plan file reflects the current state accurately before I write it.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre></pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>I’ve got enough context. I’m writing the draft plan file now by copying the original plan structure, adding a current-implementation snapshot, and folding in the clarified scope-picker and forced-state rules as confirmed decisions.</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre></pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>The draft plan file is in place. I’m doing a quick readback to confirm it captured the original structure plus the new confirmed decisions without mutating the original numbered plan.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre></pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>Created Docs/Plans/_AddMultiPicturePerTrackSupport.md. It preserves the original plan structure, adds a Current Implementation Snapshot based on the current codebase, and incorporates your clarified design changes into scope, implementation phases, test strategy, acceptance criteria, and confirmed decisions.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre></pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>The original numbered plan at Docs/Plans/11-AddMultiPicturePerTrackSupport.md was not modified.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre></pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>[ 2026-03-22T20:49:00Z (1m 50s since Assistant start) ]</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre></pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>## User 2026-03-22T21:33:19Z (46m 9s since previous Assistant start) </pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre></pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>Ok, implement latest plan _AddMultiPicturePerTrackSupport.md phases.</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre></pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>## Assistant 2026-03-22T21:33:19Z (0s since User start)</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre></pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>I’m implementing the draft plan in the codebase now. I’ll start by tracing the album-art scope, pinning, and save-path integration points so the model and UI changes land together instead of creating another partial compatibility layer.</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre></pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>The core work is concentrated in AlbumArtViewModel and the ContentView sheet wiring. I’m reading those sections and the existing tests next so I can patch the model API once and update all the call sites consistently.</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre></pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>I’ve got the model shape. The main refactor now is separating stored pin state from effective pin state so the new forced behaviors can work without rewriting the underlying references. After that I’ll wire the new pickers into the sheet.</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre></pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>I’ve moved the pinning source of truth into the model and updated the sheet wiring. Next I’m cleaning up the compile edges from the new API surface and then I’ll add targeted tests for the new scope and effective-state behavior.</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre></pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>I’m tightening the behavior with targeted model tests now. The main cases I want covered are scope-sensitive counts, type-scope pin targets, forced-state restoration, and the new metadata text so we don’t regress those rules during follow-up fixes.</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre></pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>Two targeted failures came from the default Save Front Cover to all Tracks setting forcing front-cover pins on in tests that were assuming manual pin control. I’m making those tests explicit about settings so they validate the intended behavior rather than whatever the defaults happen to be.</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre></pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>The scoped model tests are passing now. I’m running a broader album-art-focused test pass and then a full project build to catch any integration issues outside the directly edited files.</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre></pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>One behavior gap showed up in the broader run: I had tied remove-picture scope to the new type-scope picker, but the existing and planned behavior is still selection-based removal with the out-of-scope overlay. I’m correcting that before the build.</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre></pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>Implemented the scoped multi-picture plan across the album-art model, sheet UI, save behavior, and tests.</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre></pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>The main changes are in AlbumArtViewModel.swift, AlbumArtSheetView.swift, and ContentView.swift. The model now tracks Track Picture Scope and per-type Type Picture Scope, separates stored pin state from effective forced pin state, applies Save Front Cover to all Tracks and Save all Pictures to all Tracks as temporary effective overrides, updates metadata to include In file: Yes|Mixed|No plus position text, and simplifies front-cover drop handling by removing the addFirst/addLast path. The sheet now exposes both segmented pickers and uses the new effective pin/disable state wiring.</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre></pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>I also updated tests in SwiftTagTests.swift and TrackStatusViewInspectorTests.swift to cover the new scope/count logic, forced-state restoration, and metadata behavior.</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre></pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>Validation passed:</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>- Targeted album-art tests: 14/14 passed</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>- Project build: succeeded</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre></pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>[ 2026-03-22T21:42:19Z (9m 0s since Assistant start) ]</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre></pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>## User 2026-03-22T23:57:26Z (2h 24m 8s since previous Assistant start) </pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre></pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>Update selected code so that poolItemId can be used for more granularity on when to draw overlay. The overlay should not be drawn over every image of a given type, but for the actual image removed for a given type.</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre></pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>## Assistant 2026-03-22T23:57:26Z (0s since User start)</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre></pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>I’m updating the remove-picture overlay state so it tracks the specific removed picture instead of the whole slot. I’ll inspect the overlay plumbing first, then patch the view model and the sheet wiring together so the UI only marks the actual affected image.</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre></pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>The current overlay state is still keyed only by slot, so any image shown in that slot picks up the same message. I’m changing that to track the removed poolItemID and exposing a helper that only returns overlay text when the currently displayed image matches that specific removed picture.</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre></pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>I’ve updated the state shape and the call sites. I’m running fast diagnostics and the targeted remove-picture test now to confirm the overlay only appears for the removed image’s poolItemID.</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre></pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>Updated the remove-picture overlay so it is keyed by the removed image’s poolItemID, not just by slot.</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre></pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>AlbumArtViewModel now stores infoOverlayStateBySlot with both poolItemID and message, and exposes infoOverlayText(for:) that only returns text when the currently displayed picture in that slot matches the removed picture. ContentView was updated to use that helper, and the existing remove-picture test was adjusted accordingly.</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre></pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>Files changed:</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>- AlbumArtViewModel.swift</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>- ContentView.swift</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>- SwiftTagTests.swift</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre></pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>Validation:</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>- Targeted test albumArtViewModelRemoveCurrentPictureShowsRepinHintWhenOutOfScopeReferenceRemains() passed.</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre></pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>[ 2026-03-23T00:35:51Z (38m 25s since Assistant start) ]</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre></pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>## User 2026-03-23T07:11:45Z (7h 14m 19s since previous Assistant start) </pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre></pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>Reloading a track file that has changes does not update status icon immediately after reload. The icon does update for that track file after another status change event occurs. Also confirm that syncTrackPictureRecordsFromAlbumArt is not being called redundantly.</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre></pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>## Assistant 2026-03-23T07:11:45Z (0s since User start)</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre></pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>I’m tracing the reload path and the status presentation update path first, with syncTrackPictureRecordsFromAlbumArt() in that same pass, so I can separate a real stale-state bug from an incidental redraw issue.</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre></pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>I found the reload path and the status presentation logic. Next I’m reading the reload implementation in TagEditorViewModel and the state mutations around externalDifferences/snapshots to locate why the row doesn’t redraw until a later event.</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre></pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>The likely bug is that reload mutates fields on trackItems[index] in place, including externalDifferences = nil, which is exactly the kind of element-level array mutation that can fail to trigger an immediate SwiftUI redraw. I’m checking whether setPictureRecordsByTrackID has the same pattern before I patch it.</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre></pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre>syncTrackPictureRecordsFromAlbumArt() is definitely being called redundantly in at least one hot path: reloadSelectedTracks() calls it immediately before confirmBeforeDestructiveAction(), and confirmBeforeDestructiveAction() calls it again unconditionally. I’m going to remove that duplication while fixing the stale reload/status update.</pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre></pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>I confirmed the broader pattern: the calls before syncAlbumArtContext() are mostly intentional because they push album-art model edits back into trackItems before configureTrackContext() rebuilds from trackItems. The clear redundancy is reloadSelectedTracks() calling syncTrackPictureRecordsFromAlbumArt() right before confirmBeforeDestructiveAction(), since that helper calls it again itself. I’m patching just that redundant path and the reload redraw bug.</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre></pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>I’ve patched the two concrete issues: reload now publishes a full trackItems replacement instead of only mutating one array element in place, and the redundant pre-confirm sync in reloadSelectedTracks() is removed. I’m adding a focused regression test around reloadTracksWithDifferences() and then I’ll run diagnostics and a build.</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre></pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>The compile diagnostics are clean. I’m running the new reload regression test plus a couple adjacent status tests, then a full build to verify the behavior and the sync cleanup together.</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre></pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>The new regression test surfaced a real mismatch, but it’s in the test setup, not the fix: the editor-wide totalDiscs value in the test wasn’t aligned with the imported fixture, so the track still had an in-editor diff after reload. I’m correcting the fixture setup and rerunning.</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre></pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>The cleaner way to validate this is to use the real import path instead of hand-assembling the track state. I’m switching the regression test to importFlacFiles(...) so it matches the app’s actual setup and isolates the reload behavior itself.</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre></pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>The publish fix is in place, but the new test shows reload is still leaving an actual editor diff behind, not just a stale view. I’m using a quick snippet against TagEditorViewModel to see which field remains dirty after reload so I can fix the correct state mismatch instead of guessing.</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre></pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre>The remaining failing test indicates the fixture setup still isn’t in the same “clean editor” state that the live app reaches around reload. I’m normalizing the test by explicitly syncing the imported state as saved first, then rerunning the reload regression.</pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre></pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>The failing regression points to a real reload-state mismatch: after reloading from disk, the editor data is refreshed but the snapshot being stored is still the raw file snapshot, which can leave a canonical tag diff immediately afterward. I’m correcting reload to store the reloaded state as the new synced snapshot.</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre></pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre>The reload regression test is green now. I’m doing a full project build to make sure the snapshot change and the sync-call cleanup didn’t create any integration fallout elsewhere.</pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre></pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre>Fixed the reload-status issue in TagEditorViewModel.swift. reloadTracksWithDifferences(...) now rebuilds trackItems through a copied array and assigns it back once, which gives SwiftUI an observable collection change immediately, and it stores the reloaded track as the new synced snapshot using canonical write tags plus the reloaded picture records. That removes the leftover immediate fish status after reload and makes the icon update right away.</pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre></pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre>I also confirmed one real redundancy in ContentView.swift: reloadSelectedTracks() was calling syncTrackPictureRecordsFromAlbumArt() immediately before confirmBeforeDestructiveAction(), and confirmBeforeDestructiveAction() already calls it. I removed that duplicate call. The other syncTrackPictureRecordsFromAlbumArt() calls that are immediately followed by syncAlbumArtContext() are not redundant, because they persist album-art model edits back into trackItems before syncAlbumArtContext() rebuilds album-art state from trackItems.</pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre></pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre>I added a regression test in SwiftTagTests.swift for reload restoring fish.fill status immediately.</pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre></pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre>Validation:</pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre>- Targeted tests passed:</pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre>   - tagEditorViewModelReloadTracksWithDifferencesRestoresSyncedStatusPresentation()</pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre>   - tagEditorViewModelStatusPresentationPrefersLockAndExternalDifference()</pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre>   - tagEditorViewModelSyncedSnapshotProducesFishFillStatus()</pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>- Project build succeeded</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre></pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>[ 2026-03-23T07:19:14Z (7m 29s since Assistant start) ]</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre></pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>## User 2026-03-23T17:07:01Z (9h 55m 17s since previous Assistant start) </pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre></pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>The status icon still does not update immediately after reload when a picture is added and then that picture is unpinned.</pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre></pre></td></tr>
+<tr id="L302"><th><a href="#L302">302</a></th><td><pre>## Assistant 2026-03-23T17:07:01Z (0s since User start)</pre></td></tr>
+<tr id="L303"><th><a href="#L303">303</a></th><td><pre></pre></td></tr>
+<tr id="L304"><th><a href="#L304">304</a></th><td><pre>I traced the remaining case to stale album-art model state surviving a destructive reload. When a picture has been added and then unpinned, the reload updates trackItems, but the album-art pool/reference state still retains that track’s transient reference, so the editor can still see a picture diff until another event rebuilds it. I’m clearing that transient album-art state for reloaded tracks before the post-reload context sync.</pre></td></tr>
+<tr id="L305"><th><a href="#L305">305</a></th><td><pre></pre></td></tr>
+<tr id="L306"><th><a href="#L306">306</a></th><td><pre>I’ve isolated the remaining case to reload not clearing album-art transient state for the reloaded track. I’m adding an explicit discard step for those track IDs before the post-reload album-art rebuild, and I’ll cover that with a focused album-art regression test.</pre></td></tr>
+<tr id="L307"><th><a href="#L307">307</a></th><td><pre></pre></td></tr>
+<tr id="L308"><th><a href="#L308">308</a></th><td><pre>The reload path now explicitly drops transient album-art refs for the reloaded tracks before rebuilding from trackItems. I’m running fast diagnostics plus the new regression test and the existing reload-status test together.</pre></td></tr>
+<tr id="L309"><th><a href="#L309">309</a></th><td><pre></pre></td></tr>
+<tr id="L310"><th><a href="#L310">310</a></th><td><pre>The targeted regressions are green. I’m doing one more build so this change set is verified end to end.</pre></td></tr>
+<tr id="L311"><th><a href="#L311">311</a></th><td><pre></pre></td></tr>
+<tr id="L312"><th><a href="#L312">312</a></th><td><pre>Fixed the remaining reload case where a picture had been added and then unpinned.</pre></td></tr>
+<tr id="L313"><th><a href="#L313">313</a></th><td><pre></pre></td></tr>
+<tr id="L314"><th><a href="#L314">314</a></th><td><pre>I added discardTransientState(for:albumArtTypes:) to AlbumArtViewModel.swift. It clears pooled track references and unpinned state for the reloaded track IDs, garbage-collects the pool, and refreshes the visible image state. Then ContentView.swift now calls that right after reloadTracksWithDifferences(...) and before syncAlbumArtContext(). That prevents stale unpinned picture state from surviving reload and continuing to drive a false picture-difference status.</pre></td></tr>
+<tr id="L315"><th><a href="#L315">315</a></th><td><pre></pre></td></tr>
+<tr id="L316"><th><a href="#L316">316</a></th><td><pre>I also kept the earlier reload-status fix in place: reloadTracksWithDifferences(...) still replaces trackItems as a whole and stores a synced snapshot after reload, so the row publishes immediately and the status resolves to fish.fill without waiting for another event.</pre></td></tr>
+<tr id="L317"><th><a href="#L317">317</a></th><td><pre></pre></td></tr>
+<tr id="L318"><th><a href="#L318">318</a></th><td><pre>Tests added or re-run in SwiftTagTests.swift:</pre></td></tr>
+<tr id="L319"><th><a href="#L319">319</a></th><td><pre>- albumArtViewModelDiscardTransientStateRemovesUnpinnedPictureForReloadedTrack()</pre></td></tr>
+<tr id="L320"><th><a href="#L320">320</a></th><td><pre>- tagEditorViewModelReloadTracksWithDifferencesRestoresSyncedStatusPresentation()</pre></td></tr>
+<tr id="L321"><th><a href="#L321">321</a></th><td><pre>- albumArtViewModelDepinKeepsPictureAvailableAfterContextRefresh()</pre></td></tr>
+<tr id="L322"><th><a href="#L322">322</a></th><td><pre></pre></td></tr>
+<tr id="L323"><th><a href="#L323">323</a></th><td><pre>Validation:</pre></td></tr>
+<tr id="L324"><th><a href="#L324">324</a></th><td><pre>- Targeted tests passed</pre></td></tr>
+<tr id="L325"><th><a href="#L325">325</a></th><td><pre>- Project build succeeded</pre></td></tr>
+<tr id="L326"><th><a href="#L326">326</a></th><td><pre></pre></td></tr>
+<tr id="L327"><th><a href="#L327">327</a></th><td><pre>[ 2026-03-23T17:09:33Z (2m 32s since Assistant start) ]</pre></td></tr>
+<tr id="L328"><th><a href="#L328">328</a></th><td><pre></pre></td></tr>
+<tr id="L329"><th><a href="#L329">329</a></th><td><pre>## User 2026-03-23T17:48:33Z (41m 32s since previous Assistant start) </pre></td></tr>
+<tr id="L330"><th><a href="#L330">330</a></th><td><pre></pre></td></tr>
+<tr id="L331"><th><a href="#L331">331</a></th><td><pre>Review _AddMultiPicturePerTrackSupport.md and confirm/add test coverage leverage ViewInspector harness when possible.</pre></td></tr>
+<tr id="L332"><th><a href="#L332">332</a></th><td><pre></pre></td></tr>
+<tr id="L333"><th><a href="#L333">333</a></th><td><pre>## Assistant 2026-03-23T17:48:33Z (0s since User start)</pre></td></tr>
+<tr id="L334"><th><a href="#L334">334</a></th><td><pre></pre></td></tr>
+<tr id="L335"><th><a href="#L335">335</a></th><td><pre>I’m reviewing the draft plan against the current implementation and the testing guide, focusing on whether the test strategy is actually preferring ViewInspector where it can instead of defaulting to model-only or broader runs.</pre></td></tr>
+<tr id="L336"><th><a href="#L336">336</a></th><td><pre></pre></td></tr>
+<tr id="L337"><th><a href="#L337">337</a></th><td><pre>The draft plan already mentions ViewInspector, but it’s still too generic. I’m tightening the test strategy so it explicitly reuses the existing TrackStatusViewInspectorTests harness for AlbumArtSheetView and TagEditorAlbumView behaviors instead of leaving that as an implied option.</pre></td></tr>
+<tr id="L338"><th><a href="#L338">338</a></th><td><pre></pre></td></tr>
+<tr id="L339"><th><a href="#L339">339</a></th><td><pre>I’ve got the exact sections. I’m updating the plan now to make the ViewInspector harness requirement concrete rather than aspirational.</pre></td></tr>
+<tr id="L340"><th><a href="#L340">340</a></th><td><pre></pre></td></tr>
+<tr id="L341"><th><a href="#L341">341</a></th><td><pre>Reviewed and tightened Docs/Plans/_AddMultiPicturePerTrackSupport.md so the test strategy now explicitly leverages ViewInspector when possible instead of just mentioning it generally.</pre></td></tr>
+<tr id="L342"><th><a href="#L342">342</a></th><td><pre></pre></td></tr>
+<tr id="L343"><th><a href="#L343">343</a></th><td><pre>The plan now:</pre></td></tr>
+<tr id="L344"><th><a href="#L344">344</a></th><td><pre>- Calls out the existing ViewInspector harness in TrackStatusViewInspectorTests.swift as the first-choice UI test surface to extend.</pre></td></tr>
+<tr id="L345"><th><a href="#L345">345</a></th><td><pre>- Adds explicit ViewInspector coverage targets for AlbumArtSheetView picker wiring, pin-state rendering, metadata text, navigation bounds, overlay visibility tied to the current picture reference, and inspectable album-art well interactions.</pre></td></tr>
+<tr id="L346"><th><a href="#L346">346</a></th><td><pre>- Clarifies that non-UI model/service tests should continue to cover save payload, reload/transient-state discard, dedupe, unpin, and garbage-collection behavior.</pre></td></tr>
+<tr id="L347"><th><a href="#L347">347</a></th><td><pre>- Pushes XCUI down to only the cases ViewInspector cannot reliably validate after a focused attempt.</pre></td></tr>
+<tr id="L348"><th><a href="#L348">348</a></th><td><pre></pre></td></tr>
+<tr id="L349"><th><a href="#L349">349</a></th><td><pre>[ 2026-03-23T17:49:44Z (1m 11s since Assistant start) ]</pre></td></tr>
+<tr id="L350"><th><a href="#L350">350</a></th><td><pre></pre></td></tr>
+<tr id="L351"><th><a href="#L351">351</a></th><td><pre>## User 2026-03-23T17:51:26Z (2m 53s since previous Assistant start) </pre></td></tr>
+<tr id="L352"><th><a href="#L352">352</a></th><td><pre></pre></td></tr>
+<tr id="L353"><th><a href="#L353">353</a></th><td><pre>Implement remaining tests.</pre></td></tr>
+<tr id="L354"><th><a href="#L354">354</a></th><td><pre></pre></td></tr>
+<tr id="L355"><th><a href="#L355">355</a></th><td><pre>## Assistant 2026-03-23T17:51:26Z (0s since User start)</pre></td></tr>
+<tr id="L356"><th><a href="#L356">356</a></th><td><pre></pre></td></tr>
+<tr id="L357"><th><a href="#L357">357</a></th><td><pre>I’m implementing the remaining targeted tests now, starting with the existing ViewInspector harness so the remaining album-art UI behaviors get covered there instead of adding broader integration tests.</pre></td></tr>
+<tr id="L358"><th><a href="#L358">358</a></th><td><pre></pre></td></tr>
+<tr id="L359"><th><a href="#L359">359</a></th><td><pre>I’m checking the existing ViewInspector harness and the current album-art sheet surface so I can add only the remaining tests the plan calls for, without widening scope.</pre></td></tr>
+<tr id="L360"><th><a href="#L360">360</a></th><td><pre></pre></td></tr>
+<tr id="L361"><th><a href="#L361">361</a></th><td><pre>I’ve confirmed the current ViewInspector file still only covers the save overlay and basic album-art well cases. I’m adding the missing sheet-level tests for scope pickers, metadata/overlay rendering, and navigation gating next.</pre></td></tr>
+<tr id="L362"><th><a href="#L362">362</a></th><td><pre></pre></td></tr>
+<tr id="L363"><th><a href="#L363">363</a></th><td><pre>I have enough context. I’m editing the existing TrackStatusViewInspectorTests.swift helper to support configurable sheet fixtures, then I’ll add focused AlbumArtSheetView tests for the untested scope/count/overlay/navigation cases.</pre></td></tr>
+<tr id="L364"><th><a href="#L364">364</a></th><td><pre></pre></td></tr>
+<tr id="L365"><th><a href="#L365">365</a></th><td><pre>The first pass showed NavigationStack destination content is not stably traversable here, which is consistent with the plan’s warning about toolbar/destination brittleness. I’m converting those three tests to the same harness style already used elsewhere: ViewInspector for injected view state, plus focused source assertions for the destination gating that ViewInspector cannot reliably reach.</pre></td></tr>
+<tr id="L366"><th><a href="#L366">366</a></th><td><pre></pre></td></tr>
+<tr id="L367"><th><a href="#L367">367</a></th><td><pre>The added tests are compiling and passing in isolation. I’m doing a full project build once so this lands with a clean compile across the scheme, not just the individual test cases.</pre></td></tr>
+<tr id="L368"><th><a href="#L368">368</a></th><td><pre></pre></td></tr>
+<tr id="L369"><th><a href="#L369">369</a></th><td><pre>Added the remaining album-art sheet tests in TrackStatusViewInspectorTests.swift. Coverage now includes scoped count labels, overlay and metadata wiring, scope picker configuration, and navigation bound gating. I also expanded the local sheet fixture helper in TrackStatusViewInspectorTests.swift so these cases can be exercised without duplicating setup.</pre></td></tr>
+<tr id="L370"><th><a href="#L370">370</a></th><td><pre></pre></td></tr>
+<tr id="L371"><th><a href="#L371">371</a></th><td><pre>For the parts ViewInspector can reach cleanly, the tests use the existing harness directly. For NavigationStack destination toolbar content, I kept the tests on the stable side of the boundary: they assert the injected state through actualView() and verify the destination gating exists in AlbumArtSheetView.swift. That matches the plan’s “ViewInspector when possible” requirement without adding brittle traversal.</pre></td></tr>
+<tr id="L372"><th><a href="#L372">372</a></th><td><pre></pre></td></tr>
+<tr id="L373"><th><a href="#L373">373</a></th><td><pre>Validation:</pre></td></tr>
+<tr id="L374"><th><a href="#L374">374</a></th><td><pre>- Targeted tests passed: 5/5</pre></td></tr>
+<tr id="L375"><th><a href="#L375">375</a></th><td><pre>- Project build succeeded</pre></td></tr>
+<tr id="L376"><th><a href="#L376">376</a></th><td><pre></pre></td></tr>
+<tr id="L377"><th><a href="#L377">377</a></th><td><pre>[ 2026-03-23T17:55:23Z (3m 57s since Assistant start) ]</pre></td></tr>
+<tr id="L378"><th><a href="#L378">378</a></th><td><pre></pre></td></tr>
+<tr id="L379"><th><a href="#L379">379</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

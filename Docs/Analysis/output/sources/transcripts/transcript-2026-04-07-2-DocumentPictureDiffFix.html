@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-04-07-2-DocumentPictureDiffFix</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-04-07-2-DocumentPictureDiffFix</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-04-07-2-DocumentPictureDiffFix.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-04-07  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Bug, Test  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: Pictures seen as different between doc loads  </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.4 Extra High (Codex app)  </pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User 2026-04-07T08:29:42Z </pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>Opened .swifttag document shows external differences in pictures when there are no differences:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Add two flac files to editor with one file having at least one more picture for a given type (e.g. one front cover in the first file and two front covers in the second).</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Save as .swifttag document.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- In a new window add the file that has less pictures for a type and edit tag, then save the flac file</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Open saved .swifttag file, editor will show that all tracks have external differences in pictures with only one of the tracks showing in the window text that it has (by selection) an external difference. Neither actually have any picture difference.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>I suspect it has to do with seeing a difference based on picture ordering, but this is a guess.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>Create a UI test that confirms the issue and fix.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>## Assistant 2026-04-07T08:29:42Z (0s since User start)</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre></pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>I’m tracing the picture-diff flow first so we can reproduce the bug in the right layer, then I’ll add a UI test that locks the behavior down before fixing it.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre></pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>I’ve got the project layout and the likely planning docs; next I’m reading the testing guide plus the document/status code that computes picture differences so we can pin the regression to a specific comparison path.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre></pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>I found the exact comparison seam: picture diffs are currently canonicalized by type and original index, which means same-content multi-picture sets can still look different after a reopen if the order changes. I’m reading the existing document-load tests now so we can extend the same workflow instead of inventing a new harness.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre></pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>The document load path itself looks straightforward, so I’m checking the album-art synchronization around handleOpenedSwiftTagDocument next. If that layer reorders per-track picture arrays on load, it would explain why a false picture diff can spread beyond the one externally edited file.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>I’ve narrowed the likely fault line: .swifttag export canonicalizes multi-picture arrays by content, but the reopen/live comparison still treats same-type pictures as order-sensitive. That mismatch is exactly the kind of thing that would surface as a false picture diff after reopening a saved document.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>Plan:</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>1. Add a narrow document-load regression test with multiple front covers so we can prove the comparison should be order-insensitive for equivalent picture sets.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>2. Add an XCUI regression that saves a two-track .swifttag, edits only the lower-picture FLAC through the app, then reopens the document and checks that picture diff counts stay at 0.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>3. Fix the picture canonicalization/comparison path so reopened document pictures are compared with the same deterministic ordering used by .swifttag export.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>4. Run targeted build and test passes, then tighten anything flaky in the UI harness if needed.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre></pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>I’ve got the edit set lined up: one shared picture canonicalization change, one narrow document regression test, and one XCUI scenario that exercises the reopened .swifttag path with a multi-front-cover track.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre></pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>I’m applying the comparison fix first, then I’m wiring the unit and UI regressions around it so both the narrow and end-to-end paths stay covered.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre></pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>The fix and both regressions are in place. I’m doing a fast diagnostics pass now so we can catch any compile or test-harness issues before running the targeted tests.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre></pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>The project compiles cleanly. I have the unit-test identifier from Xcode already; I’m pulling the UI-test identifier from the generated test list so I can run both targets as narrowly as possible.</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre></pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>I hit a useful snag: the UI test target can see the app module headers, but it can’t link those app-internal helpers directly. I’m pivoting to the existing app-driven UI-test harness so the app itself prepares the picture variants and file mutations, which keeps the XCUI coverage intact without fragile target-linking changes.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre></pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>I’m swapping the XCUI setup over to the app’s built-in launch/materialization hooks now, which keeps the test self-contained and avoids the linker dead-end from calling app internals directly out of the UI test bundle.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre></pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>The narrow document regression is green now. I’m running the XCUI scenario next, which exercises the saved-document reopen path through the app’s own UI-test fixture hooks.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre></pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>[ 2026-04-07T08:55:09Z (25m 27s since Assistant start) ]</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre></pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>## User 2026-04-07T08:55:09Z </pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre></pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre></pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>When you typed to change a tag you lost focus and now text changes happened.</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre></pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>## Assistant 2026-04-07T08:55:09Z (0s since User start)</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre></pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>I did steal focus with the XCUI run, and I’m stopping that path right now. I’m checking for any leftover test/app processes so nothing keeps typing or clicking.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre></pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre></pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>I’m stopping the focus-stealing UI automation path here. I’m going to finish the fix safely by cleaning up the UI test code so it builds, and I won’t run that XCUI test again unless you want me to.</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre></pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>I’ve checked the UI test file, and the stale direct app-import helpers are no longer there. I’m reading the regression test and launch plumbing now so I can verify the safe state without re-running the focus-stealing test.</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre></pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>The regression UI test is wired through launch-environment fixture overrides now, which means we can at least validate the code path by building without taking focus again. I’m running a project build next.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre></pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>I’ve got the safe verification now: the project builds cleanly, and I’m pulling the exact code locations so I can hand you a precise close-out without touching the UI again.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre></pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>[ 2026-04-07T08:57:41Z (2m 32s since Assistant start) ]</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre></pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>## User 2026-04-07T08:57:41Z </pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre></pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>No, continue with tests, I was just trying help point a potential false negative.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre></pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>## Assistant 2026-04-07T08:57:41Z (0s since User start)</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre></pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>I’m resuming with the targeted regression UI test only, so we can confirm the fix end-to-end without broad automation. If it exposes a real failure instead of the false negative you suspected, I’ll tighten the test or the fix from there.</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre></pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>The test did fail, so this looks like a real remaining issue rather than just the earlier false negative. I’m pulling the failing assertion and the test log now so I can see whether the bug is still in comparison logic or in the test flow itself.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>The failure is at the first subtitle assertion after reopening. I’m checking the probe helpers and the underlying status logic next so I can tell whether the app is still reporting the wrong counts or the test is asserting the wrong post-save title/selection state.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre></pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>I’ve confirmed the UI probe is reading the same hidden subtitle text the window shows, so the failing assertion is about the actual computed counts. I’m looking at the subtitle derivation now to line the UI expectation up with the model behavior and see whether the first selected track should really show a selected tag difference count of 1 or 0.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre></pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>I’m going to add a tiny bit of debug output to the failing UI assertion so we can see the actual subtitle value the app is publishing. That lets us distinguish “bug still present” from “test expected the wrong settled state” in one more targeted run.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre></pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>I’ve added temporary assertion messages so the next run will tell us the exact subtitle the app is exposing. Running the same single UI test again now.</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre></pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>[ 2026-04-07T09:07:43Z (10m 2s since Assistant start) ]</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre></pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>## User 2026-04-07T09:07:43Z </pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre></pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre></pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>Ok, if you are trying to change the track title in this test, you are failing, because as soon as you enter the track title field to change the title you lose focus and no changes happen. If this is your tag field to change, then either you will need to find out how to actually change this field or perhaps pick another field like Description to edit/change.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre></pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>## Assistant 2026-04-07T09:07:43Z (0s since User start)</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre></pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>You’re right, and that lines up with what the test is doing. I’m switching the external edit in the regression flow away from the title field and onto a stable tag field so the test validates the picture-diff bug instead of the title-focus bug.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre></pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>I’ve swapped the live-file edit to the album field, which should avoid the title-focus trap and keep the scenario true to “tag-only external change.” I’m rerunning that one UI test now.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre></pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>The targeted regression now passes with the album-field edit, so the focus problem was indeed producing a false negative in the first version of the UI test. I’m grabbing the final file locations and then I’ll give you a tight summary with the verification results.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre></pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>You were right: the first UI regression was getting a false negative because editing the title field drops focus before the save. I changed that regression to perform the external tag-only edit through the album field instead, so it now validates the picture-diff reopen bug rather than the title-focus bug.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre></pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>The actual fix is shared picture canonicalization, so live external-difference checks and `.swifttag` packaging now treat equivalent multi-picture sets the same even when their order differs. Key spots are [FlacMetadataService.swift](Swift/SwiftTag/SwiftTag/FlacMetadataService.swift#L101), [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift#L1789), [SwiftTagDocumentPackage.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift#L520), [SwiftTagDocumentTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagDocumentTests.swift#L648), and [SwiftTagUITests.swift](Swift/SwiftTag/SwiftTagUITests/SwiftTagUITests.swift#L630).</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre></pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>Verification: project build passed, `SwiftTagDocumentTests/swiftTagDocumentLoadRefreshDoesNotFlagEquivalentMultiPictureOrderingAsPictureDifference()` passed, and `SwiftTagUITests/testReopeningSavedSwiftTagDocumentIgnoresEquivalentMultiPictureOrderingAfterExternalTagSave()` passed.</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre></pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>[ 2026-04-07T09:10:15Z (2m 32s since Assistant start) ]</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre></pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

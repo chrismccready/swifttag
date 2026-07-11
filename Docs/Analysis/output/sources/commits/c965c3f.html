@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: Refine tag​-driven track editor and misc tag table behavior</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: Refine tag​-driven track editor and misc tag table behavior</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-03-02</p>
+<p><code>c965c3feb354452704670af683ab541da3c43f71</code></p>
+<p>Refine tag​-driven track editor and misc tag table behavior</p>
+<h2>Body</h2><pre>- migrate track model to dictionary-backed tags with stable id
+- keep existing UI functionality mapped to tag keys (TITLE, ARTIST, DATE, etc.)
+- remove Number column from tracks table
+- bind Number field to selected track NUMBER tag and validate positive integer input
+- validate total​Tracks as positive integer string and center-align both numeric fields
+- normalize imported track number from TRACKNUMBER/TRACK and strip leading zeros
+- add misc​Tags editable table (Key/Value) with multi-select, add, and delete actions
+- exclude explicit tag keys from misc tags handling
+- misc tags show union of non-explicit tags across all tracks
+- show empty value when selected tracks are missing/mixed for a tag
+- allow misc tag row creation at any time (even with no selection)
+- refresh misc tags after FLAC import so new non-explicit tags appear</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>48.3 Moderate</span></div>
+  <div><strong>Weight Coverage</strong><span>70%</span></div>
+  <div><strong>Elapsed</strong><span>Unavailable</span></div>
+  <div><strong>Assistant</strong><span>Unavailable</span></div>
+  <div><strong>User Response</strong><span>Unavailable</span></div>
+  <div><strong>Back/Forth</strong><span>7.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p>None</p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-02-1-MiscTagEditorDev.html#L1">transcript-2026-03-02-1-MiscTagEditorDev</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-02-1-MiscTagEditorDev.html#L12">transcript-2026-03-02-1-MiscTagEditorDev</a></td><td>transcript-2026-03-02-1-MiscTagEditorDev:segment-001</td><td>work</td><td>1.000</td><td>20.8</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-02-1-MiscTagEditorDev.html#L31">transcript-2026-03-02-1-MiscTagEditorDev</a></td><td>transcript-2026-03-02-1-MiscTagEditorDev:segment-002</td><td>work</td><td>1.000</td><td>12.1</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-02-1-MiscTagEditorDev.html#L42">transcript-2026-03-02-1-MiscTagEditorDev</a></td><td>transcript-2026-03-02-1-MiscTagEditorDev:segment-003</td><td>work</td><td>1.000</td><td>15.3</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-02-1-MiscTagEditorDev.html#L56">transcript-2026-03-02-1-MiscTagEditorDev</a></td><td>transcript-2026-03-02-1-MiscTagEditorDev:segment-004</td><td>work</td><td>1.000</td><td>6.6</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-02-1-MiscTagEditorDev.html#L62">transcript-2026-03-02-1-MiscTagEditorDev</a></td><td>transcript-2026-03-02-1-MiscTagEditorDev:segment-005</td><td>work</td><td>1.000</td><td>27.4</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-02-1-MiscTagEditorDev.html#L87">transcript-2026-03-02-1-MiscTagEditorDev</a></td><td>transcript-2026-03-02-1-MiscTagEditorDev:segment-006</td><td>work</td><td>1.000</td><td>16.4</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-02-1-MiscTagEditorDev.html#L102">transcript-2026-03-02-1-MiscTagEditorDev</a></td><td>transcript-2026-03-02-1-MiscTagEditorDev:segment-007</td><td>work</td><td>1.000</td><td>25.2</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-02-1-MiscTagEditorDev.html#L125">transcript-2026-03-02-1-MiscTagEditorDev</a></td><td>transcript-2026-03-02-1-MiscTagEditorDev:segment-008</td><td>work</td><td>1.000</td><td>24.1</td><td>Unavailable</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>SwiftTag/ContentView.swift</td><td>226</td><td>20</td><td>app_code</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>246.00</td></tr>
+<tr><td>transcript_lines</td><td>148.00</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>Unavailable</td></tr>
+<tr><td>assistant_processing_time</td><td>Unavailable</td></tr>
+<tr><td>back_and_forth_count</td><td>7.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<ul><li><a href="../../transcripts-without-timestamps-notes.html">Transcript timing unavailable notes</a></li></ul></main></body></html>

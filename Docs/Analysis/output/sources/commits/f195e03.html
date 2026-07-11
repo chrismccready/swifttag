@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(quicklook): add .swifttag quick look preview extension</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(quicklook): add .swifttag quick look preview extension</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-11</p>
+<p><code>f195e03db1cd290792f99f8b880bb69995e28921</code></p>
+<p>feat(quicklook): add .swifttag quick look preview extension</p>
+<h2>Body</h2><pre>- add the SwiftTagQuickLookPreview appex target, embed it in the app, and register
+  com.toowalks.swifttag-document with the Quick Look preview extension point
+- split shared SwiftTag document and picture support so the extension can reuse package reading
+  and preview models without linking the FLAC bridge
+- add Quick Look snapshot, SwiftUI view, bitmap renderer, and provider code for cover-art-backed
+  previews with track ordering, conditional metadata lines, and ellipsis overflow handling
+- add focused Quick Look tests
+
+docs (plan): add plan documentation and transcript</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>94.0 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>18h 14m</span></div>
+  <div><strong>Assistant</strong><span>2h 31m</span></div>
+  <div><strong>User Response</strong><span>15h 43m</span></div>
+  <div><strong>Back/Forth</strong><span>5.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/flac-lib.html">FLAC Lib</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/23.html">Plan 23: Add SwiftTag Document Quick Look Preview Extension Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook.html#L1">transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook.html#L12">transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook</a></td><td>transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-001</td><td>work</td><td>1.000</td><td>71.0</td><td>14h 6m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook.html#L80">transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook</a></td><td>transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-002</td><td>work</td><td>1.000</td><td>87.7</td><td>2h 5m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook.html#L164">transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook</a></td><td>transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-003</td><td>work</td><td>1.000</td><td>45.9</td><td>52m 13s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook.html#L208">transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook</a></td><td>transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-004</td><td>work</td><td>1.000</td><td>29.2</td><td>1h 4m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook.html#L236">transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook</a></td><td>transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-005</td><td>work</td><td>1.000</td><td>50.1</td><td>5m 49s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/23-AddSwiftTagDocumentQuickLook.md</td><td>256</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook.md</td><td>284</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag.xcodeproj/project.pbxproj</td><td>213</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag.xcodeproj/xcuserdata/ccm.xcuserdatad/xcschemes/xcschememanagement.plist</td><td>0</td><td>37</td><td>other</td></tr>
+<tr><td>SwiftTag/FlacMetadataService.swift</td><td>0</td><td>123</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/FlacPictureModels.swift</td><td>63</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/QuickLook/SwiftTagDocumentQuickLookBitmapRenderer.swift</td><td>47</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/QuickLook/SwiftTagDocumentQuickLookSnapshot.swift</td><td>244</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/QuickLook/SwiftTagDocumentQuickLookView.swift</td><td>106</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/FlacPictureUtilities.swift</td><td>62</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift</td><td>0</td><td>738</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentPackageManifest.swift</td><td>87</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentPackageReader.swift</td><td>131</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentPackageWriter.swift</td><td>336</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentSupport.swift</td><td>187</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTagQuickLookPreview/Info.plist</td><td>40</td><td>0</td><td>other</td></tr>
+<tr><td>SwiftTagQuickLookPreview/Resources/SwiftTagQuickLookFallback.png</td><td>0</td><td>0</td><td>other</td></tr>
+<tr><td>SwiftTagQuickLookPreview/SwiftTagDocumentQuickLookPreviewProvider.swift</td><td>51</td><td>0</td><td>other</td></tr>
+<tr><td>SwiftTagTests/SwiftTagQuickLookTests.swift</td><td>276</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>2337.00</td></tr>
+<tr><td>transcript_lines</td><td>284.00</td></tr>
+<tr><td>plan_lines</td><td>256.00</td></tr>
+<tr><td>elapsed_time</td><td>65681.00</td></tr>
+<tr><td>assistant_processing_time</td><td>9070.00</td></tr>
+<tr><td>back_and_forth_count</td><td>5.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

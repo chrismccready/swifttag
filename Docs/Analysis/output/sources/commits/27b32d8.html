@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(save): add FLAC tag and picture writing workflow</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(save): add FLAC tag and picture writing workflow</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-03-06</p>
+<p><code>27b32d888ac16fcaa31f6735b29d960131a8315c</code></p>
+<p>feat(save): add FLAC tag and picture writing workflow</p>
+<h2>Body</h2><pre>• add metadata write support in the FLAC bridge and Swift service for tags, pictures, or both
+• add save actions to the app commands and route editor saves through persisted save settings
+• add write mapping for canonical tag output, count-key strategies, and number zero padding
+• add settings views and save preference models for payload, scope, and tag write defaults
+• add unit and UI coverage for save behavior, persisted settings, and FLAC fixture workflows
+• update docs with current app behavior and renumber plan files under Docs​/​Plans/</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>67.7 High</span></div>
+  <div><strong>Weight Coverage</strong><span>70%</span></div>
+  <div><strong>Elapsed</strong><span>Unavailable</span></div>
+  <div><strong>Assistant</strong><span>Unavailable</span></div>
+  <div><strong>User Response</strong><span>Unavailable</span></div>
+  <div><strong>Back/Forth</strong><span>15.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/flac-lib.html">FLAC Lib</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/settings.html">Settings</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/4.html">Plan 4: FLAC Write Tags and Pictures Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L1">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L13">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-001</td><td>work</td><td>1.000</td><td>51.4</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L63">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-002</td><td>work</td><td>1.000</td><td>24.7</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L87">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-003</td><td>work</td><td>1.000</td><td>18.5</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L105">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-004</td><td>work</td><td>1.000</td><td>23.7</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L128">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-005</td><td>work</td><td>1.000</td><td>144.0</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L268">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-006</td><td>work</td><td>1.000</td><td>43.2</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L310">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-007</td><td>work</td><td>1.000</td><td>6.2</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L316">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-008</td><td>work</td><td>1.000</td><td>14.4</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L330">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-009</td><td>work</td><td>1.000</td><td>27.8</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L357">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-010</td><td>work</td><td>1.000</td><td>39.1</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L395">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-011</td><td>work</td><td>1.000</td><td>16.5</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L411">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-012</td><td>work</td><td>1.000</td><td>28.8</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L439">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-013</td><td>work</td><td>1.000</td><td>25.7</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L464">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-014</td><td>work</td><td>1.000</td><td>25.7</td><td>Unavailable</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.html#L489">transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan</a></td><td>transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan:segment-015</td><td>work</td><td>1.000</td><td>9.3</td><td>Unavailable</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/{FLACBridgeExecution.md =&gt; 1-FLACBridgeExecution.md}</td><td>0</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/{ContentViewReorganizationPlan.md =&gt; 2-ContentViewReorganizationPlan.md}</td><td>0</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/{FlacPictureImportAlbumArtPlan.md =&gt; 3-FlacPictureImportAlbumArtPlan.md}</td><td>0</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/4-FlacWriteTagsAndPicturesPlan.md</td><td>274</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/README.md</td><td>71</td><td>36</td><td>docs</td></tr>
+<tr><td>SwiftTag.xcodeproj/project.pbxproj</td><td>115</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>150</td><td>7</td><td>app_code</td></tr>
+<tr><td>SwiftTag/FLACBridge/include/FlacMetadataBridge.h</td><td>25</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/FLACBridge/src/FlacMetadataBridge.c</td><td>422</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtTypes.swift</td><td>1</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift</td><td>33</td><td>10</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/FlacImport/FlacImportMapper.swift</td><td>4</td><td>4</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/FlacImport/FlacWriteMapper.swift</td><td>149</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/GeneralSettingsView.swift</td><td>46</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/SettingsView.swift</td><td>20</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/TagWriteSettingsView.swift</td><td>51</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>149</td><td>37</td><td>app_code</td></tr>
+<tr><td>SwiftTag/FlacMetadataService.swift</td><td>144</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/SaveSettings.swift</td><td>129</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/TagKey.swift</td><td>2</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/Track.swift</td><td>15</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/TagNormalization.swift</td><td>2</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTagApp.swift</td><td>57</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>543</td><td>2</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>305</td><td>24</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>1579.00</td></tr>
+<tr><td>transcript_lines</td><td>499.00</td></tr>
+<tr><td>plan_lines</td><td>274.00</td></tr>
+<tr><td>elapsed_time</td><td>Unavailable</td></tr>
+<tr><td>assistant_processing_time</td><td>Unavailable</td></tr>
+<tr><td>back_and_forth_count</td><td>15.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<ul><li><a href="../../transcripts-without-timestamps-notes.html">Transcript timing unavailable notes</a></li></ul></main></body></html>

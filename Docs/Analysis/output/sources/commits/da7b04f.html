@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(flac): add track fingerprint support</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(flac): add track fingerprint support</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-01</p>
+<p><code>da7b04f7563351b6c4c0883dbcbc16a5e081336a</code></p>
+<p>feat(flac): add track fingerprint support</p>
+<h2>Body</h2><pre>- read the STREAMINFO MD5 from libFLAC and expose it through FlacMetadataService
+- store fingerprints on tracks and snapshots during import, reload, save refresh, and file refresh
+- add a Fingerprint (ffp) track-table column with persisted show or hide state and NA fallback
+- add targeted tests for fixture reads, fingerprint propagation, and table column behavior
+
+docs(plan): add plan and transcript docs for FLAC fingerprint support</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>68.3 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>1h 1m</span></div>
+  <div><strong>Assistant</strong><span>10m 55s</span></div>
+  <div><strong>User Response</strong><span>50m 40s</span></div>
+  <div><strong>Back/Forth</strong><span>3.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/flac-lib.html">FLAC Lib</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/settings.html">Settings</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/13.html">Plan 13: Add FLAC Fingerprint Support Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-01-1-13-AddFLACFingerprintSupport.html#L1">transcript-2026-04-01-1-13-AddFLACFingerprintSupport</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-01-1-13-AddFLACFingerprintSupport.html#L12">transcript-2026-04-01-1-13-AddFLACFingerprintSupport</a></td><td>transcript-2026-04-01-1-13-AddFLACFingerprintSupport:segment-001</td><td>work</td><td>1.000</td><td>38.9</td><td>17m 36s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-01-1-13-AddFLACFingerprintSupport.html#L46">transcript-2026-04-01-1-13-AddFLACFingerprintSupport</a></td><td>transcript-2026-04-01-1-13-AddFLACFingerprintSupport:segment-002</td><td>work</td><td>1.000</td><td>25.1</td><td>35m 49s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-01-1-13-AddFLACFingerprintSupport.html#L68">transcript-2026-04-01-1-13-AddFLACFingerprintSupport</a></td><td>transcript-2026-04-01-1-13-AddFLACFingerprintSupport:segment-003</td><td>work</td><td>1.000</td><td>32.0</td><td>8m 10s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>AGENTS.md</td><td>1</td><td>0</td><td>docs</td></tr>
+<tr><td>Docs/Plans/13-AddFLACFingerprintSupport.md</td><td>133</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-01-1-13-AddFLACFingerprintSupport.md</td><td>96</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>2</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/FLACBridge/include/FlacMetadataBridge.h</td><td>1</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/FLACBridge/src/FlacMetadataBridge.c</td><td>51</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift</td><td>19</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorView.swift</td><td>2</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>19</td><td>8</td><td>app_code</td></tr>
+<tr><td>SwiftTag/FlacMetadataService.swift</td><td>19</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/FeedbackSettings.swift</td><td>2</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/Track.swift</td><td>16</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/TrackStatus.swift</td><td>4</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>78</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/TrackStatusViewInspectorTests.swift</td><td>61</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>145.00</td></tr>
+<tr><td>transcript_lines</td><td>96.00</td></tr>
+<tr><td>plan_lines</td><td>133.00</td></tr>
+<tr><td>elapsed_time</td><td>3695.00</td></tr>
+<tr><td>assistant_processing_time</td><td>655.00</td></tr>
+<tr><td>back_and_forth_count</td><td>3.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

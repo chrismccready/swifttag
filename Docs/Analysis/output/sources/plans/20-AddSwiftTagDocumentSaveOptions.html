@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 20-AddSwiftTagDocumentSaveOptions</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 20-AddSwiftTagDocumentSaveOptions</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/20-AddSwiftTagDocumentSaveOptions.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add Window-Close SwiftTag Document Save Options Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Extend the unsaved-FLAC window-close and app-quit flows so they offer additional save choices</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>beyond the current destructive confirm/cancel alerts.</pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre></pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>The intended result is:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- when a window has unsaved FLAC changes, the close flow always offers `Save FLAC files`, using the</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>  current default FLAC save write options regardless of the</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>  `saveReferencedSwiftTagDocument` and `askToSaveNewSwiftTagDocument` settings</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- when the app is quitting and there are unsaved FLAC changes in one or more windows, the quit flow</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>  uses the same expanded choice set rather than the current simple quit confirmation</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- when the current session already references a `.swifttag` document, the close/quit flow also</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>  offers:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>  - `Save &lt;referenced .swifttag document name&gt;`</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>  - `Save FLAC files &amp; &lt;referenced .swifttag document name&gt;`</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- when the current session does not reference a `.swifttag` document, the close/quit flow instead</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>  offers:</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>  - `Save New SwiftTag Document...`</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>  - `Save FLAC files &amp; New SwiftTag Document...`</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- when a close-triggered or quit-triggered new-document save option opens the SwiftTag save panel</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>  and the user cancels that panel, the originating window stays open and the quit attempt is</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>  canceled</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre></pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- Replace or extend the current unsaved window-close alert for sessions with unsaved FLAC changes.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- Replace or extend the current app-quit unsaved-changes alert so it can drive the same expanded</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>  choice set across affected sessions.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- Add close-triggered save choices for FLAC-only, SwiftTag-document-only, and combined save flows.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Add quit-triggered save choices for FLAC-only, SwiftTag-document-only, and combined save flows.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- Reuse the existing default FLAC save settings and existing SwiftTag document save writer/destination</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>  flow where practical.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Use the remembered referenced `.swifttag` document as the source of truth when one already exists.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- Keep the originating window open when a close-triggered SwiftTag save panel is canceled.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- Cancel the app-quit attempt when a quit-triggered SwiftTag save panel is canceled.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- Add targeted automated coverage for option resolution, close-flow orchestration, and cancel/failure</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>  behavior.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Changing `⌘S` follow-on save behavior already covered by `Docs/Plans/19-AddSwiftTagDocumentSaveOptions.md`.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- Changing manual `Save SwiftTag Document...` command semantics beyond reusing its save helpers.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- Changing SwiftTag document package contents, format, or reopen logic.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- Changing FLAC write semantics outside the close-window flow.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- Changing save flows outside window close and app quit confirmation.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre></pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- Latest numbered plan reviewed:</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>  - `Docs/Plans/19-AddSwiftTagDocumentSaveOptions.md`</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- Current implementation files reviewed:</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>  - `SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>  - `SwiftTag/Shared/Utilities/UnsavedChangesCoordinator.swift`</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>  - `SwiftTag/Shared/Models/SaveSettings.swift`</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>  - `SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift`</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>  - `SwiftTag/SwiftTagApp.swift`</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>  - `AGENTS.md`</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>  - `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- Relevant fixtures inspected:</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>  - `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>  - `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- Constraints accounted for:</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>  - `windowShouldClose(_:)` is synchronous, while FLAC save work currently runs asynchronously in</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>    `ContentView.save()`.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>  - `applicationShouldTerminate(_:)` currently uses `UnsavedChangesCoordinator.confirmQuitIfNeeded()`</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>    and returns either `.terminateNow` or `.terminateCancel`, so quit-triggered save work will also</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>    need a deferred async orchestration path.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>  - `UnsavedChangesCoordinator` currently knows only unsaved edit counts; it does not yet know the</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>    referenced SwiftTag document name, available close actions, or save callbacks.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>  - `ContentView` already has reusable SwiftTag document save helpers:</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>    `performSwiftTagDocumentSave(using:)`, destination resolution, and error presentation.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>  - The remembered referenced document source of truth already lives in</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>    `TagEditorViewModel.swiftTagDocumentSaveState()`.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>  - Close-triggered new-document creation must coordinate with `NSSavePanel` cancellation without</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>    tearing down the window prematurely.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>  - Window teardown currently happens from `onWindowWillClose`; the implementation must avoid</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>    invoking teardown until the chosen close action has either succeeded or been canceled.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- `WindowCloseGuardRepresentable` routes `windowShouldClose(_:)` through</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>  `UnsavedChangesCoordinator.shared.confirmCloseWindowIfNeeded(for:)`.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- `SwiftTagApp.applicationShouldTerminate(_:)` routes app quit through</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>  `UnsavedChangesCoordinator.shared.confirmQuitIfNeeded()`.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- `UnsavedChangesCoordinator` currently registers a per-session provider that returns only</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>  `(tagEdits, pictureEdits)` and shows a synchronous AppKit `NSAlert` with `Close Window` and</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>  `Cancel` for window close plus `Quit` and `Cancel` for app quit.</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- `ContentView` already tracks unsaved edit counts, owns the editor session ID, and owns the save</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>  helpers that can write FLAC changes and SwiftTag documents.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- `ContentView.save(using:)` already applies the default save payload/scope and performs FLAC writes</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>  through `TagEditorViewModel.save(...)`.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>- `ContentView.performSwiftTagDocumentSave(using:)` already supports three destination modes:</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>  remembered-or-prompt, remembered-only, and prompt-for-new-document.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- `ContentView` already presents SwiftTag save failures distinctly when FLAC save already succeeded,</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>  which is useful for combined close-save actions.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre></pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>- The expanded choice set applies to the unsaved-FLAC window-close dialog regardless of the current</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>  `saveReferencedSwiftTagDocument` and `askToSaveNewSwiftTagDocument` settings values.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- The same expanded choice set also applies to app quit confirmation.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>- `Save FLAC files` saves using the current default save write options.</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>- When a referenced `.swifttag` document exists, the close flow should offer both document-only and</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>  combined FLAC-plus-document save actions.</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>- When no referenced `.swifttag` document exists, the close flow should offer both new-document-only</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>  and combined FLAC-plus-new-document save actions.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>- If a close-triggered `Save New SwiftTag Document...` path opens a save panel and the user cancels</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>  that panel, the originating window must remain open.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- If the user chooses a document-only action, the window closes afterward even though the unsaved</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>  FLAC edits were not written back to the FLAC files.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- The destructive no-save option remains present in the close dialog and keeps the label</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>  `Close Window`.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- For app quit, the destructive no-save option should remain present and preserve the existing quit</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>  semantics.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- If a combined action saves FLAC files successfully but the SwiftTag document save then fails, the</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>  window remains open with the same partial-success error behavior already used by the `⌘S`</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>  follow-on save flow.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre></pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- The close flow should reuse the remembered SwiftTag document URL/name in</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>  `TagEditorViewModel.swiftTagDocumentSaveState()` instead of inventing a second reference store.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- The implementation needs a close-specific orchestration seam that can:</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>  - block immediate window closure</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>  - present close options</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>  - run asynchronous save work</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>  - re-attempt or force the actual window close only after the chosen action completes successfully</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- The quit flow needs the same orchestration pattern, but it must coordinate across every affected</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>  unsaved session and only allow termination after the chosen quit actions complete successfully.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- The current `UnsavedChangesCoordinator` API is too narrow for the requested behavior, so it will</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>  likely need to register richer per-session close context or delegate the full close workflow back</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>  into `ContentView`.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- Combined save actions should preserve the established save ordering unless a clarified requirement</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>  says otherwise; the likely order is FLAC first, then SwiftTag document.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>- The close workflow must guard against re-entrant close attempts and repeated saves while a</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>  close-triggered save action is already in progress.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- The user-visible button label for the referenced-document actions depends on deriving a stable file</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>  name from the remembered destination URL.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Because the requested choice set exceeds the current two-button alert, the implementation may need</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>  a custom sheet/dialog flow instead of keeping the existing minimal `NSAlert` unchanged.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- For app quit, the implementation must decide whether to present one aggregated dialog that works</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>  across all unsaved sessions or a session-at-a-time workflow; whichever path is chosen must still</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>  preserve the confirmed action semantics above.</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre></pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>## Write-Back Behavior</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>- Preserved data:</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>  - Existing FLAC save behavior and write options remain the source of truth for any close-triggered</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>    or quit-triggered FLAC write.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>  - Existing remembered `.swifttag` destination/document ID behavior remains the source of truth for</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>    referenced-document saves.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>  - Canceling the new-document save panel keeps the current window and in-memory edits intact.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>- Replaced data:</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>  - When a referenced-document save action is chosen, the existing `.swifttag` package is rewritten</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>    using the current editor session state.</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>  - When a combined save action is chosen, FLAC files are rewritten according to the current default</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>    save options before any follow-on SwiftTag document save step.</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- Removed data:</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>  - A document-only close or quit action discards the current unsaved FLAC-on-disk changes after the</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>    window closes or the app terminates, while preserving the current session state only in the</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>    saved `.swifttag` document.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>- Selection semantics:</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>  - Close-triggered save actions should continue to operate on the same payload/scope source of truth</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>    used by the existing save commands, rather than introducing a close-only track-selection model.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre></pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>- The confirmed document-only close/quit options are intentionally destructive to FLAC-on-disk state</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>  because they preserve the current session only in the `.swifttag` document, so dialog copy and</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>  action separation must make that distinction clear.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>- If a combined close-save action partially succeeds, users need unambiguous messaging about which</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>  data was saved and whether the window remains open.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>- If the new close dialog replaces standard close-sheet behavior poorly, button ordering, default</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>  action, keyboard shortcuts, and user expectation may regress.</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>- If the referenced document name is missing or derived inconsistently, the close dialog labels can</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>  become unstable or misleading.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>- If quit confirmation spans multiple unsaved windows, the product behavior must remain predictable</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>  about whether actions apply to one session or all pending sessions.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre></pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>### Tooling / Environment / Sandbox Risks</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>- `windowShouldClose(_:)` is synchronous, but FLAC save uses async work, so the implementation must</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>  defer closure rather than trying to block synchronously on an async save.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>- `applicationShouldTerminate(_:)` has the same synchronous-to-async mismatch for quit-triggered</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>  save flows.</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>- `NSSavePanel` is AppKit-driven and must coordinate correctly with any custom close sheet/dialog to</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>  avoid nested-modal or focus issues.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>- Targeted UI tests for close behavior can be timing-sensitive because they involve window delegate</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>  routing, dialog presentation, and save-panel interaction.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre></pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>1. Model Close-Flow Options And Session Context</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>- Add a close-flow model that can derive available actions from:</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>  - unsaved edit counts</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>  - referenced SwiftTag document presence</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>  - referenced SwiftTag document display name</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>  - current default save settings snapshot</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>- Extend the session registration path so the close/quit-flow owner can access more than just edit</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>  counts.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>- Keep the action resolver pure and unit-testable.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre></pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>2. Replace The Current Return-Only Close Confirmation With Deferred Close Orchestration</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>- Change the close guard flow so `windowShouldClose(_:)` returns `false` when unsaved changes require</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>  user confirmation.</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>- Present the expanded close options through either:</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>  - a richer AppKit alert/sheet managed by the coordinator, or</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>  - a `ContentView`-owned sheet/dialog triggered by the close guard</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>- Add a one-shot bypass or re-entry flag so a successful close action can trigger the real window</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>  close without re-presenting the dialog.</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>- Apply the same deferred pattern to app quit so `applicationShouldTerminate(_:)` can cancel the</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>  immediate quit request, run the selected save actions, and then resume termination only after</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>  success.</pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre></pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>3. Reuse Existing Save Helpers For Close-Triggered Actions</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>- Extract or wrap the existing FLAC save path so the close flow can request a default-save execution</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>  and receive a success/failure result.</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>- Reuse `performSwiftTagDocumentSave(using:)` for:</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>  - referenced-document-only saves</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>  - new-document-only saves</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre>  - combined close-save actions after the FLAC save step succeeds</pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>- Keep save failures routed through the existing save error presentation patterns where practical.</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre></pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>4. Define Post-Action Close Semantics And Failure Handling</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>- For each close action, explicitly define whether the window:</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>  - closes after success</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>  - remains open after cancellation</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>  - remains open after any save failure</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre>- Mirror the same semantics for quit, with the added rule that any canceled panel or failed save</pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>  aborts the pending app termination.</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>- Ensure combined actions stop after the first failed step and surface a partial-success message when</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>  one save completed before another failed.</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>- Ensure new-document save-panel cancellation leaves the original unsaved state intact and the window</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>  open.</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>- Ensure document-only actions intentionally close the window or continue app termination even though</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>  the FLAC files themselves were not updated.</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre></pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>5. Add Targeted Automated Coverage</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>- Add pure unit tests for the close-option resolver.</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>- Add lightweight state/orchestration tests only where a test seam exists without overfitting UI</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>  internals.</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>- Add targeted XCUI tests for the actual close-flow behaviors that depend on AppKit window delegate</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>  routing and modal UI.</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>- Add targeted quit-flow tests for the same option resolution and cancellation/failure behavior.</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre></pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>Order:</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>1. Pure unit tests:</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>  - referenced document present produces the referenced-document option set</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>  - no referenced document produces the new-document option set</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>  - labels include the referenced `.swifttag` file name when available</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>  - no-unsaved-edits path bypasses the close dialog</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>2. Service / orchestration tests where practical:</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>  - combined action runs FLAC save before SwiftTag document save</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>  - close bypass/re-entry flag prevents the dialog from reappearing on the final close attempt</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>  - panel cancellation leaves the session in an unsaved/open state</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>  - quit orchestration aborts termination when any panel is canceled or any save step fails</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>3. Targeted XCUI tests:</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>  - closing a window with unsaved FLAC changes shows the expanded option set</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>  - `Save FLAC files` saves with current default save options and then closes the window</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>  - referenced-document-only action saves only the `.swifttag` document and then closes the window</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>  - referenced-document combined action saves both outputs and then closes the window</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>  - `Save New SwiftTag Document...` opens the save panel and canceling it keeps the window open</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>  - `Save FLAC files &amp; New SwiftTag Document...` writes FLAC changes first, then prompts for the new</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>    document, and canceling that panel keeps the window open</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>  - app quit with unsaved changes shows the expanded option set and honors the same success,</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>    cancellation, and partial-failure rules</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre>4. Verification workflow:</pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre>  - prefer targeted build/test validation over full-suite runs</pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>  - prefer fixture-backed FLAC tests using `SwiftTagTestFiles/test.flac` and</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre>    `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>  - keep XCUI coverage narrow and focused on close-flow integration behavior</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre></pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>- Closing a window with no unsaved FLAC changes continues to close immediately.</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>- Closing a window with unsaved FLAC changes shows the expanded close-save option set.</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>- `Save FLAC files` uses the current default save write options and, on success, closes the window.</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>- When a referenced `.swifttag` document exists, the close flow shows both referenced-document-only</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>  and combined FLAC-plus-document actions using the referenced document file name in the labels.</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>- When no referenced `.swifttag` document exists, the close flow shows both new-document-only and</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>  combined FLAC-plus-new-document actions.</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre>- Choosing a document-only action saves the SwiftTag document and then closes the window or proceeds</pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre>  with app termination without writing the pending FLAC changes back to the FLAC files.</pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>- Choosing a new-document action opens the SwiftTag save panel.</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>- Canceling the save panel for a new-document close action does not close the originating window.</pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre>- Canceling the save panel for a new-document quit action aborts app termination.</pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>- Any failed close-triggered save action leaves the window open and presents an error describing what</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre>  did and did not save.</pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>- Any failed quit-triggered save action aborts termination and presents an error describing what did</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre>  and did not save.</pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>- The final close path does not re-present the unsaved-changes dialog after a successful save action.</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre>- The final quit path does not re-present the unsaved-changes dialog after a successful save action.</pre></td></tr></table></main></body></html>

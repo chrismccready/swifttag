@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-05-02-1-26-AddAppleScriptSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-05-02-1-26-AddAppleScriptSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-05-02-1-26-AddAppleScriptSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>Date: 2026-05-02    </pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>References: 26-AddAppleScriptSupport.md  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Agent: GPT-5.5 Extra High (Codex app)  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre></pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>## User 2026-05-02T18:49:06Z </pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>1. Add to &quot;SwiftTag Suite&quot; &quot;application&quot; class of `SwiftTag.sdef`</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>```XML</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>&lt;property name=&quot;format on track to file diff&quot; code=&quot;ftfd&quot; type=&quot;boolean&quot; access=&quot;rw&quot; description=&quot;Perform text formatting on track to file diff (aka: Diff Tools: Format on Track to File Diff).&quot;&gt;</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>    &lt;cocoa key=&quot;FormatOnTrackToFileDiffSetting&quot;/&gt;</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>&lt;/property&gt;</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>&lt;property name=&quot;format on track to track diff&quot; code=&quot;fttd&quot; type=&quot;boolean&quot; access=&quot;rw&quot; description=&quot;Perform text formatting on track to track diff (aka: Diff Tools: Format on Track to Track Diff).&quot;&gt;</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>    &lt;cocoa key=&quot;FormatOnTrackToTrackDiffSetting&quot;/&gt;</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>&lt;/property&gt;</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>&lt;property name=&quot;format on externally modified diff&quot; code=&quot;ftem&quot; type=&quot;boolean&quot; access=&quot;rw&quot; description=&quot;Perform text formatting on externally modified diff (aka: Diff Tools: Format on Externally Modified Diff).&quot;&gt;</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>    &lt;cocoa key=&quot;FormatOnExternallyModifiedDiffSetting&quot;/&gt;</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>&lt;/property&gt;</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>&lt;property name=&quot;format on track total mismatch&quot; code=&quot;fttm&quot; type=&quot;boolean&quot; access=&quot;rw&quot; description=&quot;Perform text formatting on track total mismatch (aka: Diff Tools: Format on Track Total Mismatch).&quot;&gt;</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>    &lt;cocoa key=&quot;FormatOnTrackTotalMismatchSetting&quot;/&gt;</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>&lt;/property&gt;</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>&lt;property name=&quot;format on disc total mismatch&quot; code=&quot;ftdm&quot; type=&quot;boolean&quot; access=&quot;rw&quot; description=&quot;Perform text formatting on disc total mismatch (aka: Diff Tools: Format on Disc Total Mismatch).&quot;&gt;</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>    &lt;cocoa key=&quot;FormatOnDiscTotalMismatchSetting&quot;/&gt;</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>&lt;/property&gt;</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>&lt;property name=&quot;format on duplicate picture&quot; code=&quot;fdp&quot; type=&quot;boolean&quot; access=&quot;rw&quot; description=&quot;Show color overlay on duplicate picture (aka: Diff Tools: Format on Duplicate Picture).&quot;&gt;</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>    &lt;cocoa key=&quot;FormatOnDuplicatePictureSetting&quot;/&gt;</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>&lt;/property&gt;</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>```</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>2. The added `application` properties map to SwiftTag&#x27;s Diff Tools (`DiffToolsView.swift`).</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Add settings read/write via AppleScript (`SwiftTagAppleScriptSupport.swift`).</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- Add tests including UI scripting to confirm functionality.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre></pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>Use Apple Docs Scout agent to review Apple’s AppleScript documentation to confirm use of latest technology, coding patterns, etc.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>## Assistant 2026-05-02T18:49:06Z (0s since User start)</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre></pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>Using Apple Docs Scout profile first, then source. Need confirm sdef/KVC mapping matches current project pattern before edit.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre></pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>Apple Docs Scout profile says Xcode docs first. I’ll delegate docs lookup while I inspect local scripting/settings code.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>Input: Use Docs/AppleDocsIndex/apple-docs-scout-agent.md as Apple Docs Scout profile. Task: verify current primary Apple guidance for exposing read/write app-level AppleScript properties in a macOS Swift/AppKit/SwiftUI app using an sdef `&lt;property&gt;` with `&lt;cocoa key&gt;`, KVC on NSApplication/AppDelegate/custom NSApplication subclass, and tests using NSAppleScript/osascript. Prefer Xcode MCP DocumentationSearch for Foundation/AppKit scripting APIs, then local Docs/AppleDocsIndex/Generated, then SDK headers. Return concise findings with symbols/topics, framework, availability if found, source path or Apple URL, and implementation-relevant answer. Do not edit files.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>Existing app properties already use sdef `&lt;cocoa key&gt;` into NSApplication KVC. Diff toggles use FeedbackSettingsKey, so edit likely lives in same settings bridge, plus UI harness extension.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>Docs Scout done: sdef access=&quot;rw&quot; plus `&lt;cocoa key&gt;` maps to KVC; NSAppleScript harness valid. Existing NSApplication extension pattern can absorb new booleans.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>Edits now: add six sdef properties, six NSApplication KVC booleans, UI constants, AppleScript scenario assertions. Also add accessibility values to diff toggles for stable UI reads.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre></pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>Patch in. Now build plus targeted unit/UI tests through Xcode MCP, so sdef compilation and AppleScript terms get checked by project toolchain.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre></pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>Build clean. Running narrow tests next: unit KVC settings bridge, then AppleScript UI harness scenario.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre></pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>Unit KVC test passed. Enabling existing /tmp sentinel so UI AppleScript harness runs, then targeted UI test.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre></pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>UI harness found corrupted dictionary at compile step. Likely terminology issue, not runtime setting bridge. Checking built dictionary now.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre></pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>Cause likely 3-char Apple event code fdp. Scripting dictionaries need FourChar codes. Padding to fdp , same intent, valid compiled terminology.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre></pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>Rebuild clean with padded code. Rerunning UI AppleScript harness.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre></pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>UI AppleScript test passed after code padding. Rerun unit once after final sdef change for clean target result.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre></pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>Targeted checks pass. Cleaning temp harness flag done. Now quick diff/status scan before closeout.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre></pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>Diff scan clean in scope. One UI script line too long for human reading; reshaping script output list only, behavior unchanged.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre></pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>Script reshaped. Rerunning UI harness once more because AppleScript syntax changed.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre></pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>Done.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre></pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>Changed:</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- [SwiftTag.sdef](Swift/SwiftTag/SwiftTag/SwiftTag.sdef): added six Diff Tools application properties. Padded duplicate-picture code to `fdp ` because 3-char `fdp` corrupted AppleScript dictionary.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- [SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift): added KVC read/write bridges to `FeedbackSettingsKey`.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- [DiffToolsView.swift](Swift/SwiftTag/SwiftTag/Features/Settings/DiffToolsView.swift): added accessibility value for stable UI assertions.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- Unit/UI AppleScript tests now cover new properties and confirm Diff Tools toggles update.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>Apple Docs Scout confirmed current pattern: sdef `access=&quot;rw&quot;` + `&lt;cocoa key&gt;` maps to KVC; `NSAppleScript` harness valid.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre></pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- BuildProject passed</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- `SwiftTagAppleScriptTests/applicationSettingsExposeUserDefaultsThroughAppleScriptKeys()` passed</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- `SwiftTagAppleScriptUITests/testAppleScriptHarnessReadsAndWritesApplicationSettings()` passed</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- `git diff --check` passed</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre></pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>[ 2026-05-02T18:58:55Z (9m 49s since Assistant start) ]</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre></pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>End of Transcript</pre></td></tr></table></main></body></html>

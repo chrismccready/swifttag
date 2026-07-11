@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 1-FLACBridgeExecution</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 1-FLACBridgeExecution</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/1-FLACBridgeExecution.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># FLAC Bridge Build Notes</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Current Architecture</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>- `ThirdParty/flac` is the source of truth for FLAC.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>- `BuildScripts/build-libflac.sh` builds static `libFLAC.a` during Xcode builds.</pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>- `SwiftTag/FLACBridge/src/FlacMetadataBridge.c` is the C bridge used by Swift.</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>- `SwiftTag/FlacMetadataService.swift` consumes the bridge API.</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre></pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>## Build Configuration</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- FLAC is built as static-only (`BUILD_SHARED_LIBS=OFF`).</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Programs are disabled (`BUILD_PROGRAMS=OFF`).</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- C++ FLAC library is disabled (`BUILD_CXXLIBS=OFF`).</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Ogg support is disabled (`WITH_OGG=OFF`).</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre></pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>## Output Locations</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Static library: `${DERIVED_FILE_DIR}/flac-build/install/lib/libFLAC.a`</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Staged headers: `${DERIVED_FILE_DIR}/flac-include/FLAC`</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre></pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>## Cleanup Status</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Legacy `metaflac` CLI runtime flow is removed.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Legacy `.template` bridge files are removed.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Vendored `SwiftTag/FLACBridge/vendor/FLAC` headers are removed.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- Prebuilt `Resources/bin` FLAC artifacts are removed.</pre></td></tr></table></main></body></html>

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation Source: Docs/UserDocumentation/examples/re-tag-with-applescript.html</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Documentation Source: Docs/UserDocumentation/examples/re-tag-with-applescript.html</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/UserDocumentation/examples/re-tag-with-applescript.html</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>&lt;!doctype html&gt;</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre>&lt;html lang=&quot;en&quot;&gt;</pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>&lt;head&gt;</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>    &lt;meta charset=&quot;utf-8&quot;&gt;</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;</pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>    &lt;title&gt;Re-tag with AppleScript - SwiftTag Documentation&lt;/title&gt;</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>    &lt;link rel=&quot;stylesheet&quot; href=&quot;../assets/swifttag-docs.css&quot;&gt;</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>&lt;/head&gt;</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>&lt;body&gt;</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>    &lt;header class=&quot;site-header&quot;&gt;</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>        &lt;div class=&quot;shell&quot;&gt;</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>            &lt;a class=&quot;site-title&quot; href=&quot;../index.html&quot;&gt;SwiftTag Documentation&lt;/a&gt;</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>            &lt;nav class=&quot;top-nav&quot; aria-label=&quot;Documentation&quot;&gt;</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>                &lt;a href=&quot;../quick-start.html&quot;&gt;Quick Start&lt;/a&gt;</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>                &lt;a href=&quot;../automation/applescript.html&quot;&gt;AppleScript&lt;/a&gt;</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>                &lt;a href=&quot;clean-up-album.html&quot;&gt;Examples&lt;/a&gt;</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>                &lt;a href=&quot;../troubleshooting.html&quot;&gt;Troubleshooting&lt;/a&gt;</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>            &lt;/nav&gt;</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>        &lt;/div&gt;</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>    &lt;/header&gt;</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>    &lt;main class=&quot;shell&quot;&gt;</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>        &lt;article&gt;</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>            &lt;p class=&quot;section-label&quot;&gt;Examples&lt;/p&gt;</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>            &lt;h1&gt;Re-tag with AppleScript&lt;/h1&gt;</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>            &lt;p&gt;</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>                Use AppleScript to remove existing tags and pictures, then re-tag and add new front cover.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>            &lt;/p&gt;</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre></pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>                &lt;div class=&quot;code-label&quot;&gt;AppleScript&lt;/div&gt;</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>                &lt;pre&gt;&lt;code&gt;on run</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>    -- this test folder path (or any other paths that SwiftTag does not have explicit permission to)</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>    -- will need to be added to SwiftTag&#x27;s Sandbox Paths in General settings (not needed when going</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>    -- through open/save panels as Swiftag uses security-scoped bookmarks for those)</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>    set testFolder to POSIX path of ((path to me as text) &amp; &quot;::&quot;) &amp; &quot;../test-io/&quot;</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>    set testPNGData to &quot;iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO3ZbZ0AAAAASUVORK5CYII=&quot;</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre></pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>    tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>        -- load some tracks into a new editor window --</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>        set editorWindow to make new editor window</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>        set editorWindowShortID to (do shell script &quot;date +%Y%m%d%H%M%S&quot;) &amp; &quot;-&quot; &amp; (my shortUUID from (window id of editorWindow as text))</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>        set trackPaths to {testFolder &amp; &quot;test_1.flac&quot;, testFolder &amp; &quot;test_2.flac&quot;, testFolder &amp; &quot;test_3.flac&quot;}</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>        tell editorWindow</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>            -- add tracks --</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>            set addedTracks to add trackPaths</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>            -- before making track changes, save a backup document --</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>            set backupDocumentPath to testFolder &amp; editorWindowShortID &amp; &quot;-backup.swifttag&quot;</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>            save its document in backupDocumentPath</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>            log &quot;Saved backup document at &quot; &amp; backupDocumentPath &amp; return &amp; ¬</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>                &quot; for editor window index: &quot; &amp; index &amp; &quot;, name: &quot; &amp; name &amp; &quot;, window id: &quot; &amp; window id</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>            -- make some track changes --</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>            -- repeat in reverse order as deleting existing tags may reorder tracks due to loss of track number --</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>            repeat with i from (count addedTracks) to 1 by -1</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>                set thisTrack to item i of addedTracks</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>                log &quot;Deleting tags and pictures for track: &quot; &amp; file of thisTrack &amp; &quot;, locked: &quot; &amp; locked of thisTrack</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>                tell thisTrack</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>                    -- clear existing tags and pictures --</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>                    my deleteMetadata for thisTrack with deleteTags, deletePictures</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>                end tell</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>            end repeat</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre></pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>            -- add new tags and pictures --</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>            -- repeat in forward order as adding new tags (with track number) will reorder tracks founded on file name order --</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>            repeat with i from 1 to (count addedTracks)</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>                set thisTrack to item i of addedTracks</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>                tell thisTrack</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>                    -- update tags --</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>                    set album to &quot;Test Album&quot;</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>                    set album artist to &quot;Test Artist&quot;</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>                    set sort album artist to &quot;Artist, Test&quot;</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>                    set artist to &quot;Test Artist&quot;</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>                    set sort artist to &quot;Artist, Test&quot;</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>                    set title to &quot;Test Title &quot; &amp; i</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>                    set track number to i</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>                    set track count to count addedTracks</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre></pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>                    -- update pictures --</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>                    make new picture with properties {data:testPNGData, picture type:front cover, description:&quot;Test PNG Cover&quot;}</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre></pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>                    -- log some track properties --</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>                    log &quot;Updated track: &quot; &amp; return &amp; ¬ </pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>                        &quot;  • File: &quot; &amp; its file &amp; return &amp; ¬</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>                        &quot;  • Track Number: &quot; &amp; track number &amp; return &amp; ¬</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>                        &quot;  • Title: &quot; &amp; title &amp; return &amp; ¬</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>                        &quot;  • Album: &quot; &amp; album &amp; return &amp; ¬</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>                        &quot;  • Artist: &quot; &amp; artist &amp; return &amp; ¬</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>                        &quot;  • Cover Description: &quot; &amp; (description of first picture whose picture type is front cover)</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>                end tell</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>            end repeat</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre></pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>            -- save all FLAC files with all changes --</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>            save with scope all with payload tags and pictures</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre></pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>            -- save latest changes to a new document --</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>            set changesDocumentPath to testFolder &amp; editorWindowShortID &amp; &quot;-changes.swifttag&quot;</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>            save its document in changesDocumentPath</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>            log &quot;Saved document at &quot; &amp; changesDocumentPath &amp; return &amp; ¬</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>                &quot; for editor window index: &quot; &amp; index &amp; &quot;, name: &quot; &amp; name &amp; &quot;, window id: &quot; &amp; window id</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>        end tell</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>    end tell</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>end run</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre></pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>on deleteMetadata for theTrack given deleteTags:deleteTags, deletePictures:deletePictures</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>    tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>        if deleteTags then</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>            try</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>                delete tags of theTrack</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>            on error errMsg number errNum</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>                if errNum is not -1728 then -- ignore &quot;can&#x27;t delete missing value&quot; error which can happen if there are no tags to delete</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>                    &quot;Error deleting tags: &quot; &amp; errMsg &amp; &quot; (error number: &quot; &amp; errNum &amp; &quot;)&quot;</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>                end if</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>            end try</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>        end if</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>        if deletePictures then</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>            try</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>                delete pictures of theTrack</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>            on error errMsg number errNum</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>                if errNum is not -1728 then -- ignore &quot;can&#x27;t delete missing value&quot; error which can happen if there are no pictures to delete</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>                    &quot;Error deleting pictures: &quot; &amp; errMsg &amp; &quot; (error number: &quot; &amp; errNum &amp; &quot;)&quot;</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>                end if</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>            end try</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>        end if</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>    end tell</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>end deleteMetadata</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre></pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>on shortUUID from theUUID</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>    return text 1 thru 8 of theUUID</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>end shortUUID &lt;/code&gt;&lt;/pre&gt;</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre></pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>            &lt;aside class=&quot;callout note&quot;&gt;</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>               The example above used a local variable for &lt;code&gt;testPNGData&lt;/code&gt;; however, image data can also be loaded from file,</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>               see &lt;a href=&quot;../automation/applescript-picture.html#examples&quot;&gt;picture class&lt;/a&gt; for examples using NSData with </pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>               Base64 encoded data and AppleScript native data.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>            &lt;/aside&gt;</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre></pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>            &lt;p&gt;</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>                Reference: &lt;a href=&quot;../automation/applescript-save.html&quot;&gt;save command&lt;/a&gt;,</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>                &lt;a href=&quot;../automation/applescript-windows.html#editor-window-definition&quot;&gt;editor window class&lt;/a&gt;,</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>                &lt;a href=&quot;../automation/applescript-document.html&quot;&gt;document class&lt;/a&gt;,</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>                &lt;a href=&quot;../automation/applescript-track.html#properties&quot;&gt;track class properties&lt;/a&gt;,</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>                &lt;a href=&quot;../automation/applescript-picture.html#examples&quot;&gt;picture class examples&lt;/a&gt;.</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>            &lt;/p&gt;</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>        &lt;/article&gt;</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>    &lt;/main&gt;</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>    &lt;footer class=&quot;site-footer&quot;&gt;</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>        &lt;div class=&quot;shell&quot;&gt;</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>            &lt;nav class=&quot;footer-nav&quot; aria-label=&quot;Footer&quot;&gt;</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>                &lt;a href=&quot;../quick-start.html&quot;&gt;Quick Start&lt;/a&gt;</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>                &lt;a href=&quot;../automation/applescript.html&quot;&gt;AppleScript&lt;/a&gt;</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>                &lt;a href=&quot;clean-up-album.html&quot;&gt;Examples&lt;/a&gt;</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>                &lt;a href=&quot;../troubleshooting.html&quot;&gt;Troubleshooting&lt;/a&gt;</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>            &lt;/nav&gt;</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>        &lt;/div&gt;</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>    &lt;/footer&gt;</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>&lt;/body&gt;</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>&lt;/html&gt;</pre></td></tr></table></main></body></html>

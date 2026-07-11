@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 11-v2-AddMultiPicturePerTrackSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 11-v2-AddMultiPicturePerTrackSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/11-v2-AddMultiPicturePerTrackSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add Multi Picture Per Track Support Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Implement per-track multi-picture album-art management with shared in-memory picture pooling, selection-aware pinning controls, picture browser navigation and commands, save-setting overrides, writeback behavior that supports multiple pictures per type, and the additional scope-driven browser/pinning behavior described below while preserving lock protections and explicit UI feedback.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Replace single-picture-per-type editor state with a pooled picture model that supports:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Multiple pictures per type per track.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Shared image references across tracks without duplicating image bytes in memory.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Per-track ordered references to pooled pictures.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Type-level constraints for FLAC type `1` (single picture, PNG only).</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Add album-art browser behavior updates in `AlbumArtSheetView`:</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Type list labels show `Name (count)` where `count` is unique picture count for the active picture scope.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Duplicate cross-type warning presentation using the configured mismatch color and italicized type labels.</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Accessory toolbar for album-level pinning (`Pin Album Pictures`) with scope text (`All Tracks` or `Selected Tracks (count)`).</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Add a segmented `Track Picture Scope` picker after `Pin Album Pictures` with icon-only choices:</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- `All Track Pictures` (`photo.stack.fill`) as the default.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- `Selected Track Pictures` (`photo.on.rectangle.angled.fill`).</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- When `Track Picture Scope` is `All Track Pictures`, type list counts use all pooled pictures available for that type.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- When `Track Picture Scope` is `Selected Track Pictures`, type list counts use pooled pictures for that type that are referenced by the current selected tracks.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Destination accessory toolbar for per-type picture pinning (`Pin Track Pictures`), per-type picture-scope selection, picture navigation controls, import/remove/export controls, metadata/status text, and enablement rules.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- Add a segmented `Type Picture Scope` picker after `Pin Track Pictures` with icon-only choices:</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- `All Track Pictures` (`photo.stack.fill`) as the default.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- `Selected Track Pictures` (`photo.on.rectangle.angled.fill`).</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- When `Type Picture Scope` is `All Track Pictures`, the destination list/browser for that type exposes all pooled pictures of that type.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- When `Type Picture Scope` is `Selected Track Pictures`, the destination list/browser for that type exposes only pooled pictures of that type referenced by the current selected tracks.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- `Pin Track Pictures` toggles write targets based on `Type Picture Scope`:</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- `All Track Pictures` means pin/unpin against all tracks.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- `Selected Track Pictures` means pin/unpin against selected tracks.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Add settings toggles in `TagWriteSettingsView`:</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- `Save Front Cover to all Tracks` (default On).</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- `Save all Pictures to all Tracks` (default Off).</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Enforce setting precedence:</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- `Save all Pictures to all Tracks` forces album-level pinning behavior and per-type pinning behavior for all picture types.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- `Save Front Cover to all Tracks` forces per-type front-cover pinning behavior only.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- Forced controls show effective temporary values in the UI while preserving stored state for later restoration.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- If save runs while a control is forced, the effective forced state determines write output.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- Update main album-art well behavior:</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- Replace single-click sheet open with double-click.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Add context menu action `Show Picture Browser`.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- Add View menu command `Show Picture Browser` / `Hide Picture Browser` with `Command-1` toggle behavior.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- Update import/reload/remove/save state handling:</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- Import merges pictures into a deduplicated pool.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- Track removal removes references and garbage-collects unreferenced pooled pictures.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- Save writes per-track picture lists (ordered) and keeps existing bridge-level picture rewrite semantics.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- Add locked-track guardrails and alerts for pin/edit actions that cannot execute because one or more selected tracks are locked.</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- For remove-picture with out-of-scope references, remove from selected affected tracks and present a mismatch-color informational overlay instead of an alert.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- Remove `addFirst` and `addLast` from `chooseFrontCoverDropAction` and simplify associated front-cover drop logic.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- Extend current picture metadata text to include `In file: Yes|Mixed|No`, followed by the current presented picture index, ` of `, and the presented picture count for the active type scope.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- FLAC bridge C-layer format changes unless required to satisfy ordering rules not achievable from Swift-side record ordering.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- Unrelated tag-editing flows, diff formatting outside picture-specific UI states, or unrelated settings redesign.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>- Multi-window/global shared picture state across editor sessions.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre></pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- Latest numbered plan reviewed: `Docs/Plans/11-AddMultiPicturePerTrackSupport.md`.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- Current implementation files reviewed:</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- `SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- `SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift`</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- `SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift`</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- `SwiftTag/Features/Settings/TagWriteSettingsView.swift`</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- `SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- `SwiftTag/Features/FlacImport/FlacWriteMapper.swift`</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- `SwiftTag/Shared/Models/Track.swift`</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- `SwiftTag/Shared/Models/SaveSettings.swift`</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- `AGENTS.md`</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>- `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- Fixture-first check completed:</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- Constraints accounted for:</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- Security-scoped bookmark requirements for import/reload/save.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- Existing save/diff pipeline still contains legacy global picture assumptions alongside the newer pooled/reference model.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- Existing FLAC write path removes all picture blocks before appending new picture blocks.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- Existing browser UI currently has pooled multi-picture basics but not the new scope pickers or effective-state override presentation.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- `AlbumArtViewModel` already contains a pooled picture store (`picturePool`, `trackReferencesByTrackID`, per-slot current index state, per-track unpinned state, save-setting configuration, export/import/drop handling, and per-track write payload generation).</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>- `Track` already carries ordered `flacPictureRecords` while retaining a legacy `flacPicturesByType` compatibility view.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- `SaveSettings` and `TagWriteSettingsView` already expose `Save Front Cover to all Tracks` and `Save all Pictures to all Tracks`.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- `AlbumArtSheetView` already shows type counts, duplicate styling, album-level pin control, per-type pin control, picture navigation, import/remove/export actions, and metadata text.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- `SwiftTagTests/TrackStatusViewInspectorTests.swift` already provides a working ViewInspector harness for `TagEditorTrackFileView`, `TagEditorAlbumView`, and `AlbumArtSheetView`, so browser/UI behavior coverage should extend that harness before introducing XCUI for inspectable cases.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- `AlbumArtViewModel` still contains front-cover drop-choice machinery with `cancel`, `replace`, `addFirst`, and `addLast`.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- `AlbumArtSheetView` does not yet expose `Track Picture Scope` or `Type Picture Scope`.</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- The current browser count logic is global across all loaded tracks (`uniquePictureCount(for:)`) and is not yet scope-aware.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- The current `Pin Album Pictures` behavior only supports forcing pinning on across unlocked tracks; it does not present temporary effective states or scope-sensitive disablement rules.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- The current `Pin Track Pictures` behavior is based on existing target-track resolution and does not yet use a user-selected type picture scope as the write-target source of truth.</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>- `currentPictureMetadataText` currently reports description, MIME type, byte size, type count, and displayed-reference count, but not the requested `In file` status or active-position text.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>- `TagEditorViewModel` still retains `importedFlacPicturesByType`, which is a remaining legacy compatibility seam to keep in mind during save/diff cleanup.</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre></pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- `FlacMetadataService.readTags` already returns ordered `[FlacPictureRecord]`; order-sensitive behavior must preserve this order through import and write.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- Bridge currently enforces type-1 PNG icon legality and removes all picture blocks before write; Swift-side payload generation must satisfy this invariant.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>- Existing save eligibility and diff logic (`TagEditorViewModel`) still carries one shared picture-set assumptions in some paths; per-track picture payloads and diffing must be refactored without regressing tag-only saves.</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>- Selection semantics are centralized in `TagEditorViewModel.selectedTrackIDs`; all selection-aware picture-scope logic must use that as source of truth.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- Locked tracks are currently excluded from saves and most edits; new pinning/edit controls must use equivalent lock gating and explicit alerting.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- Command routing uses `FocusedValues`; new View menu picture-browser command should follow existing focused command patterns.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>- Forced-state UI must preserve underlying stored pin state while separately computing effective UI state and effective save output state.</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre></pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>- Ambiguity between visible scope, pinning target scope, and final write scope can cause accidental picture propagation or omission unless the UI remains explicit.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>- Shared pooled-image references can produce unexpected bulk changes if track association boundaries are unclear in UI, especially with bytes-only dedupe identity.</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>- Cross-type duplicate detection and warning overlays may confuse users if duplicate definition is not exact and deterministic.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- Effective temporary forced states can drift from stored state if model helpers are not separated cleanly into stored-state vs effective-state queries.</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- Front-cover write-order override and front-cover forced-pin precedence can be easy to violate during refactor.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre></pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>Risk mitigation (in-scope):</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- Make `Track Picture Scope` and `Type Picture Scope` explicit, independent model values with dedicated helper methods for counts, presented references, and write-target resolution.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- Keep stored pin state and effective pin state separate in the model API.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- Always display active scope text near controls and metadata, and include affected-track count in destructive or partial-removal messaging where practical.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>- Keep remove/partial-visibility overlay copy explicit that out-of-scope references remain and re-pin can restore selected-track references.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre></pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>### Tooling / Environment / Sandbox Risks</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- Large image pools can increase memory pressure; dedupe must avoid unnecessary data copies and avoid retain cycles in observable state.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- SwiftUI table/sheet and toolbar accessory behavior can be fragile under ViewInspector traversal; tests should emphasize behavior checks over brittle hierarchy assertions.</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>- Security-scoped bookmark refresh/write and reload flows may mask picture-pool bugs when file access fails.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre></pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>## Destructive / Write-Back Behavior</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- Preserved:</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- Save scope (`selected` vs `all`) and locked-track save exclusions remain unchanged unless explicitly overridden by confirmed decisions.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- FLAC bridge behavior that removes all existing picture blocks before writing new ones.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Replaced/extended:</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- Replace global album-art dictionary behavior with per-track ordered picture-reference lists backed by a shared pool.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Save picture payload is computed per target track from pool references and effective forced pin state, not from one global picture set.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>- Removed:</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>- Implicit `single image per picture type` model from import, editor state, diffing, and write payload generation.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- Front-cover drop `addFirst` and `addLast` action modes and associated branching.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre></pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>Write-back specifics to enforce:</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- Picture-only save rewrites each target track with exactly its current effective pinned picture references in pool order.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- For type `3` (front cover), the first pinned front-cover reference for that track is emitted last in final write order.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Type `1` validation must reject non-PNG or multiple type-1 entries per track before write attempt (with user-facing error).</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- De-pinning from selected/all tracks removes those in-memory references or effective inclusion as defined by the relevant scope and force rule; underlying file content changes only when save runs.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- `Save all Pictures to all Tracks` overrides save scope for picture pinning targets and applies to all loaded unlocked tracks.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- `Save Front Cover to all Tracks` overrides front-cover track pinning targets only and uses effective forced state during save even if stored state remains different.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre></pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>1. Scope And Effective-State Model Refactor</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>- Introduce explicit browser scope state for:</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>- `Track Picture Scope` at the sheet level for type-count/list scope.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>- `Type Picture Scope` at the destination level for picture presentation and track pin-target resolution.</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>- Add helpers that separately compute:</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>- Stored pin state.</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- Effective pin state.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- Effective disabled state.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>- Active track set for metadata/status evaluation.</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>- Active picture pool set for counts and presented references.</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>- Preserve stored pin state while allowing forced overrides from album-level and settings-level rules.</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre></pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>2. Browser UI Upgrade</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- Add `Track Picture Scope` segmented picker after `Pin Album Pictures`.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- Update type list labels to use the active sheet-level scope count.</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- When `Pin Album Pictures` is On and `Track Picture Scope` is `All Track Pictures`, disable every destination `Pin Track Pictures` toggle, render them visually On, but preserve stored state.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>- When `Pin Album Pictures` is On and `Track Picture Scope` is `Selected Track Pictures`, disable every destination `Pin Track Pictures` toggle for the selected-track scope, render them visually On, but preserve stored state.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>- Add `Type Picture Scope` segmented picker after `Pin Track Pictures`.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>- Update destination picture presentation, navigation bounds, and metadata counts to use the active destination-level scope.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre></pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>3. Settings Override Integration</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>- Apply `Save Front Cover to all Tracks` only to the front-cover type:</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- When a front cover exists, `Pin Track Pictures` is effectively On and disabled.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>- When no front cover exists, `Pin Track Pictures` is effectively Off and disabled.</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>- Apply `Save all Pictures to all Tracks` globally:</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- `Pin Album Pictures` is effectively On and disabled.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>- Each `Pin Track Pictures` is effectively On and disabled when that type has at least one picture available.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>- Each `Pin Track Pictures` is effectively Off and disabled when that type has no picture available.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>- Ensure subsequently imported or dropped pictures immediately update effective forced states.</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre></pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>4. Pinning And Save Pipeline Alignment</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>- Make `Type Picture Scope` the source of truth for `Pin Track Pictures` pin/unpin targets.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>- Keep the `Pin Track Pictures` On/Off mechanism otherwise consistent with current save semantics:</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>- When On, pinned pictures of that type are written to all/selected track files based on the active type scope or effective force rule.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- When Off, those pictures are not written to the targeted tracks at save time unless a stronger forced setting applies.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>- Update save payload generation to use effective forced states, not merely stored/restorable states.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>- Validate front-cover and all-pictures forced modes against target availability transitions.</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre></pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>5. Front Cover Drop Simplification</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>- Remove `addFirst` and `addLast` cases from `chooseFrontCoverDropAction`.</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>- Simplify front-cover drop resolution logic so only the remaining supported behaviors are represented in model state and any user-facing decision flow.</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>- Update related tests and any debug-only drop-action hooks.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre></pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>6. Metadata, Counts, And Messaging</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>- Extend `currentPictureMetadataText` to report:</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>- `In file: Yes` when the current picture is present in all active tracks.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>- `In file: Mixed` when it is present in some but not all active tracks.</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>- `In file: No` when it is present in none of the active tracks.</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>- Active tracks means selected tracks, or all tracks when there is no selection.</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- Append the current presented index and total presented count for the active type scope.</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- Keep existing description, MIME type, and byte-size text unless simplification is warranted during implementation.</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre></pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>7. Save/Diff/Legacy Cleanup</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- Replace remaining global picture assumptions in `ContentView` and `TagEditorViewModel` with per-track/effective-state providers.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>- Review `importedFlacPicturesByType` and related compatibility seams; remove or constrain legacy paths where they would conflict with scope-aware picture behavior.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>- Confirm no regression in tag-only behavior, reload logic, track removal, and save-status flows.</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre></pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>8. Validation And Hardening</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>- Run fast diagnostics for touched files.</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>- Build project.</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>- Run targeted tests for new model behavior, scope resolution, override precedence, metadata text, simplified front-cover drop handling, and ViewInspector-based browser UI gates.</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>- Add assertions or focused helpers where useful to catch stored-state/effective-state divergence bugs.</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre></pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>Order (per guide):</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>1. Unit tests (`SwiftTagTests`) for:</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>- Pool dedupe and reference garbage collection behavior.</pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>- Ordered per-track picture mapping from import records.</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>- Type-1 validation rules.</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>- Front-cover write-order override behavior.</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>- Per-track diff logic and save eligibility for picture-only/tag-only/tag+picture payloads.</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>- Scope-isolation rules: selected-track remove/reorder/pin must not mutate out-of-selection references, even when bytes are pooled.</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>- Stored-state vs effective-state precedence for:</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>- `Pin Album Pictures`.</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre>- `Save Front Cover to all Tracks`.</pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>- `Save all Pictures to all Tracks`.</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre>- Scope-picker count and target resolution behavior.</pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>- Metadata `In file: Yes|Mixed|No` calculation for selected vs no-selection cases.</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>- Front-cover drop simplification after removing `addFirst` and `addLast`.</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>2. Service/fixture tests with copied FLAC fixtures for:</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>- Importing multiple pictures of same type and preserving order.</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>- Writing per-track divergent picture sets.</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre>- Confirming no unintended writes for unaffected tracks in selected-scope saves.</pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>- Confirming forced save modes use effective state during write even when stored state differs.</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>3. ViewInspector tests for UI behavior whenever the behavior is inspectable:</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>- Extend `SwiftTagTests/TrackStatusViewInspectorTests.swift` as the first-choice harness for `AlbumArtSheetView`, `TagEditorAlbumView`, and album-art browser UI gates.</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>- `AlbumArtSheetView` type count labels under both track picture scopes.</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>- `Track Picture Scope` and `Type Picture Scope` picker wiring and binding propagation.</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>- Pin toggle effective On/Off rendering and disabled-state gates.</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>- Setting-driven and album-pin-driven precedence behavior, including effective temporary values while stored state remains unchanged underneath.</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>- Metadata/status text includes `In file` and active-position text.</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>- Browser navigation control enablement/disablement at first/last bounds under each scope.</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>- Overlay visibility is tied to the currently presented picture reference rather than the slot alone.</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>- Main well double-click/context-menu open action exposure through inspectable seams in `TagEditorAlbumView` / `AlbumArtWellView` where stable.</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>4. Prefer non-UI model/service tests instead of XCUI when the behavior can be proven without rendering:</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>- Effective save payload selection.</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>- Reload/transient-state discard behavior.</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>- Pool dedupe, unpin, and garbage-collection semantics.</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre>5. Targeted UI tests only if needed for:</pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>- View menu `Show/Hide Picture Browser` command toggle with keyboard shortcut.</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>- Sheet visibility interactions that ViewInspector cannot reliably assert.</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>- Segmented-picker or toolbar cases only after a focused ViewInspector attempt using `find`/`findAll`, `actualView()`, binding inspection, and lifecycle hooks proves insufficient.</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre></pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>Validation tools:</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>- `XcodeRefreshCodeIssuesInFile` on modified Swift files.</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>- `BuildProject` for compile validation.</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>- `RunSomeTests` for targeted test groups.</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre></pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>- A track can reference zero or more pictures per type, including multiple entries of the same type (except type `1` limits).</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>- Picture bytes are pooled uniquely across tracks; removing the last reference removes the pool entry.</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>- Browser type list displays `Name (count)` for the active `Track Picture Scope`.</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>- Destination picture list/navigation uses the active `Type Picture Scope`.</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>- `Pin Track Pictures` target resolution follows `Type Picture Scope`.</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>- `Pin Album Pictures` plus `Track Picture Scope` forces the effective destination pin state On and disabled without losing stored state.</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>- `Save Front Cover to all Tracks` forces only front-cover `Pin Track Pictures` effective state and disabled-state behavior, including the no-front-cover effective Off case.</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>- `Save all Pictures to all Tracks` forces effective album pinning and effective per-type pinning for all current and newly added picture types, including effective Off for types with no pictures.</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>- If save runs while a control is forced, the written payload follows the effective forced state rather than the stored restorable state.</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>- Duplicate cross-type state is visibly signaled with mismatch styling and overlay message.</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>- Main album-art well opens browser on double-click and offers `Show Picture Browser` context menu action.</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>- View menu contains `Show Picture Browser`/`Hide Picture Browser` toggle command with `Command-1`.</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre>- Save writes per-track ordered picture payloads and writes the first front-cover reference last for each written track.</pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre>- Locked-track restrictions prevent pin/edit actions with explicit user feedback.</pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>- `currentPictureMetadataText` reports `In file: Yes|Mixed|No` against selected tracks, or all tracks when nothing is selected, and includes current index of total presented count for the active type scope.</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre>- Front-cover drop behavior no longer exposes `addFirst`/`addLast`.</pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre></pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>- Picture pool dedupe identity is based on exact data bytes only.</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>- `Save Front Cover to all Tracks` does not apply front-cover in-memory pin changes to locked tracks.</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>- `Save all Pictures to all Tracks` applies to all loaded tracks regardless of save scope, while still respecting lock protections for editability.</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>- Remove-picture behavior when unselected tracks still reference a picture:</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>- Remove references from selected affected tracks.</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>- Do not show an alert for this condition.</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>- Draw a `0.25` opacity overlay using `Track/Disc Total Mismatch Color` with text indicating:</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>- The picture will be removed from selected tracks.</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre>- The picture remains displayed because tracks outside selection still reference it.</pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre>- It can be added back to selected tracks by pinning again.</pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>- Front-cover drop dialog `Replace existing image(s)` updates front-cover references only.</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>- If dropped picture is already pooled and all affected tracks already have it as first front cover, no change is made and dialog should not be shown.</pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre>- If dropped picture is already pooled and one or more affected tracks do not have it as first front cover, add first-front-cover reference for those tracks.</pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>- This may coexist with other references to the same pooled picture under different picture types.</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre>- Affected tracks are:</pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>- Selected tracks, or all tracks when no selection, or all tracks when `Save Front Cover to all Tracks` is On.</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre>- Intersected with unlocked tracks only.</pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>- View menu command is inserted at the top of View menu and reserves `Command-1` exclusively for `Show/Hide Picture Browser`.</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre>- For bytes-only dedupe collisions with differing MIME/description values, metadata is stored per track-reference, not canonicalized in the pool.</pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre>- For `Save all Pictures to all Tracks` On, locked tracks remain excluded from in-memory pin mutations.</pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre>- Remove-picture informational overlay text may use equivalent wording, but must include a hint that the picture can be added back by pinning again.</pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre>- `Type Picture Scope` is the source of truth for `Pin Track Pictures` write targets.</pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre>- `Save Front Cover to all Tracks` forced `Pin Track Pictures` behavior applies only to `Front Cover`.</pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre>- When controls are forced by `Pin Album Pictures`, `Save Front Cover to all Tracks`, or `Save all Pictures to all Tracks`, the UI shows an effective temporary value while preserving underlying stored pin state for restoration later.</pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre>- If a save occurs while a control is forced, the effective forced state determines what is written.</pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>- `currentPictureMetadataText` evaluates `In file: Yes|Mixed|No` against the selected tracks, or against all tracks when there is no selection.</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre></pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre>- None currently.</pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre></pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre>## TODO</pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>- Consider a follow-up UI enhancement to expose richer picture metadata in the browser (for example MIME type, description, dimensions, and byte size) in a compact inspector panel or inline detail row.</pre></td></tr></table></main></body></html>

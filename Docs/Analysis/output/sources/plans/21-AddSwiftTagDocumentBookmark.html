@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 21-AddSwiftTagDocumentBookmark</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 21-AddSwiftTagDocumentBookmark</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/21-AddSwiftTagDocumentBookmark.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add SwiftTag Document Bookmark Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Add bookmark-backed tracking for the associated `.swifttag` document so the app can follow external rename/move/delete events for the current document-backed session.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>The intended result is:</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>- when a window is associated with a `.swifttag` document, the app stores a bookmark-backed reference rather than only a remembered URL</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- when the associated `.swifttag` package is renamed or moved outside the app, the window title updates to the new file name and `.navigationDocument(...)` remains present with the updated live URL</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- when the associated `.swifttag` package is deleted outside the app, the window title updates to the last known file name followed by ` (deleted)`</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- when the user attempts to save after the associated `.swifttag` package has been deleted, the app explains that the document was deleted and offers saving to a new file</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Add bookmark-backed state for the associated `.swifttag` document.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Track rename, move, delete, and restore-relevant state changes for the associated `.swifttag` package while the window is open.</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Update navigation metadata and `.navigationDocument(...)` from the live associated-document state.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Update save behavior when the remembered associated document has been deleted.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Keep editor-session registration in sync with the live associated-document URL so document routing stays correct after rename/move.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Add targeted automated coverage for rename/move title updates, `.navigationDocument(...)` continuity, and deleted-document save prompting.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre></pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Changing the internal `.swifttag` package format.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- Adding autosave or background recovery for deleted associated documents.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Reworking unsaved-FLAC close and quit behavior beyond the deleted-associated-document save path.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Broad document-browser, toolbar, or window-management redesign.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre></pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- Latest numbered plan reviewed:</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>  - `Docs/Plans/20-AddSwiftTagDocumentSaveOptions.md`</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- Relevant prior plans reviewed:</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>  - `Docs/Plans/18-UpdateWindowTitleText.md`</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>  - `Docs/Plans/17-SwiftTagDocumentReadLiveFileResolution.md`</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- Current implementation files reviewed:</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>  - `SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>  - `SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift`</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>  - `SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift`</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>  - `SwiftTag/Shared/Utilities/TrackFileMonitor.swift`</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>  - `SwiftTag/Shared/Utilities/UnsavedChangesFlow.swift`</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>  - `SwiftTagTests/SwiftTagTests.swift`</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>  - `SwiftTagTests/SwiftTagDocumentTests.swift`</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>  - `AGENTS.md`</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>  - `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- Relevant fixtures inspected:</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>  - none required for the initial planning pass; existing temporary-package tests can reuse current `.swifttag` writer helpers and existing FLAC-backed document test helpers where needed</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- Constraints accounted for:</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>  - `SwiftTagDocumentSaveState` currently remembers only `destinationURL` and `documentID`, so the current model cannot represent bookmark data, last-known file name, or deleted/unresolved state.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>  - `TagEditorViewModel.editorNavigationMetadata(...)` currently derives the title and `.navigationDocument(...)` URL directly from the remembered destination URL.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>  - `ContentView` already conditionally applies `.navigationDocument(...)`, so rename/move support only needs the underlying associated-document state to stay current.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>  - `EditorWindowCoordinator` currently keys document-backed sessions by standardized `.swifttag` path and document ID; if the remembered path is not refreshed after rename/move, routing the same document can open a duplicate window.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>  - `TrackFileMonitor` already provides a bookmark-aware file-monitoring pattern for FLAC files that can inform the associated-document implementation.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>  - `.swifttag` is a package-type document, and `SwiftTagDocumentPackageWriter.save(...)` rewrites it through a temporary package plus `replaceItemAt` or `moveItem`, so any monitor must tolerate inode/path churn caused by in-app saves.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>  - `performSwiftTagDocumentSave(using:)` currently treats the remembered destination as a normal save destination and does not distinguish a deleted associated document from a valid live document.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre></pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- `SwiftTagDocumentSaveState` currently stores:</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>  - `destinationURL`</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>  - `documentID`</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- `TagEditorViewModel.rememberSwiftTagDocumentSave(...)` and `loadSwiftTagDocument(...)` update only the remembered URL and document ID.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- `TagEditorViewModel.editorNavigationMetadata(...)` uses `rememberedSwiftTagDocumentSaveState.destinationURL?.lastPathComponent` as the source of truth for:</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>  - title precedence when a `.swifttag` document exists</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>  - `.navigationDocument(...)` URL exposure</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>  - displayed document name</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- `ContentView.registerEditorSession()` republishes the remembered `.swifttag` URL and document ID into `EditorWindowCoordinator`.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- `EditorWindowCoordinator` currently matches open `.swifttag` windows by standardized path first and keeps a parallel map by document ID.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- `TrackFileMonitor` resolves security-scoped bookmarks, opens a file descriptor with `O_EVTONLY`, listens for `.write`, `.delete`, and `.rename`, and uses `F_GETPATH` to detect live path changes.</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- `SwiftTagTests` already cover static navigation metadata for:</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>  - associated-document title precedence</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  - standardized associated-document URL exposure</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- `SwiftTagDocumentTests` already cover FLAC-track bookmark repair after external rename/move, but there is no equivalent coverage for the associated `.swifttag` document itself.</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- `Docs/Plans/18-UpdateWindowTitleText.md` explicitly deferred this exact bookmark/rename/delete behavior into a future plan.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre></pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- The associated `.swifttag` document should be tracked through a bookmark-backed reference so external file changes can be followed.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- When the associated `.swifttag` package is renamed or moved outside the app, the window title should update to the new file name and `.navigationDocument(...)` should stay present with the updated URL.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- When the associated `.swifttag` package is deleted outside the app, the window title should update to the last known file name followed by ` (deleted)`.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- When the associated `.swifttag` package is deleted outside the app, `.navigationDocument(...)` should remain attached to the last known document URL until the association is replaced.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- When the user attempts to save while the associated `.swifttag` package is deleted, the app should explain that the file was deleted and offer saving to a new file.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- The deleted-document save prompt should also offer recreating the document at the original path when that path becomes writable again.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- After recovery by saving to a new file, the new file should immediately become the associated document for future `Save` commands, title updates, and document routing.</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- The implementation should keep a single source of truth for associated-document state rather than splitting it across navigation metadata, save routing, and editor-session registration.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- The associated-document model likely needs to grow beyond the current `SwiftTagDocumentSaveState`, or an adjacent `AssociatedSwiftTagDocumentReference` type should be introduced, to hold at least:</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>  - live URL</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>  - bookmark data</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>  - document ID</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>  - last-known display name</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>  - availability state such as available vs deleted vs unresolved</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>- Rename/move handling should refresh both the remembered live URL and any path-based coordinator registration so the same document continues routing to the existing window.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>- Deleted-document handling needs a stable last-known display name even when no live URL remains.</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- The save path should not silently recreate a deleted associated document at the stale path unless that behavior is explicitly chosen; the user request points toward a new-file save flow instead.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- Because the writer atomically replaces the package during normal saves, the document monitor must either:</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>  - tolerate self-initiated replacement events, or</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>  - be explicitly refreshed after successful save so the monitor tracks the new on-disk item without false deleted-state transitions.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>- Bookmark resolution can become stale after external moves, so the implementation should plan for bookmark refresh on successful resolution and on successful save/open.</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>- Because the deleted state should keep `.navigationDocument(...)` attached to the last known URL, the associated-document model must preserve that last known URL even when the live item is unavailable.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- Associated-document saves continue to serialize the full editor session, not a selection-based subset, so no new track-selection source of truth should be introduced.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre></pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>## Write-Back Behavior</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>- Preserved data:</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>  - the current editor session contents remain the source of truth for `.swifttag` document export</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>  - the existing associated document ID should remain stable across rename/move tracking and, unless clarified otherwise, across save-to-new-file recovery after deletion</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>  - current FLAC import state, track bookmarks, and unsaved editor changes remain in memory when the associated document is deleted</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>- Replaced data:</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>  - a normal associated-document save still rewrites the `.swifttag` package contents atomically using the current editor session state</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>  - a successful save-to-new-file recovery after deletion replaces the remembered associated-document URL/bookmark with the new destination</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- Removed data:</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>  - once the associated document is deleted or replaced by a new destination, the stale path-based registration and stale bookmark should no longer be treated as the live associated document</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- Selection semantics:</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>  - saving the associated `.swifttag` document continues to export the full loaded session rather than only selected tracks</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre></pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>- The deleted-title state requires preserving the last known file name separately from the live URL; otherwise the title can regress to a generic fallback after deletion.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- A normal in-app save should not flicker the title or temporarily mark the associated document as deleted just because the package was atomically replaced.</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- If rename/move tracking updates the document URL but editor-session routing does not refresh at the same time, opening the same `.swifttag` package again can create duplicate windows.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- The deleted-document save prompt must clearly distinguish between:</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>  - saving back to an existing associated document</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>  - recovering from a deleted associated document</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>  - canceling and keeping the session open in the deleted state</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre></pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>### Tooling / Environment / Sandbox Risks</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- `.swifttag` is a package directory, not a flat file, so rename/delete behavior may differ from single-file monitoring.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Security-scoped bookmark resolution may fail or become stale after external moves into locations with different access requirements.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- Finder moves on the same volume may preserve inode identity, while cross-volume moves may present as copy-plus-delete; the monitor strategy must handle both predictable and degraded paths.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Tests that assert real titlebar state can be brittle; the preferred path is a narrow, testable state seam plus one targeted integration-level assertion only where helper coverage is insufficient.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>1. Introduce Bookmark-Backed Associated Document State</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>- Expand the remembered associated-document model so it can represent bookmark-backed live state rather than only a URL and document ID.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>- Store the associated-document bookmark whenever the app:</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>  - saves a `.swifttag` document</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>  - opens a `.swifttag` document</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Preserve a last-known display name separate from the live URL so deleted-title rendering is stable.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Add a small, pure derivation seam for:</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>  - effective title text</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>  - optional `.navigationDocument(...)` URL</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>  - optional document display name</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>  - deleted-state handling</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre></pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>2. Add Associated Document Monitoring And Live-URL Refresh</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>- Introduce a dedicated associated-document monitor, likely modeled after `TrackFileMonitor`, that resolves the bookmark and observes `.write`, `.rename`, and `.delete` events for the `.swifttag` package.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>- On rename or move:</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>  - resolve the live current path</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>  - refresh the remembered live URL</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>  - refresh stale bookmark data when possible</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>  - republish the updated document URL into `EditorWindowCoordinator`</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>- On deletion:</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>  - keep the last-known display name</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>  - transition the associated-document state into a deleted/unavailable status</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>  - update any path-based routing maps so stale paths are no longer treated as live</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>- After successful in-app saves, re-arm or refresh the monitor so atomic package replacement does not leave it attached to the wrong item.</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre></pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>3. Wire Navigation Metadata To The Associated Document State</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- Update `TagEditorViewModel.editorNavigationMetadata(...)` to derive title and document metadata from the richer associated-document state.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>- Preserve the existing title precedence for live associated documents.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>- Add deleted-title formatting as `&lt;last known name&gt; (deleted)`.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>- Keep `.navigationDocument(...)` present with the updated live URL after rename/move.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>- Keep `.navigationDocument(...)` attached to the last known document URL while the associated document is in the deleted state.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre></pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>4. Intercept Save When The Associated Document Has Been Deleted</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- Add a deleted-associated-document branch before remembered-destination saves proceed.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>- Present a dedicated alert that explains the associated `.swifttag` document was deleted and offers:</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>  - saving to a new file</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>  - recreating the document at the original path when possible</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>- Route the recovery paths through the existing save-panel helper or direct original-path save helper so the successful destination becomes the new associated document on success.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>- Keep the window open and in the deleted state if the user cancels the recovery save flow.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>- Ensure successful recovery save updates:</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>  - live URL</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>  - bookmark data</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>  - document routing registration</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>  - window title</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>  - `.navigationDocument(...)` state</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre></pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>5. Add Targeted Automated Coverage</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>- Add pure tests for associated-document navigation state derivation covering:</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>  - live associated document</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>  - renamed/moved associated document</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>  - deleted associated document</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>  - deleted associated document recovered to a new destination</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>- Add targeted file-system tests using temporary directories/packages for:</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>  - rename within the same directory</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>  - move to a different directory on the same volume</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>  - deletion of the associated package</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>- Add a targeted test confirming that when the associated `.swifttag` package is renamed or moved:</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>  - the window title metadata updates to the new file name</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>  - `.navigationDocument(...)` remains present</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>  - the exposed document URL matches the updated location</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- Add save-flow tests confirming that when the associated document is deleted:</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>  - normal save does not silently write to the stale path</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>  - the deleted-document prompt appears</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>  - choosing the recovery save path associates the new file</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>  - cancel leaves the window in the deleted state</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre></pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>Order:</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>1. Pure unit tests:</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>  - associated-document state derives live title and document URL when the document is available</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>  - associated-document state derives updated title and updated document URL after rename/move</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>  - associated-document state derives `&lt;last known name&gt; (deleted)` when the document is deleted</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>  - deleted associated-document state routes save through the recovery prompt path instead of remembered-destination save</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>2. Service / filesystem tests using temporary directories:</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>  - bookmark-backed associated-document resolution refreshes the live URL after rename</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>  - moving the associated `.swifttag` package to a different folder refreshes the live URL and keeps the same logical document identity</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>  - deleting the associated `.swifttag` package transitions the state into deleted/unavailable</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>  - successful save-to-new-file recovery replaces the stale bookmark and live URL</pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>3. Targeted UI/state wiring tests where practical:</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>  - `ContentView.navigationMetadata` follows the richer associated-document state rather than raw remembered URL-only state</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>  - `.navigationDocument(...)` is still applied when the live associated-document URL changes after rename/move</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>4. Verification workflow:</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>  - prefer targeted build/test runs over full-suite execution</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>  - prefer pure and service tests first</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>  - add a heavier runtime assertion only if helper-level coverage cannot credibly verify `.navigationDocument(...)` continuity</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre></pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre>- Saving or opening a `.swifttag` document records a bookmark-backed associated-document reference for the active session.</pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>- When the associated `.swifttag` package is renamed outside the app, the active window title updates to the new file name and `.navigationDocument(...)` remains present with the updated URL.</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>- When the associated `.swifttag` package is moved outside the app, the active window title updates to the new file name and `.navigationDocument(...)` remains present with the updated URL.</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>- Reopening or re-routing the same `.swifttag` package after rename/move still targets the existing session instead of opening a duplicate window.</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>- When the associated `.swifttag` package is deleted outside the app, the title becomes `&lt;last known name&gt; (deleted)`.</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>- After associated-document deletion, invoking save does not silently continue as though the original document still exists.</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre>- After associated-document deletion, the user is prompted that the file was deleted and is offered both:</pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>  - saving to a new file</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>  - recreating the document at the original path when available</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>- If the user completes either recovery path, the recovered destination becomes the associated document for future title, `.navigationDocument(...)`, and save behavior.</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>- If the user cancels the recovery save, the window remains open and continues showing the deleted-associated-document state.</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>- Automated tests cover rename/move metadata updates and deleted-document save recovery behavior sufficiently for implementation sign-off.</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre></pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>- None currently.</pre></td></tr></table></main></body></html>

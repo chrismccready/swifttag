@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: perf(album-art): cache display images and picture specs</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: perf(album-art): cache display images and picture specs</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-06-20</p>
+<p><code>be8b3e170bc3c338a1fbbb22d814e73b77d7c994</code></p>
+<p>perf(album-art): cache display images and picture specs</p>
+<h2>Body</h2><pre>- create ImageIO-backed display images with cached CGImage assets
+- derive picture specs from ImageIO properties without creating decoded images
+- store picture specs on album-art pool items
+- reuse cached specs when building writable FLAC picture records
+- avoid building album-art records for external difference checks
+- add interpolation controls for album-art wells
+- add tests for preserved picture bytes, sRGB display images, and cached specs
+
+fix(editor): constrain core tag field group height
+
+- set max frame height for core tag metadata fields</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>22.1 Low</span></div>
+  <div><strong>Weight Coverage</strong><span>70%</span></div>
+  <div><strong>Elapsed</strong><span>Unavailable</span></div>
+  <div><strong>Assistant</strong><span>Unavailable</span></div>
+  <div><strong>User Response</strong><span>Unavailable</span></div>
+  <div><strong>Back/Forth</strong><span>0.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/diff.html">Diff</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p>None</p>
+<h2>Associated Transcripts</h2><p>None</p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>SwiftTag/ContentView.swift</td><td>1</td><td>4</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift</td><td>1</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtTypes.swift</td><td>10</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift</td><td>122</td><td>29</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtWellView.swift</td><td>2</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift</td><td>1</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>9</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/PictureDataUtilities.swift</td><td>21</td><td>28</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>70</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>230.00</td></tr>
+<tr><td>transcript_lines</td><td>0.00</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>Unavailable</td></tr>
+<tr><td>assistant_processing_time</td><td>Unavailable</td></tr>
+<tr><td>back_and_forth_count</td><td>0.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

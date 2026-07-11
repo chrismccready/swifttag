@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-04-17-1-InternalExternalDiffDocUpdateFix</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-04-17-1-InternalExternalDiffDocUpdateFix</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-04-17-1-InternalExternalDiffDocUpdateFix.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-04-17  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Bug, Test  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: Internal/External picture change after document save management/formatting  </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.4 Extra High (Codex app)  </pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User 2026-04-17T04:09:54Z </pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Loading a .swifttag document that has a stale reference to picture changes does show that there is an external difference via status icon and window title, but does not format picture browser navigation text or show overlay on changed slot pictures.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- UI test to reproduce:</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>    - Add flac file</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>    - Save .swiftag document</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>    - Make new window</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>    - Close .swiftag document</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>    - Add original flac file to new window</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>    - Edit Pictures by adding picture slot 2 or edit picture description and save</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>    - Open .swiftag document, editor does show that there is an external difference via status icon and window title, but does not format picture browser navigation text or show overlay on changed slot pictures.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>Fix issue and create UI tests to confirm fix. Be sure to look at latest git commits and tests to confirm no regression issues.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre></pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>## Assistant 2026-04-17T04:09:54Z (0s since User start)</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre></pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>Repro path clear. First step: inspect latest commits, current worktree, picture-diff UI code, nearby tests. Then patch bug, add UI coverage, run focused regressions.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre></pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>Digging into album-art diff path now. Need latest commit intent, slot-state computation, UI probes around external picture state. Looking for break between document refresh state and album-art view model refresh.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre></pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>Strong lead found. .swifttag open path calls syncAlbumArtContext() before refreshLoadedTrackFileStates(). If album-art diff state lives in albumArt context, sheet never sees refreshed external picture flags even though row/window status does. Reading sync helpers next.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre></pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>Root cause likely in hasExternalPictureDifference(for:): slot UI re-checks against latestFileSnapshot, but .swifttag refresh intentionally keeps old baseline there. External state already computed in externallyModifiedPictureTypes; slot UI should trust that source.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre></pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>Plan:</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre></pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>1. Patch slot-level external picture detection to trust already-computed external picture set.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>2. Add UI probes/tests for reopened .swifttag doc after external picture-description edit and after external picture-slot addition.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>3. Run focused UI + related document/status regressions and compare with recent commit behavior.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre></pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>Edits done. Running build first, then focused unit/UI tests: new document regression, existing picture-status regressions, then new saved-document UI flows one by one.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre></pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>Unit/doc regressions green. UI next, one by one. First existing imported-live picture overlay test, then two new saved-document reopen tests.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre></pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>Row probe not reliable enough as pure accessibility value. Switching to explicit hidden row-state text inside picture-browser sidebar. Then rerun saved-document UI test.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre></pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>[ 2026-04-17T04:29:11Z (19m 17s since Assistant start) ]</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre></pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>## User 2026-04-17T04:29:11Z </pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre></pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre></pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>With regard to &quot;Row probe not reliable enough as pure accessibility value.&quot; Remember that when the picture browser opens it opens to the Album art slot pictures not to the navigation list.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre></pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>## Assistant 2026-04-17T04:29:11Z (0s since User start)</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre></pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>Good catch. Sheet opens on slot detail, not list. I’m patching tests to back out to list before checking row-state probe, then re-enter changed slot to verify overlay state.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre></pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>Current failure looks like hidden row text not exposed, not core diff logic. I’m making row-state probe visible to accessibility without showing on screen, then rerun saved-document UI test.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre></pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>Switching UI assertions to existing diff probes in main window. Those use same slot-diff logic as picture-browser formatting, and avoid list-vs-detail navigation noise. Still keep sheet overlay assertion for actual slot view.</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre></pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>[ 2026-04-17T04:40:03Z (10m 52s since Assistant start) ]</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre></pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>## User 2026-04-17T04:40:03Z </pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre></pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre></pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre> A bunch of quess work is going on here. Go read Apple&#x27;s UI test documentation on how to determine if an overlay is in place. Also there are other test already written that successfully do this, review those.</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre></pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>## Assistant 2026-04-17T04:40:03Z (0s since User start)</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre></pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>You’re right. Stop guessing. I’m reading Apple XCTest UI docs and local passing overlay-style tests first, then I’ll rework verification around documented UI-test signals instead of custom probes.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre></pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>Apple docs confirm stable UI assertions come from accessibility-driven state like exists, label, value, isHittable, plus waitForExistence. I’m checking repo’s existing overlay assertions now and pinpointing which saved-document assertion still fails.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre></pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>Found concrete problem in test, not app logic: diff probe query was app-wide, so firstMatch could read hidden probe from empty initial window. I’m scoping probe assertions to reopened document window, same pattern existing passing tests use.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre></pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>[ 2026-04-17T04:44:53Z (4m 50s since Assistant start) ]</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre></pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>## User 2026-04-17T04:44:53Z </pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre></pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>You still need to open the picture browser to determine if the overlay is there.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre></pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre></pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>## Assistant 2026-04-17T04:44:53Z (0s since User start)</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>Need open picture browser path. Reading existing sheet tests, helper flow, current overlay logic now.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre></pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>Need helper paths next. Opening UI test helpers, sheet identifiers, existing overlay test patterns.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre></pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>Need probe use, slot navigation helper, maybe existing overlay assertions in same file.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>2026-04-17T04:46:26Z</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>Need exact sheet probe shape before patch. Reading detail-view accessibility, maybe already enough for overlay assert.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre></pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>Need patch helper/tests now. Checking worktree, then edit only test path if code probe no longer needed.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre></pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>Need existing wait helper for generic accessibility value before patch.</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre></pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>Patch time. Switching sheet helper/tests from main-window probes to picture-browser scope. Also trimming dead probe path.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre></pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>Need follow-up patch. Checking remaining call sites, then remove dead sheet state probe if unused.</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre></pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>One stale call left. Removing dead probe path too.</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre></pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>Patch in. Running quick search for dead references, then targeted tests.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre></pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>Build clean. Running focused UI + regression tests next.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre></pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>Need exact UI identifiers from full test list. Pulling only relevant names now.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre></pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>RunSomeTests hit timeout. Switching to focused xcodebuild one-by-one so we get full result, not guess.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre></pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>[ 2026-04-17T04:59:31Z (14m 38s since Assistant start) ]</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre></pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>## User 2026-04-17T04:59:31Z </pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre></pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre></pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>UI tests were interrupted. Start with the tests you just added first, get those tests to pass, then do the preexisting regression tests and confirm those pass.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre></pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>## Assistant 2026-04-17T04:59:31Z (0s since User start)</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre></pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>Need clean rerun. First checking interrupted xcodebuild session state, then I’ll run only new UI tests one by one until green.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>Failure clear. Reopened document window exists, but test not focusing it before scoped selection. Reading focus helper, then patching new tests first.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre></pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>Need focus reopened doc window at helper level. Small patch now.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>Rerun first added UI test now.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre></pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>Root sheet id not exposed in XCUI here. Reverting helper to scoped app-after-sheet-open. Still satisfies user rule: open picture browser first, then assert sheet-only ids.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre></pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>Rerun first added UI test after helper fix.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre></pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>Good signal now. Overlay probe passes. Failure narrowed to navigation-state assertion after Back. Need inspect exact line and row semantics.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre></pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>Need see if repo already asserts sidebar row state some other way.</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre></pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>Need sturdier nav-state probe. Re-adding dedicated hidden state text as sibling, not row overlay. Then first new test again.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre></pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>Rerun first added UI test with dedicated sidebar-state probe.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre></pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>Need fallback for nav formatting. Looking for existing ViewInspector coverage around album art row formatting.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre></pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>Need existing album-art view-inspector test style before adding nav-format regression. Reading relevant section.</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre></pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>[ 2026-04-17T05:12:01Z (12m 30s since Assistant start) ]</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre></pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>## User 2026-04-17T05:12:01Z </pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre></pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre></pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>Do not add a test for the navigation formatting, rather once in navigation select back cover and confirm external difference overlay is not there, this will be good enough for now to determine slot level isolation of difference.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre></pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>## Assistant 2026-04-17T05:12:01Z (0s since User start)</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre></pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>Good constraint. I’ll drop nav-row assertions, keep slot-isolation check by switching to Back Cover and verifying overlay clears, then rerun new UI tests first.</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre></pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>Simplify new tests now. No nav-state probes. Only overlay isolation after switching slots.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre></pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>Rerun first added UI test after stripping nav assertions.</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre></pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>First added UI test green. Running second added UI test now.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre></pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>Both added UI tests green. Running preexisting UI regressions around internal/external picture state next.</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre></pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>UI regressions green. Pulling exact unit identifiers, then running document/internal-external regression set.</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre></pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>Need explicit unit-test confirmation. Re-running quoted only-testing set so shell cannot eat parentheses.</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre></pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>Focused unit regressions green too. One quick git status pass, then I’ll summarize exact changes and validation.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre></pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>Reworked new UI coverage in [SwiftTagUITests.swift](Swift/SwiftTag/SwiftTagUITests/SwiftTagUITests.swift:1585). Tests now do what user wanted: open picture browser, verify changed-slot overlay, then switch to `Back Cover` and confirm slot-level isolation by checking overlay clears or appears there. No separate navigation-format assertion added.</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre></pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>App-side regression fix still covered by [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift:1819), with document regressions in [SwiftTagDocumentTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagDocumentTests.swift:885). [AlbumArtSheetView.swift](Swift/SwiftTag/SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift:232) keeps stable slot identifiers used for slot switching in UI tests.</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre></pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>Validation passed:</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>- `SwiftTagUITests/testReopeningSavedSwiftTagDocumentShowsExternalPictureDescriptionDifferenceInPictureBrowser()`</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>- `SwiftTagUITests/testReopeningSavedSwiftTagDocumentShowsExternalAddedPictureSlotInPictureBrowser()`</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>- `SwiftTagUITests/testPictureDescriptionEditKeepsInternalTrackStatusIcon()`</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>- `SwiftTagUITests/testPictureDescriptionSaveInSecondWindowShowsExternalPictureDifferenceInFirstWindow()`</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>- `SwiftTagUITests/testPictureBrowserShowsExternalOverlayOnlyForDifferingSlot()`</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>- `SwiftTagDocumentTests/swiftTagDocumentLoadRefreshesLiveTagDifferencesImmediately()`</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>- `SwiftTagDocumentTests/swiftTagDocumentLoadRefreshDoesNotFlagPictureDifferencesWhenLiveFileMatches()`</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>- `SwiftTagDocumentTests/swiftTagDocumentLoadRefreshDoesNotFlagEquivalentMultiPictureOrderingAsPictureDifference()`</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- `SwiftTagDocumentTests/swiftTagDocumentLoadRefreshShowsFishForInternalTagDifferences()`</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- `SwiftTagDocumentTests/swiftTagDocumentLoadRefreshShowsFishForInternalPictureDescriptionDifferences()`</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>- `SwiftTagDocumentTests/swiftTagDocumentLoadRefreshShowsWarningForExternalPictureDifferences()`</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>- `SwiftTagDocumentTests/swiftTagDocumentLoadRefreshReportsExternalPictureDifferenceForChangedPictureType()`</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- `SwiftTagTests/tagEditorViewModelClassifiesInternalPictureDescriptionEditsWithoutExternalOverlay()`</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>- `SwiftTagTests/tagEditorViewModelClassifiesExternalPictureDescriptionEditsAsOverlayOnly()`</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre></pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>[ 2026-04-17T05:21:21Z (9m 20s since Assistant start) ]</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre></pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

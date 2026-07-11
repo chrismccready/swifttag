@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-03-03-1-MiscTagEditorDev</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-03-03-1-MiscTagEditorDev</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-03-03-1-MiscTagEditorDev.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-03-03  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Dev  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: Tag editor UI, Bindings  </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.3-Codex</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains brief user/assistant conversation content spanning several sessions.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>Change TextField associated with totalTracks binding to be a read-only Text view that is set to track count and updated when track count changes (like when tracks are imported). Also, the text should be bold and red when any tracks containing the tag “TOTALTRACKS” or “TRACKTOTAL” is not the same value (unless the value is empty) and return to default display when all tracks match or have an empty value for the aforementioned tags. Then add view that contains an appropriate message that is displayed when the mouse is hovering over the view.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre></pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre></pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Removed obsolete @State totalTracks.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Replaced totalTracks TextField with Text(trackCountString).</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- trackCountString is computed from trackItems.count, so it updates automatically on import/add/remove.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>Added mismatch detection logic:</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre></pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Checks each track’s TOTALTRACKS and TRACKTOTAL tags.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Ignores empty values.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- Normalizes numeric strings (e.g. 03 -&gt; 3) before comparison.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- If any non-empty value differs from current track count:</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>   - count text becomes bold red</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- Otherwise:</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>   - count text uses default style.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>Added hover-help view:</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- info.circle icon next to the count.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- .help(...) message explains whether values currently match or mismatch.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre></pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>## User</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre></pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>Following totalTracks Text View, add a TextField labeled “Disc” bound to tracks TagKey “disc”, followed by a TextField labeled “of” bound to @State private var “totalDiscs”. Similar to totalTracks Text view, the totalDiscs TextField should be bold and red when any tracks containing the tag “TOTALDISCS” is not the same value (unless the value is empty) and return to default display when all tracks match or have an empty value for “TOTALDISCS” tag and help should contain an appropriate message that is displayed when the mouse is hovering over totalDiscs Text view.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre></pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre></pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- Added TagKey.disc = &quot;DISC&quot;.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- Added @State private var totalDiscs: String = &quot;&quot;.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- Added selectedDiscBinding (bound to selected track DISC tag).</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- Added DISC to explicitTagKeys.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>UI updates (in the Number/Tracks row):</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- Added Disc TextField bound to selected track DISC via selectedDiscBinding.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- Added following of TextField bound to totalDiscs.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>Validation/styling for totalDiscs:</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- Added hasTotalDiscsMismatch:</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>   - checks non-empty TOTALDISCS tag values across tracks</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>   - compares against totalDiscs (normalized numeric form)</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>   - empty TOTALDISCS values are ignored</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- totalDiscs field is bold red on mismatch, default style otherwise.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- Added hover help message on totalDiscs field via .help(totalDiscsHoverMessage).</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre></pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>Following totalDiscs Text View, add a TextField labeled “Genre” bound to tracks TagKey “genre”.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre></pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- Added TagKey.genre = &quot;GENRE&quot;.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- Added selectedGenreBinding using selectedTagBinding(tagName: TagKey.genre).</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- Added Genre TextField immediately after the totalDiscs field, bound to selected track(s) GENRE tag.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- Includes disabled placeholder when no track is selected (consistent with other tag fields).</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre></pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- Import now maps:</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>   - DISC from DISCNUMBER or DISC (with leading-zero normalization)</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>   - GENRE from GENRE</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>- Import now initializes totalDiscs from the first imported file’s TOTALDISCS (normalized) when non-empty.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre></pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>## User</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre></pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>Update var explicitTagKeys to include “ALBUM”, “TRACK”, “TRACKNUMBER”, “TOTALTRACKS”, “TRACKTOTAL”, “DISCNUMBER”, “TOTALDISCS”.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre></pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>Create git commit message.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre></pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>Git commit message</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>Refine track metadata UI and import mapping for discs/genres/misc tags</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- add dictionary-backed handling for new explicit fields: DISC and GENRE</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- add Disc of totalDiscs controls with selected-track binding and numeric validation</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- style totalDiscs in bold red when non-empty TOTALDISCS tags mismatch entered value</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- add hover help messaging for total tracks/discs consistency indicators</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- convert total tracks display to read-only track-count text with mismatch highlighting and help</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre></pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>## User</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>We still have some bugs.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>- we should not allow non-empty key at creation by focusing user input into the key editing TextEdit box immediately upon the user push the add button, if the user leaves edit without entering a key, then remove the row</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- we should maintain uniqueness at all times by not allowing duplicate keys:  if a key being typed in by user matches another miscTag table row key or an explicitTagKeys value, the text should turn red, if the user leaves the edit box when it would be a duplicate, then remove the row</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>Please update the code accordingly and do not try to maintain existing code that would invalidate or not facilitate these goals.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre></pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>Updated miscTags key-entry behavior:</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- Pressing + creates an empty row and immediately focuses its Key field.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- Key field text turns red while the typed key is invalid:</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>   - duplicates another misc row key (normalized comparison)</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>   - matches any explicitTagKeys entry</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- When key focus leaves:</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>   - if key is empty, row is removed</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>   - if key is invalid on new row (duplicate/explicit/empty), row is removed</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>   - if key is invalid on edit row (duplicate/explicit/empty), key reverts to original pre-edit key</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>   - if key is valid, it is normalized/committed</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre></pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>## User</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre></pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>Previously I said “if a key being typed in by user matches another miscTag table row key or an explicitTagKeys value, the text should turn red, if the user leaves the edit box when it would be a duplicate, then remove the row”; this is correct for adding a new row. If the row already exists, the user is editing an already validated row and the current edited text is a duplicate when the user exits editing, then return the key text back to the original pre-edited text instead of removing the row. </pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre></pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre></pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>- New row behavior unchanged:</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>   - invalid/duplicate/explicit/empty key on blur -&gt; row is removed.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- Existing row behavior changed:</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>   - if edited key is invalid/duplicate/explicit/empty on blur -&gt; key reverts to original pre-edit key instead of removing the row.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre></pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>## User (add cover image well and editing sheet)</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre></pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>Add an image well after the Album and Album Artist TextFields that is the height of difference between the Album TextField top and Album Artist TextField bottom and the width equal to that height. The image well should stick to the right on window resizing.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre></pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre></pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>What changed:</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- Added a square image well immediately to the right of the Album/Album Artist field group.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Its size is computed dynamically as:</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>   - Album Artist TextField bottom Y - Album TextField top Y</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>- The image well is right-aligned and stays pinned to the right during window resizing via HStack + Spacer/frame(maxWidth: .infinity) behavior.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- Added an accessibility id: albumArtImageWell.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre></pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>## User</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre></pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>Remove albumImageWellSize variable and use and instead use a fixed width and height of 60.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre></pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre></pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>Changes made:</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>- Removed albumImageWellSize.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>- Changed image well frame to fixed .frame(width: 60, height: 60).</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>- Removed now-unused dynamic sizing code (preference keys, geometry readers, coordinate space, and related state).</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre></pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>## User</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre></pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>Update albumArtImageWell so that a mouse click in the image well will open a sheet containing a NavigationStack that contains an image well sized 400 x 400. The default image in the stack will be the albumCover, this image will also be rendered in the albumArtImageWell which will update if the user changes the albumCover image. To change the albumCover image the user will be able to drag and drop to either the albumCover the NavigationStack or when sheet is closed, the albumArtImageWell. The same image is used by the first NavigationStack item (labeled frontCover) and the albumArtImageWell. The next image item in the NavigationStack is labeled backCover.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre></pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre></pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>What’s now implemented:</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>- Clicking albumArtImageWell opens a sheet with a NavigationStack.</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>- The stack contains two items:</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>   - frontCover (first/default destination)</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>   - backCover</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- Each destination shows a 400 x 400 image well.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- frontCover and albumArtImageWell share the same image state.</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>   - Default is albumCover (asset image) when no custom front cover is dropped.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>   - Updating frontCover updates albumArtImageWell, and vice versa.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>- Drag-and-drop image support is enabled for:</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>   - albumArtImageWell (when sheet is closed)</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>   - frontCover image well in the sheet</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>   - backCover image well in the sheet</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre></pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>## User</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre></pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>Update the albumArtSheet navigationTitle to the associated NavigationLink name. Also add  navigation links based on the following navigation link name and case to add to AlbumArtSlot:</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>“Other = other, 32x32 PNG Icon = 32x32PngIcon, Other Icon = otherIcon, Front Cover = frontCover, Back Cover = backCover, Leaflet = leaflet, Media = media, Lead Artist = leadArtist, Artist = artist, Conductor = conductor, Band = band, Composer = composer, Lyricist = lyricist, Recording Studio or Location = recordingStudioOrLocation, Recording Session = recordingSession, Performance = performance, Capture from Movie or Video = captureFromMovieOrVideo, Bright(ly) Colored Fish = brightlyColoredFish, Illustration = illustration, Band Logo = bandLogo, Publisher Logo = publisherLogo&quot;. Use a data structure to hold the navigation link name that associates a numeric value which will be used later here is the associated number and string pairs: “0 = Other, 1 = 32x32 PNG Icon, 2 = Other Icon, 3 = Front Cover, 4 = Back Cover, 5 = Leaflet, 6 = Media, 7 = Lead Artist, 8 = Artist, 9 = Conductor, 10 = Band, 11 = Composer, 12 = Lyricist, 13 = Recording Studio or Location, 14 = Recording Session, 15 = Performance, 16 = Capture from Movie or Video, 17 = Bright(ly) Colored Fish, 18 = Illustration, 19 = Band Logo, 20 = Publisher Logo”.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre></pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre></pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>Changes made:</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>- Expanded AlbumArtSlot with all requested cases, including frontCover and backCover.</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>- Added AlbumArtType data structure with:</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>   - number (0...20),</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>   - navigationLinkName,</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>   - slot.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>- Added albumArtTypes array with your exact number/name mappings.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>- Updated albumArtSheet navigation list to be generated from albumArtTypes.</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>- Updated destination navigationTitle to use the associated navigationLinkName from that data structure.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>- Generalized album-art image storage to [AlbumArtSlot: NSImage] so all slot types can hold dropped images.</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre></pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>## User</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre></pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>Update albumArtSheet so that a mouse click in the albumArtWell will open a file select dialog that allows for a single file selection of type “.jpg”, “.jpeg”, or “.png”. Selected file will replace image for associated AlbumArtSlot.</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre></pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre></pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>What changed:</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>- Added slot-aware file import state:</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>   - isAlbumArtFileImporterPresented</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>   - pendingAlbumArtSlotForImport</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- Added handler:</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>   - handleAlbumArtFileImportResult(_:)</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>   - Accepts one selected file and applies it to the pending slot via setAlbumArtImage.</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- Wired click action in albumArtSheet destination:</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>   - Clicking the 480x480 albumArtWell now launches the file dialog for that slot.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>- Added a dedicated file importer modifier:</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>   - allowedContentTypes: [.jpeg, .png]</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>   - allowsMultipleSelection: false</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>Behavior:</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>- Accepted types are .jpg/.jpeg (via UTType.jpeg) and .png.</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>- Selected file replaces the image for the currently displayed AlbumArtSlot.</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre></pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>## User</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre></pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>Update albumArtSheet’s albumArtWell to have a right-click context menu with two rows: import + current navigationLinkName and export + navigationLinkName. The import will do the same action as the left mouse click already implemented and the export will open a file save dialog to allow saving the current image, the default name in the save dialog should be the navigationLinkName followed by the appropriate extension.</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre></pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre></pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>Changes made:</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>- Expanded AlbumArtSlot with all requested cases, including frontCover and backCover.</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>- Added AlbumArtType data structure with:</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>   - number (0...20),</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>   - navigationLinkName,</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>   - slot.</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre>- Added albumArtTypes array with your exact number/name mappings.</pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>- Updated albumArtSheet navigation list to be generated from albumArtTypes.</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre>- Updated destination navigationTitle to use the associated navigationLinkName from that data structure.</pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>- Generalized album-art image storage to [AlbumArtSlot: NSImage] so all slot types can hold dropped images.</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>Updated so albumArtSheet’s albumArtWell now has a right-click context menu with:</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>- Import &lt;navigationLinkName&gt;</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>- Export &lt;navigationLinkName&gt;</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>Behavior:</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre>- Import ... runs the exact same action as left-click (opens the same file picker).</pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>- Export ... opens an NSSavePanel and saves the current image for that AlbumArtSlot.</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>- Default filename is &lt;navigationLinkName&gt;.&lt;ext&gt; where &lt;ext&gt; is chosen from the image format (jpg/png).</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre></pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>## User</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre></pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>Create Git commit message.</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre></pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>## Assistant</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre></pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>Add album art manager UI with import/export and slot metadata</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre></pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>- Add album art workflow to ContentView with a dedicated Album Art sheet</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>- Introduce AlbumArtSlot + AlbumArtType mapping (ID3 picture type numbers and labels)</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>- Add shared album art state per slot and render it in both main 60x60 well and sheet well</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>- Support image import via drag-and-drop and click-to-open file picker (.jpg/.jpeg/.png)</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre>- Add context menu actions on albumArtWell:</pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>   - Import &lt;slot name&gt;</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>   - Export &lt;slot name&gt; (enabled only when slot has an image)</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>- Refactor export to SwiftUI-native .fileExporter with default filename based on slot label and image type</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>- Update project sandbox settings to allow user-selected file read/write access and explicitly disable unused capabilities</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre></pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

@@ -1,0 +1,255 @@
+{
+  "aliases": [
+    "FLAC Lib",
+    "libFLAC",
+    "FLAC bridge",
+    "FLAC C bridge"
+  ],
+  "description": "libFLAC build integration, FLAC bridge headers and C bridge, and FLAC metadata service changes.",
+  "display_name": "FLAC Lib",
+  "included_commit_ids": [
+    "1071c2e0ffd3bbc279f2cca6e15509e725518e25",
+    "1276536d7ce542d757187ed8e2a7a229c6741847",
+    "1fcd08274065e59e148cb05d16e592e98f02bced",
+    "27b32d888ac16fcaa31f6735b29d960131a8315c",
+    "4f1e2732dc317203bf9fd6f998fe4946be3a760c",
+    "5866685bcbe463804d3efa4fb258029bf961207a",
+    "6cf4772cd3482a0a7ca38f2f613ca64a86da22a1",
+    "78b870c79708a25f71251242e16deec289711c28",
+    "859a8f570b718d332f3f3814fc621280ae0f077e",
+    "9654a156c85a094a0fe4d86cb59ab87de34bf6f3",
+    "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+    "a0438824397c29c96ca6c63b48ef501b5d63dffe",
+    "b70f6625e06280784004190bcabafe04c96086d3",
+    "bae266f0f97e4d7e264cc54628bfaf3cc70a78f7",
+    "bba775b507acd848d8bea0c67609752e0d812194",
+    "c2b2356f0f3b1143f444b6e8120567b343d729cc",
+    "d07df1fefbd553b00635ee882631ee74d12f0530",
+    "da7b04f7563351b6c4c0883dbcbc16a5e081336a",
+    "ec63010015b0d8b4b08f578fb82c8526ce872cc6",
+    "f195e03db1cd290792f99f8b880bb69995e28921"
+  ],
+  "included_plan_ids": [
+    "1",
+    "4",
+    "13"
+  ],
+  "keywords": [
+    "libflac",
+    "flac bridge",
+    "c bridge",
+    "build-libflac",
+    "FlacMetadataBridge",
+    "FlacMetadataService"
+  ],
+  "positive_and_negative_edges": [
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "6cf4772cd3482a0a7ca38f2f613ca64a86da22a1",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "1fcd08274065e59e148cb05d16e592e98f02bced",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "4f1e2732dc317203bf9fd6f998fe4946be3a760c",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "bae266f0f97e4d7e264cc54628bfaf3cc70a78f7",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "27b32d888ac16fcaa31f6735b29d960131a8315c",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "a0438824397c29c96ca6c63b48ef501b5d63dffe",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "bba775b507acd848d8bea0c67609752e0d812194",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "da7b04f7563351b6c4c0883dbcbc16a5e081336a",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "ec63010015b0d8b4b08f578fb82c8526ce872cc6",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "78b870c79708a25f71251242e16deec289711c28",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "f195e03db1cd290792f99f8b880bb69995e28921",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "b70f6625e06280784004190bcabafe04c96086d3",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "5866685bcbe463804d3efa4fb258029bf961207a",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "859a8f570b718d332f3f3814fc621280ae0f077e",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "c2b2356f0f3b1143f444b6e8120567b343d729cc",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "d07df1fefbd553b00635ee882631ee74d12f0530",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "9654a156c85a094a0fe4d86cb59ab87de34bf6f3",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "1071c2e0ffd3bbc279f2cca6e15509e725518e25",
+      "entity_type": "commit",
+      "evidence_source": "configured exact path",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "1",
+      "entity_type": "plan",
+      "evidence_source": "explicit Plan Theme include",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "4",
+      "entity_type": "plan",
+      "evidence_source": "explicit Plan Theme include",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "13",
+      "entity_type": "plan",
+      "evidence_source": "explicit Plan Theme include",
+      "relationship_type": "include",
+      "theme_id": "flac-lib"
+    }
+  ],
+  "theme_id": "flac-lib"
+}

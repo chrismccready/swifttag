@@ -4,14 +4,22 @@ description: SwiftTag project information, links, blog, etc.
 author: Chris McCready
 
 extra_nav_links:
+  - title: "Project Analysis"
+    url: /Docs/Analysis/output/index.html
   - title: "User Documentation"
-    url: /Docs/UserDocumentation/
+    url: /Docs/UserDocumentation/index.html
 
 exclude:
   - BuildScripts/
   - Docs/AppleDocsIndex/
   - Docs/Guides/
   - Docs/Plans/
+  - Docs/Analysis/config/
+  - Docs/Analysis/output/review-packets/
+  - Docs/Analysis/tests/
+  - Docs/Analysis/.gitignore
+  - Docs/Analysis/analyze_swifttag_project.py
+  - Docs/Analysis/render_plotly_commit_history.py
   - Docs/testing-tools-review.md
   - SwiftTag.xcodeproj/
   - SwiftTag/
@@ -32,4 +40,9 @@ defaults:
       path: "Docs/README.md"
     values:
       layout: default
-      title: "README"
+      title: "Project README"
+  - scope:
+      path: "Docs/Analysis/README.md"
+    values:
+      layout: default
+      title: "Project Analysis README"

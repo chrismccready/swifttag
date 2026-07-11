@@ -279,17 +279,9 @@ window.close() still not reducing count. Likely command shape issue: close front
 
 [ 2026-04-24T23:00:32Z (18m 15s since Assistant start) ]
 
-## User 2026-04-24T23:00:32Z 
-
-[ interrupted agent ]
-
-I think window close is reducing count. What I see happening is the app opens with a window (as designed) and no tracks are in this window, then another window is opened (like a new command was issued) also no tracks in this second window, then the second window is closed, then there is a pause and then the app quits. You may want to debug your window existence and count expectations before attempting to determine close mechanics. Continue.
-
-## Assistant 2026-04-24T23:00:32Z  (0s since User start)
-
-[ You've hit your usage limit. ]
-
 ## User 2026-04-25T03:51:28Z (5h 9m 12s since previous Assistant start) 
+
+[ "You've hit your usage limit.", hence the time break ]
 
 I think window close is reducing count. What I see happening is the app opens with a window (as designed) and no tracks are in this window, then another window is opened (like a new command was issued) also no tracks in this second window, then the second window is closed, then there is a pause and then the app quits. You may want to debug your window existence and count expectations before attempting to determine close mechanics. In my testing in external environment the close command does work, however the window `count` is never decremented. Continue.
 

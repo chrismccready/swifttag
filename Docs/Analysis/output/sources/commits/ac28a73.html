@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(diff-tools): implement track/file diff states and mismatch warning customization</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(diff-tools): implement track/file diff states and mismatch warning customization</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-03-17</p>
+<p><code>ac28a73112d2a5170ee56f4f05fe6081f4376eb6</code></p>
+<p>feat(diff-tools): implement track/file diff states and mismatch warning customization</p>
+<h2>Body</h2><pre>• rename diff settings to track-to-file and track-to-track terminology with new persisted keys
+• add externally modified diff formatting toggle and color setting
+• add track/disc total mismatch color and apply it to warning text and background
+• split formatting into track-to-track, track-to-file, and externally modified precedence
+• update editor bindings for per-track total discs, mixed markers, and date text diff display
+• limit misc track-to-track styling to values and detect missing-snapshot misc file diffs
+• update content and view model diff wiring plus flac import/write mapping for new behavior
+• add and update unit, view-inspector, and ui tests for feedback settings and diff formatting
+• update plan 9 and add transcripts for the feedback settings implementation changes</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>95.8 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>8h 42m</span></div>
+  <div><strong>Assistant</strong><span>1h 25m</span></div>
+  <div><strong>User Response</strong><span>7h 17m</span></div>
+  <div><strong>Back/Forth</strong><span>17.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/settings.html">Settings</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/9.html">Plan 9: Add UI Feedback Settings Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-17-1-9-AddUIFeedbackSettings.html#L1">transcript-2026-03-17-1-9-AddUIFeedbackSettings</a>, <a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L1">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-1-9-AddUIFeedbackSettings.html#L12">transcript-2026-03-17-1-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-1-9-AddUIFeedbackSettings:segment-001</td><td>work</td><td>1.000</td><td>60.5</td><td>52m 0s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-1-9-AddUIFeedbackSettings.html#L68">transcript-2026-03-17-1-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-1-9-AddUIFeedbackSettings:segment-002</td><td>work</td><td>1.000</td><td>38.9</td><td>8m 5s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-1-9-AddUIFeedbackSettings.html#L104">transcript-2026-03-17-1-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-1-9-AddUIFeedbackSettings:segment-003</td><td>work</td><td>1.000</td><td>15.1</td><td>2m 53s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-1-9-AddUIFeedbackSettings.html#L118">transcript-2026-03-17-1-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-1-9-AddUIFeedbackSettings:segment-004</td><td>work</td><td>1.000</td><td>48.6</td><td>18m 57s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L12">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-001</td><td>work</td><td>1.000</td><td>43.0</td><td>15m 22s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L54">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-002</td><td>work</td><td>1.000</td><td>41.0</td><td>7m 7s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L94">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-003</td><td>work</td><td>1.000</td><td>31.7</td><td>9m 7s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L125">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-004</td><td>work</td><td>1.000</td><td>30.7</td><td>4m 56s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L155">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-005</td><td>work</td><td>1.000</td><td>22.5</td><td>16m 51s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L177">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-006</td><td>work</td><td>1.000</td><td>41.0</td><td>19m 38s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L217">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-007</td><td>work</td><td>1.000</td><td>35.8</td><td>38m 3s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L252">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-008</td><td>work</td><td>1.000</td><td>32.8</td><td>2h 42m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L284">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-009</td><td>work</td><td>1.000</td><td>29.7</td><td>28m 17s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L313">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-010</td><td>work</td><td>1.000</td><td>43.0</td><td>6m 55s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L355">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-011</td><td>work</td><td>1.000</td><td>80.9</td><td>1h 41m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L434">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-012</td><td>work</td><td>1.000</td><td>59.4</td><td>29m 8s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L492">transcript-2026-03-17-2-9-AddUIFeedbackSettings</a></td><td>transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-013</td><td>work</td><td>1.000</td><td>21.5</td><td>30s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/9-AddUIFeedbackSettings.md</td><td>263</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-03-17-1-9-AddUIFeedbackSettings.md</td><td>31</td><td>0</td><td>transcripts</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.md</td><td>513</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag.xcodeproj/project.pbxproj</td><td>13</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>205</td><td>43</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/FlacImport/FlacImportMapper.swift</td><td>6</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/FlacImport/FlacWriteMapper.swift</td><td>24</td><td>7</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/DiffToolsView.swift</td><td>41</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/FeedbackSettingsView.swift</td><td>85</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/SettingsView.swift</td><td>5</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorAlbumView.swift</td><td>43</td><td>25</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift</td><td>121</td><td>52</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift</td><td>15</td><td>15</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift</td><td>15</td><td>16</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorView.swift</td><td>74</td><td>10</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>435</td><td>70</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/EditorSessionModels.swift</td><td>1</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/FeedbackSettings.swift</td><td>173</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/TagKey.swift</td><td>2</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/Track.swift</td><td>18</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SaveNotificationCoordinator.swift</td><td>20</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/TagDiffFormatting.swift</td><td>139</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTagApp.swift</td><td>11</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>348</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/TrackStatusViewInspectorTests.swift</td><td>59</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>18</td><td>148</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>1685.00</td></tr>
+<tr><td>transcript_lines</td><td>676.00</td></tr>
+<tr><td>plan_lines</td><td>263.00</td></tr>
+<tr><td>elapsed_time</td><td>31337.00</td></tr>
+<tr><td>assistant_processing_time</td><td>5103.00</td></tr>
+<tr><td>back_and_forth_count</td><td>17.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

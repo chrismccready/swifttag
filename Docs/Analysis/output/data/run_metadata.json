@@ -1,0 +1,33 @@
+{
+  "command_arguments": [
+    "--repo-root",
+    ".",
+    "--output",
+    "Docs/Analysis/output"
+  ],
+  "dirty_worktree_status": "M .gitignore\n M Docs/Plans/Transcripts/transcript-2026-03-18-1-9-AddUIFeedbackSettings.md\n M Docs/Plans/Transcripts/transcript-2026-03-22-1-11-AddMultiPicturePerTrackSupport.md\n M Docs/Plans/Transcripts/transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport.md\n M Docs/Plans/Transcripts/transcript-2026-03-26-1-11-AddMultiPicturePerTrackSupport.md\n M Docs/Plans/Transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.md\n M Docs/Plans/Transcripts/transcript-2026-04-05-2-AddFlacStatusUpdateFix.md\n M Docs/Plans/Transcripts/transcript-2026-04-23-2-26-AddAppleScriptSupport.md\n M Docs/Plans/Transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.md\n M Docs/Plans/Transcripts/transcript-2026-06-03-1-UpdatesForRelease-1-0-2.md\n M Docs/Plans/Transcripts/transcript-2026-06-18-1-33-AddTrackFileRename.md\n M _config.yml\n M _includes/header.html\n M index.md\n?? Docs/Analysis/",
+  "git_head": "080664ed39357f6a1822315246d0459c72b3598d",
+  "input_file_counts": {
+    "commits": 208,
+    "plan_sources": 36,
+    "plans": 33,
+    "transcripts": 81,
+    "user_documentation": 34
+  },
+  "matplotlib_version": "3.11.0",
+  "plotly_version": "6.9.0",
+  "python_version": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "report_end_commit": "1071c2e0ffd3bbc279f2cca6e15509e725518e25",
+  "report_start_commit": "2c8445cbde7892ceff58fb58780a79278bcf7d6e",
+  "review_status_counts": {
+    "invalid": 0,
+    "reviewed": 81,
+    "stale": 0,
+    "unreviewed": 0
+  },
+  "theme_coverage_percentage": 100.0,
+  "themed_commit_count": 208,
+  "unthemed_commit_count": 0,
+  "utc_run_timestamp": "2026-07-11T23:13:48.531662Z",
+  "warning_count": 36
+}

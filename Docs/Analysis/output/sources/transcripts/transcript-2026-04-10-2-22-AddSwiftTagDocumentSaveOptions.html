@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-04-10-2-22-AddSwiftTagDocumentSaveOptions</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-04-10-2-22-AddSwiftTagDocumentSaveOptions</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-04-10-2-22-AddSwiftTagDocumentSaveOptions.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-04-10  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: 22-AddSwiftTagDocumentSaveOptions.md  </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.4 High/Extra High (VSCode/Codex app)  </pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User 2026-04-10T06:05:42Z </pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>Create a plan to offer save referenced SwiftTag document when there have been changes outside of flac track tag/picture changes:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- This feature is independent of the command s settings `saveReferencedSwiftTagDocument` and `askToSaveNewSwiftTagDocument`.</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- This feature covers when tracks have been added or removed so that at the time of window/app close there is a difference between what the referenced SwiftTag document has a track list and what is the current track list. Changes in track tags/pictures is not relevant in this diff check.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- When there is a track list difference:</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>    - Put a “*” after document name in window navigationTitle </pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>    - At time of window/app close, show a dialog offering user a chance to “Save &lt;.referenced .swifttag document name&gt;”, “Close Window”, or “Cancel”.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>Save plan to 22-AddSwiftTagDocumentSaveOptions.md. Ask questions for clarification.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>## Assistant 2026-04-10T06:05:42Z (0s since User start)</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre></pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>I’m gathering the current planning conventions and the existing save-document flow so the new plan fits the project’s format and constraints before I draft it and ask targeted clarifying questions.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre></pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>The close-flow plan already covers unsaved FLAC edits; this new work is narrower and needs a separate dirty-state source for track-list divergence against the referenced document. I’m checking the current document-monitor and navigation-title logic next so the plan lands on the right model and prompt path.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre></pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>There is already bookmark-backed associated-document monitoring and deleted-state support in the save-state model. The gap for this request is likely a second close-dirty condition based on track-list divergence from the referenced document, so I’m reading those exact seams before drafting the plan.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre></pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>I’ve confirmed the current close prompt only keys off FLAC tag/picture diffs, while referenced-document dirty state already exists for deletion handling and title derivation. I’m checking whether there is any existing track-list snapshot or document import fingerprint I can anchor the new diff rule to before I write the plan and ask the remaining product questions.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>I have enough to draft the structure, but I want one more pass on how the code currently fingerprints track sets and session state so the plan can name a concrete diff source instead of a vague “compare track lists somehow.”</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>I found an existing normalized path fingerprint for the current imported track set, which is the cleanest likely hook for this feature if “track-list difference” means membership rather than metadata. I’m pulling the exact registration and change-observer sites now so the plan can point to concrete integration points.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>I’m writing the numbered plan now as a draft-with-open-questions. It will name the concrete code seams already in place, keep the confirmed behavior explicit, and leave the unresolved combination rules called out rather than guessing them.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre></pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>The plan draft is saved. I’m asking the remaining product questions now so the open-question section can be resolved into confirmed decisions before implementation starts.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>Q: For the referenced-document diff, should this compare track membership only, or should track order changes also count as dirty?  </pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>A: Order also counts - Reordering the same tracks also marks the document dirty  </pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre></pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>Q: If both FLAC tag/picture edits and referenced-document track-list differences exist, how should close or quit behave?  </pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>A: Use the existing implemented code path for this case.  </pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>Q: Should tracks without a source FLAC file path count toward the referenced-document track-list diff?  </pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>A: Yes - Any current track in the session can make the referenced document dirty  </pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre></pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>Q: If the referenced document is deleted or unavailable at close time and the user chooses Save, should the existing deleted-document recovery flow be reused?  </pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>A: Yes - Reuse the existing recovery prompt and save behavior</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>The user clarified the remaining behavior, and those answers materially change the baseline model. I’m folding them into the plan now so it is implementation-driving rather than a draft with unresolved questions.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre></pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>I’ve resolved the open questions in the plan. I’m saving the key close-flow decisions into repo memory as well so the eventual implementation can reuse them without re-deriving chat history.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre></pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>The plan file is complete and the clarification answers are incorporated. I’m marking the work finished, then I’ll summarize exactly what was saved and the key confirmed decisions that now drive implementation.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre></pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>The plan is saved at 22-AddSwiftTagDocumentSaveOptions.md. It now includes the concrete implementation seams in the current codebase, the close and quit orchestration constraints, a dedicated baseline model for referenced-document track-list divergence, and a targeted test strategy.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre></pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>The clarifications are folded into the plan as confirmed decisions: track order changes count as dirty, non-file-backed tracks also participate, deleted referenced-document saves should reuse the existing recovery flow, and when FLAC tag or picture unsaved changes are also present the feature should defer to the existing implemented mixed-dirty-state close path. The plan has no remaining open questions.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre></pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>[ 2026-04-10T06:15:02Z (9m 20s since Assistant start) ]</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre></pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>## User 2026-04-10T06:20:54Z (15m 13s since previous Assistant start) </pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre></pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>[ switched to GPT-5.4 Extra High  ]</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre></pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>Review plan 22-AddSwiftTagDocumentSaveOptions.md. Ask questions as needed for clarification and implement.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre></pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>## Assistant 2026-04-10T06:20:54Z (0s since User start)</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre></pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>I’m reviewing plan 22-AddSwiftTagDocumentSaveOptions.md against the current codebase and guides first so we can implement it without guessing on behavior. After that I’ll call out any real ambiguities, then I’ll make the changes and verify them with targeted builds/tests.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre></pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>I’ve confirmed plan 22 is new and uncommitted, so I’m treating it as the implementation spec and checking it against the existing save/document code instead of assuming older save behavior still matches. Next I’m reading the plan, the testing guide, and the current SwiftTagDocument/save-related files to see whether anything is still ambiguous.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre></pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>The plan is concrete so far; I haven’t found a blocker yet. I’m drilling into the exact seams it references now: the navigation-title derivation, the unsaved-changes resolver/coordinator, and the existing remembered-document save path so we can add the new dirty state without disturbing the current mixed-save flow.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre></pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>I’ve hit the main implementation decision point now: the dirty state needs a stable per-track identity that survives file rename/repair and also handles tracks with no file path, while still ignoring tag/picture edits. I’m checking the document track fingerprint and existing model fields before I wire anything, because that identity choice is what determines whether we get false dirty markers later.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>I’ve got enough context to implement this cleanly. The change is going to land in three pieces:</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>1. Add a view-model-owned referenced-document track-list baseline and a pure comparator that derives current-vs-baseline dirty state without looking at tag or picture diffs.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>2. Feed that new dirty state into the navigation title and the close/quit resolver, while leaving the existing mixed FLAC-unsaved flow unchanged whenever tag/picture edits already exist.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>3. Add targeted tests around the baseline/comparator, title marker behavior, and the new resolver branch, then run a build plus focused tests.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre></pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>I’m starting the code edits now. First I’m adding the baseline/comparison model in the view model and hooking it into load/save/title derivation, because that gives us the shared dirty-state seam the rest of the prompt flow can rely on.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre></pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>The baseline/diff seam is in place. I’m wiring that into the close/quit prompt resolver next, with a narrow divergence-only branch so the existing FLAC-unsaved prompt behavior stays untouched whenever tag or picture edits are already present.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre></pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>I’m in the test pass now. I’m adding small, high-signal cases around the new comparator and resolver rather than broader UI tests, since this behavior is mostly pure state and the plan explicitly prefers that route.</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre></pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>I caught one test seam that needed tightening: the deleted-document dirty-state case has to become dirty after the reference baseline is captured, not before. I’m fixing that and then I’ll run diagnostics/builds.</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre></pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>One edge case is worth closing while I’m here: if the referenced document becomes dirty because every track was removed, the close/quit save action still needs to succeed. I’m making the referenced-document save path handle an empty current session so that case doesn’t dead-end on the prompt.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre></pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>The implementation work is in place. I’m running compiler diagnostics on the touched files first so we can catch any type or initializer issues before doing the heavier build/test pass.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>The diagnostics are down to a couple of initializer/global-actor quirks rather than logic issues. I’m fixing those directly so the next build pass reflects the actual feature behavior, not Swift’s synthesized-init edge cases.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre></pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>The file-level diagnostics are clean now. I’m switching to project verification: a build first, then focused tests for the resolver/view-model/document cases we touched so we can validate the new close/quit and title behavior end to end at the unit level.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre></pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>The targeted tests all passed. I’m doing one final clean build against the current tree and then I’ll summarize the behavior changes and the one assumption I made while implementing the empty-session save path.</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre></pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>Implemented plan 22. The referenced `.swifttag` track list now keeps a baseline in [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift), adds `*` to document-backed titles when the current ordered track list diverges, and clears that state again after load/save. Close/quit prompting now has a track-list-difference-only branch in [UnsavedChangesFlow.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/UnsavedChangesFlow.swift) fed from [ContentView.swift](Swift/SwiftTag/SwiftTag/ContentView.swift), while the existing mixed FLAC-unsaved flow stays unchanged.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre></pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>I also let referenced-document saves write an empty package in [SwiftTagDocumentPackage.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift) so “remove all tracks, then save on close/quit” doesn’t dead-end. Coverage was added in [SwiftTagTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagTests.swift) and [SwiftTagDocumentTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagDocumentTests.swift). I didn’t need clarification from the plan; the main implementation assumption was that an empty current session should still be saveable back to an existing referenced document.</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre></pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>Verification: Xcode build succeeded, and 13 targeted tests passed for the new comparator, resolver, title-marker, deleted-title, pathless-track, and empty-save cases.</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre></pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>[ 2026-04-10T06:45:24Z (24m 30s since Assistant start) ]</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre></pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>## User 2026-04-10T07:05:13Z (44m 20s since previous Assistant start) </pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre></pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>Oops, I should have clarified this earlier, you can’t use the flac fingerprint as a unique track identifier/comparator in the track list as it is possible to have different track file URLs with the same fingerprint. Use the track file’s current bookmark URL as the comparator. This is what is used to determine whether tracks already exist before adding, etc. Update code and tests. Be careful to use the most current bookmark resolved URL as tracks can be renamed/moved outside of editor.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre></pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>## Assistant 2026-04-10T07:05:13Z (0s since User start)</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre></pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>I’m updating the track-list comparator now so it no longer treats FLAC fingerprints as unique track identity. I’ll switch the referenced-document dirty check over to the same current bookmark-resolved URL identity the add/dedupe flow uses, keep the non-file-backed fallback intact, and then tighten the tests around rename/move behavior.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre></pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>I found the exact seam to fix: the new comparator currently still prefers FLAC fingerprint before bookmark identity. I’m replacing that with a shared bookmark-based identity helper so the track-list diff uses the same current resolved bookmark path logic as add/dedupe, then I’ll update the tests to prove same-fingerprint/different-URL tracks stay distinct and renamed files don’t spuriously dirty the document.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre></pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre></pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>I’m updating the new track-list baseline logic to compare by the bookmark’s most recently resolved file URL instead of fingerprint, then I’ll realign the affected tests around rename/move-safe bookmark identity.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre></pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>I’ve confirmed the current comparator still prefers fingerprint first. I’m reading the existing bookmark-resolution helpers now so I can make the baseline comparison share that same identity path instead of inventing a second rule set.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre></pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>I found the shared identity helpers already in the view model, which is great. I’m folding the baseline comparator onto those same bookmark-resolution rules and then swapping the fingerprint-based tests over to file-backed bookmark cases, including a rename regression.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>I have the edit shape now: a shared bookmark-identity resolver in the view-model file, the track-list baseline dropping fingerprint entirely, and the tests moving to real file/bookmark cases so we cover same-fingerprint/different-URL plus rename safety.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre></pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>The core code is switched over now. Next I’m rewriting the affected tests to use real temp FLAC URLs plus bookmarks so the assertions match the actual dedupe/comparison behavior instead of the old fingerprint shortcut.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>The tests are rewritten. I’m running file-level diagnostics first so we can catch any compile slip from the new helpers before doing the build and targeted verification.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre></pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>The build is clean. I’m running the bookmark-focused regression set now, including the add/dedupe seam and the renamed-file baseline case, so we verify the new comparator from both sides.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre></pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>The regression set passed cleanly, including the new “same fingerprint, different URL” case and the external rename case. I’m doing one last quick diff/status pass so I can summarize exactly what changed and note any assumptions.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre></pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>The track-list comparator now uses the track’s current bookmark-resolved file URL instead of FLAC fingerprint in [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift#L12). The baseline comparison keeps bookmark data and resolves it at compare time, falls back to a normalized source path only when no bookmark is available, and still falls back to session ID for pathless tracks, so external rename/move cases no longer create false `*` markers.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre></pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>I updated the regression coverage in [SwiftTagTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagTests.swift#L88) and [SwiftTagDocumentTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagDocumentTests.swift#L35). The new tests cover same-bookmark tag-only edits staying clean, different URLs with the same fingerprint being treated as different tracks, bookmark-based rename safety, and the deleted-document dirty title flow still using real file-backed references.</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre></pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>Verification: project build succeeded, and 15 targeted tests passed, including the bookmark dedupe seam, the new comparator regressions, the rename case, and the existing track-list unsaved-changes prompt tests.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre></pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>[ 2026-04-10T07:17:34Z (12m 21s since Assistant start) ]</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre></pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

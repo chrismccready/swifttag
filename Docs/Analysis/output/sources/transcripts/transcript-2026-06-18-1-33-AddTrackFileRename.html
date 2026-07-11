@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-06-18-1-33-AddTrackFileRename</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-06-18-1-33-AddTrackFileRename</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-06-18-1-33-AddTrackFileRename.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>Date: 2026-06-18  </pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>References: 33-AddTrackFileRename.md, pre-1.0.3   </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Agent: GPT-5.5 Extra  High (Codex app)  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre></pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>## User 2026-06-18T00:16:24Z </pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>Create a plan to add track rename functionality:</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>1. Add to `File` menu before `Reload Selected Tracks` a menu item labeled `Rename Track Files` followed by `Rename Selected Track Files` followed by `Rename Track Files Config...` followed by a divider.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>2. When `Rename Track Files Config...` is selected, a sheet window will open on the key editor window. The rename sheet will contain:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>  - At top a read only Text view labeled &quot;Rename Example&quot; that contains the first selected track&#x27;s filename (the last component of the file path).</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>  - Under the filename text view will be a single line TextField labeled &quot;Rename Format&quot;, followed by a checkbox labeled &quot;Zero Pad&quot;. Editing in &quot;Rename Format&quot; field will change the &quot;Rename Example&quot; text based on formatting rules.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>  - The rename formatting rules are:</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>    - characters entered default to literals unless surrounded by &#x27;|&#x27;</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>    - characters surrounded by &#x27;|&#x27; (e.g. |TITLE|) are to be interpreted as a tag key (e.g. |TITLE| is the track title tag key)</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>    - ideally when the user completes a tag character sequence by entering the trailing &#x27;|&#x27; the app will validate the tag entered against know tags (see AppleScript track properties for larger list) and capitalize the text to known tag</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>    - also, ideally, the user can enter text similar to the tag and the app will try to find an appropriate match and replace entered text with match (e.g. user enters: `|track number|` or `|number|` and the app formats to `|TRACKNUMBER|`)</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>    - the default text/config for the &quot;Rename Format&quot; field is &quot;|TRACKNUMBER| |TITLE|&quot; and the &quot;Zero Pad&quot; is true which indicates that the rename will zero pad the `TRACKNUMBER`</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>  - Below the &quot;Rename Format&quot; TextField will be a TextField labeled &quot;Replacement Text&quot;, followed by a checkbox labeled &quot;Strict&quot;</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>    - the &quot;Replacement Text&quot; text field is allows for regex text replacement blocks formatted like (&quot;&lt;regex pattern&gt;&quot;, &quot;&lt;replacement text&gt;&quot;)()...</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>    - if the &quot;&lt;regex pattern&gt;&quot; is &quot;&quot; then the pattern is considered all invalid filename characters on macOS/Linux (essentially &#x27;/&#x27;, &#x27;:&#x27;, &#x27;\0&#x27;) unless the &quot;Strict&quot; checkbox is checked, then the default pattern is all invalid filename characters on MS Windows</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>    - the default entry for the text field is `(&quot;&quot;, &quot;-&quot;)` and the default for the &quot;Strict&quot; checkbox is false</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>  - Below all of the above and at bottom right are a `Cancel` button, followed by a `Rename Selected Track Files` button, followed by a `Rename All Track Files` button. The buttons do as labeled.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>3. When `Rename Track Files` is selected, it will run the same code as the `Rename All Track Files` button in the config sheet and using the configuration setup in that sheet and rename all files.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>4. When `Rename Selected Track Files` is selected, it will run the same code as the `Rename Selected Track Files` button in the config sheet and using the configuration setup in that sheet and rename only selected track files.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre></pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>Use Apple Docs Scout agent to review Apple’s SwiftUI documentation to confirm use of latest technology, coding patterns, etc. especially with regards to the use of regex and dynamically updating text entry fields based on user input.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>## Assistant 2026-06-18T00:16:24Z (0s since User start)</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>Plan file coming. First gather project plan style, guides, likely rename/menu code, Apple Docs Scout rules.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre></pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>Latest numbered plan found: 32-AutoUpdateDiscTotal.md. Need mirror its shape, then anchor rename plan to current app commands, document model, tests.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>Apple docs search says SwiftUI sheet + TextField bindings fit. For user-entered regex, NSRegularExpression stays strongest because pattern is runtime string and replacement template semantics are documented.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre></pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>Current code already has new disc-total command shape near Reload Selected Tracks. Rename plan can reuse focused values/menu routing pattern, plus add sheet state to ContentView.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre></pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>Rename output touches file system, so plan will mark it draft-gated. Need decisions before implementation: conflict behavior, locked/read-only rows, extension handling, and whether rename updates .swifttag dirty state.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>Apple Docs Scout returned. Plan now gets specific: focused editor command, editor-owned .sheet(item:), live TextField(text:), custom binding or onChange, NSRegularExpression, FileManager.moveItem(at:to:).</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>Tag matching source found: TagKey covers editor core tags; SwiftTag.sdef plus SwiftTagAppleScriptTagKey covers broader script property/tag aliases. Plan will make one allowlist and fuzzy alias matcher instead of scattering strings.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>Before writing, check worktree so only new plan file changes.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>Writing draft plan now. It will include confirmed items, implementation path, tests, and blocking questions so rename behavior does not get invented during implementation.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre></pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>Created draft plan: [Docs/Plans/_AddTrackRenameFunctionality.md](Swift/SwiftTag/Docs/Plans/_AddTrackRenameFunctionality.md)</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre></pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>Used Apple Docs Scout. Plan includes SwiftUI sheet/focused command approach, `TextField` live update strategy, `NSRegularExpression` replacement path, `FileManager.moveItem` rename flow, tests, risks, acceptance criteria.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre></pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>Plan is draft-gated. Open questions block implementation: extension handling, zero-pad width, conflict behavior, locked/read-only tracks, config persistence, strict Windows rules, confirmation behavior.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre></pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>[ 2026-06-18T00:21:45Z (5m 21s since Assistant start) ]</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre></pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>## User 2026-06-18T19:47:24Z (19h 31m 1s since previous Assistant start) </pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre></pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>Update `Docs/Plans/_AddTrackRenameFunctionality.md` plan with:</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>1. Remove &quot;Zero Pad&quot; checkbox.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>2. Zero padding of numbers will be done by using the dedicated tags: `|zpTRACKNUMBER|`, `|zpDISCNUMBER|`, `|zpTOTALTRACKS|`, `|zpTOTALDISCS|`, `|zpTRACKTOTAL|`, `|zpDISCTOTAL|`.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>3. As has been established already, the tag `TOTALTRACKS` is synonymous with `TRACKTOTAL`:</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>  - The user can enter `|total tracks|` and it will resolve to `|TOTALTRACKS|`</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>  - The user can enter `|track total|` and it will resolve to `|TRACKTOTAL|`</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  - The default conversion for something that is plausibly the `TOTALTRACKS` tag is converted to `|TOTALTRACKS|` (e.g. `|track count|` is converted to `|TOTALTRACKS|`).</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>4. As has been established already, the tag `TOTALDISCS` is synonymous with `DISCTOTAL`:</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>  - The user can enter `|total discs|` and it will resolve to `|TOTALDISCS|`</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>  - The user can enter `|disc total|` and it will resolve to `|DISCTOTAL|`</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>  - The default conversion for something that is plausibly the `TOTALDISCS` tag is converted to `|TOTALDISCS|` (e.g. `|disc count|` is converted to `|TOTALDISCS|`).</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>5. Replace TextField labeled &quot;Replacement Text&quot; with a Picker menu labeled &quot;Replacement Text&quot;, the picker menu contains &#x27;-&#x27;, &#x27;.&#x27;, &#x27;space&#x27;. The &quot;Replacement Text&quot; picker is followed by a checkbox labeled &quot;Strict&quot;.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>  - The selected replacement text is used to is used in place of invalid filename characters:</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>    - When strict is false/unchecked then the text replaces &#x27;/&#x27;, &#x27;:&#x27;, &#x27;\0&#x27;</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>    - When strict is true/checked then the text replaces &#x27;/&#x27;, &#x27;:&#x27;, &#x27;\0&#x27;, &#x27;&lt;&#x27;, &#x27;&gt;&#x27;, &#x27;&quot;&#x27;, &#x27;\&#x27;, &#x27;|&#x27;, &#x27;?&#x27;, &#x27;*&#x27;, and ASCII control characters (codes 0–31)</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>    - Also when strict is true/checked the final filename cannot end in a `space` or &#x27;.&#x27; and is to be handled by removing the offending ending</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>6. The filename format string, selected replacement text and strict text replacement selection should be saved in @AppStorage.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>## Assistant 2026-06-18T19:47:24Z (0s since User start)</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre></pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>Plan file targeted. Need inspect current content, likely edit only docs.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre></pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>Need rest file.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre></pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>Need continue.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre></pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>Found old plan assumes regex replacement blocks and Zero Pad toggle. Updating plan to dedicated zero-padded tags, picker-based replacement, strict trimming, AppStorage persistence.</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre></pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>Edits about to land in plan only. Main changes: remove Zero Pad control, replace regex replacement grammar with menu choices, add zp tag aliases and AppStorage persistence.</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre></pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>Plan now carries confirmed decisions for tag synonyms and persisted settings. Next pass removes obsolete regex/zero-pad behavior from product and implementation sections.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre></pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>Obsolete open questions for config persistence and regex grammar removed. Leaving zero-padded width as open because dedicated tags define opt-in behavior, not width.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>Quick scan found one stale checklist word and one acceptance wording that still implies old control mix. Cleaning those so plan reads coherent end to end.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre></pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>Validation pass clean: old regex and zero-pad toggle terms gone except explicit “no Zero Pad checkbox” acceptance lines. File is untracked in git, so git diff shows nothing; content still updated on disk.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre></pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>Updated [Docs/Plans/_AddTrackRenameFunctionality.md](Swift/SwiftTag/Docs/Plans/_AddTrackRenameFunctionality.md).</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre></pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>Changed plan: no `Zero Pad` checkbox, dedicated `zp...` tags, total tag synonym rules, picker-based `Replacement Text`, strict replacement/trailing cleanup, and `@AppStorage` persistence. Left zero-padded width as open question.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre></pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>[ 2026-06-18T19:51:57Z (4m 33s since Assistant start) ]</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre></pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>## User 2026-06-18T20:23:01Z (35m 37s since previous Assistant start) </pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre></pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>Answers to open questions in `Docs/Plans/_AddTrackRenameFunctionality.md` plan:</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>1. Yes, format output should be treated as filename stem with original `.flac` extension always preserved.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>2. Dedicated `zp...` tags pad as determined by existing functionality when padding on save now.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>3. If one file in a batch conflicts, then abort whole batch with a dialog explaining the issue.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>4. Locked tracks should be excluded from rename because lock means read-only.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>5. Tracks added via `Add FLAC files (read-only)...` not be renameable as they are locked.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>6. Deleted-in-table or missing-file tracks should be skipped with warning.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>7. The config sheet should be use first of selection or first loaded track for preview. If there is no selection then the `Rename Selected Track Files` menu item and the `Rename Selected Track Files` button in the config sheet should be disabled.</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>8. Yes, renaming mark referenced `.swifttag` document state as modified immediately so closing prompts to save updated file references.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>9. Direct menu rename commands should not prompt before renaming files and should execute immediately once configuration is valid or show dialog indicating invalid config or batch rename error conditions.</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre></pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>## Assistant 2026-06-18T20:23:01Z (0s since User start)</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre></pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>Plan answers received. Updating confirmed decisions, behavior, acceptance criteria. Open questions become resolved.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre></pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>Applying decisions across plan, not only Open Questions. Behavior now says exact rename rules, skip/abort split, document modified state.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre></pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>One numbering cleanup needed after inserted execution rules. Then tests/criteria/open questions get aligned.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre></pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>Plan now has decisions in Confirmed Decisions. Cleaning duplicate numbering and replacing unresolved section with “none.”</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre></pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>Next patch touches planner/test/acceptance sections. No code build needed; docs-only change.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre></pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>Open questions now empty. Running consistency scan for stale “pending clarification,” “once clarified,” and old answer wording.</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre></pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>Small consistency pass: scope preview text still said selected only. Fixing that and indentation.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre></pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>Plan scan clean. Only remaining “Open Questions” says none. Getting UTC stamp, then done.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre></pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>Updated [Docs/Plans/_AddTrackRenameFunctionality.md](Swift/SwiftTag/Docs/Plans/_AddTrackRenameFunctionality.md).</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre></pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>Added all 9 answers to `Confirmed Decisions`, propagated behavior into rename execution, tests, acceptance criteria. `Open Questions` now none. File remains untracked in git.</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre></pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>[ 2026-06-18T20:25:27Z (2m 26s since Assistant start) ]</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre></pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>## User 2026-06-18T20:34:36Z (11m 35s since previous Assistant start) </pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre></pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>Implement plan `Docs/Plans/33-AddTrackFileRename.md`.</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre></pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>## Assistant 2026-06-18T20:34:36Z (0s since User start)</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre></pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>Plan first. Need know exact rename behavior, touched files, test path.</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre></pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>Plan loaded. Next inspect command wiring, editor state, tag model, document writer, docs, tests.</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre></pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>Need lower sections now: focused keys, menu insertion point, save/document helpers. Then add small rename service and UI.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre></pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>Some source large. Need targeted snippets around body, helpers, tests.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre></pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>Need tag key rules. Existing normalizer blocks spaced aliases, so rename parser likely separate from edit validation.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre></pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>Existing tests already check menu/source order. Need extend instead of adding brittle new path.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre></pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>Need reuse bookmark resolution path for rename. Existing view model already has private resolver, so rename can live there close to file reference logic.</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre></pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>Need zero-pad behavior. Existing save mapper tells width.</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre></pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>Need broad known tag list for rename placeholders. Existing AppleScript mapping has most published keys.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre></pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>Need exact tag keys from script mapping.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre></pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>Edits now. Add rename settings, formatter, sheet. Then wire menu and view model.</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre></pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>View model gets batch prepare/validate/move. Rename skips locked/deleted rows, matching existing writeback safety.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre></pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>Need private helpers now: choose eligible tracks, abort collisions, perform moves, refresh bookmarks.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre></pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>ContentView wiring next: AppStorage config, focused commands, sheet, alert.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre></pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>Patch ContentView in small chunks to avoid mangling large file.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre></pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>Computed config and enablement beside existing menu state.</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre></pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>Sheet view now.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre></pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>Focused command routes inserted before reload routes.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre></pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>Presentation hooks: sheet plus rename error dialog.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre></pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>Rename actions now update model refs and monitors after successful move.</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre></pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>Add focused value declarations.</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre></pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>App File menu gets three rename commands immediately before reload.</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre></pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>Tests now: formatter, file move, conflict abort, export path refresh.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre></pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>ViewInspector/source-order tests added around new sheet and File menu placement.</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre></pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>Need make new sheet inspectable.</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre></pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>Append inspectable conformance.</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre></pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>No explicit conformance found; ViewInspector may still need one for new view depending traversal. Add local conformance safe.</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre></pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>Docs update now: menu names, format syntax, invalid character behavior.</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre></pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>Code in place. Now quick static scan for naming/compile hazards before Xcode build.</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre></pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>Small robustness fix: avoid duplicate compact alias crash for odd tag keys.</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre></pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>Static pass clean enough. Run Xcode diagnostics/build next.</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre></pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>Compiler found two things: huge focused-value chain now too heavy, and ViewInspector binding access syntax. Breaking chain and fixing test.</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre></pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>Breaking focused-value chain into smaller computed views. Same behavior, easier compiler.</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre></pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>Binding test uses projected binding now; remove deprecated conformance.</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre></pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>Re-run diagnostics on touched files.</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre></pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>Need split track command chain once more.</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre></pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>Split again between numbering and file actions.</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre></pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>Check ContentView again.</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre></pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>Diagnostics clean. Build project now.</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre></pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>Build passes. Need targeted tests: rename unit tests plus ViewInspector/source-order. Fetch identifiers.</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre></pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>Test list truncated in tool output. Grep full list for new identifiers.</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre></pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>Run targeted tests for formatter, file rename, sheet wiring, source order.</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre></pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>Target tests pass. Final check worktree summary and date soon.</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre></pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>All checks done. Getting UTC timestamp now, then final.</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre></pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>Implemented plan 33.</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre></pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>Added:</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>- File menu rename commands before Reload</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>- Rename config sheet with AppStorage settings</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>- Tag placeholder parser, fuzzy aliases, zp numeric placeholders</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>- Filename sanitizing strict/non-strict</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>- Batch rename conflict abort</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>- Track reference/bookmark refresh after rename</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>- Docs update</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>- Unit + file-operation + ViewInspector/source-order tests</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre></pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>- Xcode diagnostics clean</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>- `BuildProject` passed</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>- 7 targeted tests passed</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre></pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>Note: `Docs/Plans/33-AddTrackFileRename.md` remains untracked, already present.</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre></pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>[ 2026-06-18T20:48:00Z (13m 24s since Assistant start) ]</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre></pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>## User 2026-06-18T21:10:58Z (36m 22s since previous Assistant start) </pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre></pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>Add to `SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift` track table context menu before `Reload Selected Tracks` the menu item labeled `Rename Track Files` followed by `Rename Selected Track Files` followed by `Rename Track Files Config...` followed by a divider. These menu items have the functionality and availability of their `File` menu counterparts.</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre></pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre>## Assistant 2026-06-18T21:10:58Z (0s since User start)</pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre></pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre>Context menu needs same closures as File menu. Reading current track table and wrapper plumbing, then patch.</pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre></pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>Need plumb three closures and three booleans through TagEditorView into table view. Then source-order test covers menu placement.</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre></pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>Editing track table now. Defaults keep older tests readable while ContentView passes real actions.</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre></pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>Wiring through parent view and ContentView next.</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre></pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>ContentView now feeds same rename actions and availability used by File menu.</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre></pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>Adding test coverage for closure forwarding and source order.</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre></pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre>Patch done. Running diagnostics/build target.</pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre></pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>Diagnostics clean. Running build and two focused ViewInspector/source-order tests.</pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre></pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>Build and focused tests pass. Grabbing final status/timestamp.</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre></pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>Added track table context menu items before reload:</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre></pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>- `Rename Track Files`</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre>- `Rename Selected Track Files`</pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre>- `Rename Track Files Config...`</pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre>- divider</pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre></pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre>Wired through same actions and availability as File menu. Updated ViewInspector/source-order tests.</pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre></pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>- Xcode diagnostics clean</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre>- Build passed</pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>- 2 focused tests passed</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre></pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>[ 2026-06-18T21:12:54Z (1m 56s since Assistant start) ]</pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre></pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>## User 2026-06-18T21:35:15Z (24m 18s since previous Assistant start) </pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre></pre></td></tr>
+<tr id="L302"><th><a href="#L302">302</a></th><td><pre>A couple of issues:</pre></td></tr>
+<tr id="L303"><th><a href="#L303">303</a></th><td><pre>1. When there is an error on renaming the error dialog is not seen until canceling rename config window.</pre></td></tr>
+<tr id="L304"><th><a href="#L304">304</a></th><td><pre>2. The error when renaming currently is that SwiftTag does not have permission to move/rename the files.</pre></td></tr>
+<tr id="L305"><th><a href="#L305">305</a></th><td><pre></pre></td></tr>
+<tr id="L306"><th><a href="#L306">306</a></th><td><pre>Use Apple Docs Scout agent to review Apple’s SwiftUI documentation to confirm use of latest technology, coding patterns, etc.</pre></td></tr>
+<tr id="L307"><th><a href="#L307">307</a></th><td><pre>Fix issues.</pre></td></tr>
+<tr id="L308"><th><a href="#L308">308</a></th><td><pre></pre></td></tr>
+<tr id="L309"><th><a href="#L309">309</a></th><td><pre>## Assistant 2026-06-18T21:35:15Z (0s since User start)</pre></td></tr>
+<tr id="L310"><th><a href="#L310">310</a></th><td><pre></pre></td></tr>
+<tr id="L311"><th><a href="#L311">311</a></th><td><pre>Need check docs scout instructions first, then inspect Apple docs around SwiftUI alert/sheet and file access. Also permission issue likely sandbox scope.</pre></td></tr>
+<tr id="L312"><th><a href="#L312">312</a></th><td><pre></pre></td></tr>
+<tr id="L313"><th><a href="#L313">313</a></th><td><pre>Spawning docs scout now for SwiftUI sheet/alert and sandbox file-move guidance. While it runs, I will patch access handling.</pre></td></tr>
+<tr id="L314"><th><a href="#L314">314</a></th><td><pre></pre></td></tr>
+<tr id="L315"><th><a href="#L315">315</a></th><td><pre>Root cause likely not tag formatter: rename creates sibling URL, so file-level security scope may not authorize parent-directory mutation. Need update move path to hold folder sandbox bookmark when available and improve error presentation while sheet is open.</pre></td></tr>
+<tr id="L316"><th><a href="#L316">316</a></th><td><pre></pre></td></tr>
+<tr id="L317"><th><a href="#L317">317</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L318"><th><a href="#L318">318</a></th><td><pre></pre></td></tr>
+<tr id="L319"><th><a href="#L319">319</a></th><td><pre>Context reloaded. Need finish fix in existing rename path: sheet-scoped alert first, folder-scoped file move second. Checking current code and docs scout result.</pre></td></tr>
+<tr id="L320"><th><a href="#L320">320</a></th><td><pre></pre></td></tr>
+<tr id="L321"><th><a href="#L321">321</a></th><td><pre>Docs scout returned useful bit: sheet alert must live in active sheet hierarchy; sandbox rename should use security-scoped access plus NSFileCoordinator move notifications. Applying both patterns now.</pre></td></tr>
+<tr id="L322"><th><a href="#L322">322</a></th><td><pre></pre></td></tr>
+<tr id="L323"><th><a href="#L323">323</a></th><td><pre>Need maybe use NSFileCoordinator exact methods from header. Existing tests cover happy rename under writable temp; new code must preserve. I’m patching minimal surface plus one source assertion for alert placement.</pre></td></tr>
+<tr id="L324"><th><a href="#L324">324</a></th><td><pre></pre></td></tr>
+<tr id="L325"><th><a href="#L325">325</a></th><td><pre>Need use apply_patch. Need maybe include ContentView source test in TrackStatus tests? We&#x27;ll add simple source test maybe there since source tests. Need edit ContentView and TagEditorVM. Need decide exact implementation.</pre></td></tr>
+<tr id="L326"><th><a href="#L326">326</a></th><td><pre></pre></td></tr>
+<tr id="L327"><th><a href="#L327">327</a></th><td><pre>Let&#x27;s design TagEditorVM changes.</pre></td></tr>
+<tr id="L328"><th><a href="#L328">328</a></th><td><pre></pre></td></tr>
+<tr id="L329"><th><a href="#L329">329</a></th><td><pre>Issue: Current `withResolvedTrackFileURL` may resolve file bookmark; starts accessing source file resource inside closure. We then call move. But if source bookmark is file-scoped, `NSFileCoordinator.item willMove` may allow rename without folder scoped? Docs says sandboxed app can call method to declare intent to rename document without user approval. It might solve issue. Better include both:</pre></td></tr>
+<tr id="L330"><th><a href="#L330">330</a></th><td><pre>- Wrap move via `moveTrackFileWithSecurityScope`:</pre></td></tr>
+<tr id="L331"><th><a href="#L331">331</a></th><td><pre>   - First, inside current file scope via `withResolvedTrackFileURL`. call `coordinatedMoveTrackFile(...)`.</pre></td></tr>
+<tr id="L332"><th><a href="#L332">332</a></th><td><pre>   - Need call `NSFileCoordinator.item(at:willMoveTo:)` before move and `didMove` after success. This likely is enough for file-level permission.</pre></td></tr>
+<tr id="L333"><th><a href="#L333">333</a></th><td><pre>   - Additionally, if first move fails (permission) and SandboxPathBookmarkAccess has parent bookmark, attempt with folder scoped access? Or primary use folder scope before fallback? We can combine.</pre></td></tr>
+<tr id="L334"><th><a href="#L334">334</a></th><td><pre>Potential problem: If sourceURL is no file bookmark but file exists in readable file path (in sandbox maybe denied? But in tests okay), `startAccessing` not used. For `NSFileCoordinator` likely no harm.</pre></td></tr>
+<tr id="L335"><th><a href="#L335">335</a></th><td><pre>- Need compute destination using scoped URL? If `SandboxPathBookmarkAccess.withAccess(to: destinationURL)` returns normalizedTargetURL not necessarily with security scope? It starts folder scope around body. So we can call move on source/dest paths. If sourceURL inside same folder. Good.</pre></td></tr>
+<tr id="L336"><th><a href="#L336">336</a></th><td><pre>- Maybe run &quot;sandbox path&quot; first if stored. But security-scoped file access already active from `withResolvedTrackFileURL`, plus folder access if stored. Which is best?</pre></td></tr>
+<tr id="L337"><th><a href="#L337">337</a></th><td><pre>   - `withResolvedTrackFileURL` body executes with file scope if bookmark exists. Then call:</pre></td></tr>
+<tr id="L338"><th><a href="#L338">338</a></th><td><pre>      ```</pre></td></tr>
+<tr id="L339"><th><a href="#L339">339</a></th><td><pre>      try performSecurityScopedTrackFileMove(from: sourceURL, to: destinationURL, fileManager: fileManager)</pre></td></tr>
+<tr id="L340"><th><a href="#L340">340</a></th><td><pre>      ```</pre></td></tr>
+<tr id="L341"><th><a href="#L341">341</a></th><td><pre>      where:</pre></td></tr>
+<tr id="L342"><th><a href="#L342">342</a></th><td><pre>      ```</pre></td></tr>
+<tr id="L343"><th><a href="#L343">343</a></th><td><pre>      private func moveTrackFile(... ) throws {</pre></td></tr>
+<tr id="L344"><th><a href="#L344">344</a></th><td><pre>          if let scopedDestinationURL = try SandboxPathBookmarkAccess.withAccess(to: destinationURL, { scopedDestinationURL in</pre></td></tr>
+<tr id="L345"><th><a href="#L345">345</a></th><td><pre>              let scopedSourceURL = scopedDestinationURL.deletingLastPathComponent().appendingPathComponent(sourceURL.lastPathComponent).standardizedFileURL</pre></td></tr>
+<tr id="L346"><th><a href="#L346">346</a></th><td><pre>              try coordinatedMoveTrackFile(from: scopedSourceURL, to: scopedDestinationURL, fileManager: fileManager)</pre></td></tr>
+<tr id="L347"><th><a href="#L347">347</a></th><td><pre>              return scopedDestinationURL</pre></td></tr>
+<tr id="L348"><th><a href="#L348">348</a></th><td><pre>          }) {</pre></td></tr>
+<tr id="L349"><th><a href="#L349">349</a></th><td><pre>              return scopedDestinationURL</pre></td></tr>
+<tr id="L350"><th><a href="#L350">350</a></th><td><pre>          }</pre></td></tr>
+<tr id="L351"><th><a href="#L351">351</a></th><td><pre>          try coordinatedMoveTrackFile(from: sourceURL, to: destinationURL, fileManager: fileManager)</pre></td></tr>
+<tr id="L352"><th><a href="#L352">352</a></th><td><pre>          return destinationURL</pre></td></tr>
+<tr id="L353"><th><a href="#L353">353</a></th><td><pre>      }</pre></td></tr>
+<tr id="L354"><th><a href="#L354">354</a></th><td><pre>      ```</pre></td></tr>
+<tr id="L355"><th><a href="#L355">355</a></th><td><pre>      if source/destination same folder. If a stored parent folder is configured, this definitely has dir scope. If not, NSFileCoordinator may allow rename from file scope.</pre></td></tr>
+<tr id="L356"><th><a href="#L356">356</a></th><td><pre>      - But if `withAccess(to: destinationURL)` resolves stale, returns normalized target. It&#x27;s inside destination. Good.</pre></td></tr>
+<tr id="L357"><th><a href="#L357">357</a></th><td><pre>      - If source file bookmark and destination calculated from source; no parent bookmarks in settings, `coordinatedMoveTrackFile` is used with file scope. Need actually `NSFileCoordinator.item(at:willMoveTo:)` before move. This should satisfy docs.</pre></td></tr>
+<tr id="L358"><th><a href="#L358">358</a></th><td><pre>      - After successful move, generate bookmark. Maybe if no scope on dest? `NSFileCoordinator.didMove` should keep access to new URL. Good.</pre></td></tr>
+<tr id="L359"><th><a href="#L359">359</a></th><td><pre>- `coordinatedMoveTrackFile`:</pre></td></tr>
+<tr id="L360"><th><a href="#L360">360</a></th><td><pre>   ```</pre></td></tr>
+<tr id="L361"><th><a href="#L361">361</a></th><td><pre>   private func coordinatedMoveTrackFile(from sourceURL: URL, to destinationURL: URL, fileManager: FileManager) throws {</pre></td></tr>
+<tr id="L362"><th><a href="#L362">362</a></th><td><pre>       let coordinator = NSFileCoordinator(filePresenter: nil)</pre></td></tr>
+<tr id="L363"><th><a href="#L363">363</a></th><td><pre>       coordinator.item(at: sourceURL, willMoveTo: destinationURL)</pre></td></tr>
+<tr id="L364"><th><a href="#L364">364</a></th><td><pre>       do {</pre></td></tr>
+<tr id="L365"><th><a href="#L365">365</a></th><td><pre>           try fileManager.moveItem(at: sourceURL, to: destinationURL)</pre></td></tr>
+<tr id="L366"><th><a href="#L366">366</a></th><td><pre>           coordinator.item(at: sourceURL, didMoveTo: destinationURL)</pre></td></tr>
+<tr id="L367"><th><a href="#L367">367</a></th><td><pre>       } catch {</pre></td></tr>
+<tr id="L368"><th><a href="#L368">368</a></th><td><pre>           throw TrackFileRenameError.failedToRename(from: sourceURL.path, to: destinationURL.path, reason: trackFileRenameFailureReason(for: error))</pre></td></tr>
+<tr id="L369"><th><a href="#L369">369</a></th><td><pre>       }</pre></td></tr>
+<tr id="L370"><th><a href="#L370">370</a></th><td><pre>   }</pre></td></tr>
+<tr id="L371"><th><a href="#L371">371</a></th><td><pre>   ```</pre></td></tr>
+<tr id="L372"><th><a href="#L372">372</a></th><td><pre>   Should &quot;didMove&quot; always after success. If `fileManager.moveItem` succeeds but `didMove` perhaps no throws. Good.</pre></td></tr>
+<tr id="L373"><th><a href="#L373">373</a></th><td><pre>   - `NSFileCoordinator` is from Foundation. Need `@MainActor`? No.</pre></td></tr>
+<tr id="L374"><th><a href="#L374">374</a></th><td><pre>- Potential issue: FileManager may be subclassed in tests; NSFileCoordinator item willMove may require sourceURL exists. Fine.</pre></td></tr>
+<tr id="L375"><th><a href="#L375">375</a></th><td><pre>- If `SandboxPathBookmarkAccess.withAccess` throws `SandboxPathBookmarkAccessError` because stale or access fail, catch should wrap as TrackFileRenameError.failedToRename? Currently if body throwing it propagates maybe user sees &quot;Failed to access sandbox path&quot;. That&#x27;s acceptable? Better consistent: catch in outer move helper and wrap all errors? We want exact failure includes permission. Maybe keep as failedToRename with reason.</pre></td></tr>
+<tr id="L376"><th><a href="#L376">376</a></th><td><pre>   - In `performTrackFileRename`, catch in helper wrapper.</pre></td></tr>
+<tr id="L377"><th><a href="#L377">377</a></th><td><pre>   - Implement `try moveTrackFile(...)` which throws TrackFileRenameError already. In `performTrackFileRename`, no do-catch around helper? We&#x27;ll have `move` helper throw TrackFileRenameError. If SandboxPathBookmarkAccess error occurs, convert in helper.</pre></td></tr>
+<tr id="L378"><th><a href="#L378">378</a></th><td><pre>   - But if `SandboxPathBookmarkAccess.withAccess` returns nil, fallback can throw TrackFileRenameError.</pre></td></tr>
+<tr id="L379"><th><a href="#L379">379</a></th><td><pre>   - Need avoid double wrapping TrackFileRenameError? Use `renameFailureReason`.</pre></td></tr>
+<tr id="L380"><th><a href="#L380">380</a></th><td><pre>   - Use helper:</pre></td></tr>
+<tr id="L381"><th><a href="#L381">381</a></th><td><pre>     ```</pre></td></tr>
+<tr id="L382"><th><a href="#L382">382</a></th><td><pre>     private func moveTrackFile(from sourceURL: URL, to destinationURL: URL, fileManager: FileManager) throws -&gt; URL {</pre></td></tr>
+<tr id="L383"><th><a href="#L383">383</a></th><td><pre>       do {</pre></td></tr>
+<tr id="L384"><th><a href="#L384">384</a></th><td><pre>         if let scopedDestinationURL = try SandboxPathBookmarkAccess.withAccess(...) { return scopedDestinationURL }</pre></td></tr>
+<tr id="L385"><th><a href="#L385">385</a></th><td><pre>         try coordinatedMoveTrackFile(...)</pre></td></tr>
+<tr id="L386"><th><a href="#L386">386</a></th><td><pre>         return destinationURL</pre></td></tr>
+<tr id="L387"><th><a href="#L387">387</a></th><td><pre>       } catch let error as TrackFileRenameError { throw error }</pre></td></tr>
+<tr id="L388"><th><a href="#L388">388</a></th><td><pre>       catch {</pre></td></tr>
+<tr id="L389"><th><a href="#L389">389</a></th><td><pre>         throw TrackFileRenameError.failedToRename(... reason: reason(for: error))</pre></td></tr>
+<tr id="L390"><th><a href="#L390">390</a></th><td><pre>       }</pre></td></tr>
+<tr id="L391"><th><a href="#L391">391</a></th><td><pre>     }</pre></td></tr>
+<tr id="L392"><th><a href="#L392">392</a></th><td><pre>     ```</pre></td></tr>
+<tr id="L393"><th><a href="#L393">393</a></th><td><pre>     But if catch wraps for scoped with source/dest original, okay. `coordinatedMoveTrackFile` can throw raw error and helper wraps. Simpler.</pre></td></tr>
+<tr id="L394"><th><a href="#L394">394</a></th><td><pre>     ```</pre></td></tr>
+<tr id="L395"><th><a href="#L395">395</a></th><td><pre>     private func coordinatedMoveTrackFile(...) throws {</pre></td></tr>
+<tr id="L396"><th><a href="#L396">396</a></th><td><pre>        let coordinator = NSFileCoordinator(filePresenter:nil)</pre></td></tr>
+<tr id="L397"><th><a href="#L397">397</a></th><td><pre>        coordinator.item(at:willMoveTo:)</pre></td></tr>
+<tr id="L398"><th><a href="#L398">398</a></th><td><pre>        try fileManager.moveItem(...)</pre></td></tr>
+<tr id="L399"><th><a href="#L399">399</a></th><td><pre>        coordinator.item(at:didMoveTo:)</pre></td></tr>
+<tr id="L400"><th><a href="#L400">400</a></th><td><pre>     }</pre></td></tr>
+<tr id="L401"><th><a href="#L401">401</a></th><td><pre>     ```</pre></td></tr>
+<tr id="L402"><th><a href="#L402">402</a></th><td><pre>   - If fallback after sandbox path attempt body threw because move failed due file exists etc, catch wraps; no fallback. Good.</pre></td></tr>
+<tr id="L403"><th><a href="#L403">403</a></th><td><pre>- Need maybe source scopedSourceURL should be from `sourceURL.lastPathComponent`; but if source and dest folder same but source path maybe symlink? Use standardized. Good. For rename same directory.</pre></td></tr>
+<tr id="L404"><th><a href="#L404">404</a></th><td><pre>- But if withAccess(to: destinationURL) returns nil, use dest direct. Good.</pre></td></tr>
+<tr id="L405"><th><a href="#L405">405</a></th><td><pre>- Also maybe `SandboxPathBookmarkAccess.withAccess(to: destinationURL)` body returns `scopedDestinationURL`, but if destination didn&#x27;t differ? We only call on diff. For no-op, skip move and return destinationURL.</pre></td></tr>
+<tr id="L406"><th><a href="#L406">406</a></th><td><pre>- Bookmark after move should use moved URL. If `scopedDestinationURL` path maybe normalized. Keep `movedDestinationURL`.</pre></td></tr>
+<tr id="L407"><th><a href="#L407">407</a></th><td><pre>- Potential bug: `withResolvedTrackFileURL` at top if bookmark resolves and `didAccess` true but `currentFileURL` not nil, returns currentFileURL regardless existence. It might be OK.</pre></td></tr>
+<tr id="L408"><th><a href="#L408">408</a></th><td><pre>- Need maybe `currentFileURL` path plus stale. Fine.</pre></td></tr>
+<tr id="L409"><th><a href="#L409">409</a></th><td><pre></pre></td></tr>
+<tr id="L410"><th><a href="#L410">410</a></th><td><pre>ContentView alert:</pre></td></tr>
+<tr id="L411"><th><a href="#L411">411</a></th><td><pre>- Add `private var trackFileRenameErrorAlertBinding: Binding&lt;Bool&gt; { Binding(get: { isTrackFileRenameErrorPresented &amp;&amp; !isTrackFileRenameSheetPresented }, set: { isTrackFileRenameErrorPresented = $0}) }`.</pre></td></tr>
+<tr id="L412"><th><a href="#L412">412</a></th><td><pre>- Naming maybe base.</pre></td></tr>
+<tr id="L413"><th><a href="#L413">413</a></th><td><pre>- Add:</pre></td></tr>
+<tr id="L414"><th><a href="#L414">414</a></th><td><pre>```</pre></td></tr>
+<tr id="L415"><th><a href="#L415">415</a></th><td><pre>private var trackFileRenameSheetContent: some View {</pre></td></tr>
+<tr id="L416"><th><a href="#L416">416</a></th><td><pre> trackFileRenameSheetView</pre></td></tr>
+<tr id="L417"><th><a href="#L417">417</a></th><td><pre>   .alert(&quot;Track File Rename Error&quot;, isPresented: $isTrackFileRenameErrorPresented) { ... } message: ...</pre></td></tr>
+<tr id="L418"><th><a href="#L418">418</a></th><td><pre>}</pre></td></tr>
+<tr id="L419"><th><a href="#L419">419</a></th><td><pre>```</pre></td></tr>
+<tr id="L420"><th><a href="#L420">420</a></th><td><pre>Need avoid duplicating alert block? Use helper View extension impossible? Could create `@ViewBuilder private func trackFileRenameErrorAlert&lt;Content: View&gt;(for content: Content) -&gt; some View { content.alert(...) }`? Simpler:</pre></td></tr>
+<tr id="L421"><th><a href="#L421">421</a></th><td><pre>```</pre></td></tr>
+<tr id="L422"><th><a href="#L422">422</a></th><td><pre>private var trackFileRenameSheetView: some View {</pre></td></tr>
+<tr id="L423"><th><a href="#L423">423</a></th><td><pre>    TrackFileRenameSheetView(...).trackFileRenameErrorAlert?</pre></td></tr>
+<tr id="L424"><th><a href="#L424">424</a></th><td><pre>}</pre></td></tr>
+<tr id="L425"><th><a href="#L425">425</a></th><td><pre>```</pre></td></tr>
+<tr id="L426"><th><a href="#L426">426</a></th><td><pre>Could attach alert directly in `trackFileRenameSheetView`, but then maybe when sheet is dismissed after success, no issue. On failure, sheet remains and alert shown. This modifier is only sheet context.</pre></td></tr>
+<tr id="L427"><th><a href="#L427">427</a></th><td><pre>```</pre></td></tr>
+<tr id="L428"><th><a href="#L428">428</a></th><td><pre>private var trackFileRenameSheetView: some View {</pre></td></tr>
+<tr id="L429"><th><a href="#L429">429</a></th><td><pre>    TrackFileRenameSheetView(... )</pre></td></tr>
+<tr id="L430"><th><a href="#L430">430</a></th><td><pre>        .alert(&quot;Track File Rename Error&quot;, isPresented: $isTrackFileRenameErrorPresented) { ... } message: ...</pre></td></tr>
+<tr id="L431"><th><a href="#L431">431</a></th><td><pre>}</pre></td></tr>
+<tr id="L432"><th><a href="#L432">432</a></th><td><pre>```</pre></td></tr>
+<tr id="L433"><th><a href="#L433">433</a></th><td><pre>Then base alert still also attached. Need avoid both same binding; when sheet visible, base content is still in hierarchy and may also try to present? The current bug might be because base alert not visible behind sheet. If both attached same binding, SwiftUI might choose one? It might display sheet alert or log conflict. To be precise use base binding that is false when sheet visible:</pre></td></tr>
+<tr id="L434"><th><a href="#L434">434</a></th><td><pre>```</pre></td></tr>
+<tr id="L435"><th><a href="#L435">435</a></th><td><pre>private var mainTrackFileRenameErrorPresentedBinding: Binding&lt;Bool&gt; { ... }</pre></td></tr>
+<tr id="L436"><th><a href="#L436">436</a></th><td><pre>```</pre></td></tr>
+<tr id="L437"><th><a href="#L437">437</a></th><td><pre>Then base alert uses `mainTrackFileRenameErrorPresentedBinding`.</pre></td></tr>
+<tr id="L438"><th><a href="#L438">438</a></th><td><pre>Sheet uses direct. Good.</pre></td></tr>
+<tr id="L439"><th><a href="#L439">439</a></th><td><pre>- Add maybe shared button duplication no issue.</pre></td></tr>
+<tr id="L440"><th><a href="#L440">440</a></th><td><pre></pre></td></tr>
+<tr id="L441"><th><a href="#L441">441</a></th><td><pre>Need add source test:</pre></td></tr>
+<tr id="L442"><th><a href="#L442">442</a></th><td><pre>- In TrackStatus tests, maybe add:</pre></td></tr>
+<tr id="L443"><th><a href="#L443">443</a></th><td><pre>```</pre></td></tr>
+<tr id="L444"><th><a href="#L444">444</a></th><td><pre>@Test</pre></td></tr>
+<tr id="L445"><th><a href="#L445">445</a></th><td><pre>func contentViewSourcePresentsTrackFileRenameErrorAlertInsideSheet() throws {</pre></td></tr>
+<tr id="L446"><th><a href="#L446">446</a></th><td><pre>  sourceURL ContentView.swift...</pre></td></tr>
+<tr id="L447"><th><a href="#L447">447</a></th><td><pre>  let sheetRange = require `.sheet(isPresented: $isTrackFileRenameSheetPresented)`</pre></td></tr>
+<tr id="L448"><th><a href="#L448">448</a></th><td><pre>  let sheetAlertRange = require `.alert(&quot;Track File Rename Error&quot;, isPresented: $isTrackFileRenameErrorPresented)`</pre></td></tr>
+<tr id="L449"><th><a href="#L449">449</a></th><td><pre>  let mainAlertBindingRange = require `mainTrackFileRenameErrorPresentedBinding`</pre></td></tr>
+<tr id="L450"><th><a href="#L450">450</a></th><td><pre>  #expect(source.contains(&quot;&amp;&amp; !isTrackFileRenameSheetPresented&quot;))</pre></td></tr>
+<tr id="L451"><th><a href="#L451">451</a></th><td><pre>  #expect(source.contains(&quot;trackFileRenameSheetView\n            }&quot;))?</pre></td></tr>
+<tr id="L452"><th><a href="#L452">452</a></th><td><pre>}</pre></td></tr>
+<tr id="L453"><th><a href="#L453">453</a></th><td><pre>```</pre></td></tr>
+<tr id="L454"><th><a href="#L454">454</a></th><td><pre>Source tests brittle but existing. Need ensure asserts.</pre></td></tr>
+<tr id="L455"><th><a href="#L455">455</a></th><td><pre>Maybe not add test; current tests can catch compile. But user issue likely needs test. Source test acceptable.</pre></td></tr>
+<tr id="L456"><th><a href="#L456">456</a></th><td><pre>Add to `TrackStatusViewInspectorTests` maybe around source tests. Need inspect surrounding after context menu test.</pre></td></tr>
+<tr id="L457"><th><a href="#L457">457</a></th><td><pre></pre></td></tr>
+<tr id="L458"><th><a href="#L458">458</a></th><td><pre>Alert fix in place: rename sheet owns rename-error alert while sheet visible; main window alert stays for File menu path. Next patch adds coordinated sandbox rename.</pre></td></tr>
+<tr id="L459"><th><a href="#L459">459</a></th><td><pre></pre></td></tr>
+<tr id="L460"><th><a href="#L460">460</a></th><td><pre>One refinement: direct coordinated rename should try first. Stored sandbox-folder bookmark becomes fallback, so stale settings cannot block rename when file bookmark already grants access.</pre></td></tr>
+<tr id="L461"><th><a href="#L461">461</a></th><td><pre></pre></td></tr>
+<tr id="L462"><th><a href="#L462">462</a></th><td><pre>Adding small source regression: sheet gets direct rename-error alert, main window uses binding masked while sheet open.</pre></td></tr>
+<tr id="L463"><th><a href="#L463">463</a></th><td><pre></pre></td></tr>
+<tr id="L464"><th><a href="#L464">464</a></th><td><pre>Adding second source guard for Apple-documented rename pattern: `NSFileCoordinator` will/did move plus sandbox-folder fallback stays in rename path.</pre></td></tr>
+<tr id="L465"><th><a href="#L465">465</a></th><td><pre></pre></td></tr>
+<tr id="L466"><th><a href="#L466">466</a></th><td><pre>Patches done. Checking compiler diagnostics before build; these methods touch big files, so fast diagnostics first.</pre></td></tr>
+<tr id="L467"><th><a href="#L467">467</a></th><td><pre></pre></td></tr>
+<tr id="L468"><th><a href="#L468">468</a></th><td><pre>No file diagnostics. Running focused tests: rename happy path, rename conflict, source guard for coordinated move, and sheet-alert source guard.</pre></td></tr>
+<tr id="L469"><th><a href="#L469">469</a></th><td><pre></pre></td></tr>
+<tr id="L470"><th><a href="#L470">470</a></th><td><pre>Test list truncated in UI. Grepping full list from artifact path for exact identifiers.</pre></td></tr>
+<tr id="L471"><th><a href="#L471">471</a></th><td><pre></pre></td></tr>
+<tr id="L472"><th><a href="#L472">472</a></th><td><pre>[ Test is hung? I am seeing `FAULT: NSInvalidArgumentException: -[NSFileCoordinator itemAtURL:willMoveToURL:] may only be invoked from within a block passed to a -coordinate... method.; (user info absent)` in Xcode output. ]</pre></td></tr>
+<tr id="L473"><th><a href="#L473">473</a></th><td><pre></pre></td></tr>
+<tr id="L474"><th><a href="#L474">474</a></th><td><pre>Yes. My direct item(at:willMoveTo:) call wrong: Foundation requires it inside coordinate(...) block. Fixing now, then kill hung test runner if needed and rerun focused tests.</pre></td></tr>
+<tr id="L475"><th><a href="#L475">475</a></th><td><pre></pre></td></tr>
+<tr id="L476"><th><a href="#L476">476</a></th><td><pre>Header confirms better move pattern: coordinate source with .forMoving and destination with .forReplacing, then call will/move/did inside accessor. Patch going in.</pre></td></tr>
+<tr id="L477"><th><a href="#L477">477</a></th><td><pre></pre></td></tr>
+<tr id="L478"><th><a href="#L478">478</a></th><td><pre>Test source guards referenced old variable names. Updating them to assert actual coordinated URLs.</pre></td></tr>
+<tr id="L479"><th><a href="#L479">479</a></th><td><pre></pre></td></tr>
+<tr id="L480"><th><a href="#L480">480</a></th><td><pre>Rechecking diagnostics, then rerunning one focused test first to confirm hang gone.</pre></td></tr>
+<tr id="L481"><th><a href="#L481">481</a></th><td><pre></pre></td></tr>
+<tr id="L482"><th><a href="#L482">482</a></th><td><pre>Focused rename now passes. Running remaining focused guards and conflict case together.</pre></td></tr>
+<tr id="L483"><th><a href="#L483">483</a></th><td><pre></pre></td></tr>
+<tr id="L484"><th><a href="#L484">484</a></th><td><pre>All focused checks pass. Running project build now to catch integration issues outside edited files.</pre></td></tr>
+<tr id="L485"><th><a href="#L485">485</a></th><td><pre></pre></td></tr>
+<tr id="L486"><th><a href="#L486">486</a></th><td><pre>Build green. Reviewing diff and status so final names exact files and no stray surprise.</pre></td></tr>
+<tr id="L487"><th><a href="#L487">487</a></th><td><pre></pre></td></tr>
+<tr id="L488"><th><a href="#L488">488</a></th><td><pre>Patch after fault validated by focused tests. One more full project build after corrected coordination API.</pre></td></tr>
+<tr id="L489"><th><a href="#L489">489</a></th><td><pre></pre></td></tr>
+<tr id="L490"><th><a href="#L490">490</a></th><td><pre>Build green. Grabbing line anchors and timestamp, then final.</pre></td></tr>
+<tr id="L491"><th><a href="#L491">491</a></th><td><pre></pre></td></tr>
+<tr id="L492"><th><a href="#L492">492</a></th><td><pre>Fixed both.</pre></td></tr>
+<tr id="L493"><th><a href="#L493">493</a></th><td><pre></pre></td></tr>
+<tr id="L494"><th><a href="#L494">494</a></th><td><pre>Docs Scout confirmed current Apple pattern: alert must attach to active presentation hierarchy, and sandbox rename should use security-scoped access plus `NSFileCoordinator` move coordination.</pre></td></tr>
+<tr id="L495"><th><a href="#L495">495</a></th><td><pre></pre></td></tr>
+<tr id="L496"><th><a href="#L496">496</a></th><td><pre>Changed:</pre></td></tr>
+<tr id="L497"><th><a href="#L497">497</a></th><td><pre>- [ContentView.swift](Swift/SwiftTag/SwiftTag/ContentView.swift:224): main rename alert masked while config sheet open.</pre></td></tr>
+<tr id="L498"><th><a href="#L498">498</a></th><td><pre>- [ContentView.swift](Swift/SwiftTag/SwiftTag/ContentView.swift:1083): rename error alert now attached inside config sheet, so error shows without canceling sheet.</pre></td></tr>
+<tr id="L499"><th><a href="#L499">499</a></th><td><pre>- [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift:3414): rename now falls back to stored sandbox folder bookmark access.</pre></td></tr>
+<tr id="L500"><th><a href="#L500">500</a></th><td><pre>- [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift:3461): rename uses `NSFileCoordinator.coordinate(... .forMoving ... .forReplacing ...)`, with `willMove` / `didMove` inside accessor block. Fault fixed.</pre></td></tr>
+<tr id="L501"><th><a href="#L501">501</a></th><td><pre></pre></td></tr>
+<tr id="L502"><th><a href="#L502">502</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L503"><th><a href="#L503">503</a></th><td><pre>- `tagEditorViewModelRenamesSelectedTrackFileAndUpdatesExportReference()` passed.</pre></td></tr>
+<tr id="L504"><th><a href="#L504">504</a></th><td><pre>- `tagEditorViewModelRenameConflictAbortsWholeBatch()` passed.</pre></td></tr>
+<tr id="L505"><th><a href="#L505">505</a></th><td><pre>- `tagEditorViewModelRenameUsesCoordinatedSandboxMove()` passed.</pre></td></tr>
+<tr id="L506"><th><a href="#L506">506</a></th><td><pre>- `contentViewSourcePresentsRenameErrorsInsideConfigSheet()` passed.</pre></td></tr>
+<tr id="L507"><th><a href="#L507">507</a></th><td><pre>- `BuildProject` passed.</pre></td></tr>
+<tr id="L508"><th><a href="#L508">508</a></th><td><pre></pre></td></tr>
+<tr id="L509"><th><a href="#L509">509</a></th><td><pre>[ 2026-06-18T21:47:58Z (12m 43s since Assistant start) ]</pre></td></tr>
+<tr id="L510"><th><a href="#L510">510</a></th><td><pre></pre></td></tr>
+<tr id="L511"><th><a href="#L511">511</a></th><td><pre>## User 2026-06-18T22:59:09Z (1h 23m 55s since previous Assistant start) </pre></td></tr>
+<tr id="L512"><th><a href="#L512">512</a></th><td><pre></pre></td></tr>
+<tr id="L513"><th><a href="#L513">513</a></th><td><pre>The &quot;Rename Format&quot; TextField should not try to replace user input until after a trailing &#x27;|&#x27; character is entered. </pre></td></tr>
+<tr id="L514"><th><a href="#L514">514</a></th><td><pre></pre></td></tr>
+<tr id="L515"><th><a href="#L515">515</a></th><td><pre>## Assistant 2026-06-18T22:59:09Z (0s since User start)</pre></td></tr>
+<tr id="L516"><th><a href="#L516">516</a></th><td><pre></pre></td></tr>
+<tr id="L517"><th><a href="#L517">517</a></th><td><pre>Rename field normalizes every keystroke now. Need defer placeholder replacement until token closes with trailing |; checking formatter before patch.</pre></td></tr>
+<tr id="L518"><th><a href="#L518">518</a></th><td><pre></pre></td></tr>
+<tr id="L519"><th><a href="#L519">519</a></th><td><pre>Fix belongs in formatter, not sheet UI. I’m adding edit-aware normalization: only normalize when edit inserted a closing |; final rename still normalizes before execution.</pre></td></tr>
+<tr id="L520"><th><a href="#L520">520</a></th><td><pre></pre></td></tr>
+<tr id="L521"><th><a href="#L521">521</a></th><td><pre>Formatter now has edit-aware gate. Wiring ContentView binding through view model so TextField stops rewriting partial edits.</pre></td></tr>
+<tr id="L522"><th><a href="#L522">522</a></th><td><pre></pre></td></tr>
+<tr id="L523"><th><a href="#L523">523</a></th><td><pre>Now TextField binding uses previous/new edit state. Adding focused unit coverage for opener, partial token, closing delimiter, paste, and editing inside existing token.</pre></td></tr>
+<tr id="L524"><th><a href="#L524">524</a></th><td><pre></pre></td></tr>
+<tr id="L525"><th><a href="#L525">525</a></th><td><pre>Need tests.</pre></td></tr>
+<tr id="L526"><th><a href="#L526">526</a></th><td><pre></pre></td></tr>
+<tr id="L527"><th><a href="#L527">527</a></th><td><pre>Need diagnostics.</pre></td></tr>
+<tr id="L528"><th><a href="#L528">528</a></th><td><pre></pre></td></tr>
+<tr id="L529"><th><a href="#L529">529</a></th><td><pre>Diagnostics clean. Running new formatter test plus existing rename formatter test, then build.</pre></td></tr>
+<tr id="L530"><th><a href="#L530">530</a></th><td><pre></pre></td></tr>
+<tr id="L531"><th><a href="#L531">531</a></th><td><pre>Focused tests pass. Running project build for integration.</pre></td></tr>
+<tr id="L532"><th><a href="#L532">532</a></th><td><pre></pre></td></tr>
+<tr id="L533"><th><a href="#L533">533</a></th><td><pre>Implemented.</pre></td></tr>
+<tr id="L534"><th><a href="#L534">534</a></th><td><pre></pre></td></tr>
+<tr id="L535"><th><a href="#L535">535</a></th><td><pre>`Rename Format` TextField now keeps partial user input as typed. It normalizes aliases only when edit inserts closing `|`, so `|trackn` stays `|trackn`, then `|tracknumber|` becomes `|TRACKNUMBER|`.</pre></td></tr>
+<tr id="L536"><th><a href="#L536">536</a></th><td><pre></pre></td></tr>
+<tr id="L537"><th><a href="#L537">537</a></th><td><pre>Changed:</pre></td></tr>
+<tr id="L538"><th><a href="#L538">538</a></th><td><pre>- [TrackFileRenameFormatter.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/TrackFileRenameFormatter.swift:182)</pre></td></tr>
+<tr id="L539"><th><a href="#L539">539</a></th><td><pre>- [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift:422)</pre></td></tr>
+<tr id="L540"><th><a href="#L540">540</a></th><td><pre>- [ContentView.swift](Swift/SwiftTag/SwiftTag/ContentView.swift:497)</pre></td></tr>
+<tr id="L541"><th><a href="#L541">541</a></th><td><pre>- [SwiftTagTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagTests.swift:293)</pre></td></tr>
+<tr id="L542"><th><a href="#L542">542</a></th><td><pre></pre></td></tr>
+<tr id="L543"><th><a href="#L543">543</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L544"><th><a href="#L544">544</a></th><td><pre>- `trackFileRenameFormatterNormalizesAliasesAndZeroPadsNumbers()` passed.</pre></td></tr>
+<tr id="L545"><th><a href="#L545">545</a></th><td><pre>- `trackFileRenameFormatterDefersTextFieldNormalizationUntilClosingDelimiter()` passed.</pre></td></tr>
+<tr id="L546"><th><a href="#L546">546</a></th><td><pre>- `BuildProject` passed.</pre></td></tr>
+<tr id="L547"><th><a href="#L547">547</a></th><td><pre></pre></td></tr>
+<tr id="L548"><th><a href="#L548">548</a></th><td><pre>[ 2026-06-18T23:01:45Z (2m 36s since Assistant start) ]</pre></td></tr>
+<tr id="L549"><th><a href="#L549">549</a></th><td><pre></pre></td></tr>
+<tr id="L550"><th><a href="#L550">550</a></th><td><pre>## User 2026-06-18T23:18:16Z (19m 8s since previous Assistant start) </pre></td></tr>
+<tr id="L551"><th><a href="#L551">551</a></th><td><pre></pre></td></tr>
+<tr id="L552"><th><a href="#L552">552</a></th><td><pre>The &quot;Rename Format&quot; TextField cursor is being placed at end of string after text update on trailing &#x27;|&#x27; entry. The cursor should be placed after the last edited character which will be just after the trailing &#x27;|&#x27; entered.</pre></td></tr>
+<tr id="L553"><th><a href="#L553">553</a></th><td><pre></pre></td></tr>
+<tr id="L554"><th><a href="#L554">554</a></th><td><pre>## Assistant 2026-06-18T23:18:16Z (0s since User start)</pre></td></tr>
+<tr id="L555"><th><a href="#L555">555</a></th><td><pre></pre></td></tr>
+<tr id="L556"><th><a href="#L556">556</a></th><td><pre>Cursor jumps because binding setter replaces whole string after closing token. Need own selection state or AppKit bridge. Checking current SwiftUI TextField selection API first.</pre></td></tr>
+<tr id="L557"><th><a href="#L557">557</a></th><td><pre></pre></td></tr>
+<tr id="L558"><th><a href="#L558">558</a></th><td><pre>SwiftUI docs show TextField(_:text:selection:) with TextSelection. I’m using that, plus formatter returns target insertion offset after normalized closing token.</pre></td></tr>
+<tr id="L559"><th><a href="#L559">559</a></th><td><pre></pre></td></tr>
+<tr id="L560"><th><a href="#L560">560</a></th><td><pre>Formatter now reports caret offset. Wiring through view model and sheet selection binding.</pre></td></tr>
+<tr id="L561"><th><a href="#L561">561</a></th><td><pre></pre></td></tr>
+<tr id="L562"><th><a href="#L562">562</a></th><td><pre>ContentView now stores selection. Sheet TextField gets selection binding using current SwiftUI initializer.</pre></td></tr>
+<tr id="L563"><th><a href="#L563">563</a></th><td><pre></pre></td></tr>
+<tr id="L564"><th><a href="#L564">564</a></th><td><pre>Updating ViewInspector harness for new selection binding. Then adding formatter offset cases for alias expansion in middle of string.</pre></td></tr>
+<tr id="L565"><th><a href="#L565">565</a></th><td><pre></pre></td></tr>
+<tr id="L566"><th><a href="#L566">566</a></th><td><pre>Offset tests cover alias expansion before trailing text, which is exact jump case. Running diagnostics now.</pre></td></tr>
+<tr id="L567"><th><a href="#L567">567</a></th><td><pre></pre></td></tr>
+<tr id="L568"><th><a href="#L568">568</a></th><td><pre>Diagnostics clean. Running focused formatter and sheet harness tests.</pre></td></tr>
+<tr id="L569"><th><a href="#L569">569</a></th><td><pre></pre></td></tr>
+<tr id="L570"><th><a href="#L570">570</a></th><td><pre>Focused tests pass. Running build for final integration check.</pre></td></tr>
+<tr id="L571"><th><a href="#L571">571</a></th><td><pre></pre></td></tr>
+<tr id="L572"><th><a href="#L572">572</a></th><td><pre>Build green. Grabbing exact anchors and timestamp.</pre></td></tr>
+<tr id="L573"><th><a href="#L573">573</a></th><td><pre></pre></td></tr>
+<tr id="L574"><th><a href="#L574">574</a></th><td><pre>Fixed cursor jump.</pre></td></tr>
+<tr id="L575"><th><a href="#L575">575</a></th><td><pre></pre></td></tr>
+<tr id="L576"><th><a href="#L576">576</a></th><td><pre>Used SwiftUI `TextField(_:text:selection:)` with `TextSelection`, per current docs. Formatter now returns normalized format plus insertion offset after closed placeholder, so cursor lands after normalized trailing `|`, not end of field.</pre></td></tr>
+<tr id="L577"><th><a href="#L577">577</a></th><td><pre></pre></td></tr>
+<tr id="L578"><th><a href="#L578">578</a></th><td><pre>Changed:</pre></td></tr>
+<tr id="L579"><th><a href="#L579">579</a></th><td><pre>- [TrackFileRenameSheetView.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TrackFileRenameSheetView.swift:30)</pre></td></tr>
+<tr id="L580"><th><a href="#L580">580</a></th><td><pre>- [ContentView.swift](Swift/SwiftTag/SwiftTag/ContentView.swift:98)</pre></td></tr>
+<tr id="L581"><th><a href="#L581">581</a></th><td><pre>- [TrackFileRenameFormatter.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/TrackFileRenameFormatter.swift:32)</pre></td></tr>
+<tr id="L582"><th><a href="#L582">582</a></th><td><pre>- [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift:425)</pre></td></tr>
+<tr id="L583"><th><a href="#L583">583</a></th><td><pre></pre></td></tr>
+<tr id="L584"><th><a href="#L584">584</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L585"><th><a href="#L585">585</a></th><td><pre>- `trackFileRenameFormatterDefersTextFieldNormalizationUntilClosingDelimiter()` passed.</pre></td></tr>
+<tr id="L586"><th><a href="#L586">586</a></th><td><pre>- `trackFileRenameFormatterReportsSelectionAfterClosedPlaceholderEdit()` passed.</pre></td></tr>
+<tr id="L587"><th><a href="#L587">587</a></th><td><pre>- `trackFileRenameSheetViewReceivesConfigurationAndActions()` passed.</pre></td></tr>
+<tr id="L588"><th><a href="#L588">588</a></th><td><pre>- `BuildProject` passed.</pre></td></tr>
+<tr id="L589"><th><a href="#L589">589</a></th><td><pre></pre></td></tr>
+<tr id="L590"><th><a href="#L590">590</a></th><td><pre>[ 2026-06-18T23:22:04Z (3m 48s since Assistant start) ]</pre></td></tr>
+<tr id="L591"><th><a href="#L591">591</a></th><td><pre></pre></td></tr>
+<tr id="L592"><th><a href="#L592">592</a></th><td><pre>## User 2026-06-19T05:53:24Z (6h 35m 9s since previous Assistant start) </pre></td></tr>
+<tr id="L593"><th><a href="#L593">593</a></th><td><pre></pre></td></tr>
+<tr id="L594"><th><a href="#L594">594</a></th><td><pre>1. Add after `Strict` checkbox a Picker menu labeled `Space Replacement` which contains &#x27;-&#x27;, &#x27;_&#x27;, &#x27;.&#x27;, &quot;none&quot;.</pre></td></tr>
+<tr id="L595"><th><a href="#L595">595</a></th><td><pre>  - The default for this picker in &quot;none&quot;.</pre></td></tr>
+<tr id="L596"><th><a href="#L596">596</a></th><td><pre>  - When the selection is something other than &quot;none&quot;, then the selected character replaces all white spaces is the filename.</pre></td></tr>
+<tr id="L597"><th><a href="#L597">597</a></th><td><pre>  - White space replacement occurs after all other formatting so that it will catch the potential space from invalid filename character replacement.</pre></td></tr>
+<tr id="L598"><th><a href="#L598">598</a></th><td><pre>2. Change `Replacement Text` picker label to `Invalid Replacement`.</pre></td></tr>
+<tr id="L599"><th><a href="#L599">599</a></th><td><pre>3. Add to `Invalid Replacement` menu items &#x27;_&#x27;, insert it between &#x27;-&#x27; and &#x27;.&#x27;.</pre></td></tr>
+<tr id="L600"><th><a href="#L600">600</a></th><td><pre>Backward compatibly is not a concern, rename variables as appropriate.</pre></td></tr>
+<tr id="L601"><th><a href="#L601">601</a></th><td><pre>Update plan `Docs/Plans/33-AddTrackFileRename.md`.</pre></td></tr>
+<tr id="L602"><th><a href="#L602">602</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L603"><th><a href="#L603">603</a></th><td><pre></pre></td></tr>
+<tr id="L604"><th><a href="#L604">604</a></th><td><pre>## Assistant 2026-06-19T05:53:24Z (0s since User start)</pre></td></tr>
+<tr id="L605"><th><a href="#L605">605</a></th><td><pre></pre></td></tr>
+<tr id="L606"><th><a href="#L606">606</a></th><td><pre>Need add second replacement setting and rename existing label. Reading plan, settings model, formatter, tests, and sheet before patch.</pre></td></tr>
+<tr id="L607"><th><a href="#L607">607</a></th><td><pre></pre></td></tr>
+<tr id="L608"><th><a href="#L608">608</a></th><td><pre>No clarification needed. Interpreting order as: render tags/literals, replace invalid filename chars, replace whitespace if configured, then strict trailing cleanup. This catches spaces produced by invalid replacement and keeps strict final-name rule.</pre></td></tr>
+<tr id="L609"><th><a href="#L609">609</a></th><td><pre></pre></td></tr>
+<tr id="L610"><th><a href="#L610">610</a></th><td><pre>Applying model rename now: invalid replacement gets underscore; space replacement is separate persisted picker defaulting none.</pre></td></tr>
+<tr id="L611"><th><a href="#L611">611</a></th><td><pre></pre></td></tr>
+<tr id="L612"><th><a href="#L612">612</a></th><td><pre>Formatter next: invalid replacement first, whitespace replacement second, strict trailing cleanup last.</pre></td></tr>
+<tr id="L613"><th><a href="#L613">613</a></th><td><pre></pre></td></tr>
+<tr id="L614"><th><a href="#L614">614</a></th><td><pre>Wiring ContentView storage/configuration for both pickers.</pre></td></tr>
+<tr id="L615"><th><a href="#L615">615</a></th><td><pre></pre></td></tr>
+<tr id="L616"><th><a href="#L616">616</a></th><td><pre>Sheet labels next: Invalid Replacement, new Space Replacement after Strict.</pre></td></tr>
+<tr id="L617"><th><a href="#L617">617</a></th><td><pre></pre></td></tr>
+<tr id="L618"><th><a href="#L618">618</a></th><td><pre>Updating tests for renamed controls plus new whitespace behavior.</pre></td></tr>
+<tr id="L619"><th><a href="#L619">619</a></th><td><pre></pre></td></tr>
+<tr id="L620"><th><a href="#L620">620</a></th><td><pre>Tests still named old replacement fields. Patching expectations and adding sanitizer checks for _ and space replacement.</pre></td></tr>
+<tr id="L621"><th><a href="#L621">621</a></th><td><pre></pre></td></tr>
+<tr id="L622"><th><a href="#L622">622</a></th><td><pre>Need sweep remaining old names.</pre></td></tr>
+<tr id="L623"><th><a href="#L623">623</a></th><td><pre></pre></td></tr>
+<tr id="L624"><th><a href="#L624">624</a></th><td><pre>Search command tripped quote. Re-running plain patterns.</pre></td></tr>
+<tr id="L625"><th><a href="#L625">625</a></th><td><pre></pre></td></tr>
+<tr id="L626"><th><a href="#L626">626</a></th><td><pre>User docs have old label too. Updating them with plan so app docs stay true.</pre></td></tr>
+<tr id="L627"><th><a href="#L627">627</a></th><td><pre></pre></td></tr>
+<tr id="L628"><th><a href="#L628">628</a></th><td><pre>Updating plan 33 to match new controls and sanitizer order.</pre></td></tr>
+<tr id="L629"><th><a href="#L629">629</a></th><td><pre></pre></td></tr>
+<tr id="L630"><th><a href="#L630">630</a></th><td><pre>Continuing plan changes in confirmed decisions and behavior sections.</pre></td></tr>
+<tr id="L631"><th><a href="#L631">631</a></th><td><pre></pre></td></tr>
+<tr id="L632"><th><a href="#L632">632</a></th><td><pre>Updating replacement behavior and execution wording in plan.</pre></td></tr>
+<tr id="L633"><th><a href="#L633">633</a></th><td><pre></pre></td></tr>
+<tr id="L634"><th><a href="#L634">634</a></th><td><pre>Updating model, sanitizer, sheet, and test sections in plan.</pre></td></tr>
+<tr id="L635"><th><a href="#L635">635</a></th><td><pre></pre></td></tr>
+<tr id="L636"><th><a href="#L636">636</a></th><td><pre>Finishing plan test and acceptance criteria updates.</pre></td></tr>
+<tr id="L637"><th><a href="#L637">637</a></th><td><pre></pre></td></tr>
+<tr id="L638"><th><a href="#L638">638</a></th><td><pre>Two old phrases left in plan; replacing with new names.</pre></td></tr>
+<tr id="L639"><th><a href="#L639">639</a></th><td><pre></pre></td></tr>
+<tr id="L640"><th><a href="#L640">640</a></th><td><pre>Plan control order adjusted to match UI request.</pre></td></tr>
+<tr id="L641"><th><a href="#L641">641</a></th><td><pre></pre></td></tr>
+<tr id="L642"><th><a href="#L642">642</a></th><td><pre>Code/docs updated. Running diagnostics on touched Swift files.</pre></td></tr>
+<tr id="L643"><th><a href="#L643">643</a></th><td><pre></pre></td></tr>
+<tr id="L644"><th><a href="#L644">644</a></th><td><pre>Diagnostics clean. Running focused tests for defaults, formatter sanitizing, rename file path, and sheet bindings.</pre></td></tr>
+<tr id="L645"><th><a href="#L645">645</a></th><td><pre></pre></td></tr>
+<tr id="L646"><th><a href="#L646">646</a></th><td><pre>Focused tests pass. Running build now.</pre></td></tr>
+<tr id="L647"><th><a href="#L647">647</a></th><td><pre></pre></td></tr>
+<tr id="L648"><th><a href="#L648">648</a></th><td><pre>Build green. Grabbing final anchors and timestamp.</pre></td></tr>
+<tr id="L649"><th><a href="#L649">649</a></th><td><pre></pre></td></tr>
+<tr id="L650"><th><a href="#L650">650</a></th><td><pre>Implemented.</pre></td></tr>
+<tr id="L651"><th><a href="#L651">651</a></th><td><pre></pre></td></tr>
+<tr id="L652"><th><a href="#L652">652</a></th><td><pre>Changed:</pre></td></tr>
+<tr id="L653"><th><a href="#L653">653</a></th><td><pre>- `Replacement Text` -&gt; `Invalid Replacement`.</pre></td></tr>
+<tr id="L654"><th><a href="#L654">654</a></th><td><pre>- Added `_` to invalid replacement picker between `-` and `.`.</pre></td></tr>
+<tr id="L655"><th><a href="#L655">655</a></th><td><pre>- Added `Space Replacement` picker after `Strict`, values `-`, `_`, `.`, `none`.</pre></td></tr>
+<tr id="L656"><th><a href="#L656">656</a></th><td><pre>- Default space replacement is `none`.</pre></td></tr>
+<tr id="L657"><th><a href="#L657">657</a></th><td><pre>- Filename sanitation order now: invalid-character replacement -&gt; whitespace replacement -&gt; strict trailing cleanup.</pre></td></tr>
+<tr id="L658"><th><a href="#L658">658</a></th><td><pre>- Updated plan [33-AddTrackFileRename.md](Swift/SwiftTag/Docs/Plans/33-AddTrackFileRename.md:23).</pre></td></tr>
+<tr id="L659"><th><a href="#L659">659</a></th><td><pre>- Updated user docs [tags.html](Swift/SwiftTag/Docs/UserDocumentation/workflows/tags.html:93).</pre></td></tr>
+<tr id="L660"><th><a href="#L660">660</a></th><td><pre></pre></td></tr>
+<tr id="L661"><th><a href="#L661">661</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L662"><th><a href="#L662">662</a></th><td><pre>- `trackFileRenameSettingsDefaultsMatchPlan()` passed.</pre></td></tr>
+<tr id="L663"><th><a href="#L663">663</a></th><td><pre>- `trackFileRenameFormatterNormalizesAliasesAndZeroPadsNumbers()` passed.</pre></td></tr>
+<tr id="L664"><th><a href="#L664">664</a></th><td><pre>- `trackFileRenameFormatterAppliesStrictAndNonStrictFilenameSanitizing()` passed.</pre></td></tr>
+<tr id="L665"><th><a href="#L665">665</a></th><td><pre>- `tagEditorViewModelRenamesSelectedTrackFileAndUpdatesExportReference()` passed.</pre></td></tr>
+<tr id="L666"><th><a href="#L666">666</a></th><td><pre>- `trackFileRenameSheetViewReceivesConfigurationAndActions()` passed.</pre></td></tr>
+<tr id="L667"><th><a href="#L667">667</a></th><td><pre>- `BuildProject` passed.</pre></td></tr>
+<tr id="L668"><th><a href="#L668">668</a></th><td><pre></pre></td></tr>
+<tr id="L669"><th><a href="#L669">669</a></th><td><pre>[ 2026-06-19T06:01:00Z (7m 36s since Assistant start) ]</pre></td></tr>
+<tr id="L670"><th><a href="#L670">670</a></th><td><pre></pre></td></tr>
+<tr id="L671"><th><a href="#L671">671</a></th><td><pre>## User 2026-06-19T06:26:05Z (32m 41s since previous Assistant start) </pre></td></tr>
+<tr id="L672"><th><a href="#L672">672</a></th><td><pre></pre></td></tr>
+<tr id="L673"><th><a href="#L673">673</a></th><td><pre>Remove the final filename format checking for a `space` or &#x27;.&#x27; at the end of the filename, it is not needed as the actual filename end will be `.flac`.</pre></td></tr>
+<tr id="L674"><th><a href="#L674">674</a></th><td><pre></pre></td></tr>
+<tr id="L675"><th><a href="#L675">675</a></th><td><pre>## Assistant 2026-06-19T06:26:05Z (0s since User start)</pre></td></tr>
+<tr id="L676"><th><a href="#L676">676</a></th><td><pre></pre></td></tr>
+<tr id="L677"><th><a href="#L677">677</a></th><td><pre>Strict trailing cleanup no longer needed because extension supplies actual filename ending. Removing sanitizer trim, plan/doc claims, and old test expectation.</pre></td></tr>
+<tr id="L678"><th><a href="#L678">678</a></th><td><pre></pre></td></tr>
+<tr id="L679"><th><a href="#L679">679</a></th><td><pre>Search quote failed; enough context found. Applying removals.</pre></td></tr>
+<tr id="L680"><th><a href="#L680">680</a></th><td><pre></pre></td></tr>
+<tr id="L681"><th><a href="#L681">681</a></th><td><pre>Removing code path and plan/docs mentions now.</pre></td></tr>
+<tr id="L682"><th><a href="#L682">682</a></th><td><pre></pre></td></tr>
+<tr id="L683"><th><a href="#L683">683</a></th><td><pre>Code no longer trims final stem chars. Updating test expected strict result to keep trailing dot.</pre></td></tr>
+<tr id="L684"><th><a href="#L684">684</a></th><td><pre></pre></td></tr>
+<tr id="L685"><th><a href="#L685">685</a></th><td><pre>Updating plan and user docs to remove final stem cleanup.</pre></td></tr>
+<tr id="L686"><th><a href="#L686">686</a></th><td><pre></pre></td></tr>
+<tr id="L687"><th><a href="#L687">687</a></th><td><pre>Plan has many strict cleanup references. Removing or replacing with extension-preservation note.</pre></td></tr>
+<tr id="L688"><th><a href="#L688">688</a></th><td><pre></pre></td></tr>
+<tr id="L689"><th><a href="#L689">689</a></th><td><pre>Checking for stale references.</pre></td></tr>
+<tr id="L690"><th><a href="#L690">690</a></th><td><pre></pre></td></tr>
+<tr id="L691"><th><a href="#L691">691</a></th><td><pre>Stale trim references gone except normal UI &quot;trailing&quot; wording. Running diagnostics and focused tests now.</pre></td></tr>
+<tr id="L692"><th><a href="#L692">692</a></th><td><pre></pre></td></tr>
+<tr id="L693"><th><a href="#L693">693</a></th><td><pre>Diagnostics clean. Running sanitizer/default focused tests, then build.</pre></td></tr>
+<tr id="L694"><th><a href="#L694">694</a></th><td><pre></pre></td></tr>
+<tr id="L695"><th><a href="#L695">695</a></th><td><pre>Focused tests pass. Running project build.</pre></td></tr>
+<tr id="L696"><th><a href="#L696">696</a></th><td><pre></pre></td></tr>
+<tr id="L697"><th><a href="#L697">697</a></th><td><pre>Build green. Grabbing anchors and timestamp.</pre></td></tr>
+<tr id="L698"><th><a href="#L698">698</a></th><td><pre></pre></td></tr>
+<tr id="L699"><th><a href="#L699">699</a></th><td><pre>Removed final stem trim for trailing `space` / `.`.</pre></td></tr>
+<tr id="L700"><th><a href="#L700">700</a></th><td><pre></pre></td></tr>
+<tr id="L701"><th><a href="#L701">701</a></th><td><pre>Now sanitizer only does invalid-character replacement, then optional whitespace replacement. Final `.flac` extension handles actual filename ending.</pre></td></tr>
+<tr id="L702"><th><a href="#L702">702</a></th><td><pre></pre></td></tr>
+<tr id="L703"><th><a href="#L703">703</a></th><td><pre>Updated:</pre></td></tr>
+<tr id="L704"><th><a href="#L704">704</a></th><td><pre>- [TrackFileRenameFormatter.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/TrackFileRenameFormatter.swift:322)</pre></td></tr>
+<tr id="L705"><th><a href="#L705">705</a></th><td><pre>- [SwiftTagTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagTests.swift:368)</pre></td></tr>
+<tr id="L706"><th><a href="#L706">706</a></th><td><pre>- [33-AddTrackFileRename.md](Swift/SwiftTag/Docs/Plans/33-AddTrackFileRename.md:59)</pre></td></tr>
+<tr id="L707"><th><a href="#L707">707</a></th><td><pre>- [tags.html](Swift/SwiftTag/Docs/UserDocumentation/workflows/tags.html:98)</pre></td></tr>
+<tr id="L708"><th><a href="#L708">708</a></th><td><pre></pre></td></tr>
+<tr id="L709"><th><a href="#L709">709</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L710"><th><a href="#L710">710</a></th><td><pre>- `trackFileRenameSettingsDefaultsMatchPlan()` passed.</pre></td></tr>
+<tr id="L711"><th><a href="#L711">711</a></th><td><pre>- `trackFileRenameFormatterAppliesStrictAndNonStrictFilenameSanitizing()` passed.</pre></td></tr>
+<tr id="L712"><th><a href="#L712">712</a></th><td><pre>- `tagEditorViewModelRenamesSelectedTrackFileAndUpdatesExportReference()` passed.</pre></td></tr>
+<tr id="L713"><th><a href="#L713">713</a></th><td><pre>- `BuildProject` passed.</pre></td></tr>
+<tr id="L714"><th><a href="#L714">714</a></th><td><pre></pre></td></tr>
+<tr id="L715"><th><a href="#L715">715</a></th><td><pre>[ 2026-06-19T06:28:10Z (2m 5s since Assistant start) ]</pre></td></tr>
+<tr id="L716"><th><a href="#L716">716</a></th><td><pre></pre></td></tr>
+<tr id="L717"><th><a href="#L717">717</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

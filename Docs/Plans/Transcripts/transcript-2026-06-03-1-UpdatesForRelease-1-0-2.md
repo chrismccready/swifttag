@@ -392,6 +392,8 @@ Failure happened before scrolling pressure, so frame source likely wrong. Using 
 
 Rerunning new UI test with corrected table frame.
 
+[ 2026-06-06T00:50:56Z (19m 28s since Assistant start) ]
+
 ## User 2026-06-06T00:50:56Z (19m 28s since previous Assistant start) 
 
 [ interrupted agent ]
@@ -419,6 +421,8 @@ Callback restored. Building now, then rerun regression.
 Build passes. New UI regression next.
 
 Scroll trigger compiles, but regression still fails: new field exists then not hittable. Need inspect run log and tune target timing or identity.
+
+[ 2026-06-06T01:01:16Z (10m 20s since Assistant start) ]
 
 ## User 2026-06-06T01:01:16Z (10m 20s since previous Assistant start) 
 

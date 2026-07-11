@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(save): add close and quit swifttag save choices</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(save): add close and quit swifttag save choices</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-08</p>
+<p><code>603c07621916ecd47e1a9faee08d8c32cd6eebdf</code></p>
+<p>feat(save): add close and quit swifttag save choices</p>
+<h2>Body</h2><pre>- add unsaved-changes flow models and async coordinator handling for expanded close and quit
+  prompts
+- reuse ContentView FLAC and SwiftTag save helpers for flac-only, document-only, and combined
+  actions
+- keep windows open and abort quit when new-document save panels are canceled or saves fail
+- add resolver and UI test coverage for the new close-flow options
+
+docs(plan) add plan 20 and its transcript for the implemented save-option work</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>83.5 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>2h 29m</span></div>
+  <div><strong>Assistant</strong><span>20m 48s</span></div>
+  <div><strong>User Response</strong><span>2h 8m</span></div>
+  <div><strong>Back/Forth</strong><span>4.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/19.html">Plan 19: Add SwiftTag Document Save Options Plan</a>, <a href="../../plans/20.html">Plan 20: Add Window-Close SwiftTag Document Save Options Plan</a>, <a href="../../plans/22.html">Plan 22: Add Referenced SwiftTag Document Track-List Save Offer Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions.html#L1">transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions.html#L12">transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions</a></td><td>transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions:segment-001</td><td>work</td><td>1.000</td><td>45.8</td><td>1h 25m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions.html#L54">transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions</a></td><td>transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions:segment-002</td><td>work</td><td>1.000</td><td>22.9</td><td>6m 51s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions.html#L75">transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions</a></td><td>transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions:segment-003</td><td>work</td><td>1.000</td><td>49.0</td><td>52m 35s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions.html#L120">transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions</a></td><td>transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions:segment-004</td><td>work</td><td>1.000</td><td>28.3</td><td>3m 44s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/20-AddSwiftTagDocumentSaveOptions.md</td><td>287</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions.md</td><td>146</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>163</td><td>34</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/UnsavedChangesCoordinator.swift</td><td>221</td><td>29</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/UnsavedChangesFlow.swift</td><td>127</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTagApp.swift</td><td>1</td><td>5</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>132</td><td>48</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>44</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>580.00</td></tr>
+<tr><td>transcript_lines</td><td>146.00</td></tr>
+<tr><td>plan_lines</td><td>287.00</td></tr>
+<tr><td>elapsed_time</td><td>8944.00</td></tr>
+<tr><td>assistant_processing_time</td><td>1248.00</td></tr>
+<tr><td>back_and_forth_count</td><td>4.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

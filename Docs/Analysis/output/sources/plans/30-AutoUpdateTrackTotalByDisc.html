@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 30-AutoUpdateTrackTotalByDisc</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 30-AutoUpdateTrackTotalByDisc</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/30-AutoUpdateTrackTotalByDisc.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Auto Update Track Total By Disc Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre></pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>Add a track-total calculation mode that can set or auto-update each track&#x27;s</pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>`TOTALTRACKS` value to the number of non-deleted tracks on that track&#x27;s disc,</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>while preserving the current full-table track-count behavior when the new mode</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>is off.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre></pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>### In Scope</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Add `SaveSettingsKey.autoUpdateTrackTotalByDisc`.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Add `SaveSettingsDefaults.autoUpdateTrackTotalByDisc = false`.</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Add an `@AppStorage` toggle in</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>  `SwiftTag/Features/Settings/TagWriteSettingsView.swift` after</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>  `Auto update Track Total`.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Label the toggle `Auto update Track Total by Disc`.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Add an accessibility identifier, recommended:</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>  `settings.tags.autoUpdateTrackTotalByDisc`.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Add `@AppStorage` wiring in `SwiftTag/ContentView.swift`.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- When `autoUpdateTrackTotal` is on and</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>  `autoUpdateTrackTotalByDisc` is off, keep current behavior:</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>  set track total to non-deleted track count.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- When both settings are on, set each applicable track total to count of</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>  non-deleted tracks for that track&#x27;s disc.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- Add `File` menu item after `Set Track Total`:</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>  `Set Track Total by Disc (...)`.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- Add `Set Track Total by Disc (...)` after existing `Set Track Total` in</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>  track-table and total-track field context menus.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- Route the new menu action to the focused key editor window.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- Enable the new menu with same base rules as `Set Track Total`.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Expose the new setting to AppleScript.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- Update total-track mismatch, hover/help accuracy text, and diff/state checks</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>  so expected values use current active calculation mode.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- Update User Documentation HTML files where this behavior appears.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- Add focused unit, ViewInspector/source-order, and targeted integration tests</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>  where they provide useful coverage.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre></pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>### Out Of Scope</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre></pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- Changing track number calculation.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- Changing disc total calculation.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- Changing album, album artist, compilation, picture, or save-scope behavior.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- Changing FLAC parser behavior or fixture formats.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- Reworking total-track alias storage beyond existing `Track.totalTracks`</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>  abstraction.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- Latest numbered plan reviewed:</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>  - `Docs/Plans/29-AddSandboxSettings.md`</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>  - `AGENTS.md`</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>  - `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- Relevant app files reviewed:</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>  - `SwiftTag/Features/Settings/TagWriteSettingsView.swift`</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>  - `SwiftTag/Shared/Models/SaveSettings.swift`</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>  - `SwiftTag/SwiftTagApp.swift`</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>  - `SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorView.swift`</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift`</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift`</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>  - `SwiftTag/Features/FlacImport/FlacWriteMapper.swift`</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>  - `SwiftTag/Shared/Models/Track.swift`</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>  - `SwiftTag/Shared/Utilities/TagDiffFormatting.swift`</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- Relevant user documentation files to inspect/update:</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  - `Docs/UserDocumentation/workflows/settings.html`</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>  - `Docs/UserDocumentation/workflows/tags.html`</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>  - `Docs/UserDocumentation/workflows/saving.html`</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>  - `Docs/UserDocumentation/automation/applescript-application.html`</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>  - `Docs/UserDocumentation/automation/applescript.html`</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>  - `Docs/UserDocumentation/index.html`</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- Relevant tests reviewed:</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>  - `SwiftTagTests/SwiftTagTests.swift`</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>  - `SwiftTagTests/TrackStatusViewInspectorTests.swift`</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>  - `SwiftTagTests/SwiftTagAppleScriptTests.swift`</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>  - `SwiftTagTests/SwiftTagHelpDocumentationTests.swift`</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>  - `SwiftTagUITests/SwiftTagUITests.swift`</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>- Relevant fixtures reviewed:</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>  - `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>  - `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>  - `SwiftTagTestFiles/test.swifttag`</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre></pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre></pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- `TagWriteSettingsView` already stores `autoUpdateTrackTotal` via</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>  `@AppStorage`.</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>- `ContentView` mirrors `autoUpdateTrackTotal` via `@AppStorage` and calls</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>  `applyAutoTrackTotalIfNeeded()`.</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- Current auto-update behavior calls</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>  `TagEditorViewModel.setTrackTotalToCurrentCount()`.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- Current manual menu title is `Set Track Total (&lt;non-deleted count&gt;)`.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- Current manual menu is disabled during save operations, when no non-deleted</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>  tracks exist, or when `autoUpdateTrackTotal` is on.</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>- `TagEditorViewModel.setTrackTotal(_:)` skips deleted and locked tracks.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- Current total-track mismatch logic compares non-empty total-track values</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>  against loaded track count.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>- Current total-track diff logic writes expected tags through</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>  `FlacWriteMapper.makeTags(...)` from the current editor track values.</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- `Track.totalTracks` normalizes aliases by removing `TOTALTRACKS` and</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>  `TRACKTOTAL`, then storing the editor value under `TOTALTRACKS`.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>- Save output still follows `TrackCountKeyStrategy`, so FLAC writes can emit</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>  `TOTALTRACKS`, `TRACKTOTAL`, both, or neither.</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre></pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre></pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- Plan file path is `Docs/Plans/_AutoUpdateTrackTotalByDisc.md`.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- New persisted key name is `settings.autoUpdateTrackTotalByDisc`.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- New setting default is off.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- New Settings label is `Auto update Track Total by Disc`.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- New `File` menu label stem is `Set Track Total by Disc`.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>- Menu title suffix uses comma-separated per-disc counts with zero placeholders</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>  for gaps, for example `Set Track Total by Disc (10,0,5)`.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- Existing table-count mode remains unchanged when new setting is off.</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- New manual menu command acts on the focused key editor window, same as</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>  existing `Set Track Total`.</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>- Missing, blank, zero, or non-numeric `DISCNUMBER` values are invalid for</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>  by-disc counting.</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- Tracks with invalid `DISCNUMBER` values are excluded from by-disc counts and</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>  keep their existing total-track value.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- Disc-number gaps are represented by `0` placeholders in menu titles. For</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>  example, discs 1 and 3 display as `(10,0,5)`.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- New setting is scriptable through AppleScript.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- New `Set Track Total by Disc (...)` command appears in the `File` menu,</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>  track-table context menu, and total-track field context menu.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>## Product Behavior</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre></pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>### Settings</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>1. User opens Settings &gt; Tags.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>2. In `Track Total/Compilation Management`, user sees:</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>   - `Auto update Track Total`</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>   - `Auto update Track Total by Disc`</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>   - `Apply Compilation to all Tracks`</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>3. Toggling `Auto update Track Total by Disc` persists to user defaults.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>4. The by-disc setting affects automatic updates only when</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>   `Auto update Track Total` is on.</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>5. Recommended UI behavior: leave by-disc toggle enabled even when parent auto</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>   update toggle is off, so user can preselect calculation mode.</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre></pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>### Automatic Track Total</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre></pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>1. If `Auto update Track Total` is off, no automatic total-track mutation occurs.</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>2. If `Auto update Track Total` is on and by-disc mode is off:</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>   - non-deleted unlocked tracks get total track count equal to non-deleted</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>     track count.</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>3. If both auto update settings are on:</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>   - app builds per-disc counts from non-deleted tracks.</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>   - tracks with missing, blank, zero, or non-numeric disc numbers are excluded</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>     from counts.</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>   - locked tracks contribute to counts.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>   - deleted tracks do not contribute to counts.</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>   - non-deleted unlocked tracks get the count for their disc.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>   - non-deleted unlocked tracks with invalid disc numbers keep their existing</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>     total-track value.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>   - locked tracks keep existing editor values.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>4. Auto-update must run after imports, deletes, reloads, lock toggles, and any</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>   disc-number edit that changes per-disc counts.</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>5. Auto-update should no-op when target values are already correct, avoiding</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>   needless view update loops.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre></pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>### Manual File Menu Command</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre></pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>1. `File` menu shows existing `Set Track Total (...)`.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>2. Immediately after it, `File` menu shows</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>   `Set Track Total by Disc (...)`.</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>3. Title suffix displays per-disc counts in disc-number order.</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>4. Disc gaps display as zero placeholders, for example `(10,0,5)`.</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>5. Selecting command updates the focused key editor window.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>6. Command applies to whole non-deleted track table, not selected rows.</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>7. Command skips locked tracks, matching current `Set Track Total` behavior.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>8. Command skips deleted tracks, matching current `Set Track Total` behavior.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>9. Command leaves tracks with invalid disc numbers unchanged.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>10. Command is disabled with same base rules as current `Set Track Total`:</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>   - save operation running</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>   - no non-deleted tracks</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>   - `autoUpdateTrackTotal` is on</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre></pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>### Context Menu Commands</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre></pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>1. Track-table context menu shows `Set Track Total by Disc (...)` immediately</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>   after existing `Set Track Total (...)`.</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>2. Total-track field context menu shows `Set Track Total by Disc (...)`</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>   immediately after existing `Set Track Total (...)`.</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>3. Context-menu command title and enablement match the `File` menu command.</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>4. Context-menu command action uses the same view callback as the `File` menu</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>   command.</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre></pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>### AppleScript Setting</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre></pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>1. AppleScript exposes `auto update track total by disc`.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>2. Property reads and writes the same user defaults key as the Settings toggle.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>3. Existing `auto update track total` remains the parent behavior switch.</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>4. Scripts can set by-disc preference before enabling automatic update.</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre></pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>## Proposed Implementation</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre></pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>### 1. Settings Model</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre></pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>- Extend `SaveSettingsKey`:</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>  - `static let autoUpdateTrackTotalByDisc = &quot;settings.autoUpdateTrackTotalByDisc&quot;`</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>- Extend `SaveSettingsDefaults`:</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>  - `static let autoUpdateTrackTotalByDisc = false`</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>- Add matching `@AppStorage` in:</pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>  - `TagWriteSettingsView`</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>  - `ContentView`</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre></pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>Add AppleScript settings parity:</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre></pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>- `SwiftTag.sdef` property:</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>  - name: `auto update track total by disc`</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre>  - recommended code: `autd`</pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>  - cocoa key: `AutoUpdateTrackTotalByDiscSetting`</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre>- `SwiftTagAppleScriptSupport.swift` property:</pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>  - `@objc(AutoUpdateTrackTotalByDiscSetting)`</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre></pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>### 2. View Model Helpers</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre></pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>Add focused helpers in `TagEditorViewModel`:</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre></pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>- normalized positive disc-number lookup for a track.</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>- non-deleted track grouping by valid positive disc number.</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>- per-disc menu title suffix.</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>- expected total-track value for a track under:</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>  - table-count mode</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>  - by-disc mode</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>- `setTrackTotalToCurrentDiscCounts()`.</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>- `hasTotalTracksMismatch(autoUpdateTrackTotalByDisc:)`.</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>- `totalTracksHoverMessage(autoUpdateTrackTotalByDisc:)`.</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>- an `Equatable` auto-update input snapshot for `ContentView.onChange`.</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre></pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>Keep old property names as compatibility shims if that reduces test churn:</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre></pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>- `hasTotalTracksMismatch` can call new method with `false`.</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>- `totalTracksHoverMessage` can call new method with `false`.</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre></pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>### 3. Content View Wiring</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre></pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>- Add `@AppStorage(SaveSettingsKey.autoUpdateTrackTotalByDisc)`.</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>- Change `hasTotalTracksMismatch` to call view-model method with active mode.</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>- Change `totalTracksHoverMessage` to use active mode.</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>- Add `setTrackTotalByDiscMenuTitle`.</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>- Add `canSetTrackTotalByDisc`.</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>- Add `setTrackTotalToCurrentDiscCounts()` action wrapper.</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>- Pass by-disc menu title, action, and enablement into</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>  `TagEditorTrackFileView`, `TagEditorCoreTagsView`, and `TagEditorView`.</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>- Change `applyAutoTrackTotalIfNeeded()`:</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>  - guard `autoUpdateTrackTotal`.</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>  - if `autoUpdateTrackTotalByDisc`, call by-disc setter.</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>  - else call current-count setter.</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>- Add `.onChange(of: autoUpdateTrackTotalByDisc)`.</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>- Replace or augment `.onChange(of: viewModel.nonDeletedTrackCount)` with a</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>  snapshot that also changes when normalized disc numbers change.</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>- Add focused scene values:</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>  - `setTrackTotalByDiscTitle`</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>  - `performSetTrackTotalByDisc`</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>  - `canPerformSetTrackTotalByDisc`</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre></pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre>### 4. File Menu</pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre></pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>In `SwiftTagApp.swift`, add after existing `Set Track Total` button:</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre></pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>- Button with `setTrackTotalByDiscTitle ?? &quot;Set Track Total by Disc (0)&quot;`.</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>- Action calls focused `performSetTrackTotalByDisc`.</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>- Disabled when focused `canPerformSetTrackTotalByDisc` is false.</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre></pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>Keep divider placement consistent with existing `File` menu:</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre></pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>- no new divider between the two total-track commands.</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>- keep existing divider after the total-track command group.</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre></pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>### 5. Context Menus</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre></pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre>- Add `Set Track Total by Disc (...)` after existing `Set Track Total (...)` in</pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>  `TagEditorTrackFileView` table context menu.</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>- Add `Set Track Total by Disc (...)` after existing `Set Track Total (...)` in</pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre>  both total-track field context-menu branches in `TagEditorCoreTagsView`.</pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>- Use same title, action, and disabled state as the `File` menu item.</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre></pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>### 6. Diff And Accuracy Checks</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre></pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>- Make total-track mismatch compare against active expected count:</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre>  - table-count mode: non-deleted track count.</pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre>  - by-disc mode: count for each track&#x27;s valid positive disc number.</pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre>- In by-disc mode, ignore tracks with invalid disc numbers for mismatch.</pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre>- Keep empty total-track values ignored for mismatch, unless auto update fills</pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre>  them first.</pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre>- Update hover/help text to report active expectation:</pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre>  - table mode: loaded non-deleted track count.</pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>  - by-disc mode: per-disc count list with zero placeholders for gaps.</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre>- Ensure track-to-file and editor difference checks see by-disc values after</pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>  manual or automatic mutation.</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre>- If stale values can exist before mutation, prefer computing expected</pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>  total-track values inside view-model comparison helpers rather than relying</pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre>  on UI timing.</pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre></pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre>### 7. User Documentation</pre></td></tr>
+<tr id="L302"><th><a href="#L302">302</a></th><td><pre></pre></td></tr>
+<tr id="L303"><th><a href="#L303">303</a></th><td><pre>- Update `Docs/UserDocumentation/workflows/settings.html` for the new</pre></td></tr>
+<tr id="L304"><th><a href="#L304">304</a></th><td><pre>  `Auto update Track Total by Disc` setting.</pre></td></tr>
+<tr id="L305"><th><a href="#L305">305</a></th><td><pre>- Update `Docs/UserDocumentation/workflows/tags.html` for table-count versus</pre></td></tr>
+<tr id="L306"><th><a href="#L306">306</a></th><td><pre>  per-disc total-track behavior.</pre></td></tr>
+<tr id="L307"><th><a href="#L307">307</a></th><td><pre>- Update `Docs/UserDocumentation/workflows/saving.html` if it describes</pre></td></tr>
+<tr id="L308"><th><a href="#L308">308</a></th><td><pre>  automatic count updates or pending tag edits.</pre></td></tr>
+<tr id="L309"><th><a href="#L309">309</a></th><td><pre>- Update AppleScript documentation pages for the new scriptable setting:</pre></td></tr>
+<tr id="L310"><th><a href="#L310">310</a></th><td><pre>  - `Docs/UserDocumentation/automation/applescript-application.html`</pre></td></tr>
+<tr id="L311"><th><a href="#L311">311</a></th><td><pre>  - `Docs/UserDocumentation/automation/applescript.html`</pre></td></tr>
+<tr id="L312"><th><a href="#L312">312</a></th><td><pre>- Update `Docs/UserDocumentation/index.html` only if navigation, feature</pre></td></tr>
+<tr id="L313"><th><a href="#L313">313</a></th><td><pre>  summary, or cross-links need the new setting surfaced.</pre></td></tr>
+<tr id="L314"><th><a href="#L314">314</a></th><td><pre>- Preserve existing documentation visual style, link structure, table format,</pre></td></tr>
+<tr id="L315"><th><a href="#L315">315</a></th><td><pre>  and terminology.</pre></td></tr>
+<tr id="L316"><th><a href="#L316">316</a></th><td><pre></pre></td></tr>
+<tr id="L317"><th><a href="#L317">317</a></th><td><pre>## Destructive / Write-Back Semantics</pre></td></tr>
+<tr id="L318"><th><a href="#L318">318</a></th><td><pre></pre></td></tr>
+<tr id="L319"><th><a href="#L319">319</a></th><td><pre>### Data Preserved</pre></td></tr>
+<tr id="L320"><th><a href="#L320">320</a></th><td><pre></pre></td></tr>
+<tr id="L321"><th><a href="#L321">321</a></th><td><pre>- Track order.</pre></td></tr>
+<tr id="L322"><th><a href="#L322">322</a></th><td><pre>- Track selection.</pre></td></tr>
+<tr id="L323"><th><a href="#L323">323</a></th><td><pre>- Track lock state.</pre></td></tr>
+<tr id="L324"><th><a href="#L324">324</a></th><td><pre>- Deleted-row status.</pre></td></tr>
+<tr id="L325"><th><a href="#L325">325</a></th><td><pre>- Album, album artist, title, date, genre, composer, location, description,</pre></td></tr>
+<tr id="L326"><th><a href="#L326">326</a></th><td><pre>  comment, compilation, and picture data.</pre></td></tr>
+<tr id="L327"><th><a href="#L327">327</a></th><td><pre>- Existing save scope and save payload semantics.</pre></td></tr>
+<tr id="L328"><th><a href="#L328">328</a></th><td><pre>- Existing `TrackCountKeyStrategy` behavior on write.</pre></td></tr>
+<tr id="L329"><th><a href="#L329">329</a></th><td><pre></pre></td></tr>
+<tr id="L330"><th><a href="#L330">330</a></th><td><pre>### Data Replaced</pre></td></tr>
+<tr id="L331"><th><a href="#L331">331</a></th><td><pre></pre></td></tr>
+<tr id="L332"><th><a href="#L332">332</a></th><td><pre>- For affected non-deleted unlocked tracks, current editor total-track value is</pre></td></tr>
+<tr id="L333"><th><a href="#L333">333</a></th><td><pre>  replaced with calculated value.</pre></td></tr>
+<tr id="L334"><th><a href="#L334">334</a></th><td><pre>- Existing editor `TOTALTRACKS` / `TRACKTOTAL` alias pair is normalized through</pre></td></tr>
+<tr id="L335"><th><a href="#L335">335</a></th><td><pre>  existing `Track.totalTracks` setter.</pre></td></tr>
+<tr id="L336"><th><a href="#L336">336</a></th><td><pre>- On FLAC tag writes, count keys are rewritten according to</pre></td></tr>
+<tr id="L337"><th><a href="#L337">337</a></th><td><pre>  `TrackCountKeyStrategy`.</pre></td></tr>
+<tr id="L338"><th><a href="#L338">338</a></th><td><pre></pre></td></tr>
+<tr id="L339"><th><a href="#L339">339</a></th><td><pre>### Data Removed</pre></td></tr>
+<tr id="L340"><th><a href="#L340">340</a></th><td><pre></pre></td></tr>
+<tr id="L341"><th><a href="#L341">341</a></th><td><pre>- Existing alternate total-track alias values may be removed from the editor</pre></td></tr>
+<tr id="L342"><th><a href="#L342">342</a></th><td><pre>  model by the existing `Track.totalTracks` setter.</pre></td></tr>
+<tr id="L343"><th><a href="#L343">343</a></th><td><pre>- When `TrackCountKeyStrategy` is `.none`, saved FLAC tags omit total-track</pre></td></tr>
+<tr id="L344"><th><a href="#L344">344</a></th><td><pre>  keys as they do today.</pre></td></tr>
+<tr id="L345"><th><a href="#L345">345</a></th><td><pre></pre></td></tr>
+<tr id="L346"><th><a href="#L346">346</a></th><td><pre>### Partial Save Behavior</pre></td></tr>
+<tr id="L347"><th><a href="#L347">347</a></th><td><pre></pre></td></tr>
+<tr id="L348"><th><a href="#L348">348</a></th><td><pre>- `Tags` and `Tags &amp; Pictures` saves can persist new total-track values.</pre></td></tr>
+<tr id="L349"><th><a href="#L349">349</a></th><td><pre>- `Pictures` saves do not persist total-track changes.</pre></td></tr>
+<tr id="L350"><th><a href="#L350">350</a></th><td><pre>- Manual menu mutation can create pending tag edits even before save.</pre></td></tr>
+<tr id="L351"><th><a href="#L351">351</a></th><td><pre>- Automatic mutation can create pending tag edits when active setting changes</pre></td></tr>
+<tr id="L352"><th><a href="#L352">352</a></th><td><pre>  or track/disc composition changes.</pre></td></tr>
+<tr id="L353"><th><a href="#L353">353</a></th><td><pre></pre></td></tr>
+<tr id="L354"><th><a href="#L354">354</a></th><td><pre>### Selection Semantics</pre></td></tr>
+<tr id="L355"><th><a href="#L355">355</a></th><td><pre></pre></td></tr>
+<tr id="L356"><th><a href="#L356">356</a></th><td><pre>- Existing `Set Track Total` and new `Set Track Total by Disc` are table-wide</pre></td></tr>
+<tr id="L357"><th><a href="#L357">357</a></th><td><pre>  commands scoped to the focused key editor window.</pre></td></tr>
+<tr id="L358"><th><a href="#L358">358</a></th><td><pre>- Selected rows are not the source of truth for either command.</pre></td></tr>
+<tr id="L359"><th><a href="#L359">359</a></th><td><pre></pre></td></tr>
+<tr id="L360"><th><a href="#L360">360</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L361"><th><a href="#L361">361</a></th><td><pre></pre></td></tr>
+<tr id="L362"><th><a href="#L362">362</a></th><td><pre>### Product / Behavior Risks</pre></td></tr>
+<tr id="L363"><th><a href="#L363">363</a></th><td><pre></pre></td></tr>
+<tr id="L364"><th><a href="#L364">364</a></th><td><pre>- Missing, blank, zero, or non-numeric disc numbers are invalid for by-disc</pre></td></tr>
+<tr id="L365"><th><a href="#L365">365</a></th><td><pre>  counting and must be consistently ignored by mutation, mismatch, and title</pre></td></tr>
+<tr id="L366"><th><a href="#L366">366</a></th><td><pre>  helpers.</pre></td></tr>
+<tr id="L367"><th><a href="#L367">367</a></th><td><pre>- Gaps in disc numbers must show zero placeholders without creating any track</pre></td></tr>
+<tr id="L368"><th><a href="#L368">368</a></th><td><pre>  mutations for missing discs.</pre></td></tr>
+<tr id="L369"><th><a href="#L369">369</a></th><td><pre>- Locked tracks count toward disc totals but remain unchanged,</pre></td></tr>
+<tr id="L370"><th><a href="#L370">370</a></th><td><pre>  matching current total-track behavior.</pre></td></tr>
+<tr id="L371"><th><a href="#L371">371</a></th><td><pre>- Deleted rows are excluded from counts and updates, matching</pre></td></tr>
+<tr id="L372"><th><a href="#L372">372</a></th><td><pre>  current total-track behavior.</pre></td></tr>
+<tr id="L373"><th><a href="#L373">373</a></th><td><pre>- Auto-update by disc must react to disc-number edits, not only row-count</pre></td></tr>
+<tr id="L374"><th><a href="#L374">374</a></th><td><pre>  changes.</pre></td></tr>
+<tr id="L375"><th><a href="#L375">375</a></th><td><pre>- If by-disc mode writes different totals per disc, selected multi-disc rows</pre></td></tr>
+<tr id="L376"><th><a href="#L376">376</a></th><td><pre>  will intentionally show mixed total-track values.</pre></td></tr>
+<tr id="L377"><th><a href="#L377">377</a></th><td><pre></pre></td></tr>
+<tr id="L378"><th><a href="#L378">378</a></th><td><pre>### Tooling / Environment Risks</pre></td></tr>
+<tr id="L379"><th><a href="#L379">379</a></th><td><pre></pre></td></tr>
+<tr id="L380"><th><a href="#L380">380</a></th><td><pre>- SwiftUI command menu state flows through `FocusedValues`, which is better</pre></td></tr>
+<tr id="L381"><th><a href="#L381">381</a></th><td><pre>  covered by focused source/order checks plus small ViewInspector seams than by</pre></td></tr>
+<tr id="L382"><th><a href="#L382">382</a></th><td><pre>  broad UI automation.</pre></td></tr>
+<tr id="L383"><th><a href="#L383">383</a></th><td><pre>- ViewInspector support for `Table` and command menus is limited.</pre></td></tr>
+<tr id="L384"><th><a href="#L384">384</a></th><td><pre>- Full UI suite may be slow and brittle; prefer targeted tests.</pre></td></tr>
+<tr id="L385"><th><a href="#L385">385</a></th><td><pre>- FLAC writeback tests must mutate copied fixtures only.</pre></td></tr>
+<tr id="L386"><th><a href="#L386">386</a></th><td><pre></pre></td></tr>
+<tr id="L387"><th><a href="#L387">387</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L388"><th><a href="#L388">388</a></th><td><pre></pre></td></tr>
+<tr id="L389"><th><a href="#L389">389</a></th><td><pre>### Unit Tests</pre></td></tr>
+<tr id="L390"><th><a href="#L390">390</a></th><td><pre></pre></td></tr>
+<tr id="L391"><th><a href="#L391">391</a></th><td><pre>Add or update `SwiftTagTests/SwiftTagTests.swift`:</pre></td></tr>
+<tr id="L392"><th><a href="#L392">392</a></th><td><pre></pre></td></tr>
+<tr id="L393"><th><a href="#L393">393</a></th><td><pre>- defaults include `autoUpdateTrackTotalByDisc == false`.</pre></td></tr>
+<tr id="L394"><th><a href="#L394">394</a></th><td><pre>- per-disc count helper returns ordered counts for disc groups.</pre></td></tr>
+<tr id="L395"><th><a href="#L395">395</a></th><td><pre>- `setTrackTotalToCurrentDiscCounts()`:</pre></td></tr>
+<tr id="L396"><th><a href="#L396">396</a></th><td><pre>  - counts non-deleted tracks per disc.</pre></td></tr>
+<tr id="L397"><th><a href="#L397">397</a></th><td><pre>  - excludes missing, blank, zero, and non-numeric disc numbers.</pre></td></tr>
+<tr id="L398"><th><a href="#L398">398</a></th><td><pre>  - includes locked tracks in counts.</pre></td></tr>
+<tr id="L399"><th><a href="#L399">399</a></th><td><pre>  - skips locked tracks on mutation.</pre></td></tr>
+<tr id="L400"><th><a href="#L400">400</a></th><td><pre>  - skips deleted tracks in counts and mutation.</pre></td></tr>
+<tr id="L401"><th><a href="#L401">401</a></th><td><pre>  - leaves invalid-disc tracks unchanged.</pre></td></tr>
+<tr id="L402"><th><a href="#L402">402</a></th><td><pre>- menu suffix helper formats `(10,0,5)` when disc 2 has no tracks.</pre></td></tr>
+<tr id="L403"><th><a href="#L403">403</a></th><td><pre>- table-count mismatch behavior remains current when by-disc mode is false.</pre></td></tr>
+<tr id="L404"><th><a href="#L404">404</a></th><td><pre>- by-disc mismatch behavior accepts per-disc totals and rejects table totals</pre></td></tr>
+<tr id="L405"><th><a href="#L405">405</a></th><td><pre>  when they differ.</pre></td></tr>
+<tr id="L406"><th><a href="#L406">406</a></th><td><pre>- by-disc mismatch behavior ignores invalid-disc tracks.</pre></td></tr>
+<tr id="L407"><th><a href="#L407">407</a></th><td><pre>- editor difference counts reflect by-disc calculated values after manual</pre></td></tr>
+<tr id="L408"><th><a href="#L408">408</a></th><td><pre>  mutation.</pre></td></tr>
+<tr id="L409"><th><a href="#L409">409</a></th><td><pre></pre></td></tr>
+<tr id="L410"><th><a href="#L410">410</a></th><td><pre>### ViewInspector / Source Tests</pre></td></tr>
+<tr id="L411"><th><a href="#L411">411</a></th><td><pre></pre></td></tr>
+<tr id="L412"><th><a href="#L412">412</a></th><td><pre>Update `SwiftTagTests/TrackStatusViewInspectorTests.swift`:</pre></td></tr>
+<tr id="L413"><th><a href="#L413">413</a></th><td><pre></pre></td></tr>
+<tr id="L414"><th><a href="#L414">414</a></th><td><pre>- `TagWriteSettingsView` source or inspected tree includes</pre></td></tr>
+<tr id="L415"><th><a href="#L415">415</a></th><td><pre>  `Auto update Track Total by Disc`.</pre></td></tr>
+<tr id="L416"><th><a href="#L416">416</a></th><td><pre>- Toggle accessibility identifier is present.</pre></td></tr>
+<tr id="L417"><th><a href="#L417">417</a></th><td><pre>- Toggle appears after `Auto update Track Total`.</pre></td></tr>
+<tr id="L418"><th><a href="#L418">418</a></th><td><pre>- `SwiftTagApp` source has `Set Track Total by Disc` menu wiring after</pre></td></tr>
+<tr id="L419"><th><a href="#L419">419</a></th><td><pre>  existing `Set Track Total`.</pre></td></tr>
+<tr id="L420"><th><a href="#L420">420</a></th><td><pre>- `TagEditorTrackFileView` source has `Set Track Total by Disc` context-menu</pre></td></tr>
+<tr id="L421"><th><a href="#L421">421</a></th><td><pre>  wiring after existing `Set Track Total`.</pre></td></tr>
+<tr id="L422"><th><a href="#L422">422</a></th><td><pre>- `TagEditorCoreTagsView` source has `Set Track Total by Disc` context-menu</pre></td></tr>
+<tr id="L423"><th><a href="#L423">423</a></th><td><pre>  wiring after existing `Set Track Total`.</pre></td></tr>
+<tr id="L424"><th><a href="#L424">424</a></th><td><pre>- Existing helper initializers are updated if view signatures gain new inputs.</pre></td></tr>
+<tr id="L425"><th><a href="#L425">425</a></th><td><pre></pre></td></tr>
+<tr id="L426"><th><a href="#L426">426</a></th><td><pre>### AppleScript Tests</pre></td></tr>
+<tr id="L427"><th><a href="#L427">427</a></th><td><pre></pre></td></tr>
+<tr id="L428"><th><a href="#L428">428</a></th><td><pre>- Update settings read/write tests in `SwiftTagAppleScriptTests`.</pre></td></tr>
+<tr id="L429"><th><a href="#L429">429</a></th><td><pre>- Add new setting key to reset/default test helpers.</pre></td></tr>
+<tr id="L430"><th><a href="#L430">430</a></th><td><pre>- Update sdef terminology checks if present.</pre></td></tr>
+<tr id="L431"><th><a href="#L431">431</a></th><td><pre></pre></td></tr>
+<tr id="L432"><th><a href="#L432">432</a></th><td><pre>### Documentation Tests</pre></td></tr>
+<tr id="L433"><th><a href="#L433">433</a></th><td><pre></pre></td></tr>
+<tr id="L434"><th><a href="#L434">434</a></th><td><pre>- Update `SwiftTagHelpDocumentationTests` if navigation, expected paths, or</pre></td></tr>
+<tr id="L435"><th><a href="#L435">435</a></th><td><pre>  generated help assumptions change.</pre></td></tr>
+<tr id="L436"><th><a href="#L436">436</a></th><td><pre>- Add lightweight source/link checks if documentation pages gain new anchors or</pre></td></tr>
+<tr id="L437"><th><a href="#L437">437</a></th><td><pre>  cross-page links.</pre></td></tr>
+<tr id="L438"><th><a href="#L438">438</a></th><td><pre></pre></td></tr>
+<tr id="L439"><th><a href="#L439">439</a></th><td><pre>### Optional FLAC Fixture Test</pre></td></tr>
+<tr id="L440"><th><a href="#L440">440</a></th><td><pre></pre></td></tr>
+<tr id="L441"><th><a href="#L441">441</a></th><td><pre>Use copied `SwiftTagTestFiles/test-with_padding.flac` only if mapper/unit tests</pre></td></tr>
+<tr id="L442"><th><a href="#L442">442</a></th><td><pre>do not cover enough writeback confidence:</pre></td></tr>
+<tr id="L443"><th><a href="#L443">443</a></th><td><pre></pre></td></tr>
+<tr id="L444"><th><a href="#L444">444</a></th><td><pre>- import/copy fixture into temp directory.</pre></td></tr>
+<tr id="L445"><th><a href="#L445">445</a></th><td><pre>- apply by-disc totals to editor model.</pre></td></tr>
+<tr id="L446"><th><a href="#L446">446</a></th><td><pre>- save tags only.</pre></td></tr>
+<tr id="L447"><th><a href="#L447">447</a></th><td><pre>- read metadata back and verify per-disc total-track value.</pre></td></tr>
+<tr id="L448"><th><a href="#L448">448</a></th><td><pre></pre></td></tr>
+<tr id="L449"><th><a href="#L449">449</a></th><td><pre>Prefer not adding this unless pure unit coverage leaves a gap.</pre></td></tr>
+<tr id="L450"><th><a href="#L450">450</a></th><td><pre></pre></td></tr>
+<tr id="L451"><th><a href="#L451">451</a></th><td><pre>## Verification Strategy</pre></td></tr>
+<tr id="L452"><th><a href="#L452">452</a></th><td><pre></pre></td></tr>
+<tr id="L453"><th><a href="#L453">453</a></th><td><pre>Use Xcode MCP tools where available:</pre></td></tr>
+<tr id="L454"><th><a href="#L454">454</a></th><td><pre></pre></td></tr>
+<tr id="L455"><th><a href="#L455">455</a></th><td><pre>1. `XcodeRefreshCodeIssuesInFile` for edited Swift files.</pre></td></tr>
+<tr id="L456"><th><a href="#L456">456</a></th><td><pre>2. `BuildProject`.</pre></td></tr>
+<tr id="L457"><th><a href="#L457">457</a></th><td><pre>3. `RunSomeTests` for:</pre></td></tr>
+<tr id="L458"><th><a href="#L458">458</a></th><td><pre>   - `SwiftTagTests/SwiftTagTests`</pre></td></tr>
+<tr id="L459"><th><a href="#L459">459</a></th><td><pre>   - `SwiftTagTests/TrackStatusViewInspectorTests`</pre></td></tr>
+<tr id="L460"><th><a href="#L460">460</a></th><td><pre>   - `SwiftTagTests/SwiftTagAppleScriptTests`</pre></td></tr>
+<tr id="L461"><th><a href="#L461">461</a></th><td><pre>   - `SwiftTagTests/SwiftTagHelpDocumentationTests`</pre></td></tr>
+<tr id="L462"><th><a href="#L462">462</a></th><td><pre>4. Avoid full UI suite unless targeted coverage exposes a command-routing gap.</pre></td></tr>
+<tr id="L463"><th><a href="#L463">463</a></th><td><pre></pre></td></tr>
+<tr id="L464"><th><a href="#L464">464</a></th><td><pre>Fallback shell commands, only if MCP unavailable:</pre></td></tr>
+<tr id="L465"><th><a href="#L465">465</a></th><td><pre></pre></td></tr>
+<tr id="L466"><th><a href="#L466">466</a></th><td><pre>```sh</pre></td></tr>
+<tr id="L467"><th><a href="#L467">467</a></th><td><pre>xcodebuild -scheme SwiftTag build</pre></td></tr>
+<tr id="L468"><th><a href="#L468">468</a></th><td><pre>xcodebuild -scheme SwiftTag -destination &#x27;platform=macOS&#x27; test -only-testing:SwiftTagTests/SwiftTagTests</pre></td></tr>
+<tr id="L469"><th><a href="#L469">469</a></th><td><pre>xcodebuild -scheme SwiftTag -destination &#x27;platform=macOS&#x27; test -only-testing:SwiftTagTests/TrackStatusViewInspectorTests</pre></td></tr>
+<tr id="L470"><th><a href="#L470">470</a></th><td><pre>```</pre></td></tr>
+<tr id="L471"><th><a href="#L471">471</a></th><td><pre></pre></td></tr>
+<tr id="L472"><th><a href="#L472">472</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L473"><th><a href="#L473">473</a></th><td><pre></pre></td></tr>
+<tr id="L474"><th><a href="#L474">474</a></th><td><pre>- Settings &gt; Tags shows `Auto update Track Total by Disc` immediately after</pre></td></tr>
+<tr id="L475"><th><a href="#L475">475</a></th><td><pre>  `Auto update Track Total`.</pre></td></tr>
+<tr id="L476"><th><a href="#L476">476</a></th><td><pre>- New setting persists through `@AppStorage`.</pre></td></tr>
+<tr id="L477"><th><a href="#L477">477</a></th><td><pre>- Default value is off.</pre></td></tr>
+<tr id="L478"><th><a href="#L478">478</a></th><td><pre>- With auto update on and by-disc off, existing table-count behavior remains.</pre></td></tr>
+<tr id="L479"><th><a href="#L479">479</a></th><td><pre>- With auto update on and by-disc on, total-track values are calculated per</pre></td></tr>
+<tr id="L480"><th><a href="#L480">480</a></th><td><pre>  disc.</pre></td></tr>
+<tr id="L481"><th><a href="#L481">481</a></th><td><pre>- Tracks with missing, blank, zero, or non-numeric disc numbers keep their</pre></td></tr>
+<tr id="L482"><th><a href="#L482">482</a></th><td><pre>  existing total-track values.</pre></td></tr>
+<tr id="L483"><th><a href="#L483">483</a></th><td><pre>- `File` menu shows `Set Track Total by Disc (...)` after `Set Track Total`.</pre></td></tr>
+<tr id="L484"><th><a href="#L484">484</a></th><td><pre>- Track-table context menu shows `Set Track Total by Disc (...)` after</pre></td></tr>
+<tr id="L485"><th><a href="#L485">485</a></th><td><pre>  `Set Track Total`.</pre></td></tr>
+<tr id="L486"><th><a href="#L486">486</a></th><td><pre>- Total-track field context menu shows `Set Track Total by Disc (...)` after</pre></td></tr>
+<tr id="L487"><th><a href="#L487">487</a></th><td><pre>  `Set Track Total`.</pre></td></tr>
+<tr id="L488"><th><a href="#L488">488</a></th><td><pre>- Menu title displays ordered per-disc counts with zero placeholders for gaps,</pre></td></tr>
+<tr id="L489"><th><a href="#L489">489</a></th><td><pre>  for example `(10,0,5)`.</pre></td></tr>
+<tr id="L490"><th><a href="#L490">490</a></th><td><pre>- Menu command applies to focused key editor window.</pre></td></tr>
+<tr id="L491"><th><a href="#L491">491</a></th><td><pre>- Menu command obeys same enablement rules as `Set Track Total`.</pre></td></tr>
+<tr id="L492"><th><a href="#L492">492</a></th><td><pre>- AppleScript can read and write `auto update track total by disc`.</pre></td></tr>
+<tr id="L493"><th><a href="#L493">493</a></th><td><pre>- User Documentation HTML describes the setting, per-disc behavior, menu/context</pre></td></tr>
+<tr id="L494"><th><a href="#L494">494</a></th><td><pre>  commands, and AppleScript property where appropriate.</pre></td></tr>
+<tr id="L495"><th><a href="#L495">495</a></th><td><pre>- Documentation links and help tests remain valid.</pre></td></tr>
+<tr id="L496"><th><a href="#L496">496</a></th><td><pre>- Diff formatting and mismatch warning use active expected total-track mode.</pre></td></tr>
+<tr id="L497"><th><a href="#L497">497</a></th><td><pre>- Targeted tests pass.</pre></td></tr>
+<tr id="L498"><th><a href="#L498">498</a></th><td><pre>- Project builds.</pre></td></tr>
+<tr id="L499"><th><a href="#L499">499</a></th><td><pre></pre></td></tr>
+<tr id="L500"><th><a href="#L500">500</a></th><td><pre>## Open Questions Before Implementation</pre></td></tr>
+<tr id="L501"><th><a href="#L501">501</a></th><td><pre></pre></td></tr>
+<tr id="L502"><th><a href="#L502">502</a></th><td><pre>None.</pre></td></tr></table></main></body></html>

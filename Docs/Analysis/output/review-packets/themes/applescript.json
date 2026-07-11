@@ -1,0 +1,1395 @@
+{
+  "aliases": [
+    "applescript",
+    "Apple Script",
+    "scripting",
+    "automation",
+    "apple event",
+    "Cocoa scripting",
+    "SwiftTag scripting",
+    "SDEF",
+    "SwiftTag.sdef",
+    "osascript"
+  ],
+  "description": "Scripting dictionary, AppleScript classes, commands, enumerations, automation docs, and UI automation harness.",
+  "display_name": "AppleScript",
+  "included_commit_ids": [
+    "0539816b5ba23a6e25ff44d6be08444b0f8dd6c7",
+    "063c138d4ad746588a85c0be70cc1c5c75854e87",
+    "0c2d38575541a8dada750da08698d78e75a4d3f0",
+    "0d268f9dbda719319837ad31711eb87f9f166499",
+    "11ba78598b25840b5e415e7410b8df4b75c964c5",
+    "11e4877420c3dc760f9be803b2734ea34a2031e0",
+    "14a623cc7cae72b22210b2f44a8b8a9d3f09e85f",
+    "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+    "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+    "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+    "1b08404c005806083a5443603d98c10c5510ee70",
+    "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+    "1df3dd0c798507ee9db2c2005d577ac499b3e933",
+    "1fcd08274065e59e148cb05d16e592e98f02bced",
+    "21aacef712ef78c44bd11f0a848276d3125a82a4",
+    "2298c43c00492de67ad920a395d3ec7a8c8fb722",
+    "24428a1548324e06268c9174e358e22e9559801b",
+    "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+    "2781d736d1d22465c49e505f1fdfa9810b4f5107",
+    "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+    "29444d740b06ee147a5690f1070d56abfa8be162",
+    "2976159836a41160b0a462b26c952968c19a7923",
+    "29c8eed7decacebe51ab53c9150e9b5b86cd9f3b",
+    "2aee7213d2467ac765cf2f834b3e8b0a5409064e",
+    "2c3898c5b9fee3c3eefa3367c3219b2f4dbd2974",
+    "2e24923ec49954fa4d4b17f56f3d26c10265a51b",
+    "32d8411d0d981716488a64b235fa1c25240b90ba",
+    "352ff8c562657dc7ed4c0171d4448bdda0bec559",
+    "36c5b18642e6568ca15e897dcae9132a6907e9db",
+    "380be212ade022a481997efbb4051584360a9b92",
+    "3c4cfff64ee127631152a551713977c1ad5a40dd",
+    "3fd6771aa6fbbc5afe81722f5d39ce0c171019cd",
+    "41e60a87d8b66f2a9ba012f5c5d11b525ab7c759",
+    "43b64835145b64f3346d6298de67754019b36df8",
+    "44df34502dee4a2af0a264dfe0047ff8e82be4ab",
+    "452263137775f01b3d4877c28d37aad4dce7884d",
+    "46a24e9e98968ea9d3bfa50853be92e35d857f8e",
+    "477665910577c41766377204a1abfc8cc7f0dd6d",
+    "4a07659704ab091a117b882a027635c12af8294c",
+    "4e470f0885282d2dfa9bcfc38252ea229589132c",
+    "4eca36ce52399ef139926f5430d3cd08ac3c993a",
+    "546e43d639eb9d7eceb46aa966b8a592b187b12c",
+    "561817a4bca220d705273d6744f1e5756cec418f",
+    "575c54bdaeb6d9eda3326eedccc6e2395422094e",
+    "5944288d9bd94e8186dd374b0aec6090ad90fc96",
+    "5b2392f98b7d9b0680edf4fdfb6966ed9a44d9bc",
+    "5c2ab0a3ba722d5fdc139615b6eb55902237162d",
+    "5cf9b48f0411fadf42905537294e7db841c6a628",
+    "603c07621916ecd47e1a9faee08d8c32cd6eebdf",
+    "604d139ad72b08a404092b8812a0130678f53984",
+    "62b9a68e15a34d8c2919c736be910ce3a9eec8e4",
+    "633671ae999d222fba32fde71594440b8b367350",
+    "6811df91487bd977d74d60b43af798e9970e5d69",
+    "68e340f508e0f0f5b0ac2fbbcae259abf6155b6e",
+    "6cf4772cd3482a0a7ca38f2f613ca64a86da22a1",
+    "716c54c01f81ac69fb1c6e5252727cbd5dd10310",
+    "7228297fdfbf05a87af30e5330fdcdd1e908dd84",
+    "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+    "777706cf1432bcd9bbd0ff1d145469d038b76fd3",
+    "77e0dc1182db2bdd7d3a4d09b5c1a7b3b912191b",
+    "78b870c79708a25f71251242e16deec289711c28",
+    "798de55dcbb0a4e26d499cec324224070b108b19",
+    "7a19911399e2e3a8b7ff2d239319a658e793346c",
+    "7c15f6097d77ab2db98c6795b04474308f770536",
+    "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+    "80b722ee0e77887149ebfd307538cac12a5907c3",
+    "82c43c94fe7392a5e5551ef1a311c150006ab0f3",
+    "82db5cd7599e76c1f0c6e8dda5f420865e32f4e7",
+    "83b8764ca1faecb6f984a4cf8703eaad75501f8a",
+    "859a8f570b718d332f3f3814fc621280ae0f077e",
+    "88d09498e62eed6f088450eb0cf1ec3129a7ad34",
+    "893289b52cf06c6f3c02548f549ebc68e4281380",
+    "90ef077070ed157959eed236c4a5edfc023423b8",
+    "92460554b47e6062390266578964fe59fd5af784",
+    "94246bbd4bebc8a284577f2d68b82ff5db235599",
+    "94c83a7fe23cb17431994dd0f02d5f38c321630b",
+    "95957dd6350042cf04715f42d75a708d22bd4af1",
+    "969d6592c5cd201b256d15e2453193b8064126f1",
+    "987ade16137d70327f87ab16fcf3fc874681eba4",
+    "9b05c92e3f87af186de2ebdf43ebe8f297b41572",
+    "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+    "a0438824397c29c96ca6c63b48ef501b5d63dffe",
+    "a3d4895796afa545efc1d3c39379220da2c616f3",
+    "a41be8a2ef85b234f33f4003a47fd3d0117b6e83",
+    "abe9194d5f3d791d34010e12ea51acb0054ae4ce",
+    "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+    "ac6148bb93aa6651ba5884d968f1821e107eef34",
+    "b1c99ff0e11dc7d38d78a51a328115010a433f80",
+    "b4593bad7a73d4737a89fa81f52b0a0c853f2bce",
+    "b70f6625e06280784004190bcabafe04c96086d3",
+    "bae266f0f97e4d7e264cc54628bfaf3cc70a78f7",
+    "bba775b507acd848d8bea0c67609752e0d812194",
+    "bbb83ef00b9fb130f94ada7293ee1f429c6bf755",
+    "bc1eaf01993b5f6ef2cc64eef0f6dd4fe66824de",
+    "bee209c217c6b5fa2c4eaddbddcab99101ee589a",
+    "bf6d257c8a9a96ec6846d3cac38bd49afd54f83a",
+    "c02d65544f4b09ec7b1fa8ca3e5e15204fdd1795",
+    "c1df562489d39bf6608f3053706fc038844b482c",
+    "c2b2356f0f3b1143f444b6e8120567b343d729cc",
+    "c56695645a5579bac37f1f716650754ccc5750a1",
+    "c965c3feb354452704670af683ab541da3c43f71",
+    "ce1865558f2929bb98bcf1450a297244be3fbb06",
+    "ce82bfb0ed6ae71f4fa52b159af692e3b74fe2c7",
+    "cfba5a1a7b93b8e01d1e1b806a8db413e207ae55",
+    "d07df1fefbd553b00635ee882631ee74d12f0530",
+    "d0fca7dec639c9bd9845c8efb59147ccd1016e26",
+    "d2843d58d7c77e0470d1b467eacf8a956665e2c9",
+    "d42524c80ead7c678062531b1a7e72fe58e29d72",
+    "d433bba53b6179aaaf82904aa26a22b18eba3bf0",
+    "d4616ef79d1f5f6f9afe47e139aa7a092e4b3085",
+    "d65459355d32c58116293e4f6cce8a759b6d67f5",
+    "d928e3bb438c8fa266b8700f3d4b2709c72bd7ee",
+    "da7b04f7563351b6c4c0883dbcbc16a5e081336a",
+    "dad9d6e302f63b22f383f5f07d99ec48bade1acc",
+    "e096ded126a62938d4627bd1205b32a0e30c77b0",
+    "e0cd7da70c303f9524054cf6e150d7fbfca3d9d1",
+    "e382ae31861176bf220f87c7e380b5162331e490",
+    "e38ebba60c6454fd14c208d37ffb036038f231da",
+    "e534c8366925af29f7c8f9ab67a908c5d6941650",
+    "ec63010015b0d8b4b08f578fb82c8526ce872cc6",
+    "f195e03db1cd290792f99f8b880bb69995e28921",
+    "f19906905ecd5db8ea9d65fc0a6d80dbd0f798cb",
+    "f23c8a089f6d5549a597e0635ff808b203a25766",
+    "f36a117c021f535e956e2d1722625465cd66b2f3",
+    "f400158d420b3d62590a7863231b3f4fe603006b",
+    "fa93fee5de699542d9c5b51f16ffc9acac505d9c",
+    "fc120558109cc0d36c1bee5ae25bce69d4702311",
+    "fdd51810b0f51c7b8ee798ecfa0eb42453627946"
+  ],
+  "included_plan_ids": [
+    "6",
+    "25",
+    "26"
+  ],
+  "keywords": [
+    "applescript",
+    "script",
+    "scripting",
+    "sdef",
+    "automation",
+    "appleevent",
+    "apple event",
+    "osascript",
+    "tell application",
+    "NSScriptCommand",
+    "SwiftTagAppleScriptSupport",
+    "application class",
+    "editor window",
+    "settings window",
+    "selected tracks",
+    "track sort order",
+    "save scope",
+    "save payload",
+    "make new tag",
+    "make new picture",
+    "picture type",
+    "base64",
+    "record type",
+    "enumeration"
+  ],
+  "positive_and_negative_edges": [
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "2781d736d1d22465c49e505f1fdfa9810b4f5107",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "dad9d6e302f63b22f383f5f07d99ec48bade1acc",
+      "entity_type": "commit",
+      "evidence_source": "keywords: selected tracks",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "6cf4772cd3482a0a7ca38f2f613ca64a86da22a1",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "1fcd08274065e59e148cb05d16e592e98f02bced",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "e382ae31861176bf220f87c7e380b5162331e490",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "c965c3feb354452704670af683ab541da3c43f71",
+      "entity_type": "commit",
+      "evidence_source": "keywords: selected tracks",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "9fea9987c80b7709896d6a46e750b0a0c7925c30",
+      "entity_type": "commit",
+      "evidence_source": "explicit negative Theme edge",
+      "relationship_type": "exclude",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "f400158d420b3d62590a7863231b3f4fe603006b",
+      "entity_type": "commit",
+      "evidence_source": "keywords: picture type",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.61,
+      "entity_id": "bae266f0f97e4d7e264cc54628bfaf3cc70a78f7",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script, picture type",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "e031a26f031d038fcc430fb7057600f67102ccbe",
+      "entity_type": "commit",
+      "evidence_source": "explicit negative Theme edge",
+      "relationship_type": "exclude",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.61,
+      "entity_id": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script, editor window",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "fa93fee5de699542d9c5b51f16ffc9acac505d9c",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "e0cd7da70c303f9524054cf6e150d7fbfca3d9d1",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "c56695645a5579bac37f1f716650754ccc5750a1",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "94246bbd4bebc8a284577f2d68b82ff5db235599",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "32d8411d0d981716488a64b235fa1c25240b90ba",
+      "entity_type": "commit",
+      "evidence_source": "keywords: settings window",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "0d268f9dbda719319837ad31711eb87f9f166499",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "b1c99ff0e11dc7d38d78a51a328115010a433f80",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "68e340f508e0f0f5b0ac2fbbcae259abf6155b6e",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.61,
+      "entity_id": "b4593bad7a73d4737a89fa81f52b0a0c853f2bce",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script, settings window",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "f36a117c021f535e956e2d1722625465cd66b2f3",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "2c3898c5b9fee3c3eefa3367c3219b2f4dbd2974",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "ce82bfb0ed6ae71f4fa52b159af692e3b74fe2c7",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "2aee7213d2467ac765cf2f834b3e8b0a5409064e",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "a0438824397c29c96ca6c63b48ef501b5d63dffe",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "bba775b507acd848d8bea0c67609752e0d812194",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "da7b04f7563351b6c4c0883dbcbc16a5e081336a",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "90ef077070ed157959eed236c4a5edfc023423b8",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "bf6d257c8a9a96ec6846d3cac38bd49afd54f83a",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "633671ae999d222fba32fde71594440b8b367350",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "d0fca7dec639c9bd9845c8efb59147ccd1016e26",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "bc1eaf01993b5f6ef2cc64eef0f6dd4fe66824de",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "575c54bdaeb6d9eda3326eedccc6e2395422094e",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "41e60a87d8b66f2a9ba012f5c5d11b525ab7c759",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "a41be8a2ef85b234f33f4003a47fd3d0117b6e83",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "ac6148bb93aa6651ba5884d968f1821e107eef34",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "ec63010015b0d8b4b08f578fb82c8526ce872cc6",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "603c07621916ecd47e1a9faee08d8c32cd6eebdf",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "92460554b47e6062390266578964fe59fd5af784",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "561817a4bca220d705273d6744f1e5756cec418f",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.61,
+      "entity_id": "3c4cfff64ee127631152a551713977c1ad5a40dd",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script, editor window",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "4e470f0885282d2dfa9bcfc38252ea229589132c",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "cfba5a1a7b93b8e01d1e1b806a8db413e207ae55",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "29c8eed7decacebe51ab53c9150e9b5b86cd9f3b",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "78b870c79708a25f71251242e16deec289711c28",
+      "entity_type": "commit",
+      "evidence_source": "keywords: picture type",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "f195e03db1cd290792f99f8b880bb69995e28921",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "b70f6625e06280784004190bcabafe04c96086d3",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.61,
+      "entity_id": "36c5b18642e6568ca15e897dcae9132a6907e9db",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script, save scope",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.61,
+      "entity_id": "4a07659704ab091a117b882a027635c12af8294c",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script, picture type",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "0539816b5ba23a6e25ff44d6be08444b0f8dd6c7",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "352ff8c562657dc7ed4c0171d4448bdda0bec559",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "f23c8a089f6d5549a597e0635ff808b203a25766",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "777706cf1432bcd9bbd0ff1d145469d038b76fd3",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "bee209c217c6b5fa2c4eaddbddcab99101ee589a",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "859a8f570b718d332f3f3814fc621280ae0f077e",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "2298c43c00492de67ad920a395d3ec7a8c8fb722",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "d65459355d32c58116293e4f6cce8a759b6d67f5",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "546e43d639eb9d7eceb46aa966b8a592b187b12c",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "c02d65544f4b09ec7b1fa8ca3e5e15204fdd1795",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "95957dd6350042cf04715f42d75a708d22bd4af1",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "d42524c80ead7c678062531b1a7e72fe58e29d72",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "d433bba53b6179aaaf82904aa26a22b18eba3bf0",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "6811df91487bd977d74d60b43af798e9970e5d69",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "9b05c92e3f87af186de2ebdf43ebe8f297b41572",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "46a24e9e98968ea9d3bfa50853be92e35d857f8e",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "bbb83ef00b9fb130f94ada7293ee1f429c6bf755",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "24428a1548324e06268c9174e358e22e9559801b",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "ce1865558f2929bb98bcf1450a297244be3fbb06",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "987ade16137d70327f87ab16fcf3fc874681eba4",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "83b8764ca1faecb6f984a4cf8703eaad75501f8a",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "1b08404c005806083a5443603d98c10c5510ee70",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "7c15f6097d77ab2db98c6795b04474308f770536",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "d928e3bb438c8fa266b8700f3d4b2709c72bd7ee",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "3fd6771aa6fbbc5afe81722f5d39ce0c171019cd",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "2e24923ec49954fa4d4b17f56f3d26c10265a51b",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "43b64835145b64f3346d6298de67754019b36df8",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "380be212ade022a481997efbb4051584360a9b92",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, sdef, swifttag.sdef",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "fc120558109cc0d36c1bee5ae25bce69d4702311",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "94c83a7fe23cb17431994dd0f02d5f38c321630b",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "77e0dc1182db2bdd7d3a4d09b5c1a7b3b912191b",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "f19906905ecd5db8ea9d65fc0a6d80dbd0f798cb",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "82db5cd7599e76c1f0c6e8dda5f420865e32f4e7",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "2976159836a41160b0a462b26c952968c19a7923",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "452263137775f01b3d4877c28d37aad4dce7884d",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "11e4877420c3dc760f9be803b2734ea34a2031e0",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "82c43c94fe7392a5e5551ef1a311c150006ab0f3",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "c2b2356f0f3b1143f444b6e8120567b343d729cc",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "969d6592c5cd201b256d15e2453193b8064126f1",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "5cf9b48f0411fadf42905537294e7db841c6a628",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "44df34502dee4a2af0a264dfe0047ff8e82be4ab",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "14a623cc7cae72b22210b2f44a8b8a9d3f09e85f",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "5944288d9bd94e8186dd374b0aec6090ad90fc96",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "893289b52cf06c6f3c02548f549ebc68e4281380",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "604d139ad72b08a404092b8812a0130678f53984",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "e096ded126a62938d4627bd1205b32a0e30c77b0",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "c1df562489d39bf6608f3053706fc038844b482c",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "5c2ab0a3ba722d5fdc139615b6eb55902237162d",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "e534c8366925af29f7c8f9ab67a908c5d6941650",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "1df3dd0c798507ee9db2c2005d577ac499b3e933",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "62b9a68e15a34d8c2919c736be910ce3a9eec8e4",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, apple event",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "21aacef712ef78c44bd11f0a848276d3125a82a4",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "a3d4895796afa545efc1d3c39379220da2c616f3",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "7a19911399e2e3a8b7ff2d239319a658e793346c",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "477665910577c41766377204a1abfc8cc7f0dd6d",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "4eca36ce52399ef139926f5430d3cd08ac3c993a",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "716c54c01f81ac69fb1c6e5252727cbd5dd10310",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "d07df1fefbd553b00635ee882631ee74d12f0530",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "5b2392f98b7d9b0680edf4fdfb6966ed9a44d9bc",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "d4616ef79d1f5f6f9afe47e139aa7a092e4b3085",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "798de55dcbb0a4e26d499cec324224070b108b19",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "abe9194d5f3d791d34010e12ea51acb0054ae4ce",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "fdd51810b0f51c7b8ee798ecfa0eb42453627946",
+      "entity_type": "commit",
+      "evidence_source": "explicit Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "d2843d58d7c77e0470d1b467eacf8a956665e2c9",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation, sdef, swifttag.sdef",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "7228297fdfbf05a87af30e5330fdcdd1e908dd84",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation, sdef, swifttag.sdef",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "88d09498e62eed6f088450eb0cf1ec3129a7ad34",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript, automation, sdef, swifttag.sdef",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.53,
+      "entity_id": "29444d740b06ee147a5690f1070d56abfa8be162",
+      "entity_type": "commit",
+      "evidence_source": "keywords: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.9,
+      "entity_id": "e38ebba60c6454fd14c208d37ffb036038f231da",
+      "entity_type": "commit",
+      "evidence_source": "alias: applescript",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.75,
+      "entity_id": "6",
+      "entity_type": "plan",
+      "evidence_source": "Plan topic: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 0.75,
+      "entity_id": "25",
+      "entity_type": "plan",
+      "evidence_source": "Plan topic: script",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "26",
+      "entity_type": "plan",
+      "evidence_source": "explicit Plan Theme include",
+      "relationship_type": "include",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "docs-userdocumentation-automation-applescript-html",
+      "entity_type": "documentation",
+      "evidence_source": "configured documentation path",
+      "relationship_type": "documentation",
+      "theme_id": "applescript"
+    },
+    {
+      "allocation_weight": 0.0,
+      "confidence": 1.0,
+      "entity_id": "docs-userdocumentation-examples-re-tag-with-applescript-html",
+      "entity_type": "documentation",
+      "evidence_source": "configured documentation path",
+      "relationship_type": "documentation",
+      "theme_id": "applescript"
+    }
+  ],
+  "theme_id": "applescript"
+}

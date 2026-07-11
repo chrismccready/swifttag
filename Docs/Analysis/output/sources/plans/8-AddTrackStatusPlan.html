@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 8-AddTrackStatusPlan</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 8-AddTrackStatusPlan</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/8-AddTrackStatusPlan.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add Track Status Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Add a leftmost `Status` column to the tracks table that displays a square status icon for each loaded track file, backed by file-change monitoring and editor-vs-file difference detection, so the Tag Editor can show track state accurately and gate save behavior accordingly, including a read-only load mode.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Add a new `Status` table column to the track list in `TagEditorTrackFileView`.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Position the new column as the leftmost column in the tracks table.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Size the column so its width matches the rendered row height, allowing a square icon per row.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Show a status icon only for rows backed by an associated track file.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Add hover help for the status icon based on per-track status state.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Monitor loaded track files for macOS file-system changes that affect status.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Detect editor-vs-file differences for tags and pictures separately.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Gate `Save`, `Save Tags...`, and `Save Pictures...` availability based on the relevant difference state and read-only mode.</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Add a read-only FLAC load path and propagate read-only behavior through the editor UI.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Define the status/data contracts needed so the table, save commands, and file-monitoring logic share one source of truth.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Add targeted tests for status visibility, difference-state mapping, save gating, and read-only behavior.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre></pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Changing FLAC write semantics beyond save enablement rules.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Adding status icons to views outside the tracks table.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- Adding non-icon status text into the table cells.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Implementing conflict resolution or merge UI after file changes are detected.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Adding background directory-wide file watching beyond the currently loaded track files.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre></pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- Loaded track files should be monitored for macOS file changes, primarily to determine per-track status and the icon shown in the `Status` column.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- The implementation should most likely use `DispatchSourceFileSystemObject` to observe file modification, delete, and rename events for loaded track files.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- Unless later design instructions change it, the default status icon is `fish.fill`.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- When the Tag Editor contains user-made tag or picture differences relative to the source file, the status icon is `fish`.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- When macOS-side file changes create differences between the editor state and the source file, the status icon is `exclamationmark.triangle`.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- When a track/editor session is loaded read-only, the status icon is `lock.fill`.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- `Save Tags...` is unavailable when there are no editor/file differences in tags.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- `Save Pictures...` is unavailable when there are no editor/file differences in pictures.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- `Save` via Command-S is unavailable when there are no editor/file differences relevant to the current save settings and selected payload behavior.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- The File menu should add `Load FLAC files (read-only)...` after `Load FLAC files...` with shortcut Shift-Command-L.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- In read-only mode, editable fields are disabled, album image wells are disabled, and save/write operations are not allowed.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- Rows without an associated track file should render a fully blank status cell.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- The status column can start without an explicit fixed width or height rule; initial implementation should rely on the system image drawing/containment behavior and refine sizing later only if needed.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- The status column should intentionally use no header text (empty string) instead of `Status`.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- When a macOS file change is detected, the app should immediately re-read the file to classify the resulting differences.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- If a loaded file has been deleted, the corresponding filename text in the tracks table should render strikethrough and red.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- If one or more tags differ from the file after a macOS-side change, the associated editor field text should render italic and red.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- If the track title differs from the file, the track title text for that track row should render italic and red.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- If pictures differ from the file, a red overlay should be drawn in the album-art image well.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- Status-icon hover help for macOS-side differences should list the differences as newline-separated `tag: value` entries, where `value` is the current file value.</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- Mixed writable and read-only tracks in one editor window should be supported.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- The tracks table should keep the current lock labels: `Lock Selected Track` / `Lock Selected Tracks`, `Unlock Selected Track` / `Unlock Selected Tracks`, and `Toggle Selected Tracks Lock` for mixed locked/unlocked selections.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- Activating that context-menu item flips the lock state of each selected row.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- The lock/unlock action should use shortcut Control-L.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- When a locked row is unlocked, its icon returns to the appropriate non-locked status icon.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- When a row is locked, `lock.fill` replaces its current status icon.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- Locked rows are disabled, but the lock icon for a locked row remains enabled except during save operations.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre></pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- The tracks table currently lives in [TagEditorTrackFileView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift) and only renders `Title` and `Filename` columns today.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- `TagEditorView` passes only `trackItems`, selection, and title bindings into the track table, so any status UI will require additional per-track status data or a closure-based lookup passed down from [TagEditorView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorView.swift).</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- The current `Track` model in [Track.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Shared/Models/Track.swift) exposes `sourceFileURL`, which is the current reliable indicator of whether a row has an associated track file.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- Save command availability is currently driven in [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift) by `canSave(payload:)`, which today checks only whether the selected scope has imported FLAC tracks. The new status/difference rules must replace or extend that gating.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- The menu commands are currently defined in [SwiftTagApp.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/SwiftTagApp.swift), so adding a read-only load command and refining save enablement requires command-layer integration as well as editor-state integration.</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- The editor already has a broad `.disabled(isSaveOperationRunning)` path in [TagEditorView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorView.swift). Read-only mode needs to coexist cleanly with save-in-progress disabling without obscuring the source of truth.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- The current editor layout assumes broad view-level enable/disable behavior in places. Supporting mixed locked and unlocked rows in one window means disabling likely needs to move to row-scoped and field-scoped conditions instead of a single editor-wide read-only flag.</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- File monitoring must work with security-scoped file access and file URLs that were originally imported through the existing FLAC import flow.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- `DispatchSourceFileSystemObject` monitoring works from open file descriptors. The implementation must manage descriptor lifecycle carefully so per-track watchers are created, updated, and torn down with the loaded session instead of leaking across editor windows.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- The latest design decision defers explicit row-height sizing work for now. The initial table-column implementation should rely on the system icon’s natural containment and revisit exact sizing only if rendering proves unacceptable.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- Hover help should exist only when an icon exists, which means rows without an associated file should not expose misleading blank-cell help text.</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- Difference tracking needs to distinguish tags from pictures so save-command enablement can reflect the chosen payload correctly.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- Read-only load mode must preserve import/read behavior while preventing subsequent writes, including keyboard shortcuts and menu-triggered save flows.</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>- Immediate file re-read after a watcher event means the app needs a reliable mapping from file values back to editor fields so red/italic difference styling can be applied to the correct controls.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- Per-track lock state and per-track external-difference state can overlap in one window, so precedence rules for icon choice, field disablement, and context-menu labeling need to be centralized.</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre></pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre></pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>### Product Or Behavioral Risks</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- If status state is inferred only from whether a title field changed, the column will drift from the required source of truth for tag differences, picture differences, macOS file changes, and read-only state.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- If rows without `sourceFileURL` still reserve visible icon affordances or help text, the table will imply file-backed state that does not exist.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- If the status-column width is chosen independently from row height, icons can render non-square or appear visually off-center relative to the row.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- If tag differences and picture differences are collapsed into one boolean too early, `Save Tags...`, `Save Pictures...`, and `Save` cannot be enabled correctly.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- If external file changes are not re-read or reconciled carefully, the app can show `exclamationmark.triangle` without a reliable basis for whether tags, pictures, or both diverged.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- If read-only mode is treated as only a UI disable flag, write commands may still remain reachable through menu items or keyboard shortcuts.</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>- If mixed locked and unlocked rows are not handled per row, locking one track could incorrectly disable unrelated editable tracks in the same editor window.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- If file-difference styling is applied only at a coarse editor level, users will not be able to see which specific tags, titles, filenames, or pictures diverged.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre></pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>### Tooling, Environment, Or Filesystem Risks</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- SwiftUI `Table` behavior on macOS can make exact row metrics awkward to verify through unit tests alone, so some sizing verification may need compile-time inspection plus lightweight manual/UI confirmation.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- UI test assertions on hover help are often more brittle than view-model or helper tests; most automated coverage should live in status-mapping helpers rather than pointer-driven UI automation.</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- File-system event delivery can be noisy or incomplete across rename/delete/update combinations, so watcher logic should treat events as invalidation signals and re-evaluate track state rather than assuming one event maps to one exact status.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- Security-scoped bookmarks and file-descriptor-backed watchers can be awkward to exercise in tests, so monitoring coverage will likely rely on helper abstractions and copied fixtures rather than direct end-to-end sandbox assertions.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre></pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>### 1. Define the track-status and difference-state model</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- Introduce a dedicated per-track status model that can represent at least:</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>  - default synced/file-backed state</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>  - user-made differences between editor and file</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>  - macOS-side file changes that invalidate the editor/file match</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>  - locked/read-only state</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>  - no-associated-file state</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- Represent tag differences and picture differences separately so command enablement can answer:</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>  - are there tag changes to write?</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>  - are there picture changes to write?</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>  - does the currently configured general save action have anything to write?</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>- Model per-track lock state independently so one editor window can contain both locked and unlocked rows.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>- Define precedence rules for presentation and behavior when a track is both locked and externally different:</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>  - icon shown</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>  - whether the row is editable</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>  - whether difference styling remains visible</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- Introduce a UI-facing `TrackStatusPresentation` or equivalent mapping payload that centralizes:</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>  - icon identity</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>  - hover/help string</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>  - accessibility label if useful</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- Encode the confirmed icon mapping:</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>  - default: `fish.fill`</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>  - user differences: `fish`</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>  - macOS file differences: `exclamationmark.triangle`</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>  - read-only: `lock.fill`</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- Encode the rule that rows without an associated track file return no status icon or help.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre></pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>### 2. Add file monitoring for loaded track files</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- Add a file-monitoring layer for currently loaded track files, most likely using `DispatchSourceFileSystemObject`.</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- Observe at least modification, delete, and rename events for each loaded file.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- Scope monitoring to the currently loaded editor session and tear it down when tracks change, windows close, or sessions reload.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- Treat file-system events as signals to immediately re-read the affected file and refresh track/file comparison state.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- Ensure the monitoring layer can operate with the file-access model already used for imported FLAC files, including security-scoped access where needed.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Classify at least these outcomes after re-read:</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>  - file deleted</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>  - tag differences</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>  - title difference</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>  - picture differences</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- Preserve the latest file-side values needed for hover help and difference styling.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre></pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>### 3. Add the leftmost status-icon column</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- Update [TagEditorTrackFileView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift) to insert a new leftmost status `TableColumn` before `Title`, with an intentionally empty header string.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- Render a square icon cell for rows whose status presentation is non-`nil`.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Keep the cell visually minimal so the column functions as a status indicator rather than a secondary content column.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Preserve existing title editing and filename display behavior.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre></pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>### 4. Make the status cell square to the row</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>- Start with a simple system-image cell without explicit width or height constraints.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>- Verify that the icon renders cleanly and remains visually contained within the row.</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>- If the natural layout proves insufficient, follow up by introducing a shared sizing rule in implementation rather than blocking the first version on exact square metrics.</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre></pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>### 5. Thread status data and read-only state through the editor stack</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>- Update [TagEditorView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorView.swift) to pass a status-presentation lookup into the track table.</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>- Add the corresponding status, difference, and read-only lookup points in [TagEditorViewModel.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift) or adjacent helpers.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>- Propagate lock/read-only state at the row and field level so locked tracks can be disabled without disabling unrelated unlocked tracks in the same window.</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- Keep session-level read-only loads supported as a convenience path that initializes all imported tracks as locked/non-writable.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- Keep the view-model contract aligned with one source of truth for track edit/file status instead of deriving status separately inside the SwiftUI view.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>- Add data needed to style externally changed values:</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>  - track filename strike/red state</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>  - track title italic/red state</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>  - tag-field italic/red state</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>  - album-art red-overlay state for picture differences</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre></pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>### 6. Add hover help behavior</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- Attach `.help(...)` to the rendered status icon using the status presentation’s hover text.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>- Do not attach help to empty placeholder cells for tracks without associated files.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>- For macOS-side differences, build hover help from newline-separated `tag: value` entries using the current file values.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>- Map each supported state to its chosen icon and exact hover/help message in one centralized place so the table and any future command/UI surfaces stay synchronized.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre></pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>### 7. Gate save commands from actual differences</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>- Replace the current save enablement checks in [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift) so command availability reflects:</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>  - read-only mode blocks all save/write actions</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>  - `Save Tags...` requires tag differences in the active save scope</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>  - `Save Pictures...` requires picture differences in the active save scope</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>  - `Save` requires differences that match the current save settings and payload behavior</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>- Ensure the same rules drive menu-item enablement and command-handler guards so disabled actions cannot still execute through shortcuts.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>- Keep the scope logic aligned with existing selected-track vs all-tracks save behavior.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>- Exclude locked tracks from writable save scopes unless a later design explicitly states otherwise.</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre></pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>### 8. Add read-only load flow</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>- Update [SwiftTagApp.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/SwiftTagApp.swift) to add `Load FLAC files (read-only)...` after `Load FLAC files...` with Shift-Command-L.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>- Add the corresponding `ContentView` import path so a session can be initialized as read-only from the start.</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>- Preserve existing FLAC import behavior for metadata and picture loading while marking the resulting editor session as non-writable.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- Ensure read-only sessions show `lock.fill`, disable editable fields, disable album-art wells, and disallow all save/write commands.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>- Implement mixed lock support so the same internal mechanism can back both full read-only loads and per-row lock/unlock toggles.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre></pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>### 9. Add track-table lock/unlock controls</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>- Add a context menu to the tracks table with a lock toggle item derived from the current selection.</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>- Use these labels:</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>  - `Lock Selected Track` or `Lock Selected Tracks` when all selected rows are unlocked</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>  - `Unlock Selected Track` or `Unlock Selected Tracks` when all selected rows are locked</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>  - `Toggle Selected Tracks Lock` when the selection contains a mix of locked and unlocked rows</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>- Apply the action to each selected row, flipping its current lock state.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>- Bind the action to Control-L.</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>- Ensure locked rows are disabled while keeping the lock icon itself active unless save-in-progress state disables the whole interaction path.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre></pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>### 10. Apply difference styling to affected UI</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>- Draw deleted filenames in the tracks table with red strikethrough styling.</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- Draw externally changed title text in the tracks table italicized and red.</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- Draw externally changed editor tag-field text italicized and red for the affected controls.</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>- Draw a red overlay in the album-art image well when picture differences are detected.</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>- Keep user-made unsaved differences visually distinguishable from macOS-side differences if the design later requires both to be visible at once.</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre></pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>### 11. Verify and refine behavior</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>- Confirm that the new column remains leftmost after selection, editing, import, and read-only load flows.</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>- Confirm that rows with `sourceFileURL == nil` render an empty status cell without broken layout.</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>- Confirm that editable fields remain enabled for writable rows and disabled for locked rows.</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>- Confirm that album-art wells remain enabled for writable rows/sessions and disabled for locked or read-only tracks as designed.</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>- Confirm that save-command availability changes as editor/file differences appear or disappear.</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>- Confirm that file-monitoring events transition status as intended for modified, renamed, and deleted loaded files.</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>- Confirm that deleted files render filename strike/red styling.</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>- Confirm that externally changed title and tag fields render italic/red styling.</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>- Confirm that picture differences render the album-art red overlay.</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>- Confirm that lock/unlock context-menu labeling matches selected-row state.</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre></pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>## Suggested File Updates</pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>- Update [TagEditorTrackFileView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift)</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>- Update [TagEditorView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorView.swift)</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>- Update [TagEditorViewModel.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift)</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>- Update [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift)</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>- Update [SwiftTagApp.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/SwiftTagApp.swift)</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>- Possibly update [Track.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Shared/Models/Track.swift) if per-track monitoring or read-only metadata belongs on the model</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>- Add a focused file-monitoring helper/service if descriptor lifecycle management should be kept out of the view model</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre>- Update album-art well related views such as [TagEditorAlbumView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorAlbumView.swift) and possibly [AlbumArtWellView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/AlbumArt/AlbumArtWellView.swift) for picture-difference overlay and lock-state disablement</pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>- Update [SwiftTagTests.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTagTests/SwiftTagTests.swift) or split focused tests into a dedicated track-status test file</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre></pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>- Prefer unit tests first:</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>  - rows with `sourceFileURL` produce the expected status presentation for synced, user-dirty, external-change, and read-only states</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>  - rows without `sourceFileURL` produce no status presentation</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>  - tag differences and picture differences are tracked independently</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre>  - save gating returns the expected answers for `Save`, `Save Tags...`, and `Save Pictures...`</pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>  - read-only mode blocks all save actions regardless of differences</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>  - file-monitoring helper logic translates modification, rename, and delete invalidations into the expected refresh behavior</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>  - immediate file re-read classifies deleted files, changed tag values, changed titles, and picture differences correctly</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>  - mixed lock/unlock selections yield the expected context-menu label and lock-toggle results</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>- Add targeted view-model or helper tests where practical:</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>  - the track-status lookup uses the intended source of truth rather than recomputing unrelated edit heuristics in the view</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>  - editor edits flip tag or picture difference state as appropriate</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>  - file reload or invalidation updates status after external file changes</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>  - read-only imports initialize editor state correctly</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>  - row-level locking disables only the intended tracks</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>- Add limited UI verification:</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>  - the `Status` column appears as the leftmost table column</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>  - writable file-backed rows show an icon</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>  - non-file-backed rows show no icon</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>  - read-only loads disable fields and album-art wells</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre>  - save menu items disable when no relevant differences exist</pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>  - deleted filenames render strikethrough and red</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>  - externally changed title and tag fields render italic and red</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>  - picture differences render a red album-art overlay</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>  - the tracks-table context menu shows `Lock Selected Track` / `Lock Selected Tracks`, `Unlock Selected Track` / `Unlock Selected Tracks`, or `Toggle Selected Tracks Lock` as appropriate</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>  - hover help appears for a status icon once a test seam or stable state fixture exists</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>- Use `BuildProject` for compile validation and prefer targeted tests over broad UI automation.</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre></pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>## Current Implementation Status (2026-03-14)</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>- Implemented:</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>  - Per-track status model types are in place in `TrackStatus.swift` (`TrackFileSnapshot`, `TrackExternalDifferences`, `TrackStatusPresentation`, `TrackFileMonitorEvent`).</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>  - `Track` now carries status-related state (`latestFileSnapshot`, `externalDifferences`, `isLocked`) in `Track.swift`.</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>  - `DispatchSourceFileSystemObject` monitoring exists in `TrackFileMonitor.swift` with write/delete/rename handling and security-scoped URL support.</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>  - `TagEditorViewModel` now computes status icon/help (`fish.fill`, `fish`, `exclamationmark.triangle`, `lock.fill`), refreshes file state on monitor events, and tracks external tag/picture differences.</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>  - The tracks table has a new leftmost icon column, lock context menu wiring, title/file external-difference styling, and lock-driven row disablement in `TagEditorTrackFileView.swift`.</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>  - Read-only import flow is wired end-to-end (`Load FLAC files (read-only)...`, Shift-Command-L, locked import path) across `SwiftTagApp.swift` and `ContentView.swift`.</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>  - Save enablement now uses difference-aware gating in `ContentView.canSave(payload:)` via `TagEditorViewModel.canSave(...)`.</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>  - External-difference visuals are in place for title, filename (red + strikethrough on delete), tag fields (italic + red), and album art overlay.</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>  - Unit coverage for status mapping, save gating, lock behavior, and file-monitor refresh logic has been added in `SwiftTagTests.swift`.</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>- Partially implemented:</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>  - No additional partial implementation gaps identified for header/label wording after formalizing current behavior as intended.</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>- Not fully covered yet:</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>  - UI automation coverage for the new status column/icon/help behaviors and lock-menu label variants is still limited.</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre></pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>- No new product-behavior questions identified during this review.</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre></pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>- The tracks table includes a leftmost status-icon column with an intentionally empty header.</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>- The status column width matches the intended row height closely enough for the rendered icon area to be square.</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>- Only rows with an associated track file can display a status icon.</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>- Rows without an associated track file do not display a status icon or misleading hover help.</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>- Loaded track files are monitored for modification, rename, and delete events for status purposes.</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>- Default tracked rows use `fish.fill` unless another confirmed state overrides it.</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>- Rows with user-made editor/file differences use `fish`.</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>- Rows with macOS-side file differences use `exclamationmark.triangle`.</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>- Read-only sessions use `lock.fill`.</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre>- The title and filename columns continue to function as before.</pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre>- Hover help is shown for displayed status icons and is driven by centralized status presentation data.</pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>- Rows without an associated track file render a fully blank status cell.</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>- The initial status-column implementation works without requiring explicit width or height sizing for the system icon.</pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre>- `Save Tags...` is unavailable when there are no tag differences in the active save scope.</pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>- `Save Pictures...` is unavailable when there are no picture differences in the active save scope.</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre>- `Save` is unavailable when there are no differences relevant to the current save settings or when the session is read-only.</pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>- The File menu contains `Load FLAC files (read-only)...` after `Load FLAC files...` with Shift-Command-L.</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre>- Read-only loads disable editable fields and album-art wells and prevent all write/save actions.</pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>- Mixed locked and unlocked tracks are supported in one editor window.</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre>- The tracks-table context menu exposes `Lock Selected Track` / `Lock Selected Tracks`, `Unlock Selected Track` / `Unlock Selected Tracks`, or `Toggle Selected Tracks Lock` based on selected-row lock state and toggles each selected row with Control-L.</pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre>- Locked rows are disabled while their lock icons remain enabled except during save operations.</pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre>- On macOS-side file deletion, the corresponding filename renders red with strikethrough.</pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre>- On macOS-side tag or title differences, the affected editor text renders italic and red.</pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre>- On picture differences, the album-art image well renders a red overlay.</pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre>- Status-icon hover help for macOS-side differences lists newline-separated `tag: value` entries using the current file values.</pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre>- The implementation is covered by targeted tests for status visibility, difference tracking, save gating, read-only behavior, and compile verification.</pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre></pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre>## Remaining Implementation Steps</pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>1. Add command-handler guard logic so save actions short-circuit when no relevant differences exist, ensuring behavior matches enablement rules even if a command path is invoked while menu state is stale.</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre>2. Add targeted UI verification for:</pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>   - leftmost status-icon column visibility and icon presence/absence by row type,</pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre>   - lock-menu label variants for unlocked/locked/mixed selections using current implemented wording,</pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>   - read-only import command discoverability and disabled editing state.</pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre>3. Run `BuildProject` and the affected targeted tests after the final behavior-alignment changes above.</pre></td></tr></table></main></body></html>

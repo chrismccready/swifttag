@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theme: FLAC Lib</title>
+  <link rel="stylesheet" href="../assets.css">
+</head>
+<body>
+<header><h1>Theme: FLAC Lib</h1><nav>
+  <a href="../index.html">Index</a>
+  <a href="../commits.html">Commits</a>
+  <a href="../plans.html">Plans</a>
+  <a href="../themes.html">Themes</a>
+  <a href="../response-times.html">Response Times</a>
+  <a href="../difficulty.html">Difficulty</a>
+  <a href="../charts.html">Charts</a>
+  <a href="../transcripts.html">Transcripts</a>
+  <a href="../warnings.html">Warnings</a>
+</nav></header><main>
+<p>libFLAC build integration, FLAC bridge headers and C bridge, and FLAC metadata service changes.</p>
+<h2>Commits</h2><p><a href="../sources/commits/1071c2e.html">1071c2e fix(flac): load files without Vorbis comment tags</a>, <a href="../sources/commits/1276536.html">1276536 feat(package): add SwiftTag document creation and serialization</a>, <a href="../sources/commits/1fcd082.html">1fcd082 Build ​FLAC from source and link as stais lib • configure FLAC CMake build for app use:    • static lib only (BUILD​_​SHARED​_​LIBS​=​OFF)    • disable programs (BUILD​_​PROGRAMS​=​OFF)    • disable C++ lib (BUILD​_​CXXLIBS​=​OFF)    • disable Ogg dependency (WITH​_​OGG​=​OFF) • remove dependency on bundled prebuilt Resources​/bin FLAC/metaflac artifacts</a>, <a href="../sources/commits/27b32d8.html">27b32d8 feat(save): add FLAC tag and picture writing workflow</a>, <a href="../sources/commits/4f1e273.html">4f1e273 Cleanup: - Updated bridge include to generated header path:    - FlacMetadataBridge.c:2    - #include &lt;​FLAC​/metadata​.h&gt; - Added app target header search path (Debug + Release):    - project.pbxproj    - HEADER​_​SEARCH​_​PATHS includes $(​DERIVED​_​FILE​_​DIR)/flac​-include - Removed no-longer-used vendored FLAC headers:    - deleted Swift​Tag​/​FLACBridge​/vendor​/​FLAC/* - Removed no-longer-used modulemap artifact:    - deleted module.modulemap - Updated cleanup docs:    - FLACBridgeExecution.md</a>, <a href="../sources/commits/5866685.html">5866685 feat(stream-info): persist flac stream metadata across document round-trips</a>, <a href="../sources/commits/6cf4772.html">6cf4772 FLAC C-Bridge Incremental Execution (pre-lib use)</a>, <a href="../sources/commits/78b870c.html">78b870c feat(flac-pictures): limit FLAC picture type 2 to one per file (as per FLAC specifications)</a>, <a href="../sources/commits/859a8f5.html">859a8f5 feat(applescript): expose track fingerprints and audio properties</a>, <a href="../sources/commits/9654a15.html">9654a15 fix(save): stage overwrite replacements on destination volume</a>, <a href="../sources/commits/9e1ce62.html">9e1ce62 feat(album-art): add scoped multi-picture browser and per-track picture save behavior</a>, <a href="../sources/commits/a043882.html">a043882 feat(album-art): support copy, paste, and flac-safe picture formats</a>, <a href="../sources/commits/b70f662.html">b70f662 feat(duration): add derived flac track duration support</a>, <a href="../sources/commits/bae266f.html">bae266f feat(flac-import): import embedded flac pictures into album art</a>, <a href="../sources/commits/bba775b.html">bba775b feat(document): add finder-open support for flac files</a>, <a href="../sources/commits/c2b2356.html">c2b2356 fix(applescript): derive scriptable windows from live AppKit windows</a>, <a href="../sources/commits/d07df1f.html">d07df1f project(build): configure hardened runtime and universal libFLAC builds</a>, <a href="../sources/commits/da7b04f.html">da7b04f feat(flac): add track fingerprint support</a>, <a href="../sources/commits/ec63010.html">ec63010 fix(document): ignore equivalent multi-picture ordering after reopen</a>, <a href="../sources/commits/f195e03.html">f195e03 feat(quicklook): add .swifttag quick look preview extension</a></p>
+<h2>Plans</h2><p><a href="../plans/1.html">Plan 1: FLAC Bridge Build Notes</a>, <a href="../plans/4.html">Plan 4: FLAC Write Tags and Pictures Plan</a>, <a href="../plans/13.html">Plan 13: Add FLAC Fingerprint Support Plan</a></p>
+<h2>Separate Lenses</h2>
+<table><thead><tr>
+<th>Lens</th>
+<th>Transcript Lines</th>
+<th>Code/Plan Lines</th>
+<th>Elapsed</th>
+<th>Mean Difficulty</th>
+</tr></thead><tbody>
+<tr><td>Commit</td><td>541.2</td><td>1821.3</td><td>19h 24m</td><td>56.4</td></tr>
+<tr><td>Plan</td><td>See Plan records</td><td>158.0 direct / 1046.2 implementation</td><td>30m 48s</td><td>29.3</td></tr>
+</tbody></table>
+<p><a href="../review-packets/themes/flac-lib.md">review packet</a></p>
+</main></body></html>

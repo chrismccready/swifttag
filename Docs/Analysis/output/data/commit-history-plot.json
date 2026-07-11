@@ -1,0 +1,2746 @@
+{
+  "commits": [
+    {
+      "author_date": "2026-02-24T14:33:31-08:00",
+      "code_lines": 684.0,
+      "difficulty": 27.69,
+      "hash": "2c8445cbde7892ceff58fb58780a79278bcf7d6e",
+      "short_hash": "2c8445c",
+      "subject": "Initial Commit"
+    },
+    {
+      "author_date": "2026-02-24T16:10:47-08:00",
+      "code_lines": 9.0,
+      "difficulty": 8.65,
+      "hash": "639e6a21c2fa231ef59f0c8aab3d67494a0bce8a",
+      "short_hash": "639e6a2",
+      "subject": "Quit app when main window closes"
+    },
+    {
+      "author_date": "2026-02-24T20:34:14-08:00",
+      "code_lines": 50.0,
+      "difficulty": 13.99,
+      "hash": "43285ad34d978291d76ea1cfbeac822c7e09b4d2",
+      "short_hash": "43285ad",
+      "subject": "feat(ui): replace tracks list with table and add artist​/venue​/date fields"
+    },
+    {
+      "author_date": "2026-02-25T15:40:17-08:00",
+      "code_lines": 48.0,
+      "difficulty": 13.7,
+      "hash": "8f7481796eca68b823fc7aec209bbb51293c7feb",
+      "short_hash": "8f74817",
+      "subject": "feat(ui): add editable track metadata layout with split panes and cover well"
+    },
+    {
+      "author_date": "2026-02-25T23:43:46-08:00",
+      "code_lines": 74.0,
+      "difficulty": 16.01,
+      "hash": "2781d736d1d22465c49e505f1fdfa9810b4f5107",
+      "short_hash": "2781d73",
+      "subject": "feat(ui): add selectable tracks with per​-track descriptions and metadata form refinements"
+    },
+    {
+      "author_date": "2026-02-26T12:40:03-08:00",
+      "code_lines": 133.0,
+      "difficulty": 19.04,
+      "hash": "dad9d6e302f63b22f383f5f07d99ec48bade1acc",
+      "short_hash": "dad9d6e",
+      "subject": "feat(ui): add multi​-select track editing and per​-track metadata bindings - Added fields to Track:    - artist, composer, location (replaced venue), date - Removed global artist, venue, date state. - Added multi-selection bindings:    - selected​Artist​Binding, selected​Location​Binding, selected​Date​Binding    - generic helper selected​String​Binding(...) for string fields - Updated UI fields to bind to selected tracks:    - Artist, Composer, Location, Date now edit all selected rows    - When no rows are selected, fields are disabled with placeholder text/messages"
+    },
+    {
+      "author_date": "2026-02-26T15:26:30-08:00",
+      "code_lines": 105.0,
+      "difficulty": 17.6,
+      "hash": "4fd2b5edcbc462961a46e931d880917e5f3470ba",
+      "short_hash": "4fd2b5e",
+      "subject": "feat(toml): add TOML preview utility window (experimental)"
+    },
+    {
+      "author_date": "2026-02-26T16:01:24-08:00",
+      "code_lines": 40.0,
+      "difficulty": 13.27,
+      "hash": "0c4e80ab485f4ddfd5292c23962ece5bce8ebb9d",
+      "short_hash": "0c4e80a",
+      "subject": "feat(toml​-ui): present ​TOML in sheet rather than utility window"
+    },
+    {
+      "author_date": "2026-02-26T19:36:58-08:00",
+      "code_lines": 45.0,
+      "difficulty": 13.56,
+      "hash": "6f2967d87599d562749e274f56e19ecd000bc610",
+      "short_hash": "6f2967d",
+      "subject": "refactor(toml​-sheet): make ​Show ​TOML window​-scoped with independent sheet state per main window"
+    },
+    {
+      "author_date": "2026-02-27T10:07:58-08:00",
+      "code_lines": 242.0,
+      "difficulty": 22.79,
+      "hash": "ee7e8faab965a7c2c39bc3ec3f698594d9ce8101",
+      "short_hash": "ee7e8fa",
+      "subject": "feat(import): add ​FLAC loader with bundled metaflac parsing, sorted track ingestion, and user​-facing error alerts (experimental)"
+    },
+    {
+      "author_date": "2026-02-27T10:45:47-08:00",
+      "code_lines": 315.0,
+      "difficulty": 46.97,
+      "hash": "6cf4772cd3482a0a7ca38f2f613ca64a86da22a1",
+      "short_hash": "6cf4772",
+      "subject": "FLAC C-Bridge Incremental Execution (pre-lib use)"
+    },
+    {
+      "author_date": "2026-02-27T15:07:54-08:00",
+      "code_lines": 264.0,
+      "difficulty": 43.05,
+      "hash": "1fcd08274065e59e148cb05d16e592e98f02bced",
+      "short_hash": "1fcd082",
+      "subject": "Build ​FLAC from source and link as stais lib • configure FLAC CMake build for app use:    • static lib only (BUILD​_​SHARED​_​LIBS​=​OFF)    • disable programs (BUILD​_​PROGRAMS​=​OFF)    • disable C++ lib (BUILD​_​CXXLIBS​=​OFF)    • disable Ogg dependency (WITH​_​OGG​=​OFF) • remove dependency on bundled prebuilt Resources​/bin FLAC/metaflac artifacts"
+    },
+    {
+      "author_date": "2026-02-27T15:47:27-08:00",
+      "code_lines": 63.0,
+      "difficulty": 23.27,
+      "hash": "4f1e2732dc317203bf9fd6f998fe4946be3a760c",
+      "short_hash": "4f1e273",
+      "subject": "Cleanup: - Updated bridge include to generated header path:    - FlacMetadataBridge.c:2    - #include <​FLAC​/metadata​.h> - Added app target header search path (Debug + Release):    - project.pbxproj    - HEADER​_​SEARCH​_​PATHS includes $(​DERIVED​_​FILE​_​DIR)/flac​-include - Removed no-longer-used vendored FLAC headers:    - deleted Swift​Tag​/​FLACBridge​/vendor​/​FLAC/* - Removed no-longer-used modulemap artifact:    - deleted module.modulemap - Updated cleanup docs:    - FLACBridgeExecution.md"
+    },
+    {
+      "author_date": "2026-02-28T14:22:51-08:00",
+      "code_lines": 213.0,
+      "difficulty": 21.78,
+      "hash": "e382ae31861176bf220f87c7e380b5162331e490",
+      "short_hash": "e382ae3",
+      "subject": "feat(UI): added separate track number an total fields - Refactored Track to:    - id: ​UUID    - tags: [​String: ​String] - Added tag-key constants (NUMBER, TITLE, FILENAME, ARTIST, COMPOSER, LOCATION, DATE, DESCRIPTION). - Updated table/UI bindings to read/write through tag dictionary. - Replaced keyPath-based selection editing with tag-name-based selection editing. - Updated date handling to store date as tag text (yyyy​-​MM​-dd) and parse/format for UI. - Updated FLAC import to map metadata into tags while preserving required UI fields. - Updated TOML export to read from dictionary-backed tags and sort by numeric NUMBER."
+    },
+    {
+      "author_date": "2026-03-02T13:47:45-08:00",
+      "code_lines": 246.0,
+      "difficulty": 48.32,
+      "hash": "c965c3feb354452704670af683ab541da3c43f71",
+      "short_hash": "c965c3f",
+      "subject": "Refine tag​-driven track editor and misc tag table behavior"
+    },
+    {
+      "author_date": "2026-03-02T16:22:02-08:00",
+      "code_lines": 135.0,
+      "difficulty": 40.17,
+      "hash": "2302109d0c43a41cb71c36e47cf2b4b8973a63d6",
+      "short_hash": "2302109",
+      "subject": "Refine track metadata ​UI and import mapping for discs​/genres​/misc tags - add dictionary-backed handling for new explicit fields: DISC and GENRE - add Disc of total​Discs controls with selected-track binding and numeric validation - style total​Discs in bold red when non-empty TOTALDISCS tags mismatch entered value - add hover help messaging for total tracks/discs consistency indicators - convert total tracks display to read-only track-count text with mismatch highlighting and help"
+    },
+    {
+      "author_date": "2026-03-02T22:53:06-08:00",
+      "code_lines": 132.0,
+      "difficulty": 36.13,
+      "hash": "b5b4f12719bcc1df96078cbbc79157c47985e637",
+      "short_hash": "b5b4f12",
+      "subject": "Updated misc​Tags key-entry behavior: • Pressing + creates an empty row and immediately focuses its Key field. • Key field text turns red while the typed key is invalid:    • duplicates another misc row key (normalized comparison)    • matches any explicit​Tag​Keys entry • When key focus leaves:    • if key is empty, row is removed    • if key is invalid on new row (duplicate/explicit/empty), row is removed    • if key is invalid on edit row (duplicate/explicit/empty), key reverts to original pre-edit key    • if key is valid, it is normalized/committed"
+    },
+    {
+      "author_date": "2026-03-03T00:50:41-08:00",
+      "code_lines": 5.0,
+      "difficulty": 7.93,
+      "hash": "f80a21a0f9e9c0b21edf1637deb0e07fb89efc1e",
+      "short_hash": "f80a21a",
+      "subject": "tests(ui): added miscTags table tests"
+    },
+    {
+      "author_date": "2026-03-03T01:14:40-08:00",
+      "code_lines": 5.0,
+      "difficulty": 7.93,
+      "hash": "9fea9987c80b7709896d6a46e750b0a0c7925c30",
+      "short_hash": "9fea998",
+      "subject": "build(xcode): add input​/output paths for ​Build lib​FLAC script phase - Declare Build​Scripts​/build​-libflac​.sh as script input - Declare generated lib​FLAC​.a and staged FLAC headers as outputs - Removes “will be run during every build because it does not specify any outputs” warning"
+    },
+    {
+      "author_date": "2026-03-03T01:16:39-08:00",
+      "code_lines": 12.0,
+      "difficulty": 9.23,
+      "hash": "a28886ff5fcb92bf016b563a5df7785225f80a77",
+      "short_hash": "a28886f",
+      "subject": "build(xcode): add recommended stripping of dead code"
+    },
+    {
+      "author_date": "2026-03-03T16:30:52-08:00",
+      "code_lines": 380.0,
+      "difficulty": 50.41,
+      "hash": "f400158d420b3d62590a7863231b3f4fe603006b",
+      "short_hash": "f400158",
+      "subject": "Add album art manager UI with import/export and slot metadata - Add album art workflow to ContentView with a dedicated Album Art sheet - Introduce AlbumArtSlot + AlbumArtType mapping (ID3 picture type numbers and labels) - Add shared album art state per slot and render it in both main 60x60 well and sheet well - Support image import via drag-and-drop and click-to-open file picker (.jpg/.jpeg/.png) - Add context menu actions on albumArtWell:    - Import <slot name>    - Export <slot name> (enabled only when slot has an image) - Refactor export to SwiftUI-native .fileExporter with default filename based on slot label and image type - Update project sandbox settings to allow user-selected file read/write access and explicitly disable unused capabilities"
+    },
+    {
+      "author_date": "2026-03-04T00:18:15-08:00",
+      "code_lines": 2564.0,
+      "difficulty": 60.79,
+      "hash": "a76f2110c364943a6a2b000cd575807b8f75a6e6",
+      "short_hash": "a76f211",
+      "subject": "Initail project organization refactor based on ContentViewReorganizationPlan.md"
+    },
+    {
+      "author_date": "2026-03-04T00:53:04-08:00",
+      "code_lines": 16.0,
+      "difficulty": 27.93,
+      "hash": "6c669809df69c8e7566517df27f84cd4ac85cb37",
+      "short_hash": "6c66980",
+      "subject": "refactor(tag-editor): rename extracted tag editor subviews for naming consistency"
+    },
+    {
+      "author_date": "2026-03-04T11:43:50-08:00",
+      "code_lines": 24.0,
+      "difficulty": 10.67,
+      "hash": "94e847e6468708e93ad725939b662235d58aaa17",
+      "short_hash": "94e847e",
+      "subject": "refactor(tag-editor): rename track/core tag editor views and update docs references"
+    },
+    {
+      "author_date": "2026-03-05T12:52:09-08:00",
+      "code_lines": 270.0,
+      "difficulty": 47.48,
+      "hash": "bae266f0f97e4d7e264cc54628bfaf3cc70a78f7",
+      "short_hash": "bae266f",
+      "subject": "feat(flac-import): import embedded flac pictures into album art"
+    },
+    {
+      "author_date": "2026-03-06T11:50:39-08:00",
+      "code_lines": 1579.0,
+      "difficulty": 67.72,
+      "hash": "27b32d888ac16fcaa31f6735b29d960131a8315c",
+      "short_hash": "27b32d8",
+      "subject": "feat(save): add FLAC tag and picture writing workflow"
+    },
+    {
+      "author_date": "2026-03-06T12:37:25-08:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "f7f7e4be43044e840ea69ce6c03d1217b38913ad",
+      "short_hash": "f7f7e4b",
+      "subject": "project(xcode): add ignore rules and shared workspace settings"
+    },
+    {
+      "author_date": "2026-03-06T13:02:06-08:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "5b61279eb659afad29d7c0e59eac297dc9b0505b",
+      "short_hash": "5b61279",
+      "subject": "test(ui): update settings ui tests for radio button pickers"
+    },
+    {
+      "author_date": "2026-03-06T15:32:27-08:00",
+      "code_lines": 0.0,
+      "difficulty": 9.09,
+      "hash": "004751dd893b3e1b96ba2e42f9a63fc000d75663",
+      "short_hash": "004751d",
+      "subject": "docs(commit-guide): added Agents.md and experimental Git Commit Guide Prompt Plan"
+    },
+    {
+      "author_date": "2026-03-06T20:47:12-08:00",
+      "code_lines": 0.0,
+      "difficulty": 9.66,
+      "hash": "645232c9f5fdbcd436cd208763553a0f163d3f77",
+      "short_hash": "645232c",
+      "subject": "docs(plans): add save notifications plan and planning rules"
+    },
+    {
+      "author_date": "2026-03-07T16:24:34-08:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "315dd772a284932ebaf5b599e41c6f6dd911a4e4",
+      "short_hash": "315dd77",
+      "subject": "project(): remove Agents.md"
+    },
+    {
+      "author_date": "2026-03-07T16:26:48-08:00",
+      "code_lines": 0.0,
+      "difficulty": 21.71,
+      "hash": "e031a26f031d038fcc430fb7057600f67102ccbe",
+      "short_hash": "e031a26",
+      "subject": "project(): added new AGENTS.md and transcript formatting support"
+    },
+    {
+      "author_date": "2026-03-09T23:56:06-07:00",
+      "code_lines": 789.0,
+      "difficulty": 66.78,
+      "hash": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "short_hash": "80b722e",
+      "subject": "feat(notifications): reopen saved tracks from save success notifications"
+    },
+    {
+      "author_date": "2026-03-10T21:11:26-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "fa93fee5de699542d9c5b51f16ffc9acac505d9c",
+      "short_hash": "fa93fee",
+      "subject": "docs(transcripts): tighten transcript export rules and template"
+    },
+    {
+      "author_date": "2026-03-12T02:02:52-07:00",
+      "code_lines": 168.0,
+      "difficulty": 20.48,
+      "hash": "c499b7aead381ce46c275a2b7e1571e2a49a4cc8",
+      "short_hash": "c499b7a",
+      "subject": "project(icons): point the app target at the SwiftTag icon set"
+    },
+    {
+      "author_date": "2026-03-12T02:05:00-07:00",
+      "code_lines": 554.0,
+      "difficulty": 65.07,
+      "hash": "e0cd7da70c303f9524054cf6e150d7fbfca3d9d1",
+      "short_hash": "e0cd7da",
+      "subject": "feat(save-status): add save progress overlay and save-state UI guards"
+    },
+    {
+      "author_date": "2026-03-14T01:46:28-07:00",
+      "code_lines": 1640.0,
+      "difficulty": 95.55,
+      "hash": "c56695645a5579bac37f1f716650754ccc5750a1",
+      "short_hash": "c566956",
+      "subject": "feat(track-status): add file-monitor-based track status and lock-aware tag editor behavior"
+    },
+    {
+      "author_date": "2026-03-14T14:08:54-07:00",
+      "code_lines": 0.0,
+      "difficulty": 42.31,
+      "hash": "2d3e003b9689d477939ba8543f037de2cf8068c5",
+      "short_hash": "2d3e003",
+      "subject": "feat(track-status): updated 8-AddTrackStatusPlan to reflect latest implementation"
+    },
+    {
+      "author_date": "2026-03-14T16:15:01-07:00",
+      "code_lines": 30.0,
+      "difficulty": 61.18,
+      "hash": "ae13badc1a2a880e7b374fa67010992d398fa737",
+      "short_hash": "ae13bad",
+      "subject": "test(swiftui): add viewinspector coverage and read-only fixture ui-test support"
+    },
+    {
+      "author_date": "2026-03-14T16:30:47-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "d4f65729d1e61f20ac1eaf10d9e5b13db612d6b9",
+      "short_hash": "d4f6572",
+      "subject": "docs(testing-guide) refinement"
+    },
+    {
+      "author_date": "2026-03-16T20:39:26-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "94246bbd4bebc8a284577f2d68b82ff5db235599",
+      "short_hash": "94246bb",
+      "subject": "docs(transcript): 8-AddTrackStatusPlan.md finalization and introduction of ViewInspector"
+    },
+    {
+      "author_date": "2026-03-17T20:58:24-07:00",
+      "code_lines": 1685.0,
+      "difficulty": 95.77,
+      "hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+      "short_hash": "ac28a73",
+      "subject": "feat(diff-tools): implement track/file diff states and mismatch warning customization"
+    },
+    {
+      "author_date": "2026-03-18T09:54:29-07:00",
+      "code_lines": 83.0,
+      "difficulty": 16.73,
+      "hash": "32d8411d0d981716488a64b235fa1c25240b90ba",
+      "short_hash": "32d8411",
+      "subject": "feat(diff-tools): UI cleanup, theme setting now propagated to Diff Tools and Settings windows"
+    },
+    {
+      "author_date": "2026-03-18T11:27:14-07:00",
+      "code_lines": 32.0,
+      "difficulty": 63.39,
+      "hash": "83083cbcdf9667c18e3a5c3c11c66d2cfa24f4a6",
+      "short_hash": "83083cb",
+      "subject": "plan(feedback): update plan to latest implemented state and add targeted settings diff tests"
+    },
+    {
+      "author_date": "2026-03-18T11:48:27-07:00",
+      "code_lines": 0.0,
+      "difficulty": 29.66,
+      "hash": "0d268f9dbda719319837ad31711eb87f9f166499",
+      "short_hash": "0d268f9",
+      "subject": "plan(feedback): latest transcript and fixed test code warnings"
+    },
+    {
+      "author_date": "2026-03-18T12:23:28-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "4f2a9e8f1b624f200c4d62747f38f83200dbaf88",
+      "short_hash": "4f2a9e8",
+      "subject": "test(cleanup): move applicable UI tests to ViewInspecter harness and fix warnings"
+    },
+    {
+      "author_date": "2026-03-19T09:11:28-07:00",
+      "code_lines": 201.0,
+      "difficulty": 21.06,
+      "hash": "472c0f02b8c8e431c30a0e342fa8aee4bd3f6b63",
+      "short_hash": "472c0f0",
+      "subject": "refactor(settings UI) update options to toggle switch"
+    },
+    {
+      "author_date": "2026-03-19T14:40:41-07:00",
+      "code_lines": 932.0,
+      "difficulty": 90.91,
+      "hash": "68f7c7b1c66c1a7acd0564610efe03ceff89180b",
+      "short_hash": "68f7c7b",
+      "subject": "feat(editor): add track management commands, safeguards, and additive import flows"
+    },
+    {
+      "author_date": "2026-03-19T15:07:23-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "b1c99ff0e11dc7d38d78a51a328115010a433f80",
+      "short_hash": "b1c99ff",
+      "subject": "docs(transcript): plan 10 add track management commands, safeguards, and additive import flows"
+    },
+    {
+      "author_date": "2026-03-21T10:35:07-07:00",
+      "code_lines": 186.0,
+      "difficulty": 20.77,
+      "hash": "07da732fae63f277c83cb54cf56698ac80e2c851",
+      "short_hash": "07da732",
+      "subject": "feat(ui): minor spacing/clarity update"
+    },
+    {
+      "author_date": "2026-03-23T11:33:46-07:00",
+      "code_lines": 1707.0,
+      "difficulty": 99.21,
+      "hash": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+      "short_hash": "9e1ce62",
+      "subject": "feat(album-art): add scoped multi-picture browser and per-track picture save behavior"
+    },
+    {
+      "author_date": "2026-03-23T16:49:11-07:00",
+      "code_lines": 293.0,
+      "difficulty": 76.2,
+      "hash": "1e4ea8e60ed212c41a1f3f43a972ccad5855a07a",
+      "short_hash": "1e4ea8e",
+      "subject": "feat(ui): track picture info overlay and navigation enhancements"
+    },
+    {
+      "author_date": "2026-03-24T12:13:17-07:00",
+      "code_lines": 34.0,
+      "difficulty": 74.21,
+      "hash": "68e340f508e0f0f5b0ac2fbbcae259abf6155b6e",
+      "short_hash": "68e340f",
+      "subject": "fix(tag-editor): canonicalize picture records for snapshot and reload diff checks"
+    },
+    {
+      "author_date": "2026-03-25T21:15:38-07:00",
+      "code_lines": 579.0,
+      "difficulty": 85.99,
+      "hash": "b4593bad7a73d4737a89fa81f52b0a0c853f2bce",
+      "short_hash": "b4593ba",
+      "subject": "feat(album-art): revise picture scope forcing and front cover append behavior"
+    },
+    {
+      "author_date": "2026-03-26T08:57:58-07:00",
+      "code_lines": 122.0,
+      "difficulty": 57.31,
+      "hash": "f36a117c021f535e956e2d1722625465cd66b2f3",
+      "short_hash": "f36a117",
+      "subject": "feat(album-art): return structured picture metadata to the sheet view"
+    },
+    {
+      "author_date": "2026-03-26T09:34:59-07:00",
+      "code_lines": 0.0,
+      "difficulty": 42.74,
+      "hash": "2c3898c5b9fee3c3eefa3367c3219b2f4dbd2974",
+      "short_hash": "2c3898c",
+      "subject": "test(tag-editor): update save tests for picture write semantics and non-padding fields"
+    },
+    {
+      "author_date": "2026-03-26T12:03:25-07:00",
+      "code_lines": 94.0,
+      "difficulty": 60.29,
+      "hash": "ce82bfb0ed6ae71f4fa52b159af692e3b74fe2c7",
+      "short_hash": "ce82bfb",
+      "subject": "feat(album-art): make duplicate overlays picture-specific and scope-aware"
+    },
+    {
+      "author_date": "2026-03-26T13:00:51-07:00",
+      "code_lines": 60.0,
+      "difficulty": 46.06,
+      "hash": "2aee7213d2467ac765cf2f834b3e8b0a5409064e",
+      "short_hash": "2aee721",
+      "subject": "feat(settings): add duplicate picture overlay controls"
+    },
+    {
+      "author_date": "2026-03-26T15:51:13-07:00",
+      "code_lines": 560.0,
+      "difficulty": 69.76,
+      "hash": "a0438824397c29c96ca6c63b48ef501b5d63dffe",
+      "short_hash": "a043882",
+      "subject": "feat(album-art): support copy, paste, and flac-safe picture formats"
+    },
+    {
+      "author_date": "2026-04-01T10:00:31-07:00",
+      "code_lines": 413.0,
+      "difficulty": 90.67,
+      "hash": "bba775b507acd848d8bea0c67609752e0d812194",
+      "short_hash": "bba775b",
+      "subject": "feat(document): add finder-open support for flac files"
+    },
+    {
+      "author_date": "2026-04-01T15:38:29-07:00",
+      "code_lines": 145.0,
+      "difficulty": 68.32,
+      "hash": "da7b04f7563351b6c4c0883dbcbc16a5e081336a",
+      "short_hash": "da7b04f",
+      "subject": "feat(flac): add track fingerprint support"
+    },
+    {
+      "author_date": "2026-04-01T23:18:26-07:00",
+      "code_lines": 270.0,
+      "difficulty": 81.27,
+      "hash": "90ef077070ed157959eed236c4a5edfc023423b8",
+      "short_hash": "90ef077",
+      "subject": "feat(tag-editor): add compilation tag support"
+    },
+    {
+      "author_date": "2026-04-02T13:47:44-07:00",
+      "code_lines": 50.0,
+      "difficulty": 13.99,
+      "hash": "866d179e6bed7ea2133bcda6ef1ea9f2f91c5a15",
+      "short_hash": "866d179",
+      "subject": "feat(menus): reorganize app commands with modifier key alternates"
+    },
+    {
+      "author_date": "2026-04-03T15:23:41-07:00",
+      "code_lines": 931.0,
+      "difficulty": 93.37,
+      "hash": "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "short_hash": "1276536",
+      "subject": "feat(package): add SwiftTag document creation and serialization"
+    },
+    {
+      "author_date": "2026-04-03T16:47:00-07:00",
+      "code_lines": 150.0,
+      "difficulty": 62.43,
+      "hash": "bf6d257c8a9a96ec6846d3cac38bd49afd54f83a",
+      "short_hash": "bf6d257",
+      "subject": "fix(package): compute accurate image depth and palette colors for SwiftTag export"
+    },
+    {
+      "author_date": "2026-04-03T17:05:15-07:00",
+      "code_lines": 18.0,
+      "difficulty": 9.81,
+      "hash": "c0f71285faefcb501480a4ad69f63e5e7dc0df1e",
+      "short_hash": "c0f7128",
+      "subject": "project(config): update bundle identifiers to use reverse domain notation"
+    },
+    {
+      "author_date": "2026-04-04T11:43:27-07:00",
+      "code_lines": 479.0,
+      "difficulty": 79.86,
+      "hash": "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "short_hash": "1c2bb82",
+      "subject": "feat(document): add support for opening .swifttag documents"
+    },
+    {
+      "author_date": "2026-04-04T15:31:50-07:00",
+      "code_lines": 18.0,
+      "difficulty": 40.53,
+      "hash": "633671ae999d222fba32fde71594440b8b367350",
+      "short_hash": "633671a",
+      "subject": "fix(swifttag doc) save valid FLAC File URLrather than posix path"
+    },
+    {
+      "author_date": "2026-04-04T20:42:20-07:00",
+      "code_lines": 297.0,
+      "difficulty": 75.79,
+      "hash": "d0fca7dec639c9bd9845c8efb59147ccd1016e26",
+      "short_hash": "d0fca7d",
+      "subject": "fix(document): refresh live flac state for swifttag sessions"
+    },
+    {
+      "author_date": "2026-04-05T00:19:03-07:00",
+      "code_lines": 279.0,
+      "difficulty": 75.0,
+      "hash": "bc1eaf01993b5f6ef2cc64eef0f6dd4fe66824de",
+      "short_hash": "bc1eaf0",
+      "subject": "fix(window): restore swifttag document reopen after closing its window"
+    },
+    {
+      "author_date": "2026-04-05T17:26:21-07:00",
+      "code_lines": 117.0,
+      "difficulty": 68.1,
+      "hash": "575c54bdaeb6d9eda3326eedccc6e2395422094e",
+      "short_hash": "575c54b",
+      "subject": "fix(track-status): preserve dirty status when adding flac files"
+    },
+    {
+      "author_date": "2026-04-06T15:54:34-07:00",
+      "code_lines": 241.0,
+      "difficulty": 88.99,
+      "hash": "41e60a87d8b66f2a9ba012f5c5d11b525ab7c759",
+      "short_hash": "41e60a8",
+      "subject": "feat(tag-editor): add/update window title text"
+    },
+    {
+      "author_date": "2026-04-06T20:29:05-07:00",
+      "code_lines": 35.0,
+      "difficulty": 63.68,
+      "hash": "a41be8a2ef85b234f33f4003a47fd3d0117b6e83",
+      "short_hash": "a41be8a",
+      "subject": "fix(routing): open unassociated swifttag documents in new windows"
+    },
+    {
+      "author_date": "2026-04-06T21:32:02-07:00",
+      "code_lines": 27.0,
+      "difficulty": 53.0,
+      "hash": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+      "short_hash": "1936954",
+      "subject": "fix(editor): preserve track title editing and queued finder opens"
+    },
+    {
+      "author_date": "2026-04-07T01:01:05-07:00",
+      "code_lines": 263.0,
+      "difficulty": 75.26,
+      "hash": "ac6148bb93aa6651ba5884d968f1821e107eef34",
+      "short_hash": "ac6148b",
+      "subject": "fix(track-monitoring): refresh bookmark-backed filenames after rename and delete"
+    },
+    {
+      "author_date": "2026-04-07T12:36:18-07:00",
+      "code_lines": 251.0,
+      "difficulty": 66.18,
+      "hash": "ec63010015b0d8b4b08f578fb82c8526ce872cc6",
+      "short_hash": "ec63010",
+      "subject": "fix(document): ignore equivalent multi-picture ordering after reopen"
+    },
+    {
+      "author_date": "2026-04-07T17:22:49-07:00",
+      "code_lines": 10.0,
+      "difficulty": 8.8,
+      "hash": "126cc0a4b597443b882c65566c53e996d2cc62d2",
+      "short_hash": "126cc0a",
+      "subject": "fix(tag-editor): preserve picture spec mismatches in save checks"
+    },
+    {
+      "author_date": "2026-04-07T23:56:05-07:00",
+      "code_lines": 233.0,
+      "difficulty": 85.22,
+      "hash": "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+      "short_hash": "27b4d85",
+      "subject": "feat(save): add SwiftTag document follow-on save options"
+    },
+    {
+      "author_date": "2026-04-08T02:47:55-07:00",
+      "code_lines": 52.0,
+      "difficulty": 14.13,
+      "hash": "e34aa24684bc1f8934df624b380e976c55c09dc0",
+      "short_hash": "e34aa24",
+      "subject": "feat(ui): settings dialog ui layout cleanup"
+    },
+    {
+      "author_date": "2026-04-08T22:42:53-07:00",
+      "code_lines": 580.0,
+      "difficulty": 83.49,
+      "hash": "603c07621916ecd47e1a9faee08d8c32cd6eebdf",
+      "short_hash": "603c076",
+      "subject": "feat(save): add close and quit swifttag save choices"
+    },
+    {
+      "author_date": "2026-04-09T00:35:55-07:00",
+      "code_lines": 69.0,
+      "difficulty": 61.01,
+      "hash": "92460554b47e6062390266578964fe59fd5af784",
+      "short_hash": "9246055",
+      "subject": "fix(sync): restore repeated external album updates across windows"
+    },
+    {
+      "author_date": "2026-04-09T13:11:13-07:00",
+      "code_lines": 36.0,
+      "difficulty": 50.36,
+      "hash": "096d27739611fe6d978a8e683283c1ec3de7c030",
+      "short_hash": "096d277",
+      "subject": "feat(ui): add limit to .swifttag document name in unsaved dialog"
+    },
+    {
+      "author_date": "2026-04-09T15:15:56-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "ea17789b68f2441b900707719032349f6b2aad75",
+      "short_hash": "ea17789",
+      "subject": "tests(ui): add test to confirm control s saves only swittag document"
+    },
+    {
+      "author_date": "2026-04-09T21:37:06-07:00",
+      "code_lines": 754.0,
+      "difficulty": 83.22,
+      "hash": "561817a4bca220d705273d6744f1e5756cec418f",
+      "short_hash": "561817a",
+      "subject": "feat(swifttag-document): track referenced documents via bookmark across move and delete events"
+    },
+    {
+      "author_date": "2026-04-09T22:26:31-07:00",
+      "code_lines": 39.0,
+      "difficulty": 47.12,
+      "hash": "3c4cfff64ee127631152a551713977c1ad5a40dd",
+      "short_hash": "3c4cfff",
+      "subject": "fix(windowing): show finder-opened flac files in the launch window"
+    },
+    {
+      "author_date": "2026-04-10T00:58:16-07:00",
+      "code_lines": 315.0,
+      "difficulty": 79.74,
+      "hash": "4e470f0885282d2dfa9bcfc38252ea229589132c",
+      "short_hash": "4e470f0",
+      "subject": "feat(save): prompt to save referenced documents on track list divergence"
+    },
+    {
+      "author_date": "2026-04-10T09:28:18-07:00",
+      "code_lines": 5.0,
+      "difficulty": 41.11,
+      "hash": "454258cb9db98ff57199e91810c74d771038a613",
+      "short_hash": "454258c",
+      "subject": "feat(swifttag-document): remove from `SwiftTagDocumentPackageError` the `noTracks` error case"
+    },
+    {
+      "author_date": "2026-04-10T10:45:41-07:00",
+      "code_lines": 15.0,
+      "difficulty": 42.38,
+      "hash": "cfba5a1a7b93b8e01d1e1b806a8db413e207ae55",
+      "short_hash": "cfba5a1",
+      "subject": "feat(swifttag-document): update SwiftTag document to allow no tracks and add `SwiftTags` metadata"
+    },
+    {
+      "author_date": "2026-04-10T15:35:55-07:00",
+      "code_lines": 75.0,
+      "difficulty": 55.46,
+      "hash": "29c8eed7decacebe51ab53c9150e9b5b86cd9f3b",
+      "short_hash": "29c8eed",
+      "subject": "fix(tag-editor): when MixedStateCheckbox is disabled it does not display checkbox state"
+    },
+    {
+      "author_date": "2026-04-10T15:57:51-07:00",
+      "code_lines": 33.0,
+      "difficulty": 11.68,
+      "hash": "78b870c79708a25f71251242e16deec289711c28",
+      "short_hash": "78b870c",
+      "subject": "feat(flac-pictures): limit FLAC picture type 2 to one per file (as per FLAC specifications)"
+    },
+    {
+      "author_date": "2026-04-10T18:41:28-07:00",
+      "code_lines": 5.0,
+      "difficulty": 7.93,
+      "hash": "75f43d8c150b372bc6602d8a7a6e7e013429e880",
+      "short_hash": "75f43d8",
+      "subject": "feat(tag-editor): limit window/navigation title length"
+    },
+    {
+      "author_date": "2026-04-11T14:31:32-07:00",
+      "code_lines": 2337.0,
+      "difficulty": 94.01,
+      "hash": "f195e03db1cd290792f99f8b880bb69995e28921",
+      "short_hash": "f195e03",
+      "subject": "feat(quicklook): add .swifttag quick look preview extension"
+    },
+    {
+      "author_date": "2026-04-12T09:08:28-07:00",
+      "code_lines": 240.0,
+      "difficulty": 82.52,
+      "hash": "b70f6625e06280784004190bcabafe04c96086d3",
+      "short_hash": "b70f662",
+      "subject": "feat(duration): add derived flac track duration support"
+    },
+    {
+      "author_date": "2026-04-13T14:43:11-07:00",
+      "code_lines": 20.0,
+      "difficulty": 10.38,
+      "hash": "fa39eb8476a30b608351962f31e7e6868495c9eb",
+      "short_hash": "fa39eb8",
+      "subject": "feat(QuickLook) add \"Mix\" for album, add alternating bacground for tracks"
+    },
+    {
+      "author_date": "2026-04-14T10:12:52-07:00",
+      "code_lines": 477.0,
+      "difficulty": 92.57,
+      "hash": "36c5b18642e6568ca15e897dcae9132a6907e9db",
+      "short_hash": "36c5b18",
+      "subject": "feat(album-art): implement picture description editing"
+    },
+    {
+      "author_date": "2026-04-14T15:47:38-07:00",
+      "code_lines": 160.0,
+      "difficulty": 63.15,
+      "hash": "4a07659704ab091a117b882a027635c12af8294c",
+      "short_hash": "4a07659",
+      "subject": "fix(tag-editor): show internal icon for picture description edits"
+    },
+    {
+      "author_date": "2026-04-15T15:57:13-07:00",
+      "code_lines": 238.0,
+      "difficulty": 22.36,
+      "hash": "0539816b5ba23a6e25ff44d6be08444b0f8dd6c7",
+      "short_hash": "0539816",
+      "subject": "fix(album-art): reject oversized flac picture imports"
+    },
+    {
+      "author_date": "2026-04-16T17:08:15-07:00",
+      "code_lines": 61.0,
+      "difficulty": 66.54,
+      "hash": "352ff8c562657dc7ed4c0171d4448bdda0bec559",
+      "short_hash": "352ff8c",
+      "subject": "fix: preserve picture diff state across refresh flows"
+    },
+    {
+      "author_date": "2026-04-16T23:40:02-07:00",
+      "code_lines": 40.0,
+      "difficulty": 61.49,
+      "hash": "f23c8a089f6d5549a597e0635ff808b203a25766",
+      "short_hash": "f23c8a0",
+      "subject": "fix(album-art): show external picture diffs in reopened swifttag documents"
+    },
+    {
+      "author_date": "2026-04-17T01:18:54-07:00",
+      "code_lines": 82.0,
+      "difficulty": 16.59,
+      "hash": "759876b5751c03c882cad89d885311f3073fe8cc",
+      "short_hash": "759876b",
+      "subject": "project(xcode): adopt xcode 26.4 test plan and nonisolated annotations"
+    },
+    {
+      "author_date": "2026-04-19T17:01:56-07:00",
+      "code_lines": 313.0,
+      "difficulty": 82.26,
+      "hash": "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+      "short_hash": "192eaac",
+      "subject": "feat(applescript): initial AppleScript support"
+    },
+    {
+      "author_date": "2026-04-19T17:49:40-07:00",
+      "code_lines": 612.0,
+      "difficulty": 73.05,
+      "hash": "777706cf1432bcd9bbd0ff1d145469d038b76fd3",
+      "short_hash": "777706c",
+      "subject": "feat(applescript): add AppleScript support for swifttag document open and save"
+    },
+    {
+      "author_date": "2026-04-20T22:40:20-07:00",
+      "code_lines": 859.0,
+      "difficulty": 76.13,
+      "hash": "bee209c217c6b5fa2c4eaddbddcab99101ee589a",
+      "short_hash": "bee209c",
+      "subject": "feat(applescript): support track add, selection, and property access"
+    },
+    {
+      "author_date": "2026-04-20T23:29:10-07:00",
+      "code_lines": 213.0,
+      "difficulty": 57.43,
+      "hash": "5866685bcbe463804d3efa4fb258029bf961207a",
+      "short_hash": "5866685",
+      "subject": "feat(stream-info): persist flac stream metadata across document round-trips"
+    },
+    {
+      "author_date": "2026-04-21T01:07:43-07:00",
+      "code_lines": 151.0,
+      "difficulty": 57.52,
+      "hash": "859a8f570b718d332f3f3814fc621280ae0f077e",
+      "short_hash": "859a8f5",
+      "subject": "feat(applescript): expose track fingerprints and audio properties"
+    },
+    {
+      "author_date": "2026-04-22T13:35:01-07:00",
+      "code_lines": 695.0,
+      "difficulty": 74.45,
+      "hash": "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "short_hash": "0c2d385",
+      "subject": "feat(applescript): support standard track tag scripting"
+    },
+    {
+      "author_date": "2026-04-22T16:30:45-07:00",
+      "code_lines": 39.0,
+      "difficulty": 59.01,
+      "hash": "2298c43c00492de67ad920a395d3ec7a8c8fb722",
+      "short_hash": "2298c43",
+      "subject": "feat(applescript): update tag normalization to invalidate white space contents"
+    },
+    {
+      "author_date": "2026-04-23T01:04:12-07:00",
+      "code_lines": 425.0,
+      "difficulty": 73.03,
+      "hash": "d65459355d32c58116293e4f6cce8a759b6d67f5",
+      "short_hash": "d654593",
+      "subject": "feat(applescript): support editor window flac saves"
+    },
+    {
+      "author_date": "2026-04-23T23:15:09-07:00",
+      "code_lines": 206.0,
+      "difficulty": 86.11,
+      "hash": "546e43d639eb9d7eceb46aa966b8a592b187b12c",
+      "short_hash": "546e43d",
+      "subject": "feat(applescript): support selected tracks and track list filtering"
+    },
+    {
+      "author_date": "2026-04-24T14:58:34-07:00",
+      "code_lines": 312.0,
+      "difficulty": 63.89,
+      "hash": "c02d65544f4b09ec7b1fa8ca3e5e15204fdd1795",
+      "short_hash": "c02d655",
+      "subject": "feat(applescript): update track tag properties to be setable"
+    },
+    {
+      "author_date": "2026-04-24T22:45:16-07:00",
+      "code_lines": 422.0,
+      "difficulty": 80.77,
+      "hash": "95957dd6350042cf04715f42d75a708d22bd4af1",
+      "short_hash": "95957dd",
+      "subject": "feat(applescript): add enum-based save and close scripting support"
+    },
+    {
+      "author_date": "2026-04-27T14:55:53-07:00",
+      "code_lines": 217.0,
+      "difficulty": 21.92,
+      "hash": "d42524c80ead7c678062531b1a7e72fe58e29d72",
+      "short_hash": "d42524c",
+      "subject": "project(ai-agent): add Apple Docs Scout agent for efficient docs search"
+    },
+    {
+      "author_date": "2026-04-27T17:18:01-07:00",
+      "code_lines": 19.0,
+      "difficulty": 10.1,
+      "hash": "d433bba53b6179aaaf82904aa26a22b18eba3bf0",
+      "short_hash": "d433bba",
+      "subject": "feat(editor): allow new window command from AppleScript to not activate app"
+    },
+    {
+      "author_date": "2026-04-28T03:11:04-07:00",
+      "code_lines": 435.0,
+      "difficulty": 88.37,
+      "hash": "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "short_hash": "11ba785",
+      "subject": "feat(applescript): expose FLAC pictures to scripts"
+    },
+    {
+      "author_date": "2026-04-28T19:20:25-07:00",
+      "code_lines": 1431.0,
+      "difficulty": 90.6,
+      "hash": "6811df91487bd977d74d60b43af798e9970e5d69",
+      "short_hash": "6811df9",
+      "subject": "feat(applescript): import track pictures from script data"
+    },
+    {
+      "author_date": "2026-04-28T22:32:29-07:00",
+      "code_lines": 57.0,
+      "difficulty": 53.75,
+      "hash": "9b05c92e3f87af186de2ebdf43ebe8f297b41572",
+      "short_hash": "9b05c92",
+      "subject": "fix(applescript): accept base64 picture import payloads"
+    },
+    {
+      "author_date": "2026-04-29T01:54:09-07:00",
+      "code_lines": 8.0,
+      "difficulty": 51.49,
+      "hash": "46a24e9e98968ea9d3bfa50853be92e35d857f8e",
+      "short_hash": "46a24e9",
+      "subject": "fix(applescript): expose tag IDs for key-filtered references"
+    },
+    {
+      "author_date": "2026-04-29T12:20:03-07:00",
+      "code_lines": 286.0,
+      "difficulty": 62.31,
+      "hash": "bbb83ef00b9fb130f94ada7293ee1f429c6bf755",
+      "short_hash": "bbb83ef",
+      "subject": "feat(applescript): support deleting track tags"
+    },
+    {
+      "author_date": "2026-04-29T15:10:56-07:00",
+      "code_lines": 170.0,
+      "difficulty": 68.34,
+      "hash": "24428a1548324e06268c9174e358e22e9559801b",
+      "short_hash": "24428a1",
+      "subject": "fix(applescript): support making tags from track tell contexts"
+    },
+    {
+      "author_date": "2026-04-29T22:03:37-07:00",
+      "code_lines": 65.0,
+      "difficulty": 68.27,
+      "hash": "ce1865558f2929bb98bcf1450a297244be3fbb06",
+      "short_hash": "ce18655",
+      "subject": "fix(applescript): preserve empty tag objects for keyed lookups"
+    },
+    {
+      "author_date": "2026-04-30T01:57:32-07:00",
+      "code_lines": 158.0,
+      "difficulty": 71.35,
+      "hash": "987ade16137d70327f87ab16fcf3fc874681eba4",
+      "short_hash": "987ade1",
+      "subject": "fix(tags): use tag storage for shared track fields"
+    },
+    {
+      "author_date": "2026-04-30T02:43:12-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "c6c7c445aae308a598d41e9f839c9bfd0e495e88",
+      "short_hash": "c6c7c44",
+      "subject": "project(tests): reorganize UI tests into more clear and isolatable groups"
+    },
+    {
+      "author_date": "2026-04-30T15:21:22-07:00",
+      "code_lines": 296.0,
+      "difficulty": 70.0,
+      "hash": "83b8764ca1faecb6f984a4cf8703eaad75501f8a",
+      "short_hash": "83b8764",
+      "subject": "feat(applescript): add picture delete support"
+    },
+    {
+      "author_date": "2026-05-01T12:26:29-07:00",
+      "code_lines": 877.0,
+      "difficulty": 70.58,
+      "hash": "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+      "short_hash": "17b6c10",
+      "subject": "feat(applescript): expose settings preferences"
+    },
+    {
+      "author_date": "2026-05-02T10:52:51-07:00",
+      "code_lines": 84.0,
+      "difficulty": 57.12,
+      "hash": "1b08404c005806083a5443603d98c10c5510ee70",
+      "short_hash": "1b08404",
+      "subject": "feat(applescript): model color settings as records"
+    },
+    {
+      "author_date": "2026-05-02T12:20:10-07:00",
+      "code_lines": 97.0,
+      "difficulty": 51.85,
+      "hash": "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "short_hash": "063c138",
+      "subject": "feat(applescript): expose diff tools settings"
+    },
+    {
+      "author_date": "2026-05-02T22:22:36-07:00",
+      "code_lines": 537.0,
+      "difficulty": 72.74,
+      "hash": "7c15f6097d77ab2db98c6795b04474308f770536",
+      "short_hash": "7c15f60",
+      "subject": "feat(applescript): expose scriptable window properties"
+    },
+    {
+      "author_date": "2026-05-03T01:54:10-07:00",
+      "code_lines": 531.0,
+      "difficulty": 73.49,
+      "hash": "d928e3bb438c8fa266b8700f3d4b2709c72bd7ee",
+      "short_hash": "d928e3b",
+      "subject": "feat(applescript): add settings window scripting support"
+    },
+    {
+      "author_date": "2026-05-03T15:38:50-07:00",
+      "code_lines": 210.0,
+      "difficulty": 59.95,
+      "hash": "3fd6771aa6fbbc5afe81722f5d39ce0c171019cd",
+      "short_hash": "3fd6771",
+      "subject": "feat(applescript): add locked track support to scripting commands"
+    },
+    {
+      "author_date": "2026-05-03T22:14:01-07:00",
+      "code_lines": 105.0,
+      "difficulty": 59.78,
+      "hash": "2e24923ec49954fa4d4b17f56f3d26c10265a51b",
+      "short_hash": "2e24923",
+      "subject": "fix(applescript): support track file comparisons"
+    },
+    {
+      "author_date": "2026-05-04T00:47:08-07:00",
+      "code_lines": 274.0,
+      "difficulty": 60.91,
+      "hash": "43b64835145b64f3346d6298de67754019b36df8",
+      "short_hash": "43b6483",
+      "subject": "feat(applescript): support deleting tracks from editor windows"
+    },
+    {
+      "author_date": "2026-05-07T01:56:48-07:00",
+      "code_lines": 251.0,
+      "difficulty": 23.22,
+      "hash": "380be212ade022a481997efbb4051584360a9b92",
+      "short_hash": "380be21",
+      "subject": "fix(applescript): return missing value for unavailable picture metrics"
+    },
+    {
+      "author_date": "2026-05-07T16:47:16-07:00",
+      "code_lines": 143.0,
+      "difficulty": 64.25,
+      "hash": "fc120558109cc0d36c1bee5ae25bce69d4702311",
+      "short_hash": "fc12055",
+      "subject": "feat(applescript): expose picture identity properties"
+    },
+    {
+      "author_date": "2026-05-09T17:31:42-07:00",
+      "code_lines": 131.0,
+      "difficulty": 61.18,
+      "hash": "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+      "short_hash": "25fde2c",
+      "subject": "fix(applescript): preserve picture IDs after deleting same-type pictures"
+    },
+    {
+      "author_date": "2026-05-10T01:27:42-07:00",
+      "code_lines": 25.0,
+      "difficulty": 46.56,
+      "hash": "94c83a7fe23cb17431994dd0f02d5f38c321630b",
+      "short_hash": "94c83a7",
+      "subject": "fix(applescript): close settings window from AppleScript"
+    },
+    {
+      "author_date": "2026-05-10T11:37:38-07:00",
+      "code_lines": 24.0,
+      "difficulty": 45.7,
+      "hash": "77e0dc1182db2bdd7d3a4d09b5c1a7b3b912191b",
+      "short_hash": "77e0dc1",
+      "subject": "fix(applescript): return integer window coordinate records"
+    },
+    {
+      "author_date": "2026-05-10T15:03:07-07:00",
+      "code_lines": 29.0,
+      "difficulty": 50.31,
+      "hash": "f19906905ecd5db8ea9d65fc0a6d80dbd0f798cb",
+      "short_hash": "f199069",
+      "subject": "feat(applescript): expose editor window modified state"
+    },
+    {
+      "author_date": "2026-05-10T22:24:07-07:00",
+      "code_lines": 36.0,
+      "difficulty": 54.06,
+      "hash": "82db5cd7599e76c1f0c6e8dda5f420865e32f4e7",
+      "short_hash": "82db5cd",
+      "subject": "feat(applescript): expose track modified state"
+    },
+    {
+      "author_date": "2026-05-11T01:53:25-07:00",
+      "code_lines": 79.0,
+      "difficulty": 53.75,
+      "hash": "2976159836a41160b0a462b26c952968c19a7923",
+      "short_hash": "2976159",
+      "subject": "fix(applescript): refresh album-art state after picture imports"
+    },
+    {
+      "author_date": "2026-05-13T13:05:14-07:00",
+      "code_lines": 0.0,
+      "difficulty": 58.12,
+      "hash": "452263137775f01b3d4877c28d37aad4dce7884d",
+      "short_hash": "4522631",
+      "subject": "docs(user): add SwiftTag user documentation"
+    },
+    {
+      "author_date": "2026-05-13T15:39:37-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "7334db00fd1f68b65e90267ef0cde394804255cb",
+      "short_hash": "7334db0",
+      "subject": "docs(user): initial quick start clean up"
+    },
+    {
+      "author_date": "2026-05-13T23:08:07-07:00",
+      "code_lines": 0.0,
+      "difficulty": 37.96,
+      "hash": "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+      "short_hash": "f156647",
+      "subject": "docs(user): status and diff expansion, emphasis and links"
+    },
+    {
+      "author_date": "2026-05-14T11:41:53-07:00",
+      "code_lines": 0.0,
+      "difficulty": 37.98,
+      "hash": "9273900261be4959eb466c7c8dd5bce9283d6da8",
+      "short_hash": "9273900",
+      "subject": "docs(user): more `tgas` info"
+    },
+    {
+      "author_date": "2026-05-14T17:50:32-07:00",
+      "code_lines": 0.0,
+      "difficulty": 40.89,
+      "hash": "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27",
+      "short_hash": "fdfa298",
+      "subject": "docs(user): more on album art"
+    },
+    {
+      "author_date": "2026-05-14T21:34:46-07:00",
+      "code_lines": 0.0,
+      "difficulty": 31.8,
+      "hash": "32babc084a6572ee51a860f636b385d6870c2b90",
+      "short_hash": "32babc0",
+      "subject": "docs(user): .swifttag document updates"
+    },
+    {
+      "author_date": "2026-05-15T11:15:41-07:00",
+      "code_lines": 0.0,
+      "difficulty": 28.39,
+      "hash": "11e4877420c3dc760f9be803b2734ea34a2031e0",
+      "short_hash": "11e4877",
+      "subject": "docs(user): .swifttag document updates"
+    },
+    {
+      "author_date": "2026-05-16T16:09:55-07:00",
+      "code_lines": 733.0,
+      "difficulty": 92.45,
+      "hash": "82c43c94fe7392a5e5551ef1a311c150006ab0f3",
+      "short_hash": "82c43c9",
+      "subject": "feat(sandbox): add persisted sandbox path settings"
+    },
+    {
+      "author_date": "2026-05-18T16:19:52-07:00",
+      "code_lines": 63.0,
+      "difficulty": 56.59,
+      "hash": "c2b2356f0f3b1143f444b6e8120567b343d729cc",
+      "short_hash": "c2b2356",
+      "subject": "fix(applescript): derive scriptable windows from live AppKit windows"
+    },
+    {
+      "author_date": "2026-05-19T00:09:58-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "2d385f97d2b5097ff8ecaaefb442f64c3739da39",
+      "short_hash": "2d385f9",
+      "subject": "docs(user): simple example update"
+    },
+    {
+      "author_date": "2026-05-19T11:54:58-07:00",
+      "code_lines": 0.0,
+      "difficulty": 39.69,
+      "hash": "969d6592c5cd201b256d15e2453193b8064126f1",
+      "short_hash": "969d659",
+      "subject": "docs(user): applescript - document class and support commands"
+    },
+    {
+      "author_date": "2026-05-19T12:37:12-07:00",
+      "code_lines": 0.0,
+      "difficulty": 36.73,
+      "hash": "5cf9b48f0411fadf42905537294e7db841c6a628",
+      "short_hash": "5cf9b48",
+      "subject": "docs(user): applescript - application class and support"
+    },
+    {
+      "author_date": "2026-05-19T13:59:40-07:00",
+      "code_lines": 0.0,
+      "difficulty": 45.91,
+      "hash": "50b8fd902d32fca1ed43570b89b6e097dd4e9fae",
+      "short_hash": "50b8fd9",
+      "subject": "docs(user): settings - General settings update"
+    },
+    {
+      "author_date": "2026-05-19T17:09:06-07:00",
+      "code_lines": 0.0,
+      "difficulty": 35.7,
+      "hash": "44df34502dee4a2af0a264dfe0047ff8e82be4ab",
+      "short_hash": "44df345",
+      "subject": "docs(user): applescript enumerations"
+    },
+    {
+      "author_date": "2026-05-19T19:59:53-07:00",
+      "code_lines": 0.0,
+      "difficulty": 35.77,
+      "hash": "14a623cc7cae72b22210b2f44a8b8a9d3f09e85f",
+      "short_hash": "14a623c",
+      "subject": "docs(user): applescript record types"
+    },
+    {
+      "author_date": "2026-05-19T22:14:46-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "5944288d9bd94e8186dd374b0aec6090ad90fc96",
+      "short_hash": "5944288",
+      "subject": "docs(user): applescript make and import picture examples update"
+    },
+    {
+      "author_date": "2026-05-20T09:19:42-07:00",
+      "code_lines": 0.0,
+      "difficulty": 30.67,
+      "hash": "893289b52cf06c6f3c02548f549ebc68e4281380",
+      "short_hash": "893289b",
+      "subject": "docs(user): applescript windows"
+    },
+    {
+      "author_date": "2026-05-20T11:13:21-07:00",
+      "code_lines": 0.0,
+      "difficulty": 39.4,
+      "hash": "604d139ad72b08a404092b8812a0130678f53984",
+      "short_hash": "604d139",
+      "subject": "docs(user): applescript track"
+    },
+    {
+      "author_date": "2026-05-20T12:36:05-07:00",
+      "code_lines": 145.0,
+      "difficulty": 61.35,
+      "hash": "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+      "short_hash": "7602f5d",
+      "subject": "feat(applescript): accept base64 text when making pictures"
+    },
+    {
+      "author_date": "2026-05-20T14:05:10-07:00",
+      "code_lines": 211.0,
+      "difficulty": 62.74,
+      "hash": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+      "short_hash": "8053109",
+      "subject": "refactor(applescript)!: remove custom import picture command (replaced by use of `make`)"
+    },
+    {
+      "author_date": "2026-05-21T00:48:05-07:00",
+      "code_lines": 0.0,
+      "difficulty": 30.1,
+      "hash": "e096ded126a62938d4627bd1205b32a0e30c77b0",
+      "short_hash": "e096ded",
+      "subject": "docs(user): applescript delete command"
+    },
+    {
+      "author_date": "2026-05-21T01:42:22-07:00",
+      "code_lines": 0.0,
+      "difficulty": 31.18,
+      "hash": "c1df562489d39bf6608f3053706fc038844b482c",
+      "short_hash": "c1df562",
+      "subject": "docs(user): applescript tag class"
+    },
+    {
+      "author_date": "2026-05-21T17:09:04-07:00",
+      "code_lines": 0.0,
+      "difficulty": 28.41,
+      "hash": "5c2ab0a3ba722d5fdc139615b6eb55902237162d",
+      "short_hash": "5c2ab0a",
+      "subject": "docs(user): applescript picture class"
+    },
+    {
+      "author_date": "2026-05-23T14:04:46-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "e534c8366925af29f7c8f9ab67a908c5d6941650",
+      "short_hash": "e534c83",
+      "subject": "docs(user): content and links cleanup"
+    },
+    {
+      "author_date": "2026-05-25T15:10:13-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "1df3dd0c798507ee9db2c2005d577ac499b3e933",
+      "short_hash": "1df3dd0",
+      "subject": "docs(user): more applescript examples and links"
+    },
+    {
+      "author_date": "2026-05-25T16:40:23-07:00",
+      "code_lines": 20.0,
+      "difficulty": 10.38,
+      "hash": "62b9a68e15a34d8c2919c736be910ce3a9eec8e4",
+      "short_hash": "62b9a68",
+      "subject": "fix(applescript): accept image descriptors for picture data"
+    },
+    {
+      "author_date": "2026-05-25T18:28:19-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "21aacef712ef78c44bd11f0a848276d3125a82a4",
+      "short_hash": "21aacef",
+      "subject": "docs(user): applecript picture examples and links"
+    },
+    {
+      "author_date": "2026-05-25T21:45:30-07:00",
+      "code_lines": 0.0,
+      "difficulty": 7.74,
+      "hash": "a3d4895796afa545efc1d3c39379220da2c616f3",
+      "short_hash": "a3d4895",
+      "subject": "docs(user): re-tag example rename"
+    },
+    {
+      "author_date": "2026-05-25T21:59:02-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "8ab71c90c52e8a8740d754719c48c53f0ca66065",
+      "short_hash": "8ab71c9",
+      "subject": "docs(user): filenames and links cleanup"
+    },
+    {
+      "author_date": "2026-05-25T22:03:59-07:00",
+      "code_lines": 0.0,
+      "difficulty": 7.74,
+      "hash": "7a19911399e2e3a8b7ff2d239319a658e793346c",
+      "short_hash": "7a19911",
+      "subject": "docs(user): editing-tags rename and link update"
+    },
+    {
+      "author_date": "2026-05-25T22:20:45-07:00",
+      "code_lines": 0.0,
+      "difficulty": 7.74,
+      "hash": "477665910577c41766377204a1abfc8cc7f0dd6d",
+      "short_hash": "4776659",
+      "subject": "docs(user): album-art rename and link update"
+    },
+    {
+      "author_date": "2026-05-25T23:16:25-07:00",
+      "code_lines": 40.0,
+      "difficulty": 13.27,
+      "hash": "0015089006f52550ef2f4ed4fdd0057bb9e521b9",
+      "short_hash": "0015089",
+      "subject": "feat(ui): help menu now opens user docs"
+    },
+    {
+      "author_date": "2026-05-26T13:31:51-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "4eca36ce52399ef139926f5430d3cd08ac3c993a",
+      "short_hash": "4eca36c",
+      "subject": "test(applescript): add external .applescript test suite"
+    },
+    {
+      "author_date": "2026-05-26T15:40:25-07:00",
+      "code_lines": 96.0,
+      "difficulty": 51.56,
+      "hash": "486b13c723b2fac0220854d9ea7269a09442e7ce",
+      "short_hash": "486b13c",
+      "subject": "feat(quicklook): show audio summary in document previews"
+    },
+    {
+      "author_date": "2026-05-26T15:51:10-07:00",
+      "code_lines": 82.0,
+      "difficulty": 46.8,
+      "hash": "e8c7dcb8fa1bcfe202e061807bb6873d2e1e0473",
+      "short_hash": "e8c7dcb",
+      "subject": "feat(tag-editor): remove Show TOML feature"
+    },
+    {
+      "author_date": "2026-05-26T16:14:32-07:00",
+      "code_lines": 0.0,
+      "difficulty": 30.77,
+      "hash": "65538b7f93d2246cfc37625f018af76640c6aa40",
+      "short_hash": "65538b7",
+      "subject": "docs(readme): update README to reflect latest feature set"
+    },
+    {
+      "author_date": "2026-05-26T18:03:51-07:00",
+      "code_lines": 0.0,
+      "difficulty": 27.84,
+      "hash": "716c54c01f81ac69fb1c6e5252727cbd5dd10310",
+      "short_hash": "716c54c",
+      "subject": "docs: update project README and add session transcript"
+    },
+    {
+      "author_date": "2026-05-27T14:45:23-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "1df3bec4c822e6fcc30d809dab5277868a8e3290",
+      "short_hash": "1df3bec",
+      "subject": "project(license): add MIT License to the project"
+    },
+    {
+      "author_date": "2026-05-27T23:19:57-07:00",
+      "code_lines": 72.0,
+      "difficulty": 15.72,
+      "hash": "d07df1fefbd553b00635ee882631ee74d12f0530",
+      "short_hash": "d07df1f",
+      "subject": "project(build): configure hardened runtime and universal libFLAC builds"
+    },
+    {
+      "author_date": "2026-05-29T19:11:38-07:00",
+      "code_lines": 0.0,
+      "difficulty": 0.0,
+      "hash": "149bf183fe3edf4d14481d354a078cb50f628aee",
+      "short_hash": "149bf18",
+      "subject": "project(docs): update README with latest screenshots and links to documentation"
+    },
+    {
+      "author_date": "2026-05-30T12:00:19-07:00",
+      "code_lines": 62.0,
+      "difficulty": 57.38,
+      "hash": "fcee05c29e0d15314bee932ee8b1e48cc7ca7276",
+      "short_hash": "fcee05c",
+      "subject": "fix(tag-editor): keep unsaved album edits as internal diffs"
+    },
+    {
+      "author_date": "2026-05-30T13:31:49-07:00",
+      "code_lines": 114.0,
+      "difficulty": 54.35,
+      "hash": "03227c22ec04d4a16f48e8159bca42426af9eac7",
+      "short_hash": "03227c2",
+      "subject": "fix(tags): treat total count aliases as equivalent"
+    },
+    {
+      "author_date": "2026-05-30T13:48:08-07:00",
+      "code_lines": 6.0,
+      "difficulty": 8.22,
+      "hash": "b0eb1bc5f0a1a447bed6c6c903afad44009c9cd6",
+      "short_hash": "b0eb1bc",
+      "subject": "feat(settings): update default settings to not zero pad and write all track/disc total tags"
+    },
+    {
+      "author_date": "2026-05-30T14:19:20-07:00",
+      "code_lines": 74.0,
+      "difficulty": 52.33,
+      "hash": "48fd612594d6a6ae7f88cfe82807c8c31823b63d",
+      "short_hash": "48fd612",
+      "subject": "fix(date): preserve partial DATE tag text"
+    },
+    {
+      "author_date": "2026-05-30T15:49:55-07:00",
+      "code_lines": 8.0,
+      "difficulty": 39.76,
+      "hash": "36789f5d0b7a89231ac47b62ca91d92c8b537df8",
+      "short_hash": "36789f5",
+      "subject": "fix(album-art): require explicit import actions for picture picker"
+    },
+    {
+      "author_date": "2026-05-30T16:16:47-07:00",
+      "code_lines": 4.0,
+      "difficulty": 38.49,
+      "hash": "b5795c22e58a84982d07d6846e1929f9eba2166f",
+      "short_hash": "b5795c2",
+      "subject": "build(xcode): set development team for SwiftTag targets"
+    },
+    {
+      "author_date": "2026-05-30T16:26:44-07:00",
+      "code_lines": 0.0,
+      "difficulty": 32.62,
+      "hash": "5c58b2c352709f9b9c609c1e60a15c4ebf49062c",
+      "short_hash": "5c58b2c",
+      "subject": "test(picture): fix no tap gesture on picture browser well test"
+    },
+    {
+      "author_date": "2026-05-30T17:55:45-07:00",
+      "code_lines": 0.0,
+      "difficulty": 30.53,
+      "hash": "5b2392f98b7d9b0680edf4fdfb6966ed9a44d9bc",
+      "short_hash": "5b2392f",
+      "subject": "test(settings): update sandbox path source expectations"
+    },
+    {
+      "author_date": "2026-05-31T16:58:30-07:00",
+      "code_lines": 4.0,
+      "difficulty": 7.36,
+      "hash": "05c75465e894b197009e4fa12fcee8a2f232be65",
+      "short_hash": "05c7546",
+      "subject": "project(version): update SwiftTag release to 1.0.1"
+    },
+    {
+      "author_date": "2026-06-03T18:12:10-07:00",
+      "code_lines": 106.0,
+      "difficulty": 59.95,
+      "hash": "5f406d41dab292e9d24be77a40a86053fba4e075",
+      "short_hash": "5f406d4",
+      "subject": "fix(editor): mark swifttag documents dirty for editor differences"
+    },
+    {
+      "author_date": "2026-06-04T13:20:26-07:00",
+      "code_lines": 40.0,
+      "difficulty": 57.98,
+      "hash": "58c447d0c8f8d603db83117199143fea38de98fb",
+      "short_hash": "58c447d",
+      "subject": "feat(swifttag-document): add Save As command for session documents"
+    },
+    {
+      "author_date": "2026-06-05T14:07:44-07:00",
+      "code_lines": 34.0,
+      "difficulty": 47.52,
+      "hash": "a19bccf7a97c76901ba27f942e9cae26a5642edc",
+      "short_hash": "a19bccf",
+      "subject": "feat(settings): add last-window close quit preference"
+    },
+    {
+      "author_date": "2026-06-05T15:10:36-07:00",
+      "code_lines": 42.0,
+      "difficulty": 50.38,
+      "hash": "d4616ef79d1f5f6f9afe47e139aa7a092e4b3085",
+      "short_hash": "d4616ef",
+      "subject": "feat(applescript): expose quit-on-last-window-close setting"
+    },
+    {
+      "author_date": "2026-06-05T17:20:44-07:00",
+      "code_lines": 122.0,
+      "difficulty": 56.78,
+      "hash": "798de55dcbb0a4e26d499cec324224070b108b19",
+      "short_hash": "798de55",
+      "subject": "feat(tag-editor): add COMMENT tag editor support"
+    },
+    {
+      "author_date": "2026-06-09T16:23:24-07:00",
+      "code_lines": 71.0,
+      "difficulty": 56.9,
+      "hash": "a0be45da0d49c7dfb87bef36da1afed83c46ba4d",
+      "short_hash": "a0be45d",
+      "subject": "feat(tag-editor): scroll new misc tag rows into view"
+    },
+    {
+      "author_date": "2026-06-09T17:40:15-07:00",
+      "code_lines": 6.0,
+      "difficulty": 8.22,
+      "hash": "31627a922620a24d64ae4f88232256f56993e172",
+      "short_hash": "31627a9",
+      "subject": "feat(quicklook): update album title color, size and truncation for better visibilty"
+    },
+    {
+      "author_date": "2026-06-11T17:33:53-07:00",
+      "code_lines": 12.0,
+      "difficulty": 9.23,
+      "hash": "abe9194d5f3d791d34010e12ea51acb0054ae4ce",
+      "short_hash": "abe9194",
+      "subject": "project(release): prepare 1.0.2 release"
+    },
+    {
+      "author_date": "2026-06-14T21:25:46-07:00",
+      "code_lines": 113.0,
+      "difficulty": 18.03,
+      "hash": "9654a156c85a094a0fe4d86cb59ab87de34bf6f3",
+      "short_hash": "9654a15",
+      "subject": "fix(save): stage overwrite replacements on destination volume"
+    },
+    {
+      "author_date": "2026-06-14T23:02:25-07:00",
+      "code_lines": 30.0,
+      "difficulty": 11.39,
+      "hash": "fdd51810b0f51c7b8ee798ecfa0eb42453627946",
+      "short_hash": "fdd5181",
+      "subject": "fix(rename): refresh all batch-renamed FLAC tracks"
+    },
+    {
+      "author_date": "2026-06-15T15:22:40-07:00",
+      "code_lines": 290.0,
+      "difficulty": 83.0,
+      "hash": "d2843d58d7c77e0470d1b467eacf8a956665e2c9",
+      "short_hash": "d2843d5",
+      "subject": "feat(tags): add per-disc track total update mode"
+    },
+    {
+      "author_date": "2026-06-17T00:09:06-07:00",
+      "code_lines": 453.0,
+      "difficulty": 88.82,
+      "hash": "7228297fdfbf05a87af30e5330fdcdd1e908dd84",
+      "short_hash": "7228297",
+      "subject": "feat(tracks): add sort order and track numbering controls"
+    },
+    {
+      "author_date": "2026-06-17T11:00:06-07:00",
+      "code_lines": 189.0,
+      "difficulty": 77.62,
+      "hash": "88d09498e62eed6f088450eb0cf1ec3129a7ad34",
+      "short_hash": "88d0949",
+      "subject": "feat(tags): add auto disc total setting and command"
+    },
+    {
+      "author_date": "2026-06-19T18:07:57-07:00",
+      "code_lines": 1350.0,
+      "difficulty": 97.28,
+      "hash": "29444d740b06ee147a5690f1070d56abfa8be162",
+      "short_hash": "29444d7",
+      "subject": "feat(tag-editor): add track file rename workflow"
+    },
+    {
+      "author_date": "2026-06-19T20:18:02-07:00",
+      "code_lines": 54.0,
+      "difficulty": 14.28,
+      "hash": "d6d76b5913d9f81cd56e52292e703ab25e1d9e9d",
+      "short_hash": "d6d76b5",
+      "subject": "feat(help): add release and GitHub links to Help menu"
+    },
+    {
+      "author_date": "2026-06-19T22:44:45-07:00",
+      "code_lines": 19.0,
+      "difficulty": 10.1,
+      "hash": "9ff3081da95b34bbdf6d8d736fbee5eaf6301b84",
+      "short_hash": "9ff3081",
+      "subject": "fix(tag-editor): leave missing total tracks blank on load"
+    },
+    {
+      "author_date": "2026-06-20T01:27:03-07:00",
+      "code_lines": 230.0,
+      "difficulty": 22.07,
+      "hash": "be8b3e170bc3c338a1fbbb22d814e73b77d7c994",
+      "short_hash": "be8b3e1",
+      "subject": "perf(album-art): cache display images and picture specs"
+    },
+    {
+      "author_date": "2026-06-20T09:47:47-07:00",
+      "code_lines": 138.0,
+      "difficulty": 19.33,
+      "hash": "53c04fbdd27f87fda0f693f5de6166e607975ee0",
+      "short_hash": "53c04fb",
+      "subject": "perf(album-art): avoid image reprocessing on track selection"
+    },
+    {
+      "author_date": "2026-06-20T15:02:01-07:00",
+      "code_lines": 12.0,
+      "difficulty": 9.23,
+      "hash": "e38ebba60c6454fd14c208d37ffb036038f231da",
+      "short_hash": "e38ebba",
+      "subject": "fix(commands): add explicit Save SwiftTag Document as shortcut"
+    },
+    {
+      "author_date": "2026-06-23T17:10:07-07:00",
+      "code_lines": 107.0,
+      "difficulty": 17.88,
+      "hash": "1071c2e0ffd3bbc279f2cca6e15509e725518e25",
+      "short_hash": "1071c2e",
+      "subject": "fix(flac): load files without Vorbis comment tags"
+    }
+  ],
+  "end_commit": "1071c2e0ffd3bbc279f2cca6e15509e725518e25",
+  "plans": [
+    {
+      "covered_commits": [
+        "6cf4772cd3482a0a7ca38f2f613ca64a86da22a1",
+        "1fcd08274065e59e148cb05d16e592e98f02bced",
+        "4f1e2732dc317203bf9fd6f998fe4946be3a760c"
+      ],
+      "id": "1",
+      "initial_commit": "6cf4772cd3482a0a7ca38f2f613ca64a86da22a1",
+      "label": "Plan 1: FLAC Bridge Build Notes"
+    },
+    {
+      "covered_commits": [
+        "a76f2110c364943a6a2b000cd575807b8f75a6e6",
+        "6c669809df69c8e7566517df27f84cd4ac85cb37",
+        "bae266f0f97e4d7e264cc54628bfaf3cc70a78f7"
+      ],
+      "id": "2",
+      "initial_commit": "a76f2110c364943a6a2b000cd575807b8f75a6e6",
+      "label": "Plan 2: ContentView Reorganization Plan"
+    },
+    {
+      "covered_commits": [
+        "a76f2110c364943a6a2b000cd575807b8f75a6e6",
+        "6c669809df69c8e7566517df27f84cd4ac85cb37",
+        "bae266f0f97e4d7e264cc54628bfaf3cc70a78f7"
+      ],
+      "id": "3",
+      "initial_commit": "bae266f0f97e4d7e264cc54628bfaf3cc70a78f7",
+      "label": "Plan 3: FLAC Picture Import + Album Art Assignment Plan"
+    },
+    {
+      "covered_commits": [
+        "27b32d888ac16fcaa31f6735b29d960131a8315c"
+      ],
+      "id": "4",
+      "initial_commit": "27b32d888ac16fcaa31f6735b29d960131a8315c",
+      "label": "Plan 4: FLAC Write Tags and Pictures Plan"
+    },
+    {
+      "covered_commits": [
+        "004751dd893b3e1b96ba2e42f9a63fc000d75663",
+        "645232c9f5fdbcd436cd208763553a0f163d3f77",
+        "80b722ee0e77887149ebfd307538cac12a5907c3"
+      ],
+      "id": "5",
+      "initial_commit": "004751dd893b3e1b96ba2e42f9a63fc000d75663",
+      "label": "Plan 5: Add Save Notifications Plan"
+    },
+    {
+      "covered_commits": [
+        "e031a26f031d038fcc430fb7057600f67102ccbe",
+        "80b722ee0e77887149ebfd307538cac12a5907c3"
+      ],
+      "id": "6",
+      "initial_commit": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "label": "Plan 6: Agents Transcript Skill Plan"
+    },
+    {
+      "covered_commits": [
+        "e0cd7da70c303f9524054cf6e150d7fbfca3d9d1"
+      ],
+      "id": "7",
+      "initial_commit": "e0cd7da70c303f9524054cf6e150d7fbfca3d9d1",
+      "label": "Plan 7: Add Save Status View Plan"
+    },
+    {
+      "covered_commits": [
+        "c56695645a5579bac37f1f716650754ccc5750a1",
+        "2d3e003b9689d477939ba8543f037de2cf8068c5",
+        "ae13badc1a2a880e7b374fa67010992d398fa737"
+      ],
+      "id": "8",
+      "initial_commit": "c56695645a5579bac37f1f716650754ccc5750a1",
+      "label": "Plan 8: Add Track Status Plan"
+    },
+    {
+      "covered_commits": [
+        "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "83083cbcdf9667c18e3a5c3c11c66d2cfa24f4a6",
+        "0d268f9dbda719319837ad31711eb87f9f166499"
+      ],
+      "id": "9",
+      "initial_commit": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+      "label": "Plan 9: Add UI Feedback Settings Plan"
+    },
+    {
+      "covered_commits": [
+        "68f7c7b1c66c1a7acd0564610efe03ceff89180b"
+      ],
+      "id": "10",
+      "initial_commit": "68f7c7b1c66c1a7acd0564610efe03ceff89180b",
+      "label": "Plan 10: Add Track Management Plan"
+    },
+    {
+      "covered_commits": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+        "1e4ea8e60ed212c41a1f3f43a972ccad5855a07a",
+        "68e340f508e0f0f5b0ac2fbbcae259abf6155b6e",
+        "b4593bad7a73d4737a89fa81f52b0a0c853f2bce",
+        "f36a117c021f535e956e2d1722625465cd66b2f3",
+        "2c3898c5b9fee3c3eefa3367c3219b2f4dbd2974",
+        "ce82bfb0ed6ae71f4fa52b159af692e3b74fe2c7",
+        "2aee7213d2467ac765cf2f834b3e8b0a5409064e",
+        "a0438824397c29c96ca6c63b48ef501b5d63dffe"
+      ],
+      "id": "11",
+      "initial_commit": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+      "label": "Plan 11: Add Multi Picture Per Track Support Plan"
+    },
+    {
+      "covered_commits": [
+        "bba775b507acd848d8bea0c67609752e0d812194"
+      ],
+      "id": "12",
+      "initial_commit": "bba775b507acd848d8bea0c67609752e0d812194",
+      "label": "Plan 12: Add FLAC Document Open Support Plan"
+    },
+    {
+      "covered_commits": [
+        "da7b04f7563351b6c4c0883dbcbc16a5e081336a"
+      ],
+      "id": "13",
+      "initial_commit": "da7b04f7563351b6c4c0883dbcbc16a5e081336a",
+      "label": "Plan 13: Add FLAC Fingerprint Support Plan"
+    },
+    {
+      "covered_commits": [
+        "90ef077070ed157959eed236c4a5edfc023423b8"
+      ],
+      "id": "14",
+      "initial_commit": "90ef077070ed157959eed236c4a5edfc023423b8",
+      "label": "Plan 14: Add Compilation Tag Plan"
+    },
+    {
+      "covered_commits": [
+        "1276536d7ce542d757187ed8e2a7a229c6741847",
+        "bf6d257c8a9a96ec6846d3cac38bd49afd54f83a"
+      ],
+      "id": "15",
+      "initial_commit": "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "label": "Plan 15: Add SwiftTag Document Creation Plan"
+    },
+    {
+      "covered_commits": [
+        "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+        "633671ae999d222fba32fde71594440b8b367350",
+        "d0fca7dec639c9bd9845c8efb59147ccd1016e26",
+        "bc1eaf01993b5f6ef2cc64eef0f6dd4fe66824de"
+      ],
+      "id": "16",
+      "initial_commit": "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "label": "Plan 16: Add SwiftTag Document Read Plan"
+    },
+    {
+      "covered_commits": [
+        "633671ae999d222fba32fde71594440b8b367350",
+        "d0fca7dec639c9bd9845c8efb59147ccd1016e26"
+      ],
+      "id": "17",
+      "initial_commit": "d0fca7dec639c9bd9845c8efb59147ccd1016e26",
+      "label": "Plan 17: SwiftTag Document Read Live File Resolution Plan"
+    },
+    {
+      "covered_commits": [
+        "41e60a87d8b66f2a9ba012f5c5d11b525ab7c759"
+      ],
+      "id": "18",
+      "initial_commit": "41e60a87d8b66f2a9ba012f5c5d11b525ab7c759",
+      "label": "Plan 18: Update Window Title Text Plan"
+    },
+    {
+      "covered_commits": [
+        "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+        "603c07621916ecd47e1a9faee08d8c32cd6eebdf",
+        "4e470f0885282d2dfa9bcfc38252ea229589132c"
+      ],
+      "id": "19",
+      "initial_commit": "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+      "label": "Plan 19: Add SwiftTag Document Save Options Plan"
+    },
+    {
+      "covered_commits": [
+        "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+        "603c07621916ecd47e1a9faee08d8c32cd6eebdf",
+        "4e470f0885282d2dfa9bcfc38252ea229589132c"
+      ],
+      "id": "20",
+      "initial_commit": "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+      "label": "Plan 20: Add Window-Close SwiftTag Document Save Options Plan"
+    },
+    {
+      "covered_commits": [
+        "096d27739611fe6d978a8e683283c1ec3de7c030",
+        "561817a4bca220d705273d6744f1e5756cec418f"
+      ],
+      "id": "21",
+      "initial_commit": "561817a4bca220d705273d6744f1e5756cec418f",
+      "label": "Plan 21: Add SwiftTag Document Bookmark Plan"
+    },
+    {
+      "covered_commits": [
+        "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+        "603c07621916ecd47e1a9faee08d8c32cd6eebdf",
+        "4e470f0885282d2dfa9bcfc38252ea229589132c"
+      ],
+      "id": "22",
+      "initial_commit": "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+      "label": "Plan 22: Add Referenced SwiftTag Document Track-List Save Offer Plan"
+    },
+    {
+      "covered_commits": [
+        "f195e03db1cd290792f99f8b880bb69995e28921"
+      ],
+      "id": "23",
+      "initial_commit": "f195e03db1cd290792f99f8b880bb69995e28921",
+      "label": "Plan 23: Add SwiftTag Document Quick Look Preview Extension Plan"
+    },
+    {
+      "covered_commits": [
+        "b70f6625e06280784004190bcabafe04c96086d3"
+      ],
+      "id": "24",
+      "initial_commit": "b70f6625e06280784004190bcabafe04c96086d3",
+      "label": "Plan 24: Add Track Duration Info Plan"
+    },
+    {
+      "covered_commits": [
+        "36c5b18642e6568ca15e897dcae9132a6907e9db",
+        "4a07659704ab091a117b882a027635c12af8294c",
+        "352ff8c562657dc7ed4c0171d4448bdda0bec559",
+        "f23c8a089f6d5549a597e0635ff808b203a25766"
+      ],
+      "id": "25",
+      "initial_commit": "36c5b18642e6568ca15e897dcae9132a6907e9db",
+      "label": "Plan 25: Add Picture Description Edit Plan"
+    },
+    {
+      "covered_commits": [
+        "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+        "777706cf1432bcd9bbd0ff1d145469d038b76fd3",
+        "bee209c217c6b5fa2c4eaddbddcab99101ee589a",
+        "5866685bcbe463804d3efa4fb258029bf961207a",
+        "859a8f570b718d332f3f3814fc621280ae0f077e",
+        "0c2d38575541a8dada750da08698d78e75a4d3f0",
+        "2298c43c00492de67ad920a395d3ec7a8c8fb722",
+        "d65459355d32c58116293e4f6cce8a759b6d67f5",
+        "546e43d639eb9d7eceb46aa966b8a592b187b12c",
+        "c02d65544f4b09ec7b1fa8ca3e5e15204fdd1795",
+        "95957dd6350042cf04715f42d75a708d22bd4af1",
+        "11ba78598b25840b5e415e7410b8df4b75c964c5",
+        "6811df91487bd977d74d60b43af798e9970e5d69",
+        "9b05c92e3f87af186de2ebdf43ebe8f297b41572",
+        "46a24e9e98968ea9d3bfa50853be92e35d857f8e",
+        "bbb83ef00b9fb130f94ada7293ee1f429c6bf755",
+        "24428a1548324e06268c9174e358e22e9559801b",
+        "ce1865558f2929bb98bcf1450a297244be3fbb06",
+        "987ade16137d70327f87ab16fcf3fc874681eba4",
+        "83b8764ca1faecb6f984a4cf8703eaad75501f8a",
+        "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+        "1b08404c005806083a5443603d98c10c5510ee70",
+        "063c138d4ad746588a85c0be70cc1c5c75854e87",
+        "7c15f6097d77ab2db98c6795b04474308f770536",
+        "d928e3bb438c8fa266b8700f3d4b2709c72bd7ee",
+        "3fd6771aa6fbbc5afe81722f5d39ce0c171019cd",
+        "2e24923ec49954fa4d4b17f56f3d26c10265a51b",
+        "43b64835145b64f3346d6298de67754019b36df8",
+        "fc120558109cc0d36c1bee5ae25bce69d4702311",
+        "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+        "94c83a7fe23cb17431994dd0f02d5f38c321630b",
+        "77e0dc1182db2bdd7d3a4d09b5c1a7b3b912191b",
+        "f19906905ecd5db8ea9d65fc0a6d80dbd0f798cb",
+        "82db5cd7599e76c1f0c6e8dda5f420865e32f4e7",
+        "2976159836a41160b0a462b26c952968c19a7923",
+        "c2b2356f0f3b1143f444b6e8120567b343d729cc",
+        "969d6592c5cd201b256d15e2453193b8064126f1",
+        "5cf9b48f0411fadf42905537294e7db841c6a628",
+        "50b8fd902d32fca1ed43570b89b6e097dd4e9fae",
+        "44df34502dee4a2af0a264dfe0047ff8e82be4ab",
+        "14a623cc7cae72b22210b2f44a8b8a9d3f09e85f",
+        "893289b52cf06c6f3c02548f549ebc68e4281380",
+        "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+      ],
+      "id": "26",
+      "initial_commit": "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+      "label": "Plan 26: Add AppleScript Support Plan"
+    },
+    {
+      "covered_commits": [
+        "ce1865558f2929bb98bcf1450a297244be3fbb06",
+        "987ade16137d70327f87ab16fcf3fc874681eba4"
+      ],
+      "id": "27",
+      "initial_commit": "987ade16137d70327f87ab16fcf3fc874681eba4",
+      "label": "Plan 27: Track Tags Refactor Plan"
+    },
+    {
+      "covered_commits": [
+        "452263137775f01b3d4877c28d37aad4dce7884d",
+        "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+        "9273900261be4959eb466c7c8dd5bce9283d6da8",
+        "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27",
+        "32babc084a6572ee51a860f636b385d6870c2b90",
+        "11e4877420c3dc760f9be803b2734ea34a2031e0",
+        "c2b2356f0f3b1143f444b6e8120567b343d729cc",
+        "969d6592c5cd201b256d15e2453193b8064126f1",
+        "5cf9b48f0411fadf42905537294e7db841c6a628",
+        "50b8fd902d32fca1ed43570b89b6e097dd4e9fae",
+        "44df34502dee4a2af0a264dfe0047ff8e82be4ab",
+        "14a623cc7cae72b22210b2f44a8b8a9d3f09e85f",
+        "893289b52cf06c6f3c02548f549ebc68e4281380",
+        "604d139ad72b08a404092b8812a0130678f53984",
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+        "e096ded126a62938d4627bd1205b32a0e30c77b0",
+        "c1df562489d39bf6608f3053706fc038844b482c",
+        "5c2ab0a3ba722d5fdc139615b6eb55902237162d",
+        "a3d4895796afa545efc1d3c39379220da2c616f3",
+        "7a19911399e2e3a8b7ff2d239319a658e793346c",
+        "477665910577c41766377204a1abfc8cc7f0dd6d"
+      ],
+      "id": "28",
+      "initial_commit": "452263137775f01b3d4877c28d37aad4dce7884d",
+      "label": "Plan 28: Add SwiftTag Use Documentation Plan"
+    },
+    {
+      "covered_commits": [
+        "82c43c94fe7392a5e5551ef1a311c150006ab0f3"
+      ],
+      "id": "29",
+      "initial_commit": "82c43c94fe7392a5e5551ef1a311c150006ab0f3",
+      "label": "Plan 29: Add Sandbox Path Settings Plan"
+    },
+    {
+      "covered_commits": [
+        "d2843d58d7c77e0470d1b467eacf8a956665e2c9"
+      ],
+      "id": "30",
+      "initial_commit": "d2843d58d7c77e0470d1b467eacf8a956665e2c9",
+      "label": "Plan 30: Auto Update Track Total By Disc Plan"
+    },
+    {
+      "covered_commits": [
+        "7228297fdfbf05a87af30e5330fdcdd1e908dd84"
+      ],
+      "id": "31",
+      "initial_commit": "7228297fdfbf05a87af30e5330fdcdd1e908dd84",
+      "label": "Plan 31: Set Track Numbers And Sort Tracks Plan"
+    },
+    {
+      "covered_commits": [
+        "88d09498e62eed6f088450eb0cf1ec3129a7ad34"
+      ],
+      "id": "32",
+      "initial_commit": "88d09498e62eed6f088450eb0cf1ec3129a7ad34",
+      "label": "Plan 32: Auto Update Disc Total Plan"
+    },
+    {
+      "covered_commits": [
+        "29444d740b06ee147a5690f1070d56abfa8be162"
+      ],
+      "id": "33",
+      "initial_commit": "29444d740b06ee147a5690f1070d56abfa8be162",
+      "label": "Plan 33: Add Track File Rename Plan"
+    }
+  ],
+  "start_commit": "2c8445cbde7892ceff58fb58780a79278bcf7d6e",
+  "transcripts": [
+    {
+      "covered_commits": [
+        "6cf4772cd3482a0a7ca38f2f613ca64a86da22a1",
+        "1fcd08274065e59e148cb05d16e592e98f02bced"
+      ],
+      "id": "transcript-2026-02-27-1-1-FLACBridgeExecution",
+      "initial_commit": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "label": "transcript-2026-02-27-1-1-FLACBridgeExecution"
+    },
+    {
+      "covered_commits": [
+        "c965c3feb354452704670af683ab541da3c43f71"
+      ],
+      "id": "transcript-2026-03-02-1-MiscTagEditorDev",
+      "initial_commit": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "label": "transcript-2026-03-02-1-MiscTagEditorDev"
+    },
+    {
+      "covered_commits": [
+        "2302109d0c43a41cb71c36e47cf2b4b8973a63d6",
+        "b5b4f12719bcc1df96078cbbc79157c47985e637",
+        "f400158d420b3d62590a7863231b3f4fe603006b"
+      ],
+      "id": "transcript-2026-03-03-1-MiscTagEditorDev",
+      "initial_commit": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "label": "transcript-2026-03-03-1-MiscTagEditorDev"
+    },
+    {
+      "covered_commits": [
+        "a76f2110c364943a6a2b000cd575807b8f75a6e6",
+        "6c669809df69c8e7566517df27f84cd4ac85cb37",
+        "bae266f0f97e4d7e264cc54628bfaf3cc70a78f7"
+      ],
+      "id": "transcript-2026-03-04-1-2-ContentViewReorganizationPlan.md",
+      "initial_commit": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "label": "transcript-2026-03-04-1-2-ContentViewReorganizationPlan.md"
+    },
+    {
+      "covered_commits": [
+        "27b32d888ac16fcaa31f6735b29d960131a8315c"
+      ],
+      "id": "transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan",
+      "initial_commit": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "label": "transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan"
+    },
+    {
+      "covered_commits": [
+        "80b722ee0e77887149ebfd307538cac12a5907c3"
+      ],
+      "id": "transcript-2026-03-07-1-5-AddSaveNotificationsPlan",
+      "initial_commit": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "label": "transcript-2026-03-07-1-5-AddSaveNotificationsPlan"
+    },
+    {
+      "covered_commits": [
+        "e031a26f031d038fcc430fb7057600f67102ccbe",
+        "80b722ee0e77887149ebfd307538cac12a5907c3"
+      ],
+      "id": "transcript-2026-03-07-2-6-AgentsTranscriptSkillPlan",
+      "initial_commit": "80b722ee0e77887149ebfd307538cac12a5907c3",
+      "label": "transcript-2026-03-07-2-6-AgentsTranscriptSkillPlan"
+    },
+    {
+      "covered_commits": [
+        "e0cd7da70c303f9524054cf6e150d7fbfca3d9d1"
+      ],
+      "id": "transcript-2026-03-12-1-7-AddSaveStatusViewPlan",
+      "initial_commit": "e0cd7da70c303f9524054cf6e150d7fbfca3d9d1",
+      "label": "transcript-2026-03-12-1-7-AddSaveStatusViewPlan"
+    },
+    {
+      "covered_commits": [
+        "c56695645a5579bac37f1f716650754ccc5750a1"
+      ],
+      "id": "transcript-2026-03-13-1-8-AddTrackStatusPlan",
+      "initial_commit": "c56695645a5579bac37f1f716650754ccc5750a1",
+      "label": "transcript-2026-03-13-1-8-AddTrackStatusPlan"
+    },
+    {
+      "covered_commits": [
+        "2d3e003b9689d477939ba8543f037de2cf8068c5",
+        "ae13badc1a2a880e7b374fa67010992d398fa737"
+      ],
+      "id": "transcript-2026-03-14-1-8-AddTrackStatusPlan",
+      "initial_commit": "94246bbd4bebc8a284577f2d68b82ff5db235599",
+      "label": "transcript-2026-03-14-1-8-AddTrackStatusPlan"
+    },
+    {
+      "covered_commits": [
+        "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+      ],
+      "id": "transcript-2026-03-17-1-9-AddUIFeedbackSettings",
+      "initial_commit": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+      "label": "transcript-2026-03-17-1-9-AddUIFeedbackSettings"
+    },
+    {
+      "covered_commits": [
+        "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+      ],
+      "id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings",
+      "initial_commit": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+      "label": "transcript-2026-03-17-2-9-AddUIFeedbackSettings"
+    },
+    {
+      "covered_commits": [
+        "83083cbcdf9667c18e3a5c3c11c66d2cfa24f4a6",
+        "0d268f9dbda719319837ad31711eb87f9f166499"
+      ],
+      "id": "transcript-2026-03-18-1-9-AddUIFeedbackSettings",
+      "initial_commit": "0d268f9dbda719319837ad31711eb87f9f166499",
+      "label": "transcript-2026-03-18-1-9-AddUIFeedbackSettings"
+    },
+    {
+      "covered_commits": [
+        "68f7c7b1c66c1a7acd0564610efe03ceff89180b"
+      ],
+      "id": "transcript-2026-03-19-1-10-AddTrackManagement",
+      "initial_commit": "b1c99ff0e11dc7d38d78a51a328115010a433f80",
+      "label": "transcript-2026-03-19-1-10-AddTrackManagement"
+    },
+    {
+      "covered_commits": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+      ],
+      "id": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport",
+      "initial_commit": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+      "label": "transcript-2026-03-21-1-11-AddMultiPicturePerTrackSupport"
+    },
+    {
+      "covered_commits": [
+        "9e1ce62bf296678be8aa16075285d1f9e0cb453c"
+      ],
+      "id": "transcript-2026-03-22-1-11-AddMultiPicturePerTrackSupport",
+      "initial_commit": "9e1ce62bf296678be8aa16075285d1f9e0cb453c",
+      "label": "transcript-2026-03-22-1-11-AddMultiPicturePerTrackSupport"
+    },
+    {
+      "covered_commits": [
+        "1e4ea8e60ed212c41a1f3f43a972ccad5855a07a",
+        "68e340f508e0f0f5b0ac2fbbcae259abf6155b6e"
+      ],
+      "id": "transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport",
+      "initial_commit": "68e340f508e0f0f5b0ac2fbbcae259abf6155b6e",
+      "label": "transcript-2026-03-23-1-11-AddMultiPicturePerTrackSupport"
+    },
+    {
+      "covered_commits": [
+        "b4593bad7a73d4737a89fa81f52b0a0c853f2bce"
+      ],
+      "id": "transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport",
+      "initial_commit": "b4593bad7a73d4737a89fa81f52b0a0c853f2bce",
+      "label": "transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport"
+    },
+    {
+      "covered_commits": [
+        "f36a117c021f535e956e2d1722625465cd66b2f3",
+        "2c3898c5b9fee3c3eefa3367c3219b2f4dbd2974",
+        "ce82bfb0ed6ae71f4fa52b159af692e3b74fe2c7",
+        "2aee7213d2467ac765cf2f834b3e8b0a5409064e",
+        "a0438824397c29c96ca6c63b48ef501b5d63dffe"
+      ],
+      "id": "transcript-2026-03-26-1-11-AddMultiPicturePerTrackSupport",
+      "initial_commit": "f36a117c021f535e956e2d1722625465cd66b2f3",
+      "label": "transcript-2026-03-26-1-11-AddMultiPicturePerTrackSupport"
+    },
+    {
+      "covered_commits": [
+        "bba775b507acd848d8bea0c67609752e0d812194"
+      ],
+      "id": "transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport",
+      "initial_commit": "bba775b507acd848d8bea0c67609752e0d812194",
+      "label": "transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport"
+    },
+    {
+      "covered_commits": [
+        "da7b04f7563351b6c4c0883dbcbc16a5e081336a"
+      ],
+      "id": "transcript-2026-04-01-1-13-AddFLACFingerprintSupport",
+      "initial_commit": "da7b04f7563351b6c4c0883dbcbc16a5e081336a",
+      "label": "transcript-2026-04-01-1-13-AddFLACFingerprintSupport"
+    },
+    {
+      "covered_commits": [
+        "90ef077070ed157959eed236c4a5edfc023423b8"
+      ],
+      "id": "transcript-2026-04-02-1-14-AddCompilationTag",
+      "initial_commit": "90ef077070ed157959eed236c4a5edfc023423b8",
+      "label": "transcript-2026-04-02-1-14-AddCompilationTag"
+    },
+    {
+      "covered_commits": [
+        "1276536d7ce542d757187ed8e2a7a229c6741847",
+        "bf6d257c8a9a96ec6846d3cac38bd49afd54f83a"
+      ],
+      "id": "transcript-2026-04-02-1-15-AddSwiftTagDocumentCreation",
+      "initial_commit": "bf6d257c8a9a96ec6846d3cac38bd49afd54f83a",
+      "label": "transcript-2026-04-02-1-15-AddSwiftTagDocumentCreation"
+    },
+    {
+      "covered_commits": [
+        "1c2bb82cfcda4a8e4043b7e883e42928b18064cf"
+      ],
+      "id": "transcript-2026-04-04-1-16-AddSwiftTagDocumentRead",
+      "initial_commit": "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "label": "transcript-2026-04-04-1-16-AddSwiftTagDocumentRead"
+    },
+    {
+      "covered_commits": [
+        "633671ae999d222fba32fde71594440b8b367350",
+        "d0fca7dec639c9bd9845c8efb59147ccd1016e26"
+      ],
+      "id": "transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution",
+      "initial_commit": "d0fca7dec639c9bd9845c8efb59147ccd1016e26",
+      "label": "transcript-2026-04-04-1-17-SwiftTagDocumentReadLiveFileResolution"
+    },
+    {
+      "covered_commits": [
+        "bc1eaf01993b5f6ef2cc64eef0f6dd4fe66824de"
+      ],
+      "id": "transcript-2026-04-05-1-SwiftTagDocumentReopenFix",
+      "initial_commit": "bc1eaf01993b5f6ef2cc64eef0f6dd4fe66824de",
+      "label": "transcript-2026-04-05-1-SwiftTagDocumentReopenFix"
+    },
+    {
+      "covered_commits": [
+        "575c54bdaeb6d9eda3326eedccc6e2395422094e"
+      ],
+      "id": "transcript-2026-04-05-2-AddFlacStatusUpdateFix",
+      "initial_commit": "575c54bdaeb6d9eda3326eedccc6e2395422094e",
+      "label": "transcript-2026-04-05-2-AddFlacStatusUpdateFix"
+    },
+    {
+      "covered_commits": [
+        "41e60a87d8b66f2a9ba012f5c5d11b525ab7c759"
+      ],
+      "id": "transcript-2026-04-06-1-18-UpdateWindowTitleText",
+      "initial_commit": "41e60a87d8b66f2a9ba012f5c5d11b525ab7c759",
+      "label": "transcript-2026-04-06-1-18-UpdateWindowTitleText"
+    },
+    {
+      "covered_commits": [
+        "a41be8a2ef85b234f33f4003a47fd3d0117b6e83"
+      ],
+      "id": "transcript-2026-04-06-2-ReuseEmptyEditorIssue",
+      "initial_commit": "a41be8a2ef85b234f33f4003a47fd3d0117b6e83",
+      "label": "transcript-2026-04-06-2-ReuseEmptyEditorIssue"
+    },
+    {
+      "covered_commits": [
+        "a41be8a2ef85b234f33f4003a47fd3d0117b6e83"
+      ],
+      "id": "transcript-2026-04-06-3-ReuseEmptyEditorIssue",
+      "initial_commit": "a41be8a2ef85b234f33f4003a47fd3d0117b6e83",
+      "label": "transcript-2026-04-06-3-ReuseEmptyEditorIssue"
+    },
+    {
+      "covered_commits": [
+        "19369540b1a2f92b3ab4fd1cedb4db7cefe41498"
+      ],
+      "id": "transcript-2026-04-06-4-TestBugFixes",
+      "initial_commit": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+      "label": "transcript-2026-04-06-4-TestBugFixes"
+    },
+    {
+      "covered_commits": [
+        "ac6148bb93aa6651ba5884d968f1821e107eef34"
+      ],
+      "id": "transcript-2026-04-07-1-TrackFileMonitoringFix",
+      "initial_commit": "ac6148bb93aa6651ba5884d968f1821e107eef34",
+      "label": "transcript-2026-04-07-1-TrackFileMonitoringFix"
+    },
+    {
+      "covered_commits": [
+        "ec63010015b0d8b4b08f578fb82c8526ce872cc6"
+      ],
+      "id": "transcript-2026-04-07-2-DocumentPictureDiffFix",
+      "initial_commit": "ec63010015b0d8b4b08f578fb82c8526ce872cc6",
+      "label": "transcript-2026-04-07-2-DocumentPictureDiffFix"
+    },
+    {
+      "covered_commits": [
+        "27b4d85ec22c4165acb415ef3929bd10d4c35202"
+      ],
+      "id": "transcript-2026-04-07-3-19-AddSwiftTagDocumentSaveOptions",
+      "initial_commit": "27b4d85ec22c4165acb415ef3929bd10d4c35202",
+      "label": "transcript-2026-04-07-3-19-AddSwiftTagDocumentSaveOptions"
+    },
+    {
+      "covered_commits": [
+        "603c07621916ecd47e1a9faee08d8c32cd6eebdf"
+      ],
+      "id": "transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions",
+      "initial_commit": "603c07621916ecd47e1a9faee08d8c32cd6eebdf",
+      "label": "transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions"
+    },
+    {
+      "covered_commits": [
+        "92460554b47e6062390266578964fe59fd5af784"
+      ],
+      "id": "transcript-2026-04-09-1-ExternalDifferenceDetectionFix",
+      "initial_commit": "92460554b47e6062390266578964fe59fd5af784",
+      "label": "transcript-2026-04-09-1-ExternalDifferenceDetectionFix"
+    },
+    {
+      "covered_commits": [
+        "096d27739611fe6d978a8e683283c1ec3de7c030",
+        "561817a4bca220d705273d6744f1e5756cec418f"
+      ],
+      "id": "transcript-2026-04-09-2-21-AddSwiftTagDocumentBookmark",
+      "initial_commit": "561817a4bca220d705273d6744f1e5756cec418f",
+      "label": "transcript-2026-04-09-2-21-AddSwiftTagDocumentBookmark"
+    },
+    {
+      "covered_commits": [
+        "3c4cfff64ee127631152a551713977c1ad5a40dd"
+      ],
+      "id": "transcript-2026-04-10-1-LaunchOpenFlacOrDocFix",
+      "initial_commit": "3c4cfff64ee127631152a551713977c1ad5a40dd",
+      "label": "transcript-2026-04-10-1-LaunchOpenFlacOrDocFix"
+    },
+    {
+      "covered_commits": [
+        "4e470f0885282d2dfa9bcfc38252ea229589132c"
+      ],
+      "id": "transcript-2026-04-10-2-22-AddSwiftTagDocumentSaveOptions",
+      "initial_commit": "4e470f0885282d2dfa9bcfc38252ea229589132c",
+      "label": "transcript-2026-04-10-2-22-AddSwiftTagDocumentSaveOptions"
+    },
+    {
+      "covered_commits": [
+        "454258cb9db98ff57199e91810c74d771038a613",
+        "cfba5a1a7b93b8e01d1e1b806a8db413e207ae55"
+      ],
+      "id": "transcript-2026-04-10-3-AddSwiftTagDocumentSwiftTags",
+      "initial_commit": "cfba5a1a7b93b8e01d1e1b806a8db413e207ae55",
+      "label": "transcript-2026-04-10-3-AddSwiftTagDocumentSwiftTags"
+    },
+    {
+      "covered_commits": [
+        "29c8eed7decacebe51ab53c9150e9b5b86cd9f3b"
+      ],
+      "id": "transcript-2026-04-10-4-CompilationDisabledAndDiffFix",
+      "initial_commit": "29c8eed7decacebe51ab53c9150e9b5b86cd9f3b",
+      "label": "transcript-2026-04-10-4-CompilationDisabledAndDiffFix"
+    },
+    {
+      "covered_commits": [
+        "f195e03db1cd290792f99f8b880bb69995e28921"
+      ],
+      "id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook",
+      "initial_commit": "f195e03db1cd290792f99f8b880bb69995e28921",
+      "label": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook"
+    },
+    {
+      "covered_commits": [
+        "b70f6625e06280784004190bcabafe04c96086d3"
+      ],
+      "id": "transcript-2026-04-12-1-24-AddTrackDurationInfo",
+      "initial_commit": "b70f6625e06280784004190bcabafe04c96086d3",
+      "label": "transcript-2026-04-12-1-24-AddTrackDurationInfo"
+    },
+    {
+      "covered_commits": [
+        "36c5b18642e6568ca15e897dcae9132a6907e9db",
+        "4a07659704ab091a117b882a027635c12af8294c"
+      ],
+      "id": "transcript-2026-04-14-1-25-AddPictureDescriptionEdit",
+      "initial_commit": "4a07659704ab091a117b882a027635c12af8294c",
+      "label": "transcript-2026-04-14-1-25-AddPictureDescriptionEdit"
+    },
+    {
+      "covered_commits": [
+        "352ff8c562657dc7ed4c0171d4448bdda0bec559"
+      ],
+      "id": "transcript-2026-04-16-1-InternalExternalDiffUpdateFix",
+      "initial_commit": "f23c8a089f6d5549a597e0635ff808b203a25766",
+      "label": "transcript-2026-04-16-1-InternalExternalDiffUpdateFix"
+    },
+    {
+      "covered_commits": [
+        "f23c8a089f6d5549a597e0635ff808b203a25766"
+      ],
+      "id": "transcript-2026-04-17-1-InternalExternalDiffDocUpdateFix",
+      "initial_commit": "f23c8a089f6d5549a597e0635ff808b203a25766",
+      "label": "transcript-2026-04-17-1-InternalExternalDiffDocUpdateFix"
+    },
+    {
+      "covered_commits": [
+        "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+        "777706cf1432bcd9bbd0ff1d145469d038b76fd3"
+      ],
+      "id": "transcript-2026-04-18-1-26-AddAppleScriptSupport",
+      "initial_commit": "777706cf1432bcd9bbd0ff1d145469d038b76fd3",
+      "label": "transcript-2026-04-18-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "bee209c217c6b5fa2c4eaddbddcab99101ee589a"
+      ],
+      "id": "transcript-2026-04-20-1-26-AddAppleScriptSupport",
+      "initial_commit": "bee209c217c6b5fa2c4eaddbddcab99101ee589a",
+      "label": "transcript-2026-04-20-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "5866685bcbe463804d3efa4fb258029bf961207a",
+        "859a8f570b718d332f3f3814fc621280ae0f077e"
+      ],
+      "id": "transcript-2026-04-21-1-26-AddAppleScriptSupport",
+      "initial_commit": "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "label": "transcript-2026-04-21-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "859a8f570b718d332f3f3814fc621280ae0f077e",
+        "0c2d38575541a8dada750da08698d78e75a4d3f0"
+      ],
+      "id": "transcript-2026-04-22-1-26-AddAppleScriptSupport",
+      "initial_commit": "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "label": "transcript-2026-04-22-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "2298c43c00492de67ad920a395d3ec7a8c8fb722"
+      ],
+      "id": "transcript-2026-04-22-2-26-AddAppleScriptSupport",
+      "initial_commit": "2298c43c00492de67ad920a395d3ec7a8c8fb722",
+      "label": "transcript-2026-04-22-2-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "d65459355d32c58116293e4f6cce8a759b6d67f5"
+      ],
+      "id": "transcript-2026-04-23-1-26-AddAppleScriptSupport",
+      "initial_commit": "d65459355d32c58116293e4f6cce8a759b6d67f5",
+      "label": "transcript-2026-04-23-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "546e43d639eb9d7eceb46aa966b8a592b187b12c"
+      ],
+      "id": "transcript-2026-04-23-2-26-AddAppleScriptSupport",
+      "initial_commit": "546e43d639eb9d7eceb46aa966b8a592b187b12c",
+      "label": "transcript-2026-04-23-2-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "c02d65544f4b09ec7b1fa8ca3e5e15204fdd1795",
+        "95957dd6350042cf04715f42d75a708d22bd4af1"
+      ],
+      "id": "transcript-2026-04-24-1-26-AddAppleScriptSupport",
+      "initial_commit": "95957dd6350042cf04715f42d75a708d22bd4af1",
+      "label": "transcript-2026-04-24-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "11ba78598b25840b5e415e7410b8df4b75c964c5"
+      ],
+      "id": "transcript-2026-04-28-1-26-AddAppleScriptSupport",
+      "initial_commit": "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "label": "transcript-2026-04-28-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "6811df91487bd977d74d60b43af798e9970e5d69"
+      ],
+      "id": "transcript-2026-04-28-2-26-AddAppleScriptSupport",
+      "initial_commit": "6811df91487bd977d74d60b43af798e9970e5d69",
+      "label": "transcript-2026-04-28-2-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "9b05c92e3f87af186de2ebdf43ebe8f297b41572"
+      ],
+      "id": "transcript-2026-04-29-1-26-AddAppleScriptSupport",
+      "initial_commit": "9b05c92e3f87af186de2ebdf43ebe8f297b41572",
+      "label": "transcript-2026-04-29-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "46a24e9e98968ea9d3bfa50853be92e35d857f8e",
+        "bbb83ef00b9fb130f94ada7293ee1f429c6bf755",
+        "24428a1548324e06268c9174e358e22e9559801b"
+      ],
+      "id": "transcript-2026-04-29-2-26-AddAppleScriptSupport",
+      "initial_commit": "24428a1548324e06268c9174e358e22e9559801b",
+      "label": "transcript-2026-04-29-2-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "ce1865558f2929bb98bcf1450a297244be3fbb06",
+        "987ade16137d70327f87ab16fcf3fc874681eba4"
+      ],
+      "id": "transcript-2026-04-30-1-26-AddAppleScriptSupport",
+      "initial_commit": "987ade16137d70327f87ab16fcf3fc874681eba4",
+      "label": "transcript-2026-04-30-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "83b8764ca1faecb6f984a4cf8703eaad75501f8a"
+      ],
+      "id": "transcript-2026-04-30-2-26-AddAppleScriptSupport",
+      "initial_commit": "83b8764ca1faecb6f984a4cf8703eaad75501f8a",
+      "label": "transcript-2026-04-30-2-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+        "1b08404c005806083a5443603d98c10c5510ee70"
+      ],
+      "id": "transcript-2026-05-01-1-26-AddAppleScriptSupport",
+      "initial_commit": "1b08404c005806083a5443603d98c10c5510ee70",
+      "label": "transcript-2026-05-01-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "063c138d4ad746588a85c0be70cc1c5c75854e87"
+      ],
+      "id": "transcript-2026-05-02-1-26-AddAppleScriptSupport",
+      "initial_commit": "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "label": "transcript-2026-05-02-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "7c15f6097d77ab2db98c6795b04474308f770536"
+      ],
+      "id": "transcript-2026-05-02-2-26-AddAppleScriptSupport",
+      "initial_commit": "7c15f6097d77ab2db98c6795b04474308f770536",
+      "label": "transcript-2026-05-02-2-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "d928e3bb438c8fa266b8700f3d4b2709c72bd7ee"
+      ],
+      "id": "transcript-2026-05-03-1-26-AddAppleScriptSupport",
+      "initial_commit": "d928e3bb438c8fa266b8700f3d4b2709c72bd7ee",
+      "label": "transcript-2026-05-03-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "3fd6771aa6fbbc5afe81722f5d39ce0c171019cd"
+      ],
+      "id": "transcript-2026-05-03-2-26-AddAppleScriptSupport",
+      "initial_commit": "3fd6771aa6fbbc5afe81722f5d39ce0c171019cd",
+      "label": "transcript-2026-05-03-2-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "2e24923ec49954fa4d4b17f56f3d26c10265a51b",
+        "43b64835145b64f3346d6298de67754019b36df8"
+      ],
+      "id": "transcript-2026-05-04-1-26-AddAppleScriptSupport",
+      "initial_commit": "43b64835145b64f3346d6298de67754019b36df8",
+      "label": "transcript-2026-05-04-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "fc120558109cc0d36c1bee5ae25bce69d4702311",
+        "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+        "94c83a7fe23cb17431994dd0f02d5f38c321630b",
+        "77e0dc1182db2bdd7d3a4d09b5c1a7b3b912191b"
+      ],
+      "id": "transcript-2026-05-07-1-26-AddAppleScriptSupport",
+      "initial_commit": "77e0dc1182db2bdd7d3a4d09b5c1a7b3b912191b",
+      "label": "transcript-2026-05-07-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "f19906905ecd5db8ea9d65fc0a6d80dbd0f798cb",
+        "82db5cd7599e76c1f0c6e8dda5f420865e32f4e7",
+        "2976159836a41160b0a462b26c952968c19a7923"
+      ],
+      "id": "transcript-2026-05-10-1-26-AddAppleScriptSupport",
+      "initial_commit": "2976159836a41160b0a462b26c952968c19a7923",
+      "label": "transcript-2026-05-10-1-26-AddAppleScriptSupport"
+    },
+    {
+      "covered_commits": [
+        "452263137775f01b3d4877c28d37aad4dce7884d"
+      ],
+      "id": "transcript-2026-05-12-1-28-AddSwiftTagUseDocumentation",
+      "initial_commit": "452263137775f01b3d4877c28d37aad4dce7884d",
+      "label": "transcript-2026-05-12-1-28-AddSwiftTagUseDocumentation"
+    },
+    {
+      "covered_commits": [
+        "f156647a0d461ef4ed0ad7411cf1f1a4da51b3d4",
+        "9273900261be4959eb466c7c8dd5bce9283d6da8",
+        "fdfa298ddbbdc77c6301d6f700b3f922d82f9d27",
+        "32babc084a6572ee51a860f636b385d6870c2b90",
+        "11e4877420c3dc760f9be803b2734ea34a2031e0"
+      ],
+      "id": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation",
+      "initial_commit": "11e4877420c3dc760f9be803b2734ea34a2031e0",
+      "label": "transcript-2026-05-13-1-28-AddSwiftTagUseDocumentation"
+    },
+    {
+      "covered_commits": [
+        "82c43c94fe7392a5e5551ef1a311c150006ab0f3"
+      ],
+      "id": "transcript-2026-05-15-1-29-AddSandboxSettings",
+      "initial_commit": "82c43c94fe7392a5e5551ef1a311c150006ab0f3",
+      "label": "transcript-2026-05-15-1-29-AddSandboxSettings"
+    },
+    {
+      "covered_commits": [
+        "c2b2356f0f3b1143f444b6e8120567b343d729cc",
+        "969d6592c5cd201b256d15e2453193b8064126f1",
+        "5cf9b48f0411fadf42905537294e7db841c6a628",
+        "50b8fd902d32fca1ed43570b89b6e097dd4e9fae",
+        "44df34502dee4a2af0a264dfe0047ff8e82be4ab",
+        "14a623cc7cae72b22210b2f44a8b8a9d3f09e85f",
+        "893289b52cf06c6f3c02548f549ebc68e4281380"
+      ],
+      "id": "transcript-2026-05-18-1-28-AddSwiftTagUseDocumentation",
+      "initial_commit": "893289b52cf06c6f3c02548f549ebc68e4281380",
+      "label": "transcript-2026-05-18-1-28-AddSwiftTagUseDocumentation"
+    },
+    {
+      "covered_commits": [
+        "7602f5d2dbef63b01a09845e5f322ad810ce7431",
+        "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+      ],
+      "id": "transcript-2026-05-20-1-MakePictureFix",
+      "initial_commit": "8053109fcb999ee4c2f8a060048b83dbfe4eed81",
+      "label": "transcript-2026-05-20-1-MakePictureFix"
+    },
+    {
+      "covered_commits": [
+        "604d139ad72b08a404092b8812a0130678f53984",
+        "e096ded126a62938d4627bd1205b32a0e30c77b0",
+        "c1df562489d39bf6608f3053706fc038844b482c",
+        "5c2ab0a3ba722d5fdc139615b6eb55902237162d"
+      ],
+      "id": "transcript-2026-05-20-2-28-AddSwiftTagUseDocumentation",
+      "initial_commit": "e534c8366925af29f7c8f9ab67a908c5d6941650",
+      "label": "transcript-2026-05-20-2-28-AddSwiftTagUseDocumentation"
+    },
+    {
+      "covered_commits": [
+        "486b13c723b2fac0220854d9ea7269a09442e7ce",
+        "e8c7dcb8fa1bcfe202e061807bb6873d2e1e0473",
+        "65538b7f93d2246cfc37625f018af76640c6aa40",
+        "716c54c01f81ac69fb1c6e5252727cbd5dd10310"
+      ],
+      "id": "transcript-2026-05-26-1-MiscCleanupAndDocs",
+      "initial_commit": "716c54c01f81ac69fb1c6e5252727cbd5dd10310",
+      "label": "transcript-2026-05-26-1-MiscCleanupAndDocs"
+    },
+    {
+      "covered_commits": [
+        "fcee05c29e0d15314bee932ee8b1e48cc7ca7276",
+        "03227c22ec04d4a16f48e8159bca42426af9eac7",
+        "48fd612594d6a6ae7f88cfe82807c8c31823b63d",
+        "36789f5d0b7a89231ac47b62ca91d92c8b537df8",
+        "b5795c22e58a84982d07d6846e1929f9eba2166f",
+        "5c58b2c352709f9b9c609c1e60a15c4ebf49062c",
+        "5b2392f98b7d9b0680edf4fdfb6966ed9a44d9bc"
+      ],
+      "id": "transcript-2026-05-30-1-DiffFormatAndTestFix",
+      "initial_commit": "5b2392f98b7d9b0680edf4fdfb6966ed9a44d9bc",
+      "label": "transcript-2026-05-30-1-DiffFormatAndTestFix"
+    },
+    {
+      "covered_commits": [
+        "5f406d41dab292e9d24be77a40a86053fba4e075",
+        "58c447d0c8f8d603db83117199143fea38de98fb",
+        "a19bccf7a97c76901ba27f942e9cae26a5642edc",
+        "d4616ef79d1f5f6f9afe47e139aa7a092e4b3085",
+        "798de55dcbb0a4e26d499cec324224070b108b19",
+        "a0be45da0d49c7dfb87bef36da1afed83c46ba4d"
+      ],
+      "id": "transcript-2026-06-03-1-UpdatesForRelease-1-0-2",
+      "initial_commit": "abe9194d5f3d791d34010e12ea51acb0054ae4ce",
+      "label": "transcript-2026-06-03-1-UpdatesForRelease-1-0-2"
+    },
+    {
+      "covered_commits": [
+        "d2843d58d7c77e0470d1b467eacf8a956665e2c9"
+      ],
+      "id": "transcript-2026-06-15-1-30-AutoUpdateTrackTotalByDisc",
+      "initial_commit": "d2843d58d7c77e0470d1b467eacf8a956665e2c9",
+      "label": "transcript-2026-06-15-1-30-AutoUpdateTrackTotalByDisc"
+    },
+    {
+      "covered_commits": [
+        "7228297fdfbf05a87af30e5330fdcdd1e908dd84"
+      ],
+      "id": "transcript-2026-06-16-1-31-AddTrackSortAndNumbering",
+      "initial_commit": "7228297fdfbf05a87af30e5330fdcdd1e908dd84",
+      "label": "transcript-2026-06-16-1-31-AddTrackSortAndNumbering"
+    },
+    {
+      "covered_commits": [
+        "88d09498e62eed6f088450eb0cf1ec3129a7ad34"
+      ],
+      "id": "transcript-2026-06-17-1-32-AutoUpdateDiscTotal",
+      "initial_commit": "88d09498e62eed6f088450eb0cf1ec3129a7ad34",
+      "label": "transcript-2026-06-17-1-32-AutoUpdateDiscTotal"
+    },
+    {
+      "covered_commits": [
+        "29444d740b06ee147a5690f1070d56abfa8be162"
+      ],
+      "id": "transcript-2026-06-18-1-33-AddTrackFileRename",
+      "initial_commit": "29444d740b06ee147a5690f1070d56abfa8be162",
+      "label": "transcript-2026-06-18-1-33-AddTrackFileRename"
+    }
+  ]
+}

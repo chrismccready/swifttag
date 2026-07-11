@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 13-AddFLACFingerprintSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 13-AddFLACFingerprintSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/13-AddFLACFingerprintSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add FLAC Fingerprint Support Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Add FLAC audio fingerprint support so SwiftTag can read the FLAC stream MD5 from libFLAC, surface it per track in the track table as `Fingerprint (ffp)`, and let users show or hide that column from the track table context menu.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Add a FLAC bridge accessor for the FLAC audio MD5 value exposed by libFLAC and equivalent to `metaflac --show-md5sum`.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Surface the fingerprint through the Swift metadata service and into the imported track model.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Add a `Fingerprint (ffp)` column at the end of the track table.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Add track-table context-menu controls to show or hide the fingerprint column.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Add targeted tests for bridge/service mapping, track-model propagation, and table/context-menu behavior.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Changing how save-session fingerprints are computed in `TrackSetFingerprint`.</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Writing or modifying FLAC audio fingerprints.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Adding fingerprint-based duplicate detection or search/filtering.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Adding non-FLAC fingerprint support.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre></pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Latest numbered plan reviewed: `Docs/Plans/12-AddFLACDocumentOpenSupport.md`.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Current implementation files reviewed:</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- `SwiftTag/FLACBridge/include/FlacMetadataBridge.h`</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- `SwiftTag/FLACBridge/src/FlacMetadataBridge.c`</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- `SwiftTag/FlacMetadataService.swift`</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- `SwiftTag/Shared/Models/Track.swift`</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- `SwiftTag/Shared/Models/TrackStatus.swift`</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- `SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift`</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- `SwiftTag/Features/TagEditor/TagEditorView.swift`</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- `SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- `AGENTS.md`</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Relevant fixtures inspected:</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- Constraints accounted for:</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- The current FLAC bridge reads Vorbis comments and picture blocks separately, so fingerprint support should extend that bridge rather than shelling out to `metaflac`.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- `FlacMetadataService.readTags(for:)` is the shared import/reload read path, so fingerprint support should flow through that path instead of inventing a second file-read path.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- `Track` and `TrackFileSnapshot` currently store tag and picture state only; there is no fingerprint field yet.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- `TagEditorTrackFileView` currently hardcodes four columns and has no built-in column-visibility state.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- Existing per-app UI preferences are stored with `@AppStorage` in `ContentView` and settings views; that is the most likely persistence seam if column visibility should be remembered.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- SwiftUI `Table` inspection support is limited, so source-order assertions and `actualView()` checks are likely to be more reliable than brittle structural traversal.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre></pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- `flac_read_tags` and `flac_read_pictures` exist in the C bridge, but there is no accessor for the FLAC stream MD5 in `FlacMetadataBridge.h` or `FlacMetadataBridge.c`.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- `FlacMetadataRecord` currently returns only `tags` and `pictures`, so the Swift layer has no place to carry a fingerprint value today.</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- `TagEditorViewModel.importFlacFiles(_:locked:append:)` builds `Track` values from `FlacMetadataService.readTags(for:)`, which makes import the primary insertion point for a track fingerprint.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- Track refresh and reload paths also call `FlacMetadataService.readTags(for:)`, so fingerprint refresh behavior can stay aligned with existing file reread flows.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- `TagEditorTrackFileView` currently declares status, track number, title, and filename columns only, and its context menu has no column-visibility items.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- `TagEditorView` currently passes no fingerprint-specific data or column-visibility state into `TagEditorTrackFileView`.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre></pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- `Fingerprint (ffp)` should be visible by default the first time the app shows the track table.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>- The fingerprint column show/hide choice should persist across launches and windows using `@AppStorage`.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>- If SwiftTag cannot read a fingerprint for a row, the cell should display `NA`.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre></pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- The bridge implementation should read the stored FLAC stream info MD5 value from libFLAC metadata rather than compute a new checksum in Swift.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- The returned fingerprint should preserve parity with libFLAC/metaflac output so fixture tests can compare a stable known value.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- Fingerprint values need to survive import, reload, and external file refresh flows without creating a separate synchronization path.</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- The table column must be appended at the end of the current track table, preserving the existing order of status, `#`, `Title`, and `Filename`.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- Context-menu show/hide support needs a source of truth for whether the fingerprint column is visible, and that scope must be explicit and testable.</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre></pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- If the bridge reads the wrong metadata block or formats the MD5 differently than `metaflac --show-md5sum`, the UI could show misleading values that appear authoritative.</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- If the fingerprint column visibility state has unclear scope, users may find it surprising if the column reappears or disappears between windows or launches.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- If refresh/reload paths do not update the fingerprint consistently, the table could show stale values after file replacement or external modification.</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre></pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>### Tooling / Environment / Sandbox Risks</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- Bridge-level changes require careful C memory management and explicit free behavior if a new C string is allocated for the MD5 value.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- Fixture verification should prefer the checked-in FLAC samples rather than ad hoc files so targeted tests stay deterministic.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- SwiftUI `Table` and context-menu inspection can be brittle, so verification may need a mix of bridge/service tests, source-order assertions, and narrow view tests instead of broad UI traversal.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre></pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>1. Add FLAC Bridge MD5 Accessor</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- Extend `FlacMetadataBridge.h` with a dedicated fingerprint read API and any result/freeing surface it needs.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- Update `FlacMetadataBridge.c` to read the FLAC stream info metadata block and extract the stored MD5 of the audio data.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- Normalize the bridge result into the expected hex string format and return a clear error when the FLAC metadata cannot be read.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>2. Surface Fingerprint Through Swift Metadata Reads</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- Extend `FlacMetadataRecord` to carry a fingerprint field.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- Update `FlacMetadataService.readTags(for:)` to call the new bridge accessor and include the fingerprint in the returned record.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- Ensure the bridge-owned memory for the fingerprint string is freed on both success and failure paths.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre></pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>3. Add Fingerprint To Track And Snapshot Models</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- Add a per-track fingerprint property to `Track`.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- Decide whether `TrackFileSnapshot` also needs the fingerprint for external-difference or reload bookkeeping, or whether a track-level field is sufficient.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- Populate the fingerprint during import, reload, and other file-reread flows that already reconstruct track state from `FlacMetadataService.readTags(for:)`.</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre></pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>4. Add Table Column And Visibility State</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- Extend `TagEditorTrackFileView` to accept the fingerprint display value and visibility flag needed to render the column.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- Append a `TableColumn(&quot;Fingerprint (ffp)&quot;)` after `Filename`.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- Add context-menu controls to toggle the fingerprint column on and off.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- Store the visibility source of truth in the appropriate parent state container using `@AppStorage` so it persists across launches and windows.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>5. Validation And Hardening</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- Add targeted tests for fixture fingerprint reads from the FLAC bridge/service layer.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- Add model/view-model tests confirming imported and refreshed tracks receive the expected fingerprint.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>- Add targeted view tests or source assertions that the fingerprint column remains last and that the context menu exposes the show/hide control.</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>- Prefer targeted `RunSomeTests` coverage over full-suite execution.</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre></pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>Order:</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>1. Bridge/service tests using checked-in fixtures:</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>- reading `test.flac` returns the expected MD5 value</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- reading `test-with_padding.flac` returns the expected MD5 value for that file</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- service-level failures propagate a useful bridge error if the FLAC metadata cannot be read</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>2. View-model/model tests:</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- imported tracks receive the fingerprint from `FlacMetadataRecord`</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- reload/external refresh paths update the track fingerprint when the file is reread</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- any chosen snapshot/state container carries the fingerprint consistently if snapshot storage is added</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>3. Targeted SwiftUI/ViewInspector or source-order tests:</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>- the track table declares `Fingerprint (ffp)` after `Filename`</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>- the track table context menu exposes the show/hide fingerprint action</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- the view respects the visibility flag and omits the column when hidden</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>4. XCUI only if a context-menu visibility interaction cannot be validated with a lighter seam.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre></pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- SwiftTag can read a FLAC audio fingerprint from libFLAC without invoking external tools.</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- The returned fingerprint matches the FLAC stream MD5 representation expected from `metaflac --show-md5sum`.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- Imported FLAC tracks display their fingerprint in a track-table column titled `Fingerprint (ffp)`.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- The fingerprint column is appended after the existing `Filename` column.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- The fingerprint column is visible by default on first launch.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- The track table context menu lets the user show or hide the fingerprint column.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- The fingerprint column visibility choice persists across launches and windows.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Rows whose fingerprint cannot be read display `NA`.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>- The fingerprint value stays aligned with import and file-reread flows instead of drifting out of sync.</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>- Targeted automated tests cover the bridge/service read path and the table visibility behavior.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre></pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>- None currently.</pre></td></tr></table></main></body></html>

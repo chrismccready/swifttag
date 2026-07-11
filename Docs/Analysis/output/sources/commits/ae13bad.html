@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: test(swiftui): add viewinspector coverage and read-only fixture ui-test support</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: test(swiftui): add viewinspector coverage and read-only fixture ui-test support</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-03-14</p>
+<p><code>ae13badc1a2a880e7b374fa67010992d398fa737</code></p>
+<p>test(swiftui): add viewinspector coverage and read-only fixture ui-test support</p>
+<h2>Body</h2><pre>• add Docs​/​Guides​/testing​-guide​.md and Docs​/testing​-tools​-review​.md
+• update AGENTS​.md with ViewInspector-first SwiftUI testing guidance
+• add local View​Inspector package dependency to Swift​Tag​Tests target in Xcode project
+• add Track​Status​View​Inspector​Tests for track status, lock state, and album editor gating behavior
+• add UI tests for file menu read-only load command and read-only fixture import field disabling
+• add UITEST​_​FLAC​_​READ​_​ONLY handling in UI test launch helper and Content​View fixture import
+• return early from save flow when can​Save(payload:) is false</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>61.2 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>1h 44m</span></div>
+  <div><strong>Assistant</strong><span>18m 33s</span></div>
+  <div><strong>User Response</strong><span>1h 26m</span></div>
+  <div><strong>Back/Forth</strong><span>8.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/diff.html">Diff</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/project.html">Project</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/8.html">Plan 8: Add Track Status Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.html#L1">transcript-2026-03-14-1-8-AddTrackStatusPlan</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.html#L65">transcript-2026-03-14-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-14-1-8-AddTrackStatusPlan:segment-003</td><td>work</td><td>1.000</td><td>16.6</td><td>25m 14s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.html#L81">transcript-2026-03-14-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-14-1-8-AddTrackStatusPlan:segment-004</td><td>work</td><td>1.000</td><td>22.8</td><td>10m 43s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.html#L103">transcript-2026-03-14-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-14-1-8-AddTrackStatusPlan:segment-005</td><td>work</td><td>1.000</td><td>71.4</td><td>32m 51s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.html#L172">transcript-2026-03-14-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-14-1-8-AddTrackStatusPlan:segment-006</td><td>work</td><td>1.000</td><td>41.4</td><td>5m 46s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.html#L212">transcript-2026-03-14-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-14-1-8-AddTrackStatusPlan:segment-007</td><td>work</td><td>1.000</td><td>21.7</td><td>4m 37s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.html#L233">transcript-2026-03-14-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-14-1-8-AddTrackStatusPlan:segment-008</td><td>work</td><td>1.000</td><td>53.8</td><td>13m 37s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.html#L285">transcript-2026-03-14-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-14-1-8-AddTrackStatusPlan:segment-009</td><td>work</td><td>1.000</td><td>19.7</td><td>9m 38s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.html#L304">transcript-2026-03-14-1-8-AddTrackStatusPlan</a></td><td>transcript-2026-03-14-1-8-AddTrackStatusPlan:segment-010</td><td>work</td><td>1.000</td><td>57.9</td><td>2m 26s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>AGENTS.md</td><td>4</td><td>0</td><td>docs</td></tr>
+<tr><td>Docs/Guides/testing-guide.md</td><td>120</td><td>0</td><td>docs</td></tr>
+<tr><td>Docs/testing-tools-review.md</td><td>81</td><td>0</td><td>docs</td></tr>
+<tr><td>SwiftTag.xcodeproj/project.pbxproj</td><td>23</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag.xcodeproj/xcuserdata/ccm.xcuserdatad/xcschemes/xcschememanagement.plist</td><td>5</td><td>0</td><td>other</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>6</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/TrackStatusViewInspectorTests.swift</td><td>189</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>24</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>30.00</td></tr>
+<tr><td>transcript_lines</td><td>305.17</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>6292.00</td></tr>
+<tr><td>assistant_processing_time</td><td>1113.00</td></tr>
+<tr><td>back_and_forth_count</td><td>8.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

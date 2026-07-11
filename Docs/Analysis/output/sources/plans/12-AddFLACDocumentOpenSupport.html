@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 12-AddFLACDocumentOpenSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 12-AddFLACDocumentOpenSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/12-AddFLACDocumentOpenSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add FLAC Document Open Support Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Add proper macOS Finder/open-document support for `.flac` files so opening one or more FLAC files through Finder, Dock drop, or `open` routes those files into SwiftTag using the same append-oriented behavior as the existing `Add FLAC files...` flow.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Add app-level document-open handling for `.flac` file URLs delivered by macOS.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Route Finder-opened FLAC files through the same duplicate filtering and append import path used by `Add FLAC files...`.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Preserve the current loaded editor session contents when opening FLAC files from Finder.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Support launch-time opens and opens delivered while the app is already running.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Decide and document which editor window/session receives Finder-opened files.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Add targeted tests for routing, buffering, duplicate handling, and add-vs-load behavior.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Verify project metadata needed for Finder document opening is actually persisted in source.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre></pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Replacing the existing `Load FLAC files...` behavior.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Converting SwiftTag to an `NSDocument`-based app.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Adding Finder-open support for folders or non-FLAC file types.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Changing FLAC metadata import/write semantics beyond reusing the current add import path.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Redesigning the app icon or document icon artwork.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre></pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Latest numbered plan reviewed: `Docs/Plans/11-v4-AddMultiPicturePerTrackSupport.md`.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Current implementation files reviewed:</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- `SwiftTag/SwiftTagApp.swift`</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- `SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- `SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- `SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift`</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- `SwiftTag/Shared/Models/EditorSessionModels.swift`</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- `SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift`</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- `AGENTS.md`</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- Relevant fixtures inspected:</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- Constraints accounted for:</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- The app currently uses `WindowGroup` plus `@NSApplicationDelegateAdaptor`, not `NSDocument`.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- The current importer in `ContentView` distinguishes `Load FLAC files...` from `Add FLAC files...` through `pendingImporterAddsFiles`.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Duplicate suppression for add flows currently happens before import via `removeDuplicateImportURLsByBookmarkIdentity(_:)`.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- Imported tracks immediately create security-scoped bookmarks in `TagEditorViewModel.importFlacFiles(_:locked:append:)`.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- The app is sandboxed with `ENABLE_USER_SELECTED_FILES = readwrite`, so Finder-delivered URLs and launch-time document opens must be treated carefully and bookmarked promptly.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- The current saved project file does not show persisted document-type or imported-UTI entries yet, so document icon/type registration cannot be confirmed from source in its present state.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- `SwiftTagApp` declares app commands and an application delegate, but it does not currently implement `application(_:openFiles:)`, `application(_:open:)`, or another Finder-open entry point.</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- `ContentView` already has the append behavior we want for Finder-open:</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- `showAddWritableImporter()` sets `pendingImporterAddsFiles = true`.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- `handleFlacImportResult(_:)` filters duplicates only for add flows and then imports with `append: true`.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- `importFlacFiles(_:locked:append:)` in `TagEditorViewModel` appends imported tracks without clearing current tracks when `append == true`.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- `EditorWindowCoordinator` already owns editor-session discovery/opening and is the best existing seam for routing Finder-opened files into either an existing session or a newly opened window.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- `EditorSessionValue` currently supports reopen-notification state but has no field for pending Finder-open URLs.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre></pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>- Default Finder-open behavior for `.flac` files will follow the current `Add FLAC files...` path rather than the destructive `Load FLAC files...` path.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- Finder-opened FLAC files should append to the target editor session and preserve existing loaded tracks and unsaved edits.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- Duplicate filtering should match the current add behavior by bookmark identity/path identity in the target session before import.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- Finder-opened files should import as writable by default, matching `Add FLAC files...`, not `Add FLAC files (read-only)...`.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- The source of truth for the target session will be the focused/frontmost editor session when one exists while the app is already active; if the app is not active when Finder-open arrives, SwiftTag should always create a new editor window and deliver the pending FLAC files there after the scene is ready.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- Current table selection is not the source of truth for Finder-open routing; the operation is session-scoped append behavior.</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- If Finder/open-document delivers a mixed batch containing valid `.flac` files and unsupported URLs, SwiftTag should silently ignore the unsupported URLs and continue importing the valid FLAC files.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre></pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- App-level document-open callbacks may arrive before SwiftUI scene registration finishes, so the implementation needs a buffering/forwarding mechanism between `AppDelegate`, `EditorWindowCoordinator`, and `ContentView`.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- Finder can deliver multiple URLs in one event, and launch-time delivery may happen before the initial `WindowGroup` content is interactive.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- The target session must reuse the add-import duplicate filter so Finder-open does not create duplicate tracks when a file is already loaded.</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- Imported URLs should become security-scoped bookmarks as part of the existing import path rather than inventing a second bookmarking path.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- Proper document opening in Finder also depends on the project’s document-type/UTI registration being persisted in source control, not only shown in unsaved Xcode UI state.</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre></pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- If Finder-open accidentally routes through the load path instead of the add path, users could lose unsaved in-editor context by replacing the current session contents.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- Multiple-window behavior can feel unpredictable if the target session is not clearly defined and consistent with the frontmost editor window when the app is active versus the always-open-new-window rule when the app is inactive.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- Duplicate filtering must happen against the target session’s currently loaded tracks, or repeated Finder opens may create duplicate table entries.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre></pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>### Tooling / Environment / Sandbox Risks</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- Sandbox-opened document URLs may behave differently at launch versus while the app is active, so the implementation should avoid assuming a SwiftUI view is already mounted when the callback fires.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- Full UI automation for Finder-open/document events is likely brittle and slower than necessary in this environment; coordinator/unit coverage should be preferred, with XCUI reserved for a narrow end-to-end case only if needed.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- The current repository state does not yet expose persisted document-type metadata, so Finder integration may appear incomplete in source even if Xcode UI changes were made locally but not saved into the project file.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>1. Persist And Verify Document Registration</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- Re-check the Xcode project metadata after saving the project so `CFBundleDocumentTypes`/`LSItemContentTypes`, imported UTI declarations, and document icon references are visible in source.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- Confirm the `.flac` document type is registered to the intended icon file and UTI before treating Finder-open behavior as complete.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre></pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>2. Add App-Level Finder Open Entry Point</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- Extend `AppDelegate` in `SwiftTagApp.swift` with the appropriate macOS open-files callback for Finder/document events.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- Normalize incoming URLs and silently filter out non-FLAC payloads at the app boundary.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- Forward accepted URLs into a coordinator instead of importing directly in the app delegate.</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre></pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>3. Add Session Routing And Pending-Open Buffering</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- Extend `EditorWindowCoordinator` with a pending document-open queue and an API for delivering FLAC URLs to either the current frontmost session or a new session when no suitable editor window is registered yet.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- Extend `EditorSessionValue` only if needed to carry pending open-file identifiers into the destination scene.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- Ensure launch-time opens can survive the gap between app delegate callback time and `ContentView` registration time.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre></pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>4. Reuse The Existing Add Import Path In ContentView</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>- Add a dedicated `ContentView` entry point that accepts externally supplied FLAC URLs and routes them through the same append import behavior as `Add FLAC files...`.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- Reuse `collectFlacFiles(from:)` where practical, but keep Finder-open constrained to file URLs rather than folder recursion unless explicitly delivered in a supported way.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- Reuse `removeDuplicateImportURLsByBookmarkIdentity(_:)` and `importFlacFiles(_:locked:append:)` with `locked: false` and `append: true`.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>- Surface import errors through the existing FLAC import alert flow.</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre></pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>5. Register Session Focus And Target Selection</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>- Track which editor session is frontmost/eligible for Finder-open delivery so the routing rule is explicit and testable while the app is active.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>- Ensure Finder-open always creates a new editor window when the app is inactive, including launch-time opens and inactive-app reopen events.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre></pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>6. Validation And Hardening</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- Add targeted tests around coordinator routing, pending-open buffering, and append import behavior.</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- Run targeted build/test verification rather than a full UI suite by default.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- Re-check the project file for persisted document registration after Xcode saves the updated metadata.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre></pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>Order:</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>1. Unit tests for app/coordinator routing logic:</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>- opening FLAC files with an existing focused session routes to that session</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>- opening FLAC files while the app is inactive queues work and opens a new editor session even if other sessions already exist</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- opening FLAC files with no registered session queues work and opens a new editor session</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- pending open-file delivery flushes once the destination session registers</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- non-FLAC URLs are silently ignored before import</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>2. Service/view-model tests:</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- append import from external URLs preserves existing tracks</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- duplicate filtering removes files already loaded in the target session</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- imported Finder-opened files are bookmarked through the existing import path</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>3. Targeted UI/state tests where practical:</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- `ContentView` external-open handler uses append semantics, not load semantics</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- import errors still surface through the existing alert path</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>4. XCUI only if a narrow end-to-end document-open scenario is required and ViewInspector/unit seams cannot validate the scene lifecycle confidently.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre></pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>- The saved project metadata contains the `.flac` document type, imported UTI mapping, and document icon registration needed for Finder association.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- SwiftTag responds to Finder/open-document `.flac` events instead of ignoring them.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>- Opening `.flac` files through Finder appends them to the target editor session using the same semantics as `Add FLAC files...`.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>- Existing loaded tracks and unsaved edits are preserved when Finder-open adds files to an existing session.</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- Duplicate files already present in the target session are not re-imported.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- If no editor session is available yet, SwiftTag opens a new editor window and imports the pending FLAC files there once the scene is ready.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- If the app is inactive when Finder-open occurs, SwiftTag opens a new editor window and imports the pending FLAC files there once the scene is ready, rather than reusing an existing window.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Imported Finder-opened files remain writable by default and participate in the existing bookmark-based monitoring/save flows.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- Unsupported non-FLAC URLs delivered in the same open event are silently ignored while valid FLAC files continue importing.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- Errors during Finder-open import surface through the existing import error presentation.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre></pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>- None currently.</pre></td></tr></table></main></body></html>

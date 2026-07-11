@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(applescript): add settings window scripting support</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(applescript): add settings window scripting support</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-05-03</p>
+<p><code>d928e3bb438c8fa266b8700f3d4b2709c72bd7ee</code></p>
+<p>feat(applescript): add settings window scripting support</p>
+<h2>Body</h2><pre>- add settings window class and singleton application element to SwiftTag.sdef
+- add open settings window command with application command routing
+- register SwiftUI settings window for AppleScript window properties
+- expose application windows, settings windows, and editor windows in scripting tests
+- add UI coverage for window enumeration and singleton settings window command
+
+docs(transcript): add implementation transcript</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>73.5 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>1h 55m</span></div>
+  <div><strong>Assistant</strong><span>27m 53s</span></div>
+  <div><strong>User Response</strong><span>1h 28m</span></div>
+  <div><strong>Back/Forth</strong><span>3.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/settings.html">Settings</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/26.html">Plan 26: Add AppleScript Support Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-05-03-1-26-AddAppleScriptSupport.html#L1">transcript-2026-05-03-1-26-AddAppleScriptSupport</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-05-03-1-26-AddAppleScriptSupport.html#L10">transcript-2026-05-03-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-05-03-1-26-AddAppleScriptSupport:segment-001</td><td>work</td><td>1.000</td><td>64.5</td><td>56m 50s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-05-03-1-26-AddAppleScriptSupport.html#L71">transcript-2026-05-03-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-05-03-1-26-AddAppleScriptSupport:segment-002</td><td>work</td><td>1.000</td><td>84.6</td><td>56m 59s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-05-03-1-26-AddAppleScriptSupport.html#L151">transcript-2026-05-03-1-26-AddAppleScriptSupport</a></td><td>transcript-2026-05-03-1-26-AddAppleScriptSupport:segment-003</td><td>work</td><td>1.000</td><td>33.8</td><td>2m 7s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-05-03-1-26-AddAppleScriptSupport.md</td><td>183</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/Features/Settings/SettingsView.swift</td><td>23</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift</td><td>481</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTag.sdef</td><td>18</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTagApp.swift</td><td>8</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagAppleScriptTests.swift</td><td>37</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITestSuites.swift</td><td>10</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>116</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>531.00</td></tr>
+<tr><td>transcript_lines</td><td>183.00</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>6956.00</td></tr>
+<tr><td>assistant_processing_time</td><td>1673.00</td></tr>
+<tr><td>back_and_forth_count</td><td>3.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

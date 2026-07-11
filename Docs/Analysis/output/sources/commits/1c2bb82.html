@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(document): add support for opening .swifttag documents</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(document): add support for opening .swifttag documents</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-04</p>
+<p><code>1c2bb82cfcda4a8e4043b7e883e42928b18064cf</code></p>
+<p>feat(document): add support for opening .swifttag documents</p>
+<h2>Body</h2><pre>- Add `Open SwiftTag Document...` command to the File menu.
+- Add `SwiftTagDocumentPackageReader` to read `.swifttag` packages.
+- Update `EditorWindowCoordinator` to route `.swifttag` documents to existing unused windows or new windows.
+- Update `TagEditorViewModel` to load the `SwiftTagDocumentImportResult` into editable track state.
+- Retain the loaded document URL and ID for saving.
+- Include unit and UI tests for document read operations and routing.
+
+docs(plan): add plan and transcript for SwiftTag document read</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>79.9 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>1h 8m</span></div>
+  <div><strong>Assistant</strong><span>23m 9s</span></div>
+  <div><strong>User Response</strong><span>44m 55s</span></div>
+  <div><strong>Back/Forth</strong><span>4.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/16.html">Plan 16: Add SwiftTag Document Read Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-04-1-16-AddSwiftTagDocumentRead.html#L1">transcript-2026-04-04-1-16-AddSwiftTagDocumentRead</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-04-1-16-AddSwiftTagDocumentRead.html#L12">transcript-2026-04-04-1-16-AddSwiftTagDocumentRead</a></td><td>transcript-2026-04-04-1-16-AddSwiftTagDocumentRead:segment-001</td><td>work</td><td>1.000</td><td>39.8</td><td>12m 28s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-04-1-16-AddSwiftTagDocumentRead.html#L49">transcript-2026-04-04-1-16-AddSwiftTagDocumentRead</a></td><td>transcript-2026-04-04-1-16-AddSwiftTagDocumentRead:segment-002</td><td>work</td><td>1.000</td><td>17.2</td><td>10m 8s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-04-1-16-AddSwiftTagDocumentRead.html#L65">transcript-2026-04-04-1-16-AddSwiftTagDocumentRead</a></td><td>transcript-2026-04-04-1-16-AddSwiftTagDocumentRead:segment-003</td><td>work</td><td>1.000</td><td>88.3</td><td>43m 29s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-04-1-16-AddSwiftTagDocumentRead.html#L147">transcript-2026-04-04-1-16-AddSwiftTagDocumentRead</a></td><td>transcript-2026-04-04-1-16-AddSwiftTagDocumentRead:segment-004</td><td>work</td><td>1.000</td><td>23.7</td><td>1m 59s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/16-AddSwiftTagDocumentRead.md</td><td>200</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-04-1-16-AddSwiftTagDocumentRead.md</td><td>167</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>35</td><td>12</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>87</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/Track.swift</td><td>4</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift</td><td>138</td><td>3</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift</td><td>170</td><td>6</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTagApp.swift</td><td>21</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagDocumentTests.swift</td><td>87</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>184</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>11</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>479.00</td></tr>
+<tr><td>transcript_lines</td><td>169.00</td></tr>
+<tr><td>plan_lines</td><td>200.00</td></tr>
+<tr><td>elapsed_time</td><td>4084.00</td></tr>
+<tr><td>assistant_processing_time</td><td>1389.00</td></tr>
+<tr><td>back_and_forth_count</td><td>4.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: fix(routing): open unassociated swifttag documents in new windows</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: fix(routing): open unassociated swifttag documents in new windows</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-06</p>
+<p><code>a41be8a2ef85b234f33f4003a47fd3d0117b6e83</code></p>
+<p>fix(routing): open unassociated swifttag documents in new windows</p>
+<h2>Body</h2><pre>- stop routing new `.swifttag` opens into unused editor sessions
+- keep bringing the existing associated session forward for reopened documents
+- remove the unused empty-session routing helper from the coordinator
+- update coordinator tests to expect new sessions for unassociated document opens
+
+test(ui): update save pictures ui interactions
+
+- change the relaunch persistence test to send option-command-s for `Save Pictures`
+- update the file menu read-only command assertion to expect `Add FLAC files (read-only)...`
+
+docs(transcript): add reuse-empty-editor conversation transcripts
+
+- add transcript files for the April 6 empty-window routing investigation</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>63.7 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>2h 7m</span></div>
+  <div><strong>Assistant</strong><span>50m 46s</span></div>
+  <div><strong>User Response</strong><span>1h 16m</span></div>
+  <div><strong>Back/Forth</strong><span>7.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/project.html">Project</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p>None</p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-06-2-ReuseEmptyEditorIssue.html#L1">transcript-2026-04-06-2-ReuseEmptyEditorIssue</a>, <a href="../../sources/transcripts/transcript-2026-04-06-3-ReuseEmptyEditorIssue.html#L1">transcript-2026-04-06-3-ReuseEmptyEditorIssue</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-2-ReuseEmptyEditorIssue.html#L12">transcript-2026-04-06-2-ReuseEmptyEditorIssue</a></td><td>transcript-2026-04-06-2-ReuseEmptyEditorIssue:segment-001</td><td>work</td><td>1.000</td><td>49.7</td><td>22m 25s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-2-ReuseEmptyEditorIssue.html#L59">transcript-2026-04-06-2-ReuseEmptyEditorIssue</a></td><td>transcript-2026-04-06-2-ReuseEmptyEditorIssue:segment-002</td><td>work</td><td>1.000</td><td>31.7</td><td>16m 15s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-2-ReuseEmptyEditorIssue.html#L89">transcript-2026-04-06-2-ReuseEmptyEditorIssue</a></td><td>transcript-2026-04-06-2-ReuseEmptyEditorIssue:segment-003</td><td>work</td><td>1.000</td><td>16.9</td><td>3m 45s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-2-ReuseEmptyEditorIssue.html#L105">transcript-2026-04-06-2-ReuseEmptyEditorIssue</a></td><td>transcript-2026-04-06-2-ReuseEmptyEditorIssue:segment-004</td><td>work</td><td>1.000</td><td>77.2</td><td>38m 53s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-2-ReuseEmptyEditorIssue.html#L178">transcript-2026-04-06-2-ReuseEmptyEditorIssue</a></td><td>transcript-2026-04-06-2-ReuseEmptyEditorIssue:segment-005</td><td>work</td><td>1.000</td><td>39.1</td><td>23m 12s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-2-ReuseEmptyEditorIssue.html#L215">transcript-2026-04-06-2-ReuseEmptyEditorIssue</a></td><td>transcript-2026-04-06-2-ReuseEmptyEditorIssue:segment-006</td><td>work</td><td>1.000</td><td>4.2</td><td>0s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-3-ReuseEmptyEditorIssue.html#L12">transcript-2026-04-06-3-ReuseEmptyEditorIssue</a></td><td>transcript-2026-04-06-3-ReuseEmptyEditorIssue:segment-001</td><td>work</td><td>1.000</td><td>45.6</td><td>20m 41s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-3-ReuseEmptyEditorIssue.html#L50">transcript-2026-04-06-3-ReuseEmptyEditorIssue</a></td><td>transcript-2026-04-06-3-ReuseEmptyEditorIssue:segment-002</td><td>work</td><td>1.000</td><td>26.4</td><td>2m 2s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-06-2-ReuseEmptyEditorIssue.md</td><td>219</td><td>0</td><td>transcripts</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-06-3-ReuseEmptyEditorIssue.md</td><td>72</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift</td><td>0</td><td>35</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>62</td><td>9</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>7</td><td>2</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>35.00</td></tr>
+<tr><td>transcript_lines</td><td>291.00</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>7633.00</td></tr>
+<tr><td>assistant_processing_time</td><td>3046.00</td></tr>
+<tr><td>back_and_forth_count</td><td>7.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

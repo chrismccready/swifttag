@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-04-23-2-26-AddAppleScriptSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-04-23-2-26-AddAppleScriptSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-04-23-2-26-AddAppleScriptSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-04-23  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: 26-AddAppleScriptSupport.md  </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.4/GPT-5.5 Extra High (Codex app)  </pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User 2026-04-23T19:17:14Z </pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>Review plan `26-AddAppleScriptSupport.md` and app’s current `SwiftTag/SwiftTag.sdef`  and update AppleScript class `editor window` and `track` with the ability to handle `select`, example AppleScript:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- `set selectedTracks to select every track`</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- `set selectedTracks to select every track whose file is (POSIX file “/tmp/some.flac”)`</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- `set selectedTracks to select every track whose title is “Some Title”`</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>The `editor window``”selected track&quot; code=&quot;selt”` property should be updated to be a list (plural) and the `select` command should select in the UI the tracks that meet the criteria given.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre></pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>When updating the app’s sdef, `SwiftTag.sdef` keep class properties in alphanumeric order.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>Review Apple’s AppleScript documentation to confirm use of latest technology, coding patterns and leverage SwiftUI where possible.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre></pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre></pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>## Assistant 2026-04-23T19:17:14Z (0s since User start)</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre></pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>Task clear: inspect plan Docs/Plans/26-AddAppleScriptSupport.md, current SwiftTag/SwiftTag.sdef, AppleScript implementation, then wire select support through UI selection and update scripting definition with ordered properties. Apple docs check next so we stay aligned with current macOS scripting patterns.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre></pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>I found existing AppleScript surface in SwiftTagAppleScriptSupport.swift plus draft _SwiftTag.sdef. Next pass: read plan, current sdef, and scripting bridge code together so selection behavior lines up with actual app model.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>Current surface already has single-track selection hook in ContentView, so this looks like extension work, not greenfield. I’m drilling into wrapper classes and selection bridge now to see whether multi-select can fit current TagEditorViewModel.selectedTrackIDs without weird scripting-only state.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>One plan note conflicts with new request: plan says AppleScript collections should not follow UI table selection, but requested select every track ... must drive actual table selection. I’m confirming Apple event terminology for select and selection properties against Apple docs before I patch both scripting model and selection bridge.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>Apple docs confirm core pattern: Cocoa scripting wants model-backed KVC/KVO keys, object specifiers, and command handlers on ObjC-visible wrappers. I’m checking Apple app dictionaries too, because select is usually app-defined terminology rather than something SwiftTag gets for free.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre></pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>[ 2026-04-23T19:35:03Z (17m 49s since Assistant start) ]</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>## User 2026-04-23T19:35:03Z </pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre></pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre></pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>I have interrupted based on your recent comments. I think it would be better to not do a UI selection change on the use of `select`, rather the command `set` of `selected tracks` property should do the UI selection and `select` should be used for collection filter handling. Continue research and confirm design change as more idiomatic AppleScript.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>## Assistant 2026-04-23T19:35:03Z (0s since User start)</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>Design clarified: selected tracks becomes actual UI-selection state, mutated through set; select now needs to behave as query/filter surface instead of UI mutation. I’m checking Apple docs plus Apple app dictionaries against that split so we keep SwiftTag idiomatic, not clever.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>Apple docs point same direction: whose filter already returns list, get is built-in evaluation for object specifiers, and set is standard way to change application-defined properties. So idiomatic shape is every track whose ... for queries and set selected tracks of ... to (...) for UI selection. I’m patching toward that model now instead of inventing query-only select.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>Patch shape settled: no custom query select verb, yes plural selected tracks property with real UI selection semantics, plus app-level track collection so standard every track whose ... filters work. I’m editing SDEF and bridge code now, then I’ll tighten tests around that exact usage.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre></pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>Plan note also needs cleanup because old text tied selection work to select. I’m folding today’s clarification into the plan file so implementation and docs stop fighting each other.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre></pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>SDEF change next. I’m adding app-level track elements so every track whose ... resolves naturally, and switching window selection surface to plural selected tracks with normal property-set semantics.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre></pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>Bridge patch now. I’m swapping single-track scripting state to set-based selection so SwiftUI table selection remains single source of truth and AppleScript only feeds it through one seam.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre></pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>Tests already compile-shift halfway through. I’m adding one more assertion path for app-level track collection because that’s what makes every track whose ... legal without a custom query verb.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre></pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>Most source edits landed. I’m doing a consistency sweep now for leftover single-track API names and any Objective-C/KVC mismatches before I compile.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre></pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>Code sweep clean enough for compiler pass. I’m running fast diagnostics first, then a full project build, then targeted AppleScript tests only.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre></pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>Research says yes. More idiomatic AppleScript path is: use object specifiers and `whose` for queries, use `set` on selection property for UI state. Apple docs say filter references already return list values, `get` evaluates object specifiers, and `set` changes application-defined properties. So I did not add custom query-only `select` verb. I updated [SwiftTag.sdef](Swift/SwiftTag/SwiftTag/SwiftTag.sdef), [SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift), [ContentView.swift](Swift/SwiftTag/SwiftTag/ContentView.swift), [SwiftTagAppleScriptTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagAppleScriptTests.swift), and [26-AddAppleScriptSupport.md](Swift/SwiftTag/Docs/Plans/26-AddAppleScriptSupport.md) to match that model.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre></pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>Result: app now exposes top-level `track` elements so `every track whose ...` works, and `editor window` now exposes plural `selected tracks` backed by real UI table selection via `set selected tracks ...`. Example shape:</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>    get every track whose title is &quot;Some Title&quot;</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>    set selected tracks of first editor window to (every track whose title is &quot;Some Title&quot;)</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>```</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>Build passed. Targeted AppleScript suite passed: 11/11 tests.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre></pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>Docs used: [AppleScript Reference Forms](https://developer.apple.com/library/archive/documentation/AppleScript/Conceptual/AppleScriptLangGuide/reference/ASLR_reference_forms.html), [AppleScript Commands Reference](https://developer.apple.com/library/archive/documentation/AppleScript/Conceptual/AppleScriptLangGuide/reference/ASLR_cmds.html), [Cocoa Scripting Overview](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/AppArchitecture/Concepts/Scripting.html)</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre></pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>[ 2026-04-23T19:45:58Z (10m 55s since Assistant start) ]</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre></pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>## User 2026-04-23T20:18:56Z (43m 54s since previous Assistant start) </pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>The following fails:</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>``` applescript</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>	set selected tracks of front editor window to (every track whose title is &quot;Test Title&quot;)</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>```</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>with error: `error &quot;SwiftTag got an error: AppleEvent handler failed.&quot; number -10000`.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>As well as:</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>``` applescript</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>		set selected tracks to first track</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>```</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>with same error.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre></pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>## Assistant 2026-04-23T20:18:56Z (0s since User start)</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre></pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>I’m digging into why set selected tracks ... fails at runtime. Next step: inspect how Cocoa scripting expects writable selection properties to be declared and whether SwiftTag needs explicit KVC/set-command handling instead of only a Swift property setter.</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre></pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>I found likely cause: Cocoa’s built-in set path goes through KVC, and SwiftTag’s writable selectedTracks property only handled already-normalized [SwiftTagScriptTrack] values. set ... to first track sends a single track object, and query results can also arrive in forms that need normalization before Swift setter can use them. I’m adding that KVC normalization path and covering both exact script shapes in tests.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre></pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>KVC normalization patch in. I added coverage for both failing shapes: set ... to first track and set ... to (every track whose ...). Running build and focused AppleScript tests again now.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre></pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>Build and focused tests pass. I want one last confidence check against real AppleScript if environment allows it, so I’m locating built app product and trying the exact osascript forms you reported.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre></pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>Environment lets me run osascript against built app directly, so I’m doing a real script-level smoke test now instead of stopping at unit tests.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre></pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>Root cause found. Cocoa scripting `set` path was reaching KVC with raw value shapes like single `track`, list of `track`, or specifier result. SwiftTag only handled already-normalized `[SwiftTagScriptTrack]`, so `set selected tracks to first track` and list-based `set` both could fall into generic Apple event failure.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre></pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>Fix in [SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift:1277): `SwiftTagScriptEditorWindow` now overrides `setValue(_:forKey:)` for `selectedTracks` and normalizes single track, arrays, `NSArray`, and specifiers before applying UI selection. Tests in [SwiftTagAppleScriptTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagAppleScriptTests.swift:418) now cover both failing shapes. Build passed. Focused AppleScript tests passed.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre></pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>Retry these forms:</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>		set selected tracks to first track</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>```</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre></pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>		set selected tracks to (every track whose title is &quot;Test Title&quot;)</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>```</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>Safer with multiple windows open: scope query to window, not whole app. Top-level `every track whose ...` now works, but it queries all windows. If another window has matches, SwiftTag will reject foreign-window tracks for that window’s selection. Use window-scoped query when possible.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre></pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>I could not fully launch app from sandbox for end-to-end `osascript` UI verification because app activation returned `-10827`, so runtime confidence comes from build plus focused AppleScript tests, not live app launch in this environment.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre></pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>[ 2026-04-23T20:23:29Z (4m 33s since Assistant start) ]</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre></pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>## User 2026-04-23T21:00:45Z (41m 49s since previous Assistant start) </pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre></pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>The following works until trying to `set trackTitle to title of selected tracks`:</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>``` applescript</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>		set selected tracks to (every track whose title is &quot;Test Title&quot;)</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>		set trackCount to count of selected tracks</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>		log &quot;Selected track count: &quot; &amp; trackCount</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>		set selected tracks to first track</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>		set trackTitle to title of selected tracks</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>		-- log trackTitle</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>```</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>Fails with `error &quot;SwiftTag got an error: Can’t make title of selected tracks of editor window 1 into type specifier.&quot; number -1700 from title of selected tracks of editor window 1 to specifier`.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre></pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>I have also tried `set trackTitle to title of (first track of selected tracks)`</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>And `set trackTitle to title of (first item of selected tracks)` and both give the same error.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre></pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>## Assistant 2026-04-23T21:00:45Z (0s since User start)</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre></pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>I’m tracing this as AppleScript type-shape problem, not selection-state problem. Next step: confirm whether selected tracks should behave like Finder/Music selection by returning an actual object specifier, or whether SwiftTag should declare it as a typed list instead of specifier.</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre></pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>I’m testing one narrower hypothesis now: SwiftTag’s selected tracks is declared as type=&quot;specifier&quot;, and that matches your coercion error exactly. If AppleScript is trying to re-coerce the result to a specifier before evaluating title, the more correct fix may be to expose selected tracks as a typed track value/list instead of a generic specifier.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre></pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>I confirmed one key point: Music/Finder keep selection as type=&quot;specifier&quot; because they return real object specifiers, not raw arrays. SwiftTag currently declares selected tracks as specifier but returns [SwiftTagScriptTrack], which explains your -1700 ... into type specifier failure on reads like title of selected tracks.</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre></pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>I’m taking more standards-aligned fix: keep selected tracks as specifier-style property, but return actual track object specifiers on reads instead of raw track wrappers. That should unblock title of selected tracks, first item of selected tracks, and similar reference-form chains.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre></pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>Specifiers patch compiles clean at file-diagnostic level. I’m rebuilding and rerunning the AppleScript-focused tests now, then I’ll summarize exact behavior change.</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre></pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>Read path fixed now: selected tracks no longer returns raw wrappers to AppleScript. It now returns real track object specifiers, which is what type=&quot;specifier&quot; property needs for chains like title of selected tracks and first item of selected tracks.</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre></pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>Cause found. `selected tracks` was declared as `type=&quot;specifier&quot;` in [SwiftTag.sdef](Swift/SwiftTag/SwiftTag/SwiftTag.sdef:161), but SwiftTag was returning raw track wrapper objects on read. AppleScript can use that for `count`, but chained reference forms like `title of selected tracks` need real object specifiers. I changed [SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift:1250) so reads return track `NSScriptObjectSpecifier`s, while writes still normalize single track, list, and specifier input back into UI selection.</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre></pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>That should unblock:</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>		set selected tracks to (every track whose title is &quot;Test Title&quot;)</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>		set trackCount to count of selected tracks</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>		set selected tracks to first track</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>		set trackTitle to title of selected tracks</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>```</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre></pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>And also:</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>		set trackTitle to title of (first item of selected tracks)</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>```</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre></pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>Build passed. Focused AppleScript tests passed again. I still could not do live `osascript` app-activation verification inside sandbox, so this fix is verified by compile plus scripting tests, not by launching full app here.</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre></pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>[ 2026-04-23T21:05:19Z (4m 34s since Assistant start) ]</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre></pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>## User 2026-04-23T21:28:57Z (28m 12s since previous Assistant start) </pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre></pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>Same issue exists. Let’s first debug the use of osascript. Review Apple&#x27;s documentation on using osascript in Xcode for testing and setup the correct harness.</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre></pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>## Assistant 2026-04-23T21:28:57Z (0s since User start)</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre></pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>Task clear: review Apple docs for osascript test setup, then wire a real Xcode test harness around it instead of guessing from unit coverage. First step: gather official Apple docs plus current SwiftTag test seams so harness fits project constraints.</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre></pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>Need harness answer grounded in Apple docs, not folklore. I’m pulling Apple’s osascript man page locally now and comparing it with current SwiftTag test setup so we can codify one stable invocation pattern.</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre></pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>Current guide has no AppleScript runtime harness. I’m checking existing UI-test launch seams now so we can reuse app-owned fixture materialization instead of inventing a second boot path.</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre></pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>Best harness likely sits in SwiftTagUITests, not pure unit tests: XCUI already launches exact built app, injects fixture env, and gives us stable readiness probes. I’m locating those helpers so osascript can ride on same boot path instead of trying to launch app ad hoc.</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre></pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>Harness plan:</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre></pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>1. add AppleScript runner helpers in SwiftTagUITests that launch app with existing fixture env, write .applescript temp file, and run /usr/bin/osascript -l AppleScript -sso.</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre>2. add one real smoke test that proves Xcode-launched SwiftTag can be scripted from osascript.</pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>3. document harness rules in testing guide so later AppleScript bugs use same path.</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>I’m editing those pieces now.</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre></pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre></pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre>Need real osascript harness. First step: pull Apple docs on osascript, Process, XCTest/UI testing, then verify harness in SwiftTagUITests against those rules.</pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre></pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>Apple docs line up with harness path: XCUIApplication.launch() for app under test, Process for subprocess, pipes for stdout/stderr, no shell quoting games. Next step: inspect current UI test file, then build and run one focused UI test.</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre></pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>Harness code compiles clean at file-level diagnostics. Reading helper now, then build + one test only.</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre></pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>Build clean. Running one UI smoke test now: launch app, call real /usr/bin/osascript, verify Apple event reaches front editor window.</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre></pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>Root cause for harness failure found. Not app bug. AppleScript compiler cannot resolve app-specific terms inside tell application id targetBundleID when target comes from variable. Fix path: compile terms against static SwiftTag dictionary with using terms from, send events to dynamic bundle id at runtime.</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre></pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>Harness patch in place. Re-running smoke test with compile-time terminology bound to SwiftTag dictionary, runtime events still sent to launched app instance.</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre></pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>Compile problem gone. Next failure runtime: AppleScript sees bundle id com.toowalks.swifttag as not running. Need inspect launch helper and actual app target identity. Could be wrong bundle id, wrong process, or path-based launch needed.</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre></pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>Need actual runtime identity of app under UI test. Checking Xcode target bundle id and available XCUIApplication/NSRunningApplication data next. If bundle id mismatch, harness should target app path or runtime-resolved process, not hardcoded string.</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre></pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre>Bundle-id targeting weak in Xcode UI test context. Switching harness to path-based runtime target. Apple docs allow addressing app by path; that avoids ambiguity across built copies and matches launched bundle exactly.</pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre></pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>Path-based target in place. Running same smoke test again. If this passes, harness good and ready for real AppleScript repro next.</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre></pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>One more harness fix. AppleScript wants application path as POSIX-path text, not POSIX file object, for dynamic tell application ... in this form. Patching that exact coercion now.</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre></pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>Re-running smoke test. Now script targets exact app path as text, which matches AppleScript app reference form.</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre></pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>[ 2026-04-23T21:44:53Z (15m 56s since Assistant start) ]</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre></pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>## User 2026-04-23T21:44:53Z</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre></pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre></pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>## Assistant 2026-04-23T21:44:53Z (0s since User start)</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre></pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>The app is launching, what is the current issue?</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre></pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>Current issue not app launch. App launches fine in UI test. Current issue is `osascript` cannot attach to that launched process.</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre></pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>What ruled out:</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>- AppleScript compile issue fixed. Dynamic target needed `using terms from`, and that part now works.</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>- Wrong app-path coercion fixed. Path syntax now valid.</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre>- Build clean. Smoke harness lives in [SwiftTagUITests.swift](Swift/SwiftTag/SwiftTagUITests/SwiftTagUITests.swift:238).</pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre></pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>Current failure:</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre>- Real `osascript` call still returns `-600`:</pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>  `SwiftTag got an error: Application isn’t running.`</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>- That happens even though `XCUIApplication.launch()` has app on screen and UI test can interact with it.</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre></pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>So problem now looks like harness boundary:</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>- `XCUIApplication.launch()` starts app in way UI automation can see.</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>- `osascript` / Apple events do not see same process as regular addressable app instance by bundle id or path.</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre></pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>Most likely next fix:</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>- launch SwiftTag through Launch Services (`NSWorkspace`) so AppleScript can target it</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>- then attach `XCUIApplication` to that same launched instance for assertions</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre></pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre>[ 2026-04-23T21:45:12Z (19s since Assistant start) ]</pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre></pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>## User 2026-04-23T22:02:45Z (17m 52s since previous Assistant start) </pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre></pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>This is most likely a sandbox issue. Take a closer look at Apple’s latest documentation on testing with scripting in a sandboxed environment.</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre></pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>## Assistant 2026-04-23T22:02:45Z (0s since User start)</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre></pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>Need sandbox doc pass now. First step: pull Apple docs on App Sandbox + Apple events/testing, then compare against current UI test harness and entitlements.</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre></pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre>Docs point toward sandbox + Apple-event sender permissions, not script syntax now. Checking current app/test entitlements next so we can compare doc requirements against project state.</pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre></pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre>Doc fit getting sharper. Apple says sandboxed sender can only send Apple events to itself unless entitlement added. Need confirm whether sender here is sandboxed UI-test runner or helper it launches. Pulling real signed entitlements from built products now.</pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre></pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre>Hard evidence now. Both built app and SwiftTagUITests-Runner are sandboxed. Neither carries Apple-events sender entitlement or Apple-events temporary exception. I’m checking sandbox reports for live denial signal next so we can separate doc inference from observed runtime.</pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre></pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>Need sharper signal than broad system log. Filtering specifically for SwiftTagUITests-Runner / osascript and sandbox-deny patterns now.</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre></pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>Now have direct proof, not guess. System log shows sandbox denial from osascript itself: deny(1) appleevent-send com.toowalks.swifttag. I’m checking whether SwiftTag exposes scripting access groups; that decides whether Apple-recommended scripting-targets can even apply.</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre></pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>Research settled. I’m recording sandbox rule in testing guide so harness direction is explicit: Process-launched osascript inside UI tests inherits xctrunner sandbox and gets appleevent-send denied.</pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre></pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>Current smoke test should not stay hard-failing now that docs and logs prove harness invalid under sandbox. I’m converting it to explicit skip with reason so suite state matches reality while we move to external/helper-based harness.</pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre></pre></td></tr>
+<tr id="L302"><th><a href="#L302">302</a></th><td><pre>Yes. Sandbox issue confirmed.</pre></td></tr>
+<tr id="L303"><th><a href="#L303">303</a></th><td><pre></pre></td></tr>
+<tr id="L304"><th><a href="#L304">304</a></th><td><pre>What Apple docs say:</pre></td></tr>
+<tr id="L305"><th><a href="#L305">305</a></th><td><pre>- Sandboxed sender cannot send Apple events to other apps unless sender has `scripting-targets` or Apple-events temporary exception. Apple’s QA says sandboxed app may receive Apple events and send to self, but not to other apps without extra entitlement: [QA1888](https://developer.apple.com/library/archive/qa/qa1888/_index.html), [App Sandbox Temporary Exception Entitlements](https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/AppSandboxTemporaryExceptionEntitlements.html).</pre></td></tr>
+<tr id="L306"><th><a href="#L306">306</a></th><td><pre>- Helper launched with `Process` inherits launcher sandbox. Apple current sandbox doc says helper tools launched directly with `Process` inherit same sandbox capabilities as launching app: [Discovering and diagnosing App Sandbox violations](https://developer.apple.com/documentation/security/discovering-and-diagnosing-app-sandbox-violations).</pre></td></tr>
+<tr id="L307"><th><a href="#L307">307</a></th><td><pre>- If sender uses Apple events APIs, Apple also wants privacy string and, for prompting permission, Apple-events entitlement: [NSAppleEventsUsageDescription](https://developer.apple.com/documentation/bundleresources/information-property-list/nsappleeventsusagedescription), [com.apple.security.automation.apple-events](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.automation.apple-events).</pre></td></tr>
+<tr id="L308"><th><a href="#L308">308</a></th><td><pre></pre></td></tr>
+<tr id="L309"><th><a href="#L309">309</a></th><td><pre>What local evidence says:</pre></td></tr>
+<tr id="L310"><th><a href="#L310">310</a></th><td><pre>- Built `SwiftTag.app` is sandboxed.</pre></td></tr>
+<tr id="L311"><th><a href="#L311">311</a></th><td><pre>- Built `SwiftTagUITests-Runner.app` is sandboxed.</pre></td></tr>
+<tr id="L312"><th><a href="#L312">312</a></th><td><pre>- Neither has Apple-events sender entitlement or temporary exception.</pre></td></tr>
+<tr id="L313"><th><a href="#L313">313</a></th><td><pre>- System log shows exact denial:</pre></td></tr>
+<tr id="L314"><th><a href="#L314">314</a></th><td><pre>  `Sandbox: osascript(...) deny(1) appleevent-send com.toowalks.swifttag`</pre></td></tr>
+<tr id="L315"><th><a href="#L315">315</a></th><td><pre>- So `osascript` launched from UI test is not free-standing host tool. It inherits `SwiftTagUITests-Runner` sandbox, then Apple events get blocked.</pre></td></tr>
+<tr id="L316"><th><a href="#L316">316</a></th><td><pre></pre></td></tr>
+<tr id="L317"><th><a href="#L317">317</a></th><td><pre>Important extra detail:</pre></td></tr>
+<tr id="L318"><th><a href="#L318">318</a></th><td><pre>- SwiftTag already exposes scripting access groups in [SwiftTag.sdef](Swift/SwiftTag/SwiftTag/SwiftTag.sdef:20). That means sandbox-safe `scripting-targets` path may be possible for sender side.</pre></td></tr>
+<tr id="L319"><th><a href="#L319">319</a></th><td><pre></pre></td></tr>
+<tr id="L320"><th><a href="#L320">320</a></th><td><pre>What I changed:</pre></td></tr>
+<tr id="L321"><th><a href="#L321">321</a></th><td><pre>- Updated [testing-guide.md](Swift/SwiftTag/Docs/Guides/testing-guide.md:155) to document sandbox rule and correct harness direction.</pre></td></tr>
+<tr id="L322"><th><a href="#L322">322</a></th><td><pre>- Changed [SwiftTagUITests.swift](Swift/SwiftTag/SwiftTagUITests/SwiftTagUITests.swift:238) smoke test to explicit skip with sandbox reason, so suite no longer carries false-red harness failure.</pre></td></tr>
+<tr id="L323"><th><a href="#L323">323</a></th><td><pre></pre></td></tr>
+<tr id="L324"><th><a href="#L324">324</a></th><td><pre>Verification:</pre></td></tr>
+<tr id="L325"><th><a href="#L325">325</a></th><td><pre>- Build passed.</pre></td></tr>
+<tr id="L326"><th><a href="#L326">326</a></th><td><pre>- Targeted UI test now skips instead of failing.</pre></td></tr>
+<tr id="L327"><th><a href="#L327">327</a></th><td><pre></pre></td></tr>
+<tr id="L328"><th><a href="#L328">328</a></th><td><pre>Next correct harness choices:</pre></td></tr>
+<tr id="L329"><th><a href="#L329">329</a></th><td><pre>1. Best: run `osascript` outside `SwiftTagUITests-Runner` from Xcode scheme/script or external test script.</pre></td></tr>
+<tr id="L330"><th><a href="#L330">330</a></th><td><pre>2. Alternate: give sender target explicit Apple-event entitlements and privacy string, then keep in-process helper launch.</pre></td></tr>
+<tr id="L331"><th><a href="#L331">331</a></th><td><pre>3. If we stay sandboxed, wire `scripting-targets` against SwiftTag access group instead of raw unsandboxed shell approach.</pre></td></tr>
+<tr id="L332"><th><a href="#L332">332</a></th><td><pre></pre></td></tr>
+<tr id="L333"><th><a href="#L333">333</a></th><td><pre>[ 2026-04-23T22:08:00Z (5m 15s since Assistant start) ]</pre></td></tr>
+<tr id="L334"><th><a href="#L334">334</a></th><td><pre></pre></td></tr>
+<tr id="L335"><th><a href="#L335">335</a></th><td><pre>## User 2026-04-23T22:14:33Z (11m 48s since previous Assistant start) </pre></td></tr>
+<tr id="L336"><th><a href="#L336">336</a></th><td><pre></pre></td></tr>
+<tr id="L337"><th><a href="#L337">337</a></th><td><pre>Now that osascript testing is available, debug issue (this is a copy of original issue description):</pre></td></tr>
+<tr id="L338"><th><a href="#L338">338</a></th><td><pre>The following works until trying to `set trackTitle to title of selected tracks`:</pre></td></tr>
+<tr id="L339"><th><a href="#L339">339</a></th><td><pre>``` applescript</pre></td></tr>
+<tr id="L340"><th><a href="#L340">340</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L341"><th><a href="#L341">341</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L342"><th><a href="#L342">342</a></th><td><pre>		set selected tracks to (every track whose title is &quot;Test Title&quot;)</pre></td></tr>
+<tr id="L343"><th><a href="#L343">343</a></th><td><pre>		set trackCount to count of selected tracks</pre></td></tr>
+<tr id="L344"><th><a href="#L344">344</a></th><td><pre>		log &quot;Selected track count: &quot; &amp; trackCount</pre></td></tr>
+<tr id="L345"><th><a href="#L345">345</a></th><td><pre>		set selected tracks to first track</pre></td></tr>
+<tr id="L346"><th><a href="#L346">346</a></th><td><pre>		set trackTitle to title of selected tracks</pre></td></tr>
+<tr id="L347"><th><a href="#L347">347</a></th><td><pre>		-- log trackTitle</pre></td></tr>
+<tr id="L348"><th><a href="#L348">348</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L349"><th><a href="#L349">349</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L350"><th><a href="#L350">350</a></th><td><pre>```</pre></td></tr>
+<tr id="L351"><th><a href="#L351">351</a></th><td><pre>Fails with `error &quot;SwiftTag got an error: Can’t make title of selected tracks of editor window 1 into type specifier.&quot; number -1700 from title of selected tracks of editor window 1 to specifier`.</pre></td></tr>
+<tr id="L352"><th><a href="#L352">352</a></th><td><pre></pre></td></tr>
+<tr id="L353"><th><a href="#L353">353</a></th><td><pre>I have also tried `set trackTitle to title of (first track of selected tracks)`</pre></td></tr>
+<tr id="L354"><th><a href="#L354">354</a></th><td><pre>And `set trackTitle to title of (first item of selected tracks)` and both give the same error. </pre></td></tr>
+<tr id="L355"><th><a href="#L355">355</a></th><td><pre></pre></td></tr>
+<tr id="L356"><th><a href="#L356">356</a></th><td><pre>## Assistant 2026-04-23T22:14:33Z (0s since User start)</pre></td></tr>
+<tr id="L357"><th><a href="#L357">357</a></th><td><pre></pre></td></tr>
+<tr id="L358"><th><a href="#L358">358</a></th><td><pre>Need repro with real osascript, then trace selected tracks read path in scripting bridge. First step: inspect current sdef and getter/setter code, then run one external AppleScript against built app.</pre></td></tr>
+<tr id="L359"><th><a href="#L359">359</a></th><td><pre></pre></td></tr>
+<tr id="L360"><th><a href="#L360">360</a></th><td><pre>Need exact getter path and track specifier shape now. Reading bridge around selectedTracks, track.objectSpecifier, and selection tests.</pre></td></tr>
+<tr id="L361"><th><a href="#L361">361</a></th><td><pre></pre></td></tr>
+<tr id="L362"><th><a href="#L362">362</a></th><td><pre>Need confirm sdef shape before patch. Checking system sdef.dtd for list-valued property syntax now.</pre></td></tr>
+<tr id="L363"><th><a href="#L363">363</a></th><td><pre></pre></td></tr>
+<tr id="L364"><th><a href="#L364">364</a></th><td><pre>Selection property looks wrong at terminology level. sdef.dtd shows list-ness lives on nested &lt;type ... list=&quot;yes&quot;/&gt;, not property attribute. Current selected tracks still advertises single specifier. I’m patching toward list-of-track semantics plus matching bridge/tests.</pre></td></tr>
+<tr id="L365"><th><a href="#L365">365</a></th><td><pre></pre></td></tr>
+<tr id="L366"><th><a href="#L366">366</a></th><td><pre>Edit time. Changing selected tracks from singular specifier semantics to real list-of-track semantics in both sdef and bridge, then tightening tests around object lists instead of specifier wrappers.</pre></td></tr>
+<tr id="L367"><th><a href="#L367">367</a></th><td><pre></pre></td></tr>
+<tr id="L368"><th><a href="#L368">368</a></th><td><pre>Patch in. Running file diagnostics and targeted AppleScript/unit tests first, then real external osascript repro against built app.</pre></td></tr>
+<tr id="L369"><th><a href="#L369">369</a></th><td><pre></pre></td></tr>
+<tr id="L370"><th><a href="#L370">370</a></th><td><pre>External osascript check next. Using built app path plus FLAC fixture path, no UI-test runner in path. Goal: reproduce user script exactly against real app process.</pre></td></tr>
+<tr id="L371"><th><a href="#L371">371</a></th><td><pre></pre></td></tr>
+<tr id="L372"><th><a href="#L372">372</a></th><td><pre>Real external harness reached app layer; current failure is compile-time terminology again. Fix simple here: bake built app path into script so AppleScript compiler knows SwiftTag classes. Then rerun same repro.</pre></td></tr>
+<tr id="L373"><th><a href="#L373">373</a></th><td><pre></pre></td></tr>
+<tr id="L374"><th><a href="#L374">374</a></th><td><pre>App repro script needed one more fix: use SwiftTag’s add command, not open, for FLAC. Switching script to make new editor window + add ... to.</pre></td></tr>
+<tr id="L375"><th><a href="#L375">375</a></th><td><pre></pre></td></tr>
+<tr id="L376"><th><a href="#L376">376</a></th><td><pre>Add command failure likely separate file-coercion issue in AppleScript input resolver. For this bug I only need loaded track; fastest path is feed file-URL text, which SwiftTag resolver already accepts. Trying that now.</pre></td></tr>
+<tr id="L377"><th><a href="#L377">377</a></th><td><pre></pre></td></tr>
+<tr id="L378"><th><a href="#L378">378</a></th><td><pre>Need live proof now. Launching built app directly with UI-test fixture env so app starts with Test Title track loaded, then external osascript against that running app.</pre></td></tr>
+<tr id="L379"><th><a href="#L379">379</a></th><td><pre></pre></td></tr>
+<tr id="L380"><th><a href="#L380">380</a></th><td><pre>Live repro changed diagnosis. selected tracks must stay specifier-based for set ... to first track and set ... to every track whose .... Real bug was missing list semantics, not wrong object class. I’m reverting bridge to specifiers and making sdef explicitly specifier list.</pre></td></tr>
+<tr id="L381"><th><a href="#L381">381</a></th><td><pre></pre></td></tr>
+<tr id="L382"><th><a href="#L382">382</a></th><td><pre>Reverted to specifier-list model. Running build, targeted AppleScript unit test, then same external osascript live check.</pre></td></tr>
+<tr id="L383"><th><a href="#L383">383</a></th><td><pre></pre></td></tr>
+<tr id="L384"><th><a href="#L384">384</a></th><td><pre>Need fresh app process from new build before live check. Restarting launch session now, then rerun same external AppleScript.</pre></td></tr>
+<tr id="L385"><th><a href="#L385">385</a></th><td><pre></pre></td></tr>
+<tr id="L386"><th><a href="#L386">386</a></th><td><pre>One more iteration. Setter path already good with specifier list. Getter still wrong. Switching read side back to actual track objects while keeping sdef as specifier list. That should preserve reference-based set and allow title of selected tracks to resolve.</pre></td></tr>
+<tr id="L387"><th><a href="#L387">387</a></th><td><pre></pre></td></tr>
+<tr id="L388"><th><a href="#L388">388</a></th><td><pre>Getter patch in. Re-running build + targeted unit test, then fresh live osascript against relaunched app.</pre></td></tr>
+<tr id="L389"><th><a href="#L389">389</a></th><td><pre></pre></td></tr>
+<tr id="L390"><th><a href="#L390">390</a></th><td><pre>Build green. Refreshing live app process from new build now, then same external AppleScript check.</pre></td></tr>
+<tr id="L391"><th><a href="#L391">391</a></th><td><pre></pre></td></tr>
+<tr id="L392"><th><a href="#L392">392</a></th><td><pre>Need reference pattern from Apple app. Inspecting Finder dictionary for selection property now.</pre></td></tr>
+<tr id="L393"><th><a href="#L393">393</a></th><td><pre></pre></td></tr>
+<tr id="L394"><th><a href="#L394">394</a></th><td><pre>Need exact Cocoa scripting API for multi-object specifier. Pulling Foundation scripting classes now: NSWhoseSpecifier, test/comparison specifiers.</pre></td></tr>
+<tr id="L395"><th><a href="#L395">395</a></th><td><pre></pre></td></tr>
+<tr id="L396"><th><a href="#L396">396</a></th><td><pre>Need exact Foundation initializers before building a whose specifier. Pulling NSWhoseSpecifier, NSPropertySpecifier, NSSpecifierTest, NSLogicalTest signatures now.</pre></td></tr>
+<tr id="L397"><th><a href="#L397">397</a></th><td><pre></pre></td></tr>
+<tr id="L398"><th><a href="#L398">398</a></th><td><pre>Need one more Foundation detail: containerIsObjectBeingTested on test specifier. Pulling that before wiring NSWhoseSpecifier.</pre></td></tr>
+<tr id="L399"><th><a href="#L399">399</a></th><td><pre></pre></td></tr>
+<tr id="L400"><th><a href="#L400">400</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L401"><th><a href="#L401">401</a></th><td><pre></pre></td></tr>
+<tr id="L402"><th><a href="#L402">402</a></th><td><pre>Issue narrowed. set path works. Read path for selected tracks still wrong at AppleScript runtime. I’m tracing specifier shape in scripting bridge, then I’ll verify with live osascript.</pre></td></tr>
+<tr id="L403"><th><a href="#L403">403</a></th><td><pre></pre></td></tr>
+<tr id="L404"><th><a href="#L404">404</a></th><td><pre>Reading scripting bridge and sdef now. Goal: make selected tracks read back as AppleScript-valid reference, not raw wrapper array.</pre></td></tr>
+<tr id="L405"><th><a href="#L405">405</a></th><td><pre></pre></td></tr>
+<tr id="L406"><th><a href="#L406">406</a></th><td><pre>I have setter and test path. Next I’m reading controller helpers for track specifier generation, because fix likely lives there.</pre></td></tr>
+<tr id="L407"><th><a href="#L407">407</a></th><td><pre></pre></td></tr>
+<tr id="L408"><th><a href="#L408">408</a></th><td><pre>I have enough to try real fix: return one selection specifier, likely whose over window tracks. I’m checking exact APIs first so patch stays Cocoa-scripting-native.</pre></td></tr>
+<tr id="L409"><th><a href="#L409">409</a></th><td><pre></pre></td></tr>
+<tr id="L410"><th><a href="#L410">410</a></th><td><pre>APIs look right. I’m compiling tiny Foundation snippet inside project now, so patch can use exact NSWhoseSpecifier/NSSpecifierTest signatures without guesswork.</pre></td></tr>
+<tr id="L411"><th><a href="#L411">411</a></th><td><pre></pre></td></tr>
+<tr id="L412"><th><a href="#L412">412</a></th><td><pre>Patch next. Change set: make selected tracks return one Cocoa scripting reference, update sdef to Finder-style specifier, tighten tests around specifier evaluation.</pre></td></tr>
+<tr id="L413"><th><a href="#L413">413</a></th><td><pre></pre></td></tr>
+<tr id="L414"><th><a href="#L414">414</a></th><td><pre>Patch in. Running compiler diagnostics before live osascript, so we catch API mismatches fast.</pre></td></tr>
+<tr id="L415"><th><a href="#L415">415</a></th><td><pre></pre></td></tr>
+<tr id="L416"><th><a href="#L416">416</a></th><td><pre>Unit test clean. Now switching to live app harness. I’m restarting app from fresh build, then rerunning failing AppleScript exactly.</pre></td></tr>
+<tr id="L417"><th><a href="#L417">417</a></th><td><pre></pre></td></tr>
+<tr id="L418"><th><a href="#L418">418</a></th><td><pre>Live app reached. First repro changed shape: no longer type specifier error. Now AppleScript resolves deeper, but current session has zero tracks in front window. I’m querying app state, then I’ll rerun exact flow against populated data.</pre></td></tr>
+<tr id="L419"><th><a href="#L419">419</a></th><td><pre></pre></td></tr>
+<tr id="L420"><th><a href="#L420">420</a></th><td><pre>Live repro says patch not enough. Next step: inspect raw AppleScript shape of selected tracks itself in running app, then trace how Cocoa is serializing that property.</pre></td></tr>
+<tr id="L421"><th><a href="#L421">421</a></th><td><pre></pre></td></tr>
+<tr id="L422"><th><a href="#L422">422</a></th><td><pre>[ 2026-04-23T22:43:48Z (29m 15s since Assistant start) ]</pre></td></tr>
+<tr id="L423"><th><a href="#L423">423</a></th><td><pre></pre></td></tr>
+<tr id="L424"><th><a href="#L424">424</a></th><td><pre>## User 2026-04-24T01:13:23Z (2h 29m 35s since previous Assistant start) </pre></td></tr>
+<tr id="L425"><th><a href="#L425">425</a></th><td><pre></pre></td></tr>
+<tr id="L426"><th><a href="#L426">426</a></th><td><pre>[ &quot;You&#x27;ve hit your usage limit.&quot; hence the time break ]</pre></td></tr>
+<tr id="L427"><th><a href="#L427">427</a></th><td><pre></pre></td></tr>
+<tr id="L428"><th><a href="#L428">428</a></th><td><pre>There is a window open with a track loaded but there is an alert dialog titled `FLAC Import Error` and with message `FLAC__metadata_get_tags failed for file.` displayed. Perhaps restart test. Also be sure you are quitting the app between tests, it seems like sometimes a stale app is up. I have quit all SwiftTag app processes.</pre></td></tr>
+<tr id="L429"><th><a href="#L429">429</a></th><td><pre></pre></td></tr>
+<tr id="L430"><th><a href="#L430">430</a></th><td><pre>## Assistant 2026-04-24T01:13:23Z (0s since User start)</pre></td></tr>
+<tr id="L431"><th><a href="#L431">431</a></th><td><pre></pre></td></tr>
+<tr id="L432"><th><a href="#L432">432</a></th><td><pre>New hypothesis: bridge is returning reference fine, but sdef still types selected tracks too generically. AppleScript likely can’t resolve title on a generic specifier. I’m retagging property as track reference, then rerunning live from clean launch.</pre></td></tr>
+<tr id="L433"><th><a href="#L433">433</a></th><td><pre></pre></td></tr>
+<tr id="L434"><th><a href="#L434">434</a></th><td><pre>Type track fixed read semantics but broke set every track whose .... I’m checking sdef type grammar now. Goal: find way to keep setter reference-friendly while still telling AppleScript that selection contains track objects.</pre></td></tr>
+<tr id="L435"><th><a href="#L435">435</a></th><td><pre></pre></td></tr>
+<tr id="L436"><th><a href="#L436">436</a></th><td><pre>I’m reverting from broken type=track experiment. Next round will stay on known-good setter path and probe whether get selected tracks is usable once detached into variable. That should tell us whether bug is sdef typing or reference chaining.</pre></td></tr>
+<tr id="L437"><th><a href="#L437">437</a></th><td><pre></pre></td></tr>
+<tr id="L438"><th><a href="#L438">438</a></th><td><pre>I have one more clean diagnostic pass before changing model again: specifier build, fresh app, then compare title of selected tracks with set t to (get selected tracks); title of t. That tells us if exact syntax is supportable in current Cocoa path.</pre></td></tr>
+<tr id="L439"><th><a href="#L439">439</a></th><td><pre></pre></td></tr>
+<tr id="L440"><th><a href="#L440">440</a></th><td><pre>Low-cost sdef experiment next: keep property type=&quot;specifier&quot; for setter semantics, add nested track type metadata. If Cocoa uses that for reference chaining, we get both behaviors without command subclassing.</pre></td></tr>
+<tr id="L441"><th><a href="#L441">441</a></th><td><pre></pre></td></tr>
+<tr id="L442"><th><a href="#L442">442</a></th><td><pre>Last low-cost AppleScript-model experiment: switch to standard selection property term/code with selected tracks as synonym. If unchanged user syntax starts working, root cause is AppleScript terminology semantics, not bridge code.</pre></td></tr>
+<tr id="L443"><th><a href="#L443">443</a></th><td><pre></pre></td></tr>
+<tr id="L444"><th><a href="#L444">444</a></th><td><pre>Property-name/code experiments ruled out. Current evidence says exact syntax only works after forced get, which matches AppleScript’s “early evaluation” behavior. I’m shifting to the more likely real fix: typed track selection for read semantics, plus custom set handling so query references can still assign selection.</pre></td></tr>
+<tr id="L445"><th><a href="#L445">445</a></th><td><pre></pre></td></tr>
+<tr id="L446"><th><a href="#L446">446</a></th><td><pre>Custom get path is in. It force-evaluates selected tracks only when a larger specifier depends on it, matching Apple’s explicit-get workaround but inside app. I’m compiling now, then I’ll verify live with fresh launch.</pre></td></tr>
+<tr id="L447"><th><a href="#L447">447</a></th><td><pre></pre></td></tr>
+<tr id="L448"><th><a href="#L448">448</a></th><td><pre>Live harness hit regression during simple add-state readback. I’m checking app-side command behavior now; custom get may be intercepting normal reads too broadly.</pre></td></tr>
+<tr id="L449"><th><a href="#L449">449</a></th><td><pre></pre></td></tr>
+<tr id="L450"><th><a href="#L450">450</a></th><td><pre>performDefaultImplementation path was too late; it replaced Cocoa’s normal get. I’m moving rewrite earlier into execute(), so built-in NSGetCommand still does normal packaging after receiver-specifier surgery.</pre></td></tr>
+<tr id="L451"><th><a href="#L451">451</a></th><td><pre></pre></td></tr>
+<tr id="L452"><th><a href="#L452">452</a></th><td><pre>I’ve confirmed custom get override is too invasive in Cocoa’s command pipeline and regresses ordinary reads. I’m backing out to stable baseline now so repo stays clean, then I’ll summarize exact root cause and viable next implementation path.</pre></td></tr>
+<tr id="L453"><th><a href="#L453">453</a></th><td><pre></pre></td></tr>
+<tr id="L454"><th><a href="#L454">454</a></th><td><pre>Stable baseline rebuilt. I’m doing one final clean live pass so final report is exact: normal reads work, explicit-get workaround works, exact chained syntax still fails.</pre></td></tr>
+<tr id="L455"><th><a href="#L455">455</a></th><td><pre></pre></td></tr>
+<tr id="L456"><th><a href="#L456">456</a></th><td><pre>Current issue found. Not app launch. Not stale process now.</pre></td></tr>
+<tr id="L457"><th><a href="#L457">457</a></th><td><pre></pre></td></tr>
+<tr id="L458"><th><a href="#L458">458</a></th><td><pre>Live `osascript` on clean app shows:</pre></td></tr>
+<tr id="L459"><th><a href="#L459">459</a></th><td><pre></pre></td></tr>
+<tr id="L460"><th><a href="#L460">460</a></th><td><pre>- `title of first track` works</pre></td></tr>
+<tr id="L461"><th><a href="#L461">461</a></th><td><pre>- `set selected tracks to (every track whose title is &quot;Test Title&quot;)` works</pre></td></tr>
+<tr id="L462"><th><a href="#L462">462</a></th><td><pre>- `set selected tracks to first track` works</pre></td></tr>
+<tr id="L463"><th><a href="#L463">463</a></th><td><pre>- `title of (get selected tracks)` works</pre></td></tr>
+<tr id="L464"><th><a href="#L464">464</a></th><td><pre>- `title of selected tracks` fails with `-1700`</pre></td></tr>
+<tr id="L465"><th><a href="#L465">465</a></th><td><pre></pre></td></tr>
+<tr id="L466"><th><a href="#L466">466</a></th><td><pre>So failure is AppleScript reference-chaining semantics, not selection state.</pre></td></tr>
+<tr id="L467"><th><a href="#L467">467</a></th><td><pre></pre></td></tr>
+<tr id="L468"><th><a href="#L468">468</a></th><td><pre>What this means:</pre></td></tr>
+<tr id="L469"><th><a href="#L469">469</a></th><td><pre>`selected tracks` currently behaves as property whose value is a track reference. AppleScript does not force early evaluation of that subexpression inside a larger specifier. Apple docs describe same pattern for `get`:</pre></td></tr>
+<tr id="L470"><th><a href="#L470">470</a></th><td><pre>[AppleScript Commands Reference - get](https://developer.apple.com/library/archive/documentation/AppleScript/Conceptual/AppleScriptLangGuide/reference/ASLR_cmds.html)</pre></td></tr>
+<tr id="L471"><th><a href="#L471">471</a></th><td><pre>When app cannot resolve nested reference directly, explicit `get` fixes it.</pre></td></tr>
+<tr id="L472"><th><a href="#L472">472</a></th><td><pre></pre></td></tr>
+<tr id="L473"><th><a href="#L473">473</a></th><td><pre>Concrete live proof:</pre></td></tr>
+<tr id="L474"><th><a href="#L474">474</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L475"><th><a href="#L475">475</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L476"><th><a href="#L476">476</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L477"><th><a href="#L477">477</a></th><td><pre>		set selected tracks to first track</pre></td></tr>
+<tr id="L478"><th><a href="#L478">478</a></th><td><pre>		return title of (get selected tracks)</pre></td></tr>
+<tr id="L479"><th><a href="#L479">479</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L480"><th><a href="#L480">480</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L481"><th><a href="#L481">481</a></th><td><pre>```</pre></td></tr>
+<tr id="L482"><th><a href="#L482">482</a></th><td><pre>returns `Test Title`</pre></td></tr>
+<tr id="L483"><th><a href="#L483">483</a></th><td><pre></pre></td></tr>
+<tr id="L484"><th><a href="#L484">484</a></th><td><pre>But:</pre></td></tr>
+<tr id="L485"><th><a href="#L485">485</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L486"><th><a href="#L486">486</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L487"><th><a href="#L487">487</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L488"><th><a href="#L488">488</a></th><td><pre>		set selected tracks to first track</pre></td></tr>
+<tr id="L489"><th><a href="#L489">489</a></th><td><pre>		return title of selected tracks</pre></td></tr>
+<tr id="L490"><th><a href="#L490">490</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L491"><th><a href="#L491">491</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L492"><th><a href="#L492">492</a></th><td><pre>```</pre></td></tr>
+<tr id="L493"><th><a href="#L493">493</a></th><td><pre>still fails.</pre></td></tr>
+<tr id="L494"><th><a href="#L494">494</a></th><td><pre></pre></td></tr>
+<tr id="L495"><th><a href="#L495">495</a></th><td><pre>I also tested deeper fix paths:</pre></td></tr>
+<tr id="L496"><th><a href="#L496">496</a></th><td><pre>- typed `track` property in `sdef`</pre></td></tr>
+<tr id="L497"><th><a href="#L497">497</a></th><td><pre>- standard `selection` term/code experiment</pre></td></tr>
+<tr id="L498"><th><a href="#L498">498</a></th><td><pre>- custom `get` command override</pre></td></tr>
+<tr id="L499"><th><a href="#L499">499</a></th><td><pre></pre></td></tr>
+<tr id="L500"><th><a href="#L500">500</a></th><td><pre>None gave clean result. Typed `track` broke `set ... to every track whose ...`. Custom `get` override regressed ordinary reads. I backed those out. Repo left in stable state. Build passes. Targeted AppleScript unit test passes.</pre></td></tr>
+<tr id="L501"><th><a href="#L501">501</a></th><td><pre></pre></td></tr>
+<tr id="L502"><th><a href="#L502">502</a></th><td><pre>Most likely real fix path now:</pre></td></tr>
+<tr id="L503"><th><a href="#L503">503</a></th><td><pre>1. Keep current API and document required explicit `get`</pre></td></tr>
+<tr id="L504"><th><a href="#L504">504</a></th><td><pre>2. Build more invasive custom scripting model:</pre></td></tr>
+<tr id="L505"><th><a href="#L505">505</a></th><td><pre>   typed selection object or custom standard-command plumbing for `get`/`set`</pre></td></tr>
+<tr id="L506"><th><a href="#L506">506</a></th><td><pre></pre></td></tr>
+<tr id="L507"><th><a href="#L507">507</a></th><td><pre>I recommend option 1 unless exact Finder-style chaining is hard requirement. If you want exact `title of selected tracks` to work, next step is invasive AppleScript-command work, not small bridge tweak.</pre></td></tr>
+<tr id="L508"><th><a href="#L508">508</a></th><td><pre></pre></td></tr>
+<tr id="L509"><th><a href="#L509">509</a></th><td><pre>Files touched during investigation remain:</pre></td></tr>
+<tr id="L510"><th><a href="#L510">510</a></th><td><pre>[SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift)</pre></td></tr>
+<tr id="L511"><th><a href="#L511">511</a></th><td><pre>[SwiftTag.sdef](Swift/SwiftTag/SwiftTag/SwiftTag.sdef)</pre></td></tr>
+<tr id="L512"><th><a href="#L512">512</a></th><td><pre>[SwiftTagAppleScriptTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagAppleScriptTests.swift)</pre></td></tr>
+<tr id="L513"><th><a href="#L513">513</a></th><td><pre></pre></td></tr>
+<tr id="L514"><th><a href="#L514">514</a></th><td><pre>[ 2026-04-24T01:35:12Z (21m 49s since Assistant start) ]</pre></td></tr>
+<tr id="L515"><th><a href="#L515">515</a></th><td><pre></pre></td></tr>
+<tr id="L516"><th><a href="#L516">516</a></th><td><pre>## User 2026-04-24T04:26:42Z (3h 13m 19s since previous Assistant start) </pre></td></tr>
+<tr id="L517"><th><a href="#L517">517</a></th><td><pre></pre></td></tr>
+<tr id="L518"><th><a href="#L518">518</a></th><td><pre>[ Switched agent to GPT-5.5 Extra High ]</pre></td></tr>
+<tr id="L519"><th><a href="#L519">519</a></th><td><pre></pre></td></tr>
+<tr id="L520"><th><a href="#L520">520</a></th><td><pre>Review plan `26-AddAppleScriptSupport.md` and app’s current `SwiftTag/SwiftTag.sdef`. Worktree is dirty as this is the work in progress existing changes can be changed to address issues and implement intended functionality.</pre></td></tr>
+<tr id="L521"><th><a href="#L521">521</a></th><td><pre>The following:</pre></td></tr>
+<tr id="L522"><th><a href="#L522">522</a></th><td><pre>``` applescript</pre></td></tr>
+<tr id="L523"><th><a href="#L523">523</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L524"><th><a href="#L524">524</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L525"><th><a href="#L525">525</a></th><td><pre>		set selected tracks to (every track whose title is &quot;Test Title&quot;)</pre></td></tr>
+<tr id="L526"><th><a href="#L526">526</a></th><td><pre>		set trackCount to count of selected tracks</pre></td></tr>
+<tr id="L527"><th><a href="#L527">527</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L528"><th><a href="#L528">528</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L529"><th><a href="#L529">529</a></th><td><pre>```</pre></td></tr>
+<tr id="L530"><th><a href="#L530">530</a></th><td><pre>has a trackCount value of 1 even when more than one track is actually selected that meets criteria. Fix issue with tests including osascript tests.</pre></td></tr>
+<tr id="L531"><th><a href="#L531">531</a></th><td><pre>When updating the app’s sdef, `SwiftTag.sdef` keep class properties in alphanumeric order.</pre></td></tr>
+<tr id="L532"><th><a href="#L532">532</a></th><td><pre></pre></td></tr>
+<tr id="L533"><th><a href="#L533">533</a></th><td><pre>Review Apple’s AppleScript documentation to confirm use of latest technology, coding patterns and leverage SwiftUI where possible.</pre></td></tr>
+<tr id="L534"><th><a href="#L534">534</a></th><td><pre></pre></td></tr>
+<tr id="L535"><th><a href="#L535">535</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L536"><th><a href="#L536">536</a></th><td><pre></pre></td></tr>
+<tr id="L537"><th><a href="#L537">537</a></th><td><pre>## Assistant 2026-04-24T04:26:42Z (0s since User start)</pre></td></tr>
+<tr id="L538"><th><a href="#L538">538</a></th><td><pre></pre></td></tr>
+<tr id="L539"><th><a href="#L539">539</a></th><td><pre>Inspecting plan, sdef, AppleScript bridge, tests. Need find selection setter path and why whose collapses to one object.</pre></td></tr>
+<tr id="L540"><th><a href="#L540">540</a></th><td><pre></pre></td></tr>
+<tr id="L541"><th><a href="#L541">541</a></th><td><pre>Found likely weak spot: selected tracks exposed as property returning generated specifier. Need make selected-track collection act like real to-many element; Apple docs point Cocoa scripting through KVC/object specifier evaluation.</pre></td></tr>
+<tr id="L542"><th><a href="#L542">542</a></th><td><pre></pre></td></tr>
+<tr id="L543"><th><a href="#L543">543</a></th><td><pre>Edits now: make selected tracks concrete list of track objects, not specifier; add duplicate-title specifier test; replace skipped harness with gated osascript integration.</pre></td></tr>
+<tr id="L544"><th><a href="#L544">544</a></th><td><pre></pre></td></tr>
+<tr id="L545"><th><a href="#L545">545</a></th><td><pre>Unit path patched. Running focused AppleScript tests first; if compile breaks, fix near changed bridge only.</pre></td></tr>
+<tr id="L546"><th><a href="#L546">546</a></th><td><pre></pre></td></tr>
+<tr id="L547"><th><a href="#L547">547</a></th><td><pre>Focused unit tests pass. Now checking real osascript path against built app so test covers same AppleEvent behavior user hit.</pre></td></tr>
+<tr id="L548"><th><a href="#L548">548</a></th><td><pre></pre></td></tr>
+<tr id="L549"><th><a href="#L549">549</a></th><td><pre>Real osascript now returns &quot;2&quot; for duplicate matching tracks. Added gated UI harness so normal test runs skip external automation unless env opts in.</pre></td></tr>
+<tr id="L550"><th><a href="#L550">550</a></th><td><pre></pre></td></tr>
+<tr id="L551"><th><a href="#L551">551</a></th><td><pre>Fixed.</pre></td></tr>
+<tr id="L552"><th><a href="#L552">552</a></th><td><pre></pre></td></tr>
+<tr id="L553"><th><a href="#L553">553</a></th><td><pre>Changed `selected tracks` from single-track/specifier return into real selected-track collection in [SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift:1250). Setter still accepts `NSScriptObjectSpecifier`, so `every track whose title is &quot;Test Title&quot;` resolves to all matches. SDEF property order preserved; `selected tracks` now advertises both `specifier` and `track list` in [SwiftTag.sdef](Swift/SwiftTag/SwiftTag/SwiftTag.sdef:161).</pre></td></tr>
+<tr id="L554"><th><a href="#L554">554</a></th><td><pre></pre></td></tr>
+<tr id="L555"><th><a href="#L555">555</a></th><td><pre>Added duplicate-title unit coverage in [SwiftTagAppleScriptTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagAppleScriptTests.swift:439). Added gated `osascript` UI harness in [SwiftTagUITests.swift](Swift/SwiftTag/SwiftTagUITests/SwiftTagUITests.swift:238); run with `SWIFTTAG_RUN_OSASCRIPT_TESTS=1`.</pre></td></tr>
+<tr id="L556"><th><a href="#L556">556</a></th><td><pre></pre></td></tr>
+<tr id="L557"><th><a href="#L557">557</a></th><td><pre>Apple docs checked: Cocoa scripting still KVC/object-specifier driven; `NSWhoseSpecifier` is right model for `every ... whose ...`. Sources: [Cocoa Scripting](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/AppArchitecture/Concepts/Scripting.html), [NSScriptObjectSpecifiers](https://developer.apple.com/documentation/foundation/nsscriptobjectspecifiers), [NSWhoseSpecifier](https://developer.apple.com/documentation/foundation/nswhosespecifier).</pre></td></tr>
+<tr id="L558"><th><a href="#L558">558</a></th><td><pre></pre></td></tr>
+<tr id="L559"><th><a href="#L559">559</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L560"><th><a href="#L560">560</a></th><td><pre>- `BuildProject` passed.</pre></td></tr>
+<tr id="L561"><th><a href="#L561">561</a></th><td><pre>- 12 `SwiftTagAppleScriptTests` passed.</pre></td></tr>
+<tr id="L562"><th><a href="#L562">562</a></th><td><pre>- Focus duplicate-title test passed after final polish.</pre></td></tr>
+<tr id="L563"><th><a href="#L563">563</a></th><td><pre>- Gated UI osascript test skipped by default.</pre></td></tr>
+<tr id="L564"><th><a href="#L564">564</a></th><td><pre>- Manual `/usr/bin/osascript` repro returned `&quot;2&quot;`.</pre></td></tr>
+<tr id="L565"><th><a href="#L565">565</a></th><td><pre></pre></td></tr>
+<tr id="L566"><th><a href="#L566">566</a></th><td><pre>[ 2026-04-24T04:40:23Z (13m 41s since Assistant start) ]</pre></td></tr>
+<tr id="L567"><th><a href="#L567">567</a></th><td><pre></pre></td></tr>
+<tr id="L568"><th><a href="#L568">568</a></th><td><pre>## User 2026-04-24T05:11:11Z (44m 29s since previous Assistant start) </pre></td></tr>
+<tr id="L569"><th><a href="#L569">569</a></th><td><pre></pre></td></tr>
+<tr id="L570"><th><a href="#L570">570</a></th><td><pre>Review plan `26-AddAppleScriptSupport.md` and app’s current `SwiftTag/SwiftTag.sdef`. Worktree is dirty as this is the work in progress existing changes can be changed to address issues and implement intended functionality.</pre></td></tr>
+<tr id="L571"><th><a href="#L571">571</a></th><td><pre>The following:</pre></td></tr>
+<tr id="L572"><th><a href="#L572">572</a></th><td><pre>``` applescript</pre></td></tr>
+<tr id="L573"><th><a href="#L573">573</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L574"><th><a href="#L574">574</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L575"><th><a href="#L575">575</a></th><td><pre>		set selected tracks to first track</pre></td></tr>
+<tr id="L576"><th><a href="#L576">576</a></th><td><pre>		set trackTitle to title of (get selected tracks)</pre></td></tr>
+<tr id="L577"><th><a href="#L577">577</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L578"><th><a href="#L578">578</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L579"><th><a href="#L579">579</a></th><td><pre>```</pre></td></tr>
+<tr id="L580"><th><a href="#L580">580</a></th><td><pre>has two issues:</pre></td></tr>
+<tr id="L581"><th><a href="#L581">581</a></th><td><pre>1. `set selected tracks to first track` does not select first track but does select second. Confirm the the correct ordering of AppleScript tracks based on actual UI order in track table.</pre></td></tr>
+<tr id="L582"><th><a href="#L582">582</a></th><td><pre>2. `set trackTitle to title of (get selected tracks)` returns `error &quot;Can’t get title of {track 1 of editor window 1 of application \&quot;SwiftTag\&quot;}.&quot; number -1728 from «class titl» of {«class trck» 1 of «class edtw» 1}`. Is this an incorrect use of AppleScript syntax? Explain.</pre></td></tr>
+<tr id="L583"><th><a href="#L583">583</a></th><td><pre></pre></td></tr>
+<tr id="L584"><th><a href="#L584">584</a></th><td><pre>Fix issue with tests including osascript tests.</pre></td></tr>
+<tr id="L585"><th><a href="#L585">585</a></th><td><pre>When updating the app’s sdef, `SwiftTag.sdef` keep class properties in alphanumeric order.</pre></td></tr>
+<tr id="L586"><th><a href="#L586">586</a></th><td><pre></pre></td></tr>
+<tr id="L587"><th><a href="#L587">587</a></th><td><pre>Review Apple’s AppleScript documentation to confirm use of latest technology, coding patterns and leverage SwiftUI where possible.</pre></td></tr>
+<tr id="L588"><th><a href="#L588">588</a></th><td><pre></pre></td></tr>
+<tr id="L589"><th><a href="#L589">589</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L590"><th><a href="#L590">590</a></th><td><pre></pre></td></tr>
+<tr id="L591"><th><a href="#L591">591</a></th><td><pre>## Assistant 2026-04-24T05:11:11Z (0s since User start)</pre></td></tr>
+<tr id="L592"><th><a href="#L592">592</a></th><td><pre></pre></td></tr>
+<tr id="L593"><th><a href="#L593">593</a></th><td><pre>Rechecking current WIP and selection path. Need prove AppleScript index maps to UI table order, then patch bridge.</pre></td></tr>
+<tr id="L594"><th><a href="#L594">594</a></th><td><pre></pre></td></tr>
+<tr id="L595"><th><a href="#L595">595</a></th><td><pre>UI table sorts tracks by track number then filename. Script collection still used raw model order; checking whether Cocoa passes index 0 or 1 too.</pre></td></tr>
+<tr id="L596"><th><a href="#L596">596</a></th><td><pre></pre></td></tr>
+<tr id="L597"><th><a href="#L597">597</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L598"><th><a href="#L598">598</a></th><td><pre></pre></td></tr>
+<tr id="L599"><th><a href="#L599">599</a></th><td><pre>Need inspect AppleScript bridge sort against SwiftUI table. Then patch order source, tests, osascript harness.</pre></td></tr>
+<tr id="L600"><th><a href="#L600">600</a></th><td><pre></pre></td></tr>
+<tr id="L601"><th><a href="#L601">601</a></th><td><pre>Cause found: AppleScript collection used model insertion order; SwiftUI table sorts by track number, then filename. Patching script collection/index order to same table order, then adding unit + osascript coverage.</pre></td></tr>
+<tr id="L602"><th><a href="#L602">602</a></th><td><pre></pre></td></tr>
+<tr id="L603"><th><a href="#L603">603</a></th><td><pre>Patch in. Next compile path checks new shared table sort compiles from both SwiftUI view and script bridge, then targeted AppleScript tests.</pre></td></tr>
+<tr id="L604"><th><a href="#L604">604</a></th><td><pre></pre></td></tr>
+<tr id="L605"><th><a href="#L605">605</a></th><td><pre>One old unit assumed raw insertion order. New behavior exposed that. Adjusting fixture filenames so old property test still points at table-first track.</pre></td></tr>
+<tr id="L606"><th><a href="#L606">606</a></th><td><pre></pre></td></tr>
+<tr id="L607"><th><a href="#L607">607</a></th><td><pre>Unit bridge passes. Gated UI test now present and skipped without env, as designed. Running live osascript next for real app confirmation.</pre></td></tr>
+<tr id="L608"><th><a href="#L608">608</a></th><td><pre></pre></td></tr>
+<tr id="L609"><th><a href="#L609">609</a></th><td><pre>One cleanup: moving shared table-order helper out of view file into Track model. Keeps SwiftUI table and AppleScript bridge using same model-level sort.</pre></td></tr>
+<tr id="L610"><th><a href="#L610">610</a></th><td><pre></pre></td></tr>
+<tr id="L611"><th><a href="#L611">611</a></th><td><pre>Fixed.</pre></td></tr>
+<tr id="L612"><th><a href="#L612">612</a></th><td><pre></pre></td></tr>
+<tr id="L613"><th><a href="#L613">613</a></th><td><pre>Track order now matches visible SwiftUI table order: numeric `TRACKNUMBER` ascending, no numeric track number after numbered tracks, then `displayFileName.localizedStandardCompare`. `first track` maps to first visible row, not raw import/model order. Shared sort lives in [Track.swift](Swift/SwiftTag/SwiftTag/Shared/Models/Track.swift:187), used by SwiftUI table and AppleScript bridge in [SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift:1678).</pre></td></tr>
+<tr id="L614"><th><a href="#L614">614</a></th><td><pre></pre></td></tr>
+<tr id="L615"><th><a href="#L615">615</a></th><td><pre>Added tests:</pre></td></tr>
+<tr id="L616"><th><a href="#L616">616</a></th><td><pre>- Unit: [SwiftTagAppleScriptTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagAppleScriptTests.swift:515)</pre></td></tr>
+<tr id="L617"><th><a href="#L617">617</a></th><td><pre>- Gated osascript UI: [SwiftTagUITests.swift](Swift/SwiftTag/SwiftTagUITests/SwiftTagUITests.swift:238)</pre></td></tr>
+<tr id="L618"><th><a href="#L618">618</a></th><td><pre></pre></td></tr>
+<tr id="L619"><th><a href="#L619">619</a></th><td><pre>Syntax answer: `selected tracks` returns list. `(get selected tracks)` becomes `{track 1 ...}`. `title of (get selected tracks)` asks list for `title`, so `-1728` is expected. Use:</pre></td></tr>
+<tr id="L620"><th><a href="#L620">620</a></th><td><pre></pre></td></tr>
+<tr id="L621"><th><a href="#L621">621</a></th><td><pre>```applescript</pre></td></tr>
+<tr id="L622"><th><a href="#L622">622</a></th><td><pre>set selectedTrackList to get selected tracks</pre></td></tr>
+<tr id="L623"><th><a href="#L623">623</a></th><td><pre>set trackTitle to title of item 1 of selectedTrackList</pre></td></tr>
+<tr id="L624"><th><a href="#L624">624</a></th><td><pre>```</pre></td></tr>
+<tr id="L625"><th><a href="#L625">625</a></th><td><pre></pre></td></tr>
+<tr id="L626"><th><a href="#L626">626</a></th><td><pre>Docs checked: Apple `NSIndexSpecifier` says `first`/`front` use index `0`; bug was ordering, not off-by-one. Apple `NSScriptObjectSpecifier` / `NSWhoseSpecifier` remain current Cocoa scripting path for object specifiers and `whose`; no newer SwiftUI AppleScript API replaces this. SwiftUI leverage is shared table-order model logic.</pre></td></tr>
+<tr id="L627"><th><a href="#L627">627</a></th><td><pre></pre></td></tr>
+<tr id="L628"><th><a href="#L628">628</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L629"><th><a href="#L629">629</a></th><td><pre>- BuildProject passed</pre></td></tr>
+<tr id="L630"><th><a href="#L630">630</a></th><td><pre>- `SwiftTagAppleScriptTests`: 13 passed</pre></td></tr>
+<tr id="L631"><th><a href="#L631">631</a></th><td><pre>- osascript UI test registered, skips unless `SWIFTTAG_RUN_OSASCRIPT_TESTS=1`</pre></td></tr>
+<tr id="L632"><th><a href="#L632">632</a></th><td><pre>- manual osascript returned first selected path `/tmp/SwiftTagOsascriptOrderTest/01-swifttag-applescript.flac` and count `2`</pre></td></tr>
+<tr id="L633"><th><a href="#L633">633</a></th><td><pre>- reproduced `title of (get selected tracks)` error; corrected syntax returned `Test Title`</pre></td></tr>
+<tr id="L634"><th><a href="#L634">634</a></th><td><pre>- `SwiftTag.sdef` XML valid; class properties reviewed as alphanumeric</pre></td></tr>
+<tr id="L635"><th><a href="#L635">635</a></th><td><pre></pre></td></tr>
+<tr id="L636"><th><a href="#L636">636</a></th><td><pre>Sources: [NSIndexSpecifier](https://developer.apple.com/documentation/foundation/nsindexspecifier), [NSScriptObjectSpecifier](https://developer.apple.com/documentation/foundation/nsscriptobjectspecifier), [NSWhoseSpecifier](https://developer.apple.com/documentation/foundation/nswhosespecifier), [AppleScript get command](https://developer.apple.com/library/archive/documentation/AppleScript/Conceptual/AppleScriptLangGuide/reference/ASLR_cmds.html)</pre></td></tr>
+<tr id="L637"><th><a href="#L637">637</a></th><td><pre></pre></td></tr>
+<tr id="L638"><th><a href="#L638">638</a></th><td><pre>[ 2026-04-24T05:25:19Z (14m 8s since Assistant start) ]</pre></td></tr>
+<tr id="L639"><th><a href="#L639">639</a></th><td><pre></pre></td></tr>
+<tr id="L640"><th><a href="#L640">640</a></th><td><pre>End of Transcript</pre></td></tr></table></main></body></html>

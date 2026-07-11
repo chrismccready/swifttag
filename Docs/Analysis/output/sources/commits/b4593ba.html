@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(album-art): revise picture scope forcing and front cover append behavior</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(album-art): revise picture scope forcing and front cover append behavior</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-03-25</p>
+<p><code>b4593bad7a73d4737a89fa81f52b0a0c853f2bce</code></p>
+<p>feat(album-art): revise picture scope forcing and front cover append behavior</p>
+<h2>Body</h2><pre>- remove the album-level pin toggle and track-scope picker from the album art sheet
+- add a front cover add action that appends instead of replacing existing front cover entries
+- force per-slot all-track scope while save-to-all settings are active and keep created refs when disabled
+- default save front cover to all tracks to off
+- update album art tests and add coverage for forced scope behavior and front cover append flow
+
+feat(settings): regroup settings sections and resize the settings window
+
+- reorganize feedback, general, and tag write settings into grouped sections
+- adjust control sizing for segmented pickers and toggle groups
+- increase the settings window frame to fit the expanded layout
+
+docs(plans): add the v4 multi-picture support plan and transcript</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>86.0 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>6h 44m</span></div>
+  <div><strong>Assistant</strong><span>15m 26s</span></div>
+  <div><strong>User Response</strong><span>6h 29m</span></div>
+  <div><strong>Back/Forth</strong><span>6.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/settings.html">Settings</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/11.html">Plan 11: Add Multi Picture Per Track Support Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport.html#L1">transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport.html#L12">transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport:segment-001</td><td>work</td><td>1.000</td><td>41.5</td><td>10m 43s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport.html#L51">transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport:segment-002</td><td>work</td><td>1.000</td><td>21.3</td><td>11m 45s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport.html#L71">transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport:segment-003</td><td>work</td><td>1.000</td><td>51.1</td><td>2h 16m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport.html#L119">transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport:segment-004</td><td>work</td><td>1.000</td><td>23.4</td><td>23m 19s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport.html#L141">transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport:segment-005</td><td>work</td><td>1.000</td><td>23.4</td><td>3h 38m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport.html#L163">transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport</a></td><td>transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport:segment-006</td><td>work</td><td>1.000</td><td>39.4</td><td>3m 25s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/11-v4-AddMultiPicturePerTrackSupport.md</td><td>205</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport.md</td><td>200</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>4</td><td>15</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift</td><td>89</td><td>94</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift</td><td>92</td><td>108</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/FeedbackSettingsView.swift</td><td>40</td><td>22</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/GeneralSettingsView.swift</td><td>1</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/SettingsView.swift</td><td>1</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/TagWriteSettingsView.swift</td><td>71</td><td>39</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/SaveSettings.swift</td><td>1</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>144</td><td>6</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/TrackStatusViewInspectorTests.swift</td><td>20</td><td>10</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>579.00</td></tr>
+<tr><td>transcript_lines</td><td>200.00</td></tr>
+<tr><td>plan_lines</td><td>205.00</td></tr>
+<tr><td>elapsed_time</td><td>24267.00</td></tr>
+<tr><td>assistant_processing_time</td><td>926.00</td></tr>
+<tr><td>back_and_forth_count</td><td>6.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

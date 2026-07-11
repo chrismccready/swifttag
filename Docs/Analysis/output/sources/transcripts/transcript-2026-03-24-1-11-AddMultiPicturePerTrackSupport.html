@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-03-24-1-11-AddMultiPicturePerTrackSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-03-24  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: 11-v1-AddMultiPicturePerTrackSupport.md, 11-v2-AddMultiPicturePerTrackSupport.md, 11-v3-AddMultiPicturePerTrackSupport.md, 11-v4-AddMultiPicturePerTrackSupport.md  </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.4 </pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User 2026-03-24T20:50:10Z </pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>Create a plan to:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Add to chooseFrontCoverDropAction another case “add” for a new button titled “Add” that when selected will append picture to Front Cover list. </pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Remove &quot;Pin Album Pictures&quot; and albumArt.sheet.trackPictureScopePicker.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- When the &quot;Save all Pictures to all Tracks&quot; setting is On it sets “Pin Track Pictures” On and albumArt.sheet.typePictureScopePicker is set to allTrackPictures and all regardless of selection, all, except locked, track pictures for a given slot are pinned and any added pictures are pinned including unique pictures added by loaded/added track files.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- When &quot;Save all Pictures to all Tracks&quot; setting is Off all pictures loaded/added when are pinned based on the state of albumArt.sheet.typePictureScopePicker for that given slot that picture is associated with.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- When &quot;Save all Pictures to all Tracks&quot; setting toggled Off it sets “Pin Track Pictures” Off and and albumArt.sheet.typePictureScopePicker is set to selectedTrackPictures and no action is taken on pin state.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>-  &quot;Save all Pictures to all Tracks&quot; setting defaults to Off.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- albumArt.sheet.typePictureScopePicker defaults to Off.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- When “Save Front Cover to all Tracks” setting is On the “Pin Track Pictures” for Front Cover type is set On and disabled, the albumArt.sheet.typePictureScopePicker for Front Cover is set to allTrackPictures and disabled and any picture added to Front Cover slot is pinned. No other setting overrides this behavior except locked tracks.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- When Save Front Cover to all Tracks is Off or toggled Off, the &quot;Pin Track Pictures&quot; toggle and albumArt.sheet.typePictureScopePicker are treated like any other slot and will follow the state of &quot;Save all Pictures to all Tracks&quot; setting.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Locked tracks never have pin settings changed or picture data written to them.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>Write plan to Plans/11-v4-AddMultiPicturePerTrackSupport.md.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>Ask questions for clarification.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre></pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>## Assistant 2026-03-24T20:50:10Z (0s since User start)</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre></pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>I’m reviewing the latest multi-picture plan, the testing guide, and the album-art/settings implementation so the new plan matches existing behavior and constraints before I write it.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>I have the current plan and the relevant settings/model state. I’m checking the sheet UI next so the new plan can call out exact controls to remove or repurpose instead of describing them abstractly.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>The current UI still has both scope pickers and the old Pin Album Pictures control, while the view model still forces behavior from Save all Pictures to all Tracks. I’m locating the front-cover drop action and the save/write paths so the plan can call out exactly where the add/append behavior and locked-track protections need to be validated.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>I have enough context to write the next plan revision. I’m updating it to remove the old album-level pin workflow entirely, make the two settings the live source of truth, and leave the unresolved semantics explicit instead of inventing them.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre></pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>The plan file is in place. I’m doing a quick pass on the written version to make sure the open questions cleanly isolate the unresolved semantics instead of conflicting with the acceptance criteria.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>There was one real conflict in the draft: I had preserved one interpretation of the “toggle Off” behavior in Confirmed Decisions while also asking you to clarify it. I’m removing that assumption so the plan stays implementation-safe.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre></pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>The plan is written at Docs/Plans/11-v4-AddMultiPicturePerTrackSupport.md. It updates the prior v3 direction to remove Pin Album Pictures, remove albumArt.sheet.trackPictureScopePicker, make the two save settings the live source of truth, and add the new Front Cover Add drop action with test and writeback coverage.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre></pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>I left three implementation-blocking questions in the plan because the current request is internally ambiguous in those spots:</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>1. Does “albumArt.sheet.typePictureScopePicker defaults to Off” mean selectedTrackPictures, or do you want a new third picker/off state?</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>2. When Save all Pictures to all Tracks toggles Off, should existing unlocked picture references stay pinned as-is, or should the app actively depin them?</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>3. For Front Cover Add, should appended front covers remain appended in both UI browsing order and FLAC write order, or is append only a UI behavior?</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre></pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>[ 2026-03-24T20:52:19Z (2m 9s since Assistant start) ]</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre></pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>## User 2026-03-24T21:00:53Z (10m 44s since previous Assistant start) </pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre></pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>1. Oops, yes, “albumArt.sheet.typePictureScopePicker” defaults to selectedTrackPictures.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>2. When Save all Pictures to all Tracks toggles Off,  existing unlocked picture references should stay pinned as-is.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>3. For Front Cover Add, appended front covers should remain appended in both UI browsing order and FLAC write order.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre></pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>## Assistant 2026-03-24T21:00:53Z (0s since User start)</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre></pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>I’m updating the plan with your three clarifications so the implementation rules are explicit and no longer split between the plan and chat history.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre></pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>The first patch missed because that line had already shifted. I’m re-reading the current file and applying a narrower update against the actual text.</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre></pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>The plan now includes your clarifications in Confirmed Decisions, implementation phases, tests, and acceptance criteria, and the open questions section is cleared. I’m doing one final read to make sure the plan no longer carries any stale ambiguity.</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre></pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>The plan at Docs/Plans/11-v4-AddMultiPicturePerTrackSupport.md is updated with your clarifications.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre></pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>It now explicitly states that albumArt.sheet.typePictureScopePicker defaults to selectedTrackPictures, turning Save all Pictures to all Tracks Off preserves existing unlocked pinned references, and Front Cover Add must preserve appended order in both UI navigation and FLAC write order. The Open Questions section is now cleared.</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre></pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>[ 2026-03-24T21:02:07Z (1m 14s since Assistant start) ]</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre></pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>## User 2026-03-24T21:12:38Z (11m 45s since previous Assistant start) </pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre></pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>Read plan 11-v4-AddMultiPicturePerTrackSupport.md and implement. If further clarification is needed during implementation, stop and ask.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre></pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>## Assistant 2026-03-24T21:12:38Z (0s since User start)</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre></pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>I’m reading the implementation plan and the album-art/FLAC paths it affects first, then I’ll wire the changes through the model, mapper, and UI layers before validating with targeted diagnostics/builds.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre></pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>The resource reader isn’t exposing project files directly here, so I’m switching to the Xcode file tools to inspect the plan and current implementation surfaces.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre></pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>I’ve got the plan and the main album-art model open. Next I’m tracing the forcing/pinning helpers, the sheet UI, and existing tests so I can change the behavior without leaving dead state behind.</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>I’ve confirmed the current code still has the exact competing controls the plan removes. I’m drilling into the AlbumArtViewModel helper layer and ContentView bindings now because that’s where most of the behavior change will actually land.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre></pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>The core issue is clear now: the model still relies on a hidden “effective pinned references” overlay. I’m replacing that with explicit per-slot state updates so the UI and save payload come from the same source of truth.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre></pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>I have enough context to edit. I’m updating the model first so forced settings actually mutate slot scope and unlocked-track references, then I’ll trim the sheet/UI bindings and adjust the tests around the new semantics.</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre></pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>I’m at the edit point. The main refactor is removing the hidden save-time overlay and replacing it with explicit unlocked-track reference propagation when the settings require all-track behavior.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre></pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>I’m editing AlbumArtViewModel now. This patch removes the album-level pin state, adds the front-cover Add path, and moves the settings logic into explicit scope/reference mutation for unlocked tracks.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre></pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>The model patch is in. I’m stripping the removed toolbar controls from the sheet and rewiring ContentView to the new per-slot disabled-state APIs next.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre></pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>I’ve finished the UI wiring changes. Next pass is cleaning the now-dead references and updating the tests to the new sheet shape and setting-driven behavior.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre></pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>I found the remaining compile breakpoints: one old model test still calls the removed sheet-level scope API, and the inspector helper still builds the old sheet initializer. I’m replacing those with the new per-slot assertions now.</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre></pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>I’m updating the unit tests to match the new semantics rather than the old overlay behavior: forced settings should now materialize real unlocked-track refs, and the removed sheet-level scope shouldn’t appear in tests anymore.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre></pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>I found a likely regression source: a lot of tests build AlbumArtViewModel without calling configurePinSettings, and explicit front-cover propagation would now kick in too early. I’m gating the forced behavior so it only activates after settings are actually configured, which matches how ContentView uses it.</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre></pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>The settings gate is in, so unconfigured tests won’t get accidental front-cover forcing. I’m adding one last UI/source assertion for the new front-cover Add choice, then I’ll run diagnostics.</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre></pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>The touched files are clean at the editor-diagnostic level. I’m running targeted tests for the album-art model and the sheet inspector next rather than jumping straight to a full suite.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre></pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>One targeted test failed, and it’s the expected one: the old assertion assumed the forced-all setting would only overlay pin state temporarily. Under the new plan it now materializes unlocked refs, so I’m updating that test to assert the new persisted behavior instead.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre></pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>The targeted model and inspector tests are green now. I’m doing a full project build as the last validation step to catch any integration fallout outside the touched files.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre></pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>Implemented plan 11-v4 across the album-art model, sheet, and tests. The main behavior change is in AlbumArtViewModel.swift: the sheet-level album pin and track-scope path are gone, Save all Pictures to all Tracks / Save Front Cover to all Tracks now actively materialize unlocked-track references and force per-slot scope state, and front-cover drops now support Add append behavior instead of only cancel/replace. The sheet and wiring in AlbumArtSheetView.swift and ContentView.swift were reduced to the remaining per-slot controls, with forced disablement coming from the settings-driven model.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre></pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>I updated coverage in SwiftTagTests.swift and TrackStatusViewInspectorTests.swift for the new forced-scope behavior, locked-track exclusion, front-cover-only precedence, front-cover append flow, and removal of the old sheet controls.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre></pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>Validation: targeted tests passed, and BuildProject completed successfully.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre></pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>[ 2026-03-24T21:19:50Z (7m 12s since Assistant start) ]</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre></pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>## User 2026-03-24T23:28:59Z (2h 16m 21s since previous Assistant start) </pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre></pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- When the &quot;Save all Pictures to all Tracks&quot; setting is On or toggled On it does set “Pin Track Pictures” On and albumArt.sheet.typePictureScopePicker is set to allTrackPictures and both disabled, the current behavior implemented and perform the same pinning behavior that has been implemented, however, at time of toggle off it should just enable “Pin Track Pictures” and albumArt.sheet.typePictureScopePicker, nothing else. When &quot;Save all Pictures to all Tracks&quot; setting is Off the default pinning of pictures upon being added/loaded is based on the current albumArt.sheet.typePictureScopePicker state.</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- When the &quot;Save Front Cover to all Tracks&quot; setting is On or toggled On it does set, for Front Cover, “Pin Track Pictures” On and albumArt.sheet.typePictureScopePicker is set to allTrackPictures and both disabled, the current behavior implemented and perform the same pinning behavior that has been implemented, however, when toggled off it should just enable (unless &quot;Save all Pictures to all Tracks&quot; is On) “Pin Track Pictures” and albumArt.sheet.typePictureScopePicker, nothing else. When “Save Front Cover to all Tracks&quot; setting is Off the default pinning of pictures upon being added/loaded is based on the current albumArt.sheet.typePictureScopePicker state.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- When &quot;Save Front Cover to all Tracks&quot; is On, it takes precedence over all.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- When &quot;Save Front Cover to all Tracks&quot; is Off, then “Save all Pictures to all Tracks&quot; takes precedence.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- The default setting for albumArt.sheet.typePictureScopePicker (selectedTrackPictures) will suffice for initial state when the model is instantiated.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>Update plan 11-v4-AddMultiPicturePerTrackSupport.md and ask questions for clarification.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre></pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>## Assistant 2026-03-24T23:28:59Z (0s since User start)</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>I’m updating the plan to reflect the revised toggle-off semantics and precedence exactly as you described, then I’ll stop with the specific clarification points that still affect implementation behavior.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre></pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>I updated 11-v4-AddMultiPicturePerTrackSupport.md to reflect the new rule set: toggle-on still forces pin/scope and performs the current all-track pinning behavior, but toggle-off now only re-enables the controls unless a higher-precedence forcing setting is still active. The plan now also states that non-forced add/load behavior follows the current per-slot albumArt.sheet.typePictureScopePicker, with selectedTrackPictures as the initial model default.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>I need three clarifications before implementation proceeds:</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>1. When a forcing setting turns On and materializes all-track pinned references for unlocked tracks, should turning that setting Off leave those created references exactly as-is, or should some of them later be treated as temporary?</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>2. In non-forced mode with albumArt.sheet.typePictureScopePicker == .allTrackPictures, should add/load attach immediately to all unlocked loaded tracks?</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>3. In non-forced mode with albumArt.sheet.typePictureScopePicker == .selectedTrackPictures and no explicit track selection, should that continue to mean all loaded tracks?</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre></pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>[ 2026-03-24T23:29:44Z (45s since Assistant start) ]</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre></pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>## User 2026-03-24T23:52:18Z (23m 20s since previous Assistant start) </pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre></pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>1. When a forcing setting turns On and materializes all-track pinned references for unlocked tracks, turning that setting Off should leave those created references exactly as-is.</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>2. Yes, in non-forced mode with albumArt.sheet.typePictureScopePicker == .allTrackPictures, should add/load attach immediately to all unlocked loaded tracks.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>3. No, in non-forced mode with albumArt.sheet.typePictureScopePicker == .selectedTrackPictures and no explicit track selection, it should not continue to mean all loaded tracks. However if selectedTrackPictures  is selected, then when tracks are added/loaded those track pictures are pined to the track as if individually selected (this allows tracks to be added/loaded, have tags edited and be saved without losing their original pictures).</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre></pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>## Assistant 2026-03-24T23:52:18Z (0s since User start)</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre></pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>I’m folding your three answers into the plan’s Confirmed Decisions and tightening the non-forced selectedTrackPictures language so it matches the track-load preservation rule you just specified.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre></pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>I updated 11-v4-AddMultiPicturePerTrackSupport.md with your confirmed decisions.</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre></pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>The plan now explicitly states:</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>- forced all-track references remain in place when the forcing toggle turns Off</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- non-forced .allTrackPictures adds/loads attach immediately to all unlocked loaded tracks</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- non-forced .selectedTrackPictures adds/loads attach only to explicitly selected unlocked tracks</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- when no tracks are explicitly selected, loaded tracks still retain their own original pictures pinned to themselves so save flows do not drop them</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre></pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>Open Questions is now cleared.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre></pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>[ 2026-03-24T23:52:59Z (41s since Assistant start) ]</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre></pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>## User 2026-03-25T03:31:12Z (3h 38m 54s since previous Assistant start) </pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre></pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>[ new context ]</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre></pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>Read plan 11-v4-AddMultiPicturePerTrackSupport.md and implement. If further clarification is needed during implementation, stop and ask.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre></pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>## Assistant 2026-03-25T03:31:12Z (0s since User start)</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre></pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>I’m reading the current plan and the relevant album-art/track models first, then I’ll implement against the existing code paths and stop if the plan leaves destructive behavior or selection semantics ambiguous.</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre></pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>I have the plan and the main album-art model. Next I’m tracing the UI bindings, save settings defaults, and the current tests so I can remove the obsolete controls without leaving mismatched behavior behind.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre></pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>I’ve confirmed the settings default and the current sheet source already removed the track-scope picker, but the model logic still carries the older effective/stored pin split. I’m reading the remaining helper methods now because the implementation hinges on replacing that hidden layer cleanly.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre></pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>Plan for implementation:</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>1. Refactor AlbumArtViewModel so the two settings drive control state and materialize all-track references without resetting manual state on disable.</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>2. Keep the sheet/API surface aligned with that model, including the default selected scope and front-cover append behavior.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>3. Update affected tests for the new defaults and the preserved-reference semantics, then run targeted diagnostics/tests and a build.</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre></pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>I have enough context to edit now. The main change is in AlbumArtViewModel: forced modes need to materialize references and pin state, but they must stop overwriting stored scope/pin choices when the setting turns back off.</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre></pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>The core model refactor is in place. I’m adjusting the tests to the new semantics now, especially where the old behavior expected front-cover/global scope to snap back to selected when a forcing setting was turned off.</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre></pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>I’ve updated the defaults and the model/test expectations. Next I’m running file diagnostics on the touched Swift files before I move to targeted tests, so I can catch any API or type issues quickly.</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre></pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>The targeted album-art and settings tests are green. I’m doing a full project build now to catch anything outside the unit-test slice, then I’ll summarize the behavior changes and any remaining risk.</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre></pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>Implemented plan 11-v4 without needing further clarification.</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre></pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>The behavioral change is in AlbumArtViewModel.swift: forced picture settings now materialize all-track references for unlocked tracks and force the active slot scope to allTrackPictures, but turning those settings back off no longer resets stored scope state to selectedTrackPictures. That preserves the concrete references and scope created while forced mode was active, which matches the plan. I also kept the existing front-cover Add append path intact.</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre></pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>I updated the default for Save Front Cover to all Tracks to false in SaveSettings.swift and adjusted expectations in SwiftTagTests.swift to reflect the new defaults and the non-resetting scope behavior after forced mode is disabled.</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre></pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>Validation passed: 7 targeted tests passed, and the full Xcode build succeeded.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre></pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>[ 2026-03-25T03:34:37Z (3m 25s since Assistant start) ]</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre></pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

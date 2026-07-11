@@ -421,17 +421,9 @@ Live repro says patch not enough. Next step: inspect raw AppleScript shape of se
 
 [ 2026-04-23T22:43:48Z (29m 15s since Assistant start) ]
 
-## User 2026-04-23T22:43:48Z
-
-[ interrupted agent ]
-
-There is a window open with a track loaded but there is an alert dialog titled `FLAC Import Error` and with message `FLAC__metadata_get_tags failed for file.` displayed. Perhaps restart test. Also be sure you are quitting the app between tests, it seems like sometimes a stale app is up.
-
-## Assistant 2026-04-23T22:43:48Z (0s since User start)
-
-[ You've hit your usage limit. ]
-
 ## User 2026-04-24T01:13:23Z (2h 29m 35s since previous Assistant start) 
+
+[ "You've hit your usage limit." hence the time break ]
 
 There is a window open with a track loaded but there is an alert dialog titled `FLAC Import Error` and with message `FLAC__metadata_get_tags failed for file.` displayed. Perhaps restart test. Also be sure you are quitting the app between tests, it seems like sometimes a stale app is up. I have quit all SwiftTag app processes.
 

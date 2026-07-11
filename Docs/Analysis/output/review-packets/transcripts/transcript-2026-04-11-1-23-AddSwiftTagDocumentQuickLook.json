@@ -1,0 +1,913 @@
+{
+  "archive_provenance_commit_ids": [
+    "f195e03db1cd290792f99f8b880bb69995e28921"
+  ],
+  "base_segments": [
+    {
+      "assistant_processing_seconds": 755.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 62,
+      "excerpt": "Create a plan to create a `.swifttag` document QuickLook App Extensions (.appex): - The QuickLook App Extension (.appex) will be installed inside the app’s Plugins folder. - The Quicklook preview will contain: - A background image of either: - If it exists, the first front cover picture (FLAC picture type 3) from the SwiftTag document. - Or the SwiftTag app icon. - The FLAC track tags: - Formatted with 1.5x system label font size for ALBUM and regular system label font size for other tags. - The layout will be like: ``` ALBUM ALBUMARTIST (if not empty) ARTIST (if all tracks share the same ARTIST and it is not the same as ALBUMARTIST) TRACKNUMBER (not zero padded) <space><space> TITLE (repeat tracks in order of TRACKNUMBER up to what will fit in space, if there are more tracks than can fit into space, then the last track space should be used for \"...\") ``` Save plan to 23-AddSwiftTagDocumentQuickLook.md. Ask questions for clarification. Review Apple's documentation thoroughly and add any needed implementation information so that the latest API/technology is being used. I’m gathering the project’s planning conventions, the current SwiftTag document implementation, and Apple’s Quick L",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-001",
+      "source_line_count": 68,
+      "source_line_end": 79,
+      "source_line_start": 12,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-001",
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-002"
+      ],
+      "user_response_seconds": 50021.0,
+      "valid_atomic_elapsed_seconds": 50776.0
+    },
+    {
+      "assistant_processing_seconds": 7545.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 78,
+      "excerpt": "Review plan 23-AddSwiftTagDocumentQuickLook.md, ask questions for any additional clarification, and implement. Be sure to consult Apple’s documentation on QuickLook App Extensions (.appex). Reviewing the numbered plan, the related guides, and the current Quick Look implementation points first so we can confirm the intended behavior before changing anything. I’ll also check Apple’s current Quick Look App Extension guidance and then move into implementation with targeted verification. I’ve finished the plan read and there aren’t any unresolved product questions in the plan itself, so I’m validating it against the existing document/package code and test helpers now. Next I’m checking the shared reader, the latest save-options plan, and the testing guide so the extension stays aligned with the current document model and project conventions. I have enough context to sketch the implementation seams now: shared snapshot logic, a thin Quick Look provider, extension resources/config, and focused tests. I’m consulting Apple’s Quick Look extension docs next to verify the exact extension point and reply API, then I’ll wire the project target and shared rendering path around those constraints. ",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-002",
+      "source_line_count": 84,
+      "source_line_end": 163,
+      "source_line_start": 80,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-003",
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-004"
+      ],
+      "user_response_seconds": 0.0,
+      "valid_atomic_elapsed_seconds": 7545.0
+    },
+    {
+      "assistant_processing_seconds": 220.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 38,
+      "excerpt": "[ interrupted agent, UI tests were interrupted/unable to complete ] UI tests were interrupted by user. Disregard results from most recently run tests. Rerun tests and continue implementation. I’m treating the last interrupted run as invalid and starting verification fresh. First I’m checking whether any old xcodebuild process is still hanging around, then I’ll rerun the focused Quick Look tests and rebuild if needed. Apple’s Quick Look docs confirm the data-based .appex path we implemented: subclass QLPreviewProvider, conform to QLPreviewingController, set QLIsDataBasedPreview, list QLSupportedContentTypes, and return a QLPreviewReply. I’m pulling the concrete test identifiers next so I can rerun only the new Quick Look coverage cleanly. I’ve got the exact Quick Look test identifiers now. I’m rerunning a focused batch that covers the new preview snapshot/PDF path plus the document reader and picture utilities that were refactored to support the extension target. One focused test failed, and it’s a good catch: the overflow logic is collapsing the whole track list to just ... instead of preserving the visible rows before the ellipsis. I’m reading the snapshot code and the test expect",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-003",
+      "source_line_count": 44,
+      "source_line_end": 207,
+      "source_line_start": 164,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-005",
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-006"
+      ],
+      "user_response_seconds": 2913.0,
+      "valid_atomic_elapsed_seconds": 3133.0
+    },
+    {
+      "assistant_processing_seconds": 201.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 22,
+      "excerpt": "The final QuickLook presentation is large. I am seeing `canvasSize: CGSize(width: 900, height: 900)` on line 21 of `SwiftTagDocumentQuickLookSnapshot.swift`, but it looks like the final QuickLook presentation is larger (like around 1200x1200). Can the final presentation size be controlled? Limiting to 640x640 is preferable. I’m checking how Quick Look treats the preview’s declared size versus the rendered PDF page size, then I’ll tighten the implementation to target a 640×640 preview if the API allows it. I found the key detail in Apple’s API surface: QLPreviewReply has a dedicated PDF initializer with a page size, which is a better fit than the generic data/content-size initializer when we want to constrain the preview document itself. I’m checking the current provider and renderer now so I can switch that over cleanly. I’m making two changes: set the default preview layout to a 640×640 design, and switch the extension to Quick Look’s PDF-specific reply initializer so the preview’s intrinsic page size is declared more directly. The code is updated. I’m adding one tiny regression test for the default canvas size, then I’ll rebuild and rerun the focused Quick Look tests so we can co",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-004",
+      "source_line_count": 28,
+      "source_line_end": 235,
+      "source_line_start": 208,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-007",
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-008"
+      ],
+      "user_response_seconds": 3677.0,
+      "valid_atomic_elapsed_seconds": 3878.0
+    },
+    {
+      "assistant_processing_seconds": 349.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 42,
+      "excerpt": "Let’s use a bitmap/context-based reply instead of PDF. I’m switching the extension over to Quick Look’s context-based reply path now. I’ll confirm the exact API shape from Apple’s docs, then refactor the current PDF renderer into a CGContext renderer and rerun the focused Quick Look tests. I’ve got the API shape from Apple’s docs: QLPreviewReply(contextSize:isBitmap:drawUsing:) is the right initializer here. I’m updating the renderer and tests together so we don’t leave the Quick Look path half-switched. The sync drawUsing closure has one tricky bit: it isn’t async, so I don’t want to depend on SwiftUI rendering there directly. I’m switching to a safer shape where we render the SwiftUI preview to a CGImage on the main actor up front, then the Quick Look reply simply draws that bitmap into the supplied context. I’m replacing the PDF renderer with a bitmap renderer in place so the target wiring stays simple. After that I’ll update the one renderer smoke test to validate bitmap output instead of PDF bytes. The bitmap-path refactor is in. I’m rebuilding and running the focused Quick Look tests now; if there’s any concurrency or CGContext mismatch from the new reply initializer, this pa",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-005",
+      "source_line_count": 48,
+      "source_line_end": 283,
+      "source_line_start": 236,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-009",
+        "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:turn-010"
+      ],
+      "user_response_seconds": 0.0,
+      "valid_atomic_elapsed_seconds": 349.0
+    }
+  ],
+  "candidate_commits": [
+    {
+      "archive_provenance": false,
+      "body": "- add SwiftTag document package type registration with `.swifttag` extension and `<id>-<hash>.<extension>` pooled image assets\n- add `Save SwiftTag Document...` File menu command through focused-scene command system to serialize current frontmost-editor track list, tags, etc.\n- add image dimension/colors data will now surface as saveable file differences\n\ndocs(plan): add plan 15 for SwiftTag document creation support",
+      "changed_paths": [
+        "Docs/Plans/15-AddSwiftTagDocumentCreation.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/FLACBridge/include/FlacMetadataBridge.h",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/FlacMetadataService.swift",
+        "SwiftTag/Info.plist",
+        "SwiftTag/Shared/Utilities/PictureDataUtilities.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 931,
+      "commit_hash": "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: assets, command, current, data, docs, document",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "1276536",
+      "source_link": "../../sources/commits/1276536.html",
+      "subject": "feat(package): add SwiftTag document creation and serialization",
+      "test_line_count": 298
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "BuildScripts/build-libflac.sh",
+        "Docs/FLACBridgeExecution.md",
+        "SwiftTag-Bridging-Header.h",
+        "SwiftTag.xcodeproj/project.pbxproj",
+        "SwiftTag.xcodeproj/xcshareddata/xcschemes/SwiftTagApp.xcscheme",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c.template",
+        "SwiftTag/FlacMetadataService.swift"
+      ],
+      "code_line_count": 264,
+      "commit_hash": "1fcd08274065e59e148cb05d16e592e98f02bced",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: app, build, bundled, flac, lib, only",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "1fcd082",
+      "source_link": "../../sources/commits/1fcd082.html",
+      "subject": "Build ​FLAC from source and link as stais lib • configure FLAC CMake build for app use:    • static lib only (BUILD​_​SHARED​_​LIBS​=​OFF)    • disable programs (BUILD​_​PROGRAMS​=​OFF)    • disable C++ lib (BUILD​_​CXXLIBS​=​OFF)    • disable Ogg dependency (WITH​_​OGG​=​OFF) • remove dependency on bundled prebuilt Resources​/bin FLAC/metaflac artifacts",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "• add metadata write support in the FLAC bridge and Swift service for tags, pictures, or both\n• add save actions to the app commands and route editor saves through persisted save settings\n• add write mapping for canonical tag output, count-key strategies, and number zero padding\n• add settings views and save preference models for payload, scope, and tag write defaults\n• add unit and UI coverage for save behavior, persisted settings, and FLAC fixture workflows\n• update docs with current app behavior and renumber plan files under Docs​/​Plans/",
+      "changed_paths": [
+        "Docs/Plans/{FLACBridgeExecution.md => 1-FLACBridgeExecution.md}",
+        "Docs/Plans/{ContentViewReorganizationPlan.md => 2-ContentViewReorganizationPlan.md}",
+        "Docs/Plans/{FlacPictureImportAlbumArtPlan.md => 3-FlacPictureImportAlbumArtPlan.md}",
+        "Docs/Plans/4-FlacWriteTagsAndPicturesPlan.md",
+        "Docs/README.md",
+        "SwiftTag.xcodeproj/project.pbxproj",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/FLACBridge/include/FlacMetadataBridge.h",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/Features/AlbumArt/AlbumArtTypes.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/FlacImport/FlacWriteMapper.swift",
+        "SwiftTag/Features/Settings/GeneralSettingsView.swift",
+        "SwiftTag/Features/Settings/SettingsView.swift",
+        "SwiftTag/Features/Settings/TagWriteSettingsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/FlacMetadataService.swift",
+        "SwiftTag/Shared/Models/SaveSettings.swift",
+        "SwiftTag/Shared/Models/TagKey.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/TagNormalization.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 1579,
+      "commit_hash": "27b32d888ac16fcaa31f6735b29d960131a8315c",
+      "docs_line_count": 107,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: app, behavior, both, bridge, coverage, current",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "27b32d8",
+      "source_link": "../../sources/commits/27b32d8.html",
+      "subject": "feat(save): add FLAC tag and picture writing workflow",
+      "test_line_count": 874
+    },
+    {
+      "archive_provenance": false,
+      "body": "- separate display-state track scoping from editable track scoping for compilation toggles\n- keep the checkbox visuals in sync with SwiftUI disabled state and selected track state\n- preserve compilation checkbox state for locked tracks\n- add view, unit, and UI regression coverage for the disabled compilation checkbox flow\n\ndocs(transcipt): add bug fix transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-10-4-CompilationDisabledAndDiffFix.md",
+        "SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 75,
+      "commit_hash": "29c8eed7decacebe51ab53c9150e9b5b86cd9f3b",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: bug, coverage, display, docs, keep, not",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "29c8eed",
+      "source_link": "../../sources/commits/29c8eed.html",
+      "subject": "fix(tag-editor): when MixedStateCheckbox is disabled it does not display checkbox state",
+      "test_line_count": 113
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "SwiftTag/Shared/QuickLook/SwiftTagDocumentQuickLookView.swift"
+      ],
+      "code_line_count": 6,
+      "commit_hash": "31627a922620a24d64ae4f88232256f56993e172",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: album, better, quicklook, size, title",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "31627a9",
+      "source_link": "../../sources/commits/31627a9.html",
+      "subject": "feat(quicklook): update album title color, size and truncation for better visibilty",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add an `Edit Description...` action and child sheet in the album art browser\n- validate UTF-8 description bytes against the FLAC picture metadata budget with a 256-byte buffer\n- update picture save and diff flows so description-only changes count as picture edits\n- scope external picture-difference overlays to the affected slot and expose UI test identifiers\n- add unit, inspector, and UI tests for description saves, save scope, and multi-window diff state\n\ndocs(plan): add plan 25-AddPictureDescriptionEdit",
+      "changed_paths": [
+        "Docs/Plans/25-AddPictureDescriptionEdit.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtTypes.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/FlacPictureUtilities.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentSupport.swift",
+        "SwiftTagTests/SwiftTagQuickLookTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackDurationTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 477,
+      "commit_hash": "36c5b18642e6568ca15e897dcae9132a6907e9db",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: against, album, budget, bytes, changes, diff",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "36c5b18",
+      "source_link": "../../sources/commits/36c5b18.html",
+      "subject": "feat(album-art): implement picture description editing",
+      "test_line_count": 654
+    },
+    {
+      "archive_provenance": false,
+      "body": "- register a fallback editor window opener so launch-time Finder opens can surface an editor window\n  before any session-specific routing is available\n- keep bootstrap FLAC routing queued only while a visible unregistered window is still expected to\n  receive the files\n- preserve the separate new-window behavior for SwiftTag document opens while fixing launch-time\n  FLAC visibility\n- add a Finder-style UI regression that launches SwiftTag by opening a FLAC through NSWorkspace and\n  verifies the window becomes visible and editable\n\ndocs(transcript): add transcript for the launch-open FLAC and SwiftTag window visibility fix",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-10-1-LaunchOpenFlacOrDocFix.md",
+        "SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 39,
+      "commit_hash": "3c4cfff64ee127631152a551713977c1ad5a40dd",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: any, available, becomes, before, behavior, can",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "3c4cfff",
+      "source_link": "../../sources/commits/3c4cfff.html",
+      "subject": "fix(windowing): show finder-opened flac files in the launch window",
+      "test_line_count": 105
+    },
+    {
+      "archive_provenance": false,
+      "body": "- a SwiftTag document can contain no tracks\n- it is valid to save a SwiftTag Document with no tracks",
+      "changed_paths": [
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTagTests/SwiftTagTests.swift"
+      ],
+      "code_line_count": 5,
+      "commit_hash": "454258cb9db98ff57199e91810c74d771038a613",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: can, case, contain, document, error, package",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "454258c",
+      "source_link": "../../sources/commits/454258c.html",
+      "subject": "feat(swifttag-document): remove from `SwiftTagDocumentPackageError` the `noTracks` error case",
+      "test_line_count": 4
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add snapshot audio summary text for bits per sample, sample rate, channels, and duration\n- render summary footer with trailing total duration in Quick Look view\n- add Quick Look tests for shared, mono, stereo, and mixed audio summary values",
+      "changed_paths": [
+        "SwiftTag/Shared/QuickLook/SwiftTagDocumentQuickLookSnapshot.swift",
+        "SwiftTag/Shared/QuickLook/SwiftTagDocumentQuickLookView.swift",
+        "SwiftTagTests/SwiftTagQuickLookTests.swift"
+      ],
+      "code_line_count": 96,
+      "commit_hash": "486b13c723b2fac0220854d9ea7269a09442e7ce",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: document, look, previews, quick, quicklook, render",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "486b13c",
+      "source_link": "../../sources/commits/486b13c.html",
+      "subject": "feat(quicklook): show audio summary in document previews",
+      "test_line_count": 77
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add a referenced-document track-list baseline in the view model and compare tracks by the\n  most recent bookmark-resolved URL, with a pathless-track fallback\n- append `*` to referenced document titles when the ordered track list changes and add a\n  close/quit prompt branch for track-list-difference-only sessions\n- keep the existing FLAC unsaved-changes flow for mixed dirty states and reuse deleted-document\n  recovery for close-triggered referenced-document saves\n- allow saving an existing referenced `.swifttag` document with an empty current track list\n- add targeted tests for bookmark identity, rename safety, title markers, empty saves, and prompt resolution\n\ndocs(plan): add plan 22 documentation and transcript",
+      "changed_paths": [
+        "Docs/Plans/22-AddSwiftTagDocumentSaveOptions.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-10-2-22-AddSwiftTagDocumentSaveOptions.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTag/Shared/Utilities/UnsavedChangesFlow.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift"
+      ],
+      "code_line_count": 315,
+      "commit_hash": "4e470f0885282d2dfa9bcfc38252ea229589132c",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: changes, close, current, docs, document, documentation",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "4e470f0",
+      "source_link": "../../sources/commits/4e470f0.html",
+      "subject": "feat(save): prompt to save referenced documents on track list divergence",
+      "test_line_count": 423
+    },
+    {
+      "archive_provenance": false,
+      "body": "- store bookmark-backed referenced .swifttag document state with live, deleted, and last-known\n  document metadata\n- monitor referenced document moves and deletes, refresh navigation title and document URL, and\n  keep window routing tied to document identity after path changes\n- resolve security-scoped access before saving moved referenced documents and prompt for recovery\n  when the referenced document has been deleted\n- add unit, coordinator, and UI coverage for renamed or moved document tracking and deleted\n  document state\n\ndocs(plan): add plan 21 and transcript",
+      "changed_paths": [
+        "Docs/Plans/21-AddSwiftTagDocumentBookmark.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-09-2-21-AddSwiftTagDocumentBookmark.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentMonitor.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 754,
+      "commit_hash": "561817a4bca220d705273d6744f1e5756cec418f",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: access, after, before, changes, coverage, docs",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "561817a",
+      "source_link": "../../sources/commits/561817a.html",
+      "subject": "feat(swifttag-document): track referenced documents via bookmark across move and delete events",
+      "test_line_count": 285
+    },
+    {
+      "archive_provenance": false,
+      "body": "- extend flac bridge and metadata service with sample rate, total samples,\n  bits per sample, and channel count\n- store normalized stream metadata on Track and preserve it during import,\n  reload, and refresh flows\n- write stream metadata into document manifests and parse sample rate display\n  values when reading packages\n- add tests for metadata extraction, sample rate formatting, and document\n  round-trips",
+      "changed_paths": [
+        "SwiftTag/FLACBridge/include/FlacMetadataBridge.h",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/FlacMetadataService.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackageManifest.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackageReader.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackageWriter.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentSupport.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackDurationTests.swift"
+      ],
+      "code_line_count": 213,
+      "commit_hash": "5866685bcbe463804d3efa4fb258029bf961207a",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: bridge, display, document, during, extraction, flac",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "5866685",
+      "source_link": "../../sources/commits/5866685.html",
+      "subject": "feat(stream-info): persist flac stream metadata across document round-trips",
+      "test_line_count": 173
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add unsaved-changes flow models and async coordinator handling for expanded close and quit\n  prompts\n- reuse ContentView FLAC and SwiftTag save helpers for flac-only, document-only, and combined\n  actions\n- keep windows open and abort quit when new-document save panels are canceled or saves fail\n- add resolver and UI test coverage for the new close-flow options\n\ndocs(plan) add plan 20 and its transcript for the implemented save-option work",
+      "changed_paths": [
+        "Docs/Plans/20-AddSwiftTagDocumentSaveOptions.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-08-1-20-AddSwiftTagDocumentSaveOptions.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Shared/Utilities/UnsavedChangesCoordinator.swift",
+        "SwiftTag/Shared/Utilities/UnsavedChangesFlow.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 580,
+      "commit_hash": "603c07621916ecd47e1a9faee08d8c32cd6eebdf",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: async, changes, choices, close, content, coverage",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "603c076",
+      "source_link": "../../sources/commits/603c076.html",
+      "subject": "feat(save): add close and quit swifttag save choices",
+      "test_line_count": 224
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add shared SwiftTag.xctestplan and reference it from both shared schemes\n- update project upgrade metadata and rename quick look extension embed phase for xcode 26.4\n- mark picture record and utility helpers as nonisolated to keep them callable across isolation\n- move quick look snapshot background equality into explicit nonisolated equatable conformance",
+      "changed_paths": [
+        "SwiftTag.xcodeproj/project.pbxproj",
+        "SwiftTag.xcodeproj/xcshareddata/xcschemes/SwiftTag.xcscheme",
+        "SwiftTag.xcodeproj/xcshareddata/xcschemes/SwiftTagApp.xcscheme",
+        "SwiftTag.xctestplan",
+        "SwiftTag/Shared/Models/FlacPictureModels.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/QuickLook/SwiftTagDocumentQuickLookSnapshot.swift",
+        "SwiftTag/Shared/Utilities/PictureDataUtilities.swift"
+      ],
+      "code_line_count": 82,
+      "commit_hash": "759876b5751c03c882cad89d885311f3073fe8cc",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: background, both, embed, extension, helpers, isolation",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "759876b",
+      "source_link": "../../sources/commits/759876b.html",
+      "subject": "project(xcode): adopt xcode 26.4 test plan and nonisolated annotations",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "- rebind track file monitor observations when same-path saves replace the monitored file\n- expose selected album external file values through a gated UI test metadata probe\n- add a monitor regression for repeated same-path rewrites on the same FLAC path\n- add deterministic open-panel window targeting and shared-FLAC multi-window UI regressions\n\ndocs(transcript): add bug fix implementation transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-09-1-ExternalDifferenceDetectionFix.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/TrackFileMonitor.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 69,
+      "commit_hash": "92460554b47e6062390266578964fe59fd5af784",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: album, bug, deterministic, docs, expose, file",
+        "path/topic overlap",
+        "commit before transcript within 3d"
+      ],
+      "score": 1.0,
+      "short_hash": "9246055",
+      "source_link": "../../sources/commits/9246055.html",
+      "subject": "fix(sync): restore repeated external album updates across windows",
+      "test_line_count": 467
+    },
+    {
+      "archive_provenance": false,
+      "body": "- create FLAC rewrite temp files with itemReplacementDirectory for target file\n- stage SwiftTag document packages with itemReplacementDirectory for destination folder\n- remove replacement staging directories after write",
+      "changed_paths": [
+        "SwiftTag/FlacMetadataService.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackageWriter.swift"
+      ],
+      "code_line_count": 113,
+      "commit_hash": "9654a156c85a094a0fe4d86cb59ab87de34bf6f3",
+      "docs_line_count": 0,
+      "reasons": [
+        "changed path mentioned",
+        "subject tokens: after, create, document, file, files, flac",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "9654a15",
+      "source_link": "../../sources/commits/9654a15.html",
+      "subject": "fix(save): stage overwrite replacements on destination volume",
+      "test_line_count": 0
+    }
+  ],
+  "candidate_plans": [
+    {
+      "creation_commit_id": "f195e03db1cd290792f99f8b880bb69995e28921",
+      "current_source_path": "Docs/Plans/23-AddSwiftTagDocumentQuickLook.md",
+      "display_title": "Add SwiftTag Document Quick Look Preview Extension Plan",
+      "plan_id": "23",
+      "revision_commit_ids": [],
+      "section_names": "Goal; Scope; Plan Input Checklist Coverage; Current Implementation Snapshot; Current Apple API Guidance; Confirmed Decisions; Data Access Behavior; Dependencies And Constraints; High-Risk Concerns; Implementation Phases; Test Strategy; Acceptance Criteria; Open Questions",
+      "source_link": "../../sources/plans/23-AddSwiftTagDocumentQuickLook.html#L1"
+    }
+  ],
+  "candidate_themes": [
+    {
+      "accepted_commit_ids": [
+        "f195e03db1cd290792f99f8b880bb69995e28921"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "AppleScript",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "f195e03db1cd290792f99f8b880bb69995e28921",
+          "entity_type": "commit",
+          "evidence_source": "keywords: script",
+          "relationship_type": "include",
+          "theme_id": "applescript"
+        }
+      ],
+      "theme_id": "applescript"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Diff",
+      "positive_and_negative_edges": [],
+      "theme_id": "diff"
+    },
+    {
+      "accepted_commit_ids": [
+        "f195e03db1cd290792f99f8b880bb69995e28921"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "FLAC Lib",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "f195e03db1cd290792f99f8b880bb69995e28921",
+          "entity_type": "commit",
+          "evidence_source": "configured exact path",
+          "relationship_type": "include",
+          "theme_id": "flac-lib"
+        }
+      ],
+      "theme_id": "flac-lib"
+    },
+    {
+      "accepted_commit_ids": [
+        "f195e03db1cd290792f99f8b880bb69995e28921"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Picture",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "f195e03db1cd290792f99f8b880bb69995e28921",
+          "entity_type": "commit",
+          "evidence_source": "alias: picture",
+          "relationship_type": "include",
+          "theme_id": "picture"
+        }
+      ],
+      "theme_id": "picture"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Project",
+      "positive_and_negative_edges": [],
+      "theme_id": "project"
+    },
+    {
+      "accepted_commit_ids": [
+        "f195e03db1cd290792f99f8b880bb69995e28921"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Save",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "f195e03db1cd290792f99f8b880bb69995e28921",
+          "entity_type": "commit",
+          "evidence_source": "keywords: write",
+          "relationship_type": "include",
+          "theme_id": "save"
+        }
+      ],
+      "theme_id": "save"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Settings",
+      "positive_and_negative_edges": [],
+      "theme_id": "settings"
+    },
+    {
+      "accepted_commit_ids": [
+        "f195e03db1cd290792f99f8b880bb69995e28921"
+      ],
+      "accepted_plan_ids": [
+        "23"
+      ],
+      "display_name": "SwiftTag Document",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "f195e03db1cd290792f99f8b880bb69995e28921",
+          "entity_type": "commit",
+          "evidence_source": "alias: swifttag document, .swifttag",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.75,
+          "entity_id": "23",
+          "entity_type": "plan",
+          "evidence_source": "Plan topic: swifttag document, swifttag document, document, quick look",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        }
+      ],
+      "theme_id": "swifttag-document"
+    },
+    {
+      "accepted_commit_ids": [
+        "f195e03db1cd290792f99f8b880bb69995e28921"
+      ],
+      "accepted_plan_ids": [
+        "23"
+      ],
+      "display_name": "Tags",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "f195e03db1cd290792f99f8b880bb69995e28921",
+          "entity_type": "commit",
+          "evidence_source": "alias: metadata",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.75,
+          "entity_id": "23",
+          "entity_type": "plan",
+          "evidence_source": "Plan topic: tag",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        }
+      ],
+      "theme_id": "tags"
+    }
+  ],
+  "conservation_preview": {
+    "commit_lens": {
+      "allocated_atomic_elapsed_seconds": 65681.0,
+      "allocated_back_and_forth": 5.0,
+      "allocated_lines": 284.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "header_note_lines": 12,
+    "plan_lens": {
+      "allocated_atomic_elapsed_seconds": 65681.0,
+      "allocated_back_and_forth": 5.0,
+      "allocated_lines": 284.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "segment_source_lines": 272,
+    "transcript_source_lines": 284
+  },
+  "current_review_status": {
+    "configured_content_digest": "0ea852ec7d0a50c4c44945dc4ba2d816a3f88ec173276060829955577d111c1c",
+    "configured_review_input_digest": "73c751b12b1172ca83df6a9a0b5ee424c653263d2c75ba4fd99c291fd123f4e9",
+    "message": "Reviewed allocation accepted",
+    "normalized_content_digest": "0ea852ec7d0a50c4c44945dc4ba2d816a3f88ec173276060829955577d111c1c",
+    "review_input_digest": "73c751b12b1172ca83df6a9a0b5ee424c653263d2c75ba4fd99c291fd123f4e9",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10T18:59:40Z",
+    "reviewed_by": "Codex GPT-5",
+    "transcript_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook"
+  },
+  "existing_review": {
+    "accepted_candidate_commit_ids": [
+      "f195e03db1cd290792f99f8b880bb69995e28921"
+    ],
+    "accepted_candidate_plan_ids": [
+      "23"
+    ],
+    "evidence_note": "Reviewed against Plan 34 and local evidence.",
+    "feature_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "f195e03db1cd290792f99f8b880bb69995e28921",
+        "confidence": 1.0,
+        "entry_id": "b42-f1",
+        "evidence_note": "Commit creates Plan 23 and implements/refines Quick Look extension.",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-001",
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-002",
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-003",
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-004",
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-005"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-001",
+            "source_line_end": 79,
+            "source_line_start": 12
+          },
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-002",
+            "source_line_end": 163,
+            "source_line_start": 80
+          },
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-003",
+            "source_line_end": 207,
+            "source_line_start": 164
+          },
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-004",
+            "source_line_end": 235,
+            "source_line_start": 208
+          },
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-005",
+            "source_line_end": 283,
+            "source_line_start": 236
+          }
+        ]
+      }
+    ],
+    "feature_unallocated_remainder": 0.0,
+    "normalized_content_digest": "0ea852ec7d0a50c4c44945dc4ba2d816a3f88ec173276060829955577d111c1c",
+    "plan_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "entry_id": "b42-p1",
+        "evidence_note": "Plan 23 authoring and Apple API research.",
+        "plan_id": "23",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-001"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-001",
+            "source_line_end": 79,
+            "source_line_start": 12
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "entry_id": "b42-p2",
+        "evidence_note": "Plan 23 implementation, test repair, size refinement, and bitmap reply conversion.",
+        "plan_id": "23",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-002",
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-003",
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-004",
+          "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-005"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-002",
+            "source_line_end": 163,
+            "source_line_start": 80
+          },
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-003",
+            "source_line_end": 207,
+            "source_line_start": 164
+          },
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-004",
+            "source_line_end": 235,
+            "source_line_start": 208
+          },
+          {
+            "segment_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook:segment-005",
+            "source_line_end": 283,
+            "source_line_start": 236
+          }
+        ]
+      }
+    ],
+    "plan_unallocated_remainder": 0.0,
+    "rejected_candidate_commit_ids": [
+      "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "1fcd08274065e59e148cb05d16e592e98f02bced",
+      "27b32d888ac16fcaa31f6735b29d960131a8315c",
+      "29c8eed7decacebe51ab53c9150e9b5b86cd9f3b",
+      "31627a922620a24d64ae4f88232256f56993e172",
+      "36c5b18642e6568ca15e897dcae9132a6907e9db",
+      "3c4cfff64ee127631152a551713977c1ad5a40dd",
+      "454258cb9db98ff57199e91810c74d771038a613",
+      "486b13c723b2fac0220854d9ea7269a09442e7ce",
+      "4e470f0885282d2dfa9bcfc38252ea229589132c",
+      "561817a4bca220d705273d6744f1e5756cec418f",
+      "5866685bcbe463804d3efa4fb258029bf961207a",
+      "603c07621916ecd47e1a9faee08d8c32cd6eebdf",
+      "759876b5751c03c882cad89d885311f3073fe8cc",
+      "92460554b47e6062390266578964fe59fd5af784",
+      "9654a156c85a094a0fe4d86cb59ab87de34bf6f3"
+    ],
+    "rejected_candidate_plan_ids": [],
+    "review_input_digest": "73c751b12b1172ca83df6a9a0b5ee424c653263d2c75ba4fd99c291fd123f4e9",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10T18:59:40Z",
+    "reviewed_by": "Codex GPT-5",
+    "transcript_digest": "0ea852ec7d0a50c4c44945dc4ba2d816a3f88ec173276060829955577d111c1c"
+  },
+  "header": {
+    "agent": "GPT-5.4 High/Extra High (VSCode/Codex app)",
+    "export_date": "2026-04-11",
+    "reference_type": "Plan",
+    "references": [
+      "23-AddSwiftTagDocumentQuickLook.md"
+    ]
+  },
+  "normalized_content_digest": "0ea852ec7d0a50c4c44945dc4ba2d816a3f88ec173276060829955577d111c1c",
+  "path": "Docs/Plans/Transcripts/transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook.md",
+  "raw_metrics": {
+    "assistant_processing_seconds": 9070.0,
+    "back_and_forth_count": 5,
+    "line_count": 284,
+    "turn_count": 10,
+    "user_response_seconds": 56611.0,
+    "valid_atomic_elapsed_seconds": 65681.0
+  },
+  "review_input_digest": "73c751b12b1172ca83df6a9a0b5ee424c653263d2c75ba4fd99c291fd123f4e9",
+  "review_method_version": "plan-34-v1",
+  "schema_version": 1,
+  "source_link": "../../sources/transcripts/transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook.html#L1",
+  "transcript_id": "transcript-2026-04-11-1-23-AddSwiftTagDocumentQuickLook",
+  "unresolved_questions": [
+    "Accept or reject Commit ownership for every base segment.",
+    "Assign direct or implementation Plan role for every accepted Plan segment.",
+    "Explain any Commit-lens or Plan-lens unallocated remainder."
+  ]
+}

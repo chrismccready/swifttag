@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "report_range": {
+    "start_commit": "2c8445cbde7892ceff58fb58780a79278bcf7d6e",
+    "end_commit": "1071c2e0ffd3bbc279f2cca6e15509e725518e25",
+    "inclusive_commit_count": 208
+  },
+  "untimestamped_transcript_paths": [
+    "Docs/Plans/Transcripts/transcript-2026-02-27-1-1-FLACBridgeExecution.md",
+    "Docs/Plans/Transcripts/transcript-2026-03-02-1-MiscTagEditorDev.md",
+    "Docs/Plans/Transcripts/transcript-2026-03-03-1-MiscTagEditorDev.md",
+    "Docs/Plans/Transcripts/transcript-2026-03-04-1-2-ContentViewReorganizationPlan.md.md",
+    "Docs/Plans/Transcripts/transcript-2026-03-06-1-4-FlacWriteTagsAndPicturesPlan.md",
+    "Docs/Plans/Transcripts/transcript-2026-03-07-1-5-AddSaveNotificationsPlan.md",
+    "Docs/Plans/Transcripts/transcript-2026-03-07-2-6-AgentsTranscriptSkillPlan.md",
+    "Docs/Plans/Transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.md"
+  ],
+  "applescript_transcript_work_commits": {
+    "transcript-2026-04-18-1-26-AddAppleScriptSupport": [
+      "192eaacabaecbe09ee3ee59d935f0d3ab2d86a02",
+      "777706cf1432bcd9bbd0ff1d145469d038b76fd3"
+    ],
+    "transcript-2026-04-20-1-26-AddAppleScriptSupport": [
+      "bee209c217c6b5fa2c4eaddbddcab99101ee589a"
+    ],
+    "transcript-2026-04-21-1-26-AddAppleScriptSupport": [
+      "5866685bcbe463804d3efa4fb258029bf961207a",
+      "859a8f570b718d332f3f3814fc621280ae0f077e"
+    ],
+    "transcript-2026-04-22-1-26-AddAppleScriptSupport": [
+      "0c2d38575541a8dada750da08698d78e75a4d3f0"
+    ],
+    "transcript-2026-04-22-2-26-AddAppleScriptSupport": [
+      "2298c43c00492de67ad920a395d3ec7a8c8fb722"
+    ],
+    "transcript-2026-04-23-1-26-AddAppleScriptSupport": [
+      "d65459355d32c58116293e4f6cce8a759b6d67f5"
+    ],
+    "transcript-2026-04-23-2-26-AddAppleScriptSupport": [
+      "546e43d639eb9d7eceb46aa966b8a592b187b12c"
+    ],
+    "transcript-2026-04-24-1-26-AddAppleScriptSupport": [
+      "95957dd6350042cf04715f42d75a708d22bd4af1",
+      "c02d65544f4b09ec7b1fa8ca3e5e15204fdd1795"
+    ],
+    "transcript-2026-04-28-1-26-AddAppleScriptSupport": [
+      "11ba78598b25840b5e415e7410b8df4b75c964c5"
+    ],
+    "transcript-2026-04-28-2-26-AddAppleScriptSupport": [
+      "6811df91487bd977d74d60b43af798e9970e5d69"
+    ],
+    "transcript-2026-04-29-1-26-AddAppleScriptSupport": [
+      "9b05c92e3f87af186de2ebdf43ebe8f297b41572"
+    ],
+    "transcript-2026-04-29-2-26-AddAppleScriptSupport": [
+      "bbb83ef00b9fb130f94ada7293ee1f429c6bf755",
+      "46a24e9e98968ea9d3bfa50853be92e35d857f8e",
+      "24428a1548324e06268c9174e358e22e9559801b"
+    ],
+    "transcript-2026-04-30-1-26-AddAppleScriptSupport": [
+      "ce1865558f2929bb98bcf1450a297244be3fbb06",
+      "987ade16137d70327f87ab16fcf3fc874681eba4"
+    ],
+    "transcript-2026-04-30-2-26-AddAppleScriptSupport": [
+      "83b8764ca1faecb6f984a4cf8703eaad75501f8a"
+    ],
+    "transcript-2026-05-01-1-26-AddAppleScriptSupport": [
+      "17b6c1045af4a5e5e2c465dded80f53ff5695df5",
+      "1b08404c005806083a5443603d98c10c5510ee70"
+    ],
+    "transcript-2026-05-02-1-26-AddAppleScriptSupport": [
+      "063c138d4ad746588a85c0be70cc1c5c75854e87"
+    ],
+    "transcript-2026-05-02-2-26-AddAppleScriptSupport": [
+      "7c15f6097d77ab2db98c6795b04474308f770536"
+    ],
+    "transcript-2026-05-03-1-26-AddAppleScriptSupport": [
+      "d928e3bb438c8fa266b8700f3d4b2709c72bd7ee"
+    ],
+    "transcript-2026-05-03-2-26-AddAppleScriptSupport": [
+      "3fd6771aa6fbbc5afe81722f5d39ce0c171019cd"
+    ],
+    "transcript-2026-05-04-1-26-AddAppleScriptSupport": [
+      "43b64835145b64f3346d6298de67754019b36df8",
+      "2e24923ec49954fa4d4b17f56f3d26c10265a51b"
+    ],
+    "transcript-2026-05-07-1-26-AddAppleScriptSupport": [
+      "fc120558109cc0d36c1bee5ae25bce69d4702311",
+      "94c83a7fe23cb17431994dd0f02d5f38c321630b",
+      "25fde2c3d0c01acd97eb967b5903f6336c57b6ae",
+      "77e0dc1182db2bdd7d3a4d09b5c1a7b3b912191b"
+    ],
+    "transcript-2026-05-10-1-26-AddAppleScriptSupport": [
+      "f19906905ecd5db8ea9d65fc0a6d80dbd0f798cb",
+      "82db5cd7599e76c1f0c6e8dda5f420865e32f4e7",
+      "2976159836a41160b0a462b26c952968c19a7923"
+    ],
+    "transcript-2026-05-20-1-MakePictureFix": [
+      "8053109fcb999ee4c2f8a060048b83dbfe4eed81"
+    ]
+  },
+  "archive_provenance": {
+    "0c2d38575541a8dada750da08698d78e75a4d3f0": [
+      "transcript-2026-04-21-1-26-AddAppleScriptSupport",
+      "transcript-2026-04-22-1-26-AddAppleScriptSupport"
+    ]
+  },
+  "project_theme_required_commits": [
+    "ae13badc1a2a880e7b374fa67010992d398fa737",
+    "4f2a9e8f1b624f200c4d62747f38f83200dbaf88",
+    "759876b5751c03c882cad89d885311f3073fe8cc",
+    "f7f7e4be43044e840ea69ce6c03d1217b38913ad",
+    "05c75465e894b197009e4fa12fcee8a2f232be65",
+    "c6c7c445aae308a598d41e9f839c9bfd0e495e88",
+    "abe9194d5f3d791d34010e12ea51acb0054ae4ce",
+    "c499b7aead381ce46c275a2b7e1571e2a49a4cc8",
+    "149bf183fe3edf4d14481d354a078cb50f628aee",
+    "c0f71285faefcb501480a4ad69f63e5e7dc0df1e",
+    "d42524c80ead7c678062531b1a7e72fe58e29d72",
+    "e031a26f031d038fcc430fb7057600f67102ccbe",
+    "3c4cfff64ee127631152a551713977c1ad5a40dd",
+    "fdd51810b0f51c7b8ee798ecfa0eb42453627946",
+    "07da732fae63f277c83cb54cf56698ac80e2c851",
+    "0015089006f52550ef2f4ed4fdd0057bb9e521b9",
+    "866d179e6bed7ea2133bcda6ef1ea9f2f91c5a15",
+    "65538b7f93d2246cfc37625f018af76640c6aa40",
+    "004751dd893b3e1b96ba2e42f9a63fc000d75663",
+    "a28886ff5fcb92bf016b563a5df7785225f80a77",
+    "b5795c22e58a84982d07d6846e1929f9eba2166f",
+    "9fea9987c80b7709896d6a46e750b0a0c7925c30",
+    "639e6a21c2fa231ef59f0c8aab3d67494a0bce8a",
+    "2c8445cbde7892ceff58fb58780a79278bcf7d6e",
+    "a76f2110c364943a6a2b000cd575807b8f75a6e6",
+    "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+    "a41be8a2ef85b234f33f4003a47fd3d0117b6e83",
+    "1df3bec4c822e6fcc30d809dab5277868a8e3290",
+    "486b13c723b2fac0220854d9ea7269a09442e7ce",
+    "e8c7dcb8fa1bcfe202e061807bb6873d2e1e0473",
+    "716c54c01f81ac69fb1c6e5252727cbd5dd10310"
+  ],
+  "required_theme_plans": {
+    "project": ["2"],
+    "applescript": ["26"]
+  }
+}

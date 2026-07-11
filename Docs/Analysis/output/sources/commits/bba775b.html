@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(document): add finder-open support for flac files</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(document): add finder-open support for flac files</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-01</p>
+<p><code>bba775b507acd848d8bea0c67609752e0d812194</code></p>
+<p>feat(document): add finder-open support for flac files</p>
+<h2>Body</h2><pre>- add FLAC document type metadata and document icon resources to the app bundle
+- route openFile, openFiles, and open URL events through EditorWindowCoordinator
+- queue launch-time document opens until an editor session registers an external open handler
+- reuse the add-files import path to append opened FLAC files into editor sessions
+- track the active session and add unit and UI coverage for document-open flows
+
+build(flac): filter ranlib no-symbol warnings during libflac builds
+
+- drop libFLAC.a object warnings from cmake build and install stderr output
+
+docs(plan): add flac document open support plan and transcript
+
+- add plan 12 for Finder-open routing, buffering, and document registration work
+- add the supporting transcript for the planning session
+
+project(gitignore): ignore codex workspace files
+
+- add .codex/ to .gitignore</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>90.7 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>12h 24m</span></div>
+  <div><strong>Assistant</strong><span>49m 8s</span></div>
+  <div><strong>User Response</strong><span>11h 35m</span></div>
+  <div><strong>Back/Forth</strong><span>12.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/flac-lib.html">FLAC Lib</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/project.html">Project</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/12.html">Plan 12: Add FLAC Document Open Support Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L1">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L12">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-001</td><td>work</td><td>1.000</td><td>26.8</td><td>4h 15m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L38">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-002</td><td>work</td><td>1.000</td><td>74.2</td><td>16m 24s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L110">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-003</td><td>work</td><td>1.000</td><td>10.3</td><td>5h 22m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L120">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-004</td><td>work</td><td>1.000</td><td>26.8</td><td>6m 52s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L146">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-005</td><td>work</td><td>1.000</td><td>27.8</td><td>18m 46s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L173">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-006</td><td>work</td><td>1.000</td><td>19.6</td><td>5m 43s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L192">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-007</td><td>work</td><td>1.000</td><td>27.8</td><td>6m 43s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L219">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-008</td><td>work</td><td>1.000</td><td>43.3</td><td>53m 5s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L261">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-009</td><td>work</td><td>1.000</td><td>18.6</td><td>5m 41s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L279">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-010</td><td>work</td><td>1.000</td><td>65.0</td><td>31m 8s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L342">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-011</td><td>work</td><td>1.000</td><td>29.9</td><td>20m 51s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.html#L371">transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport</a></td><td>transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport:segment-012</td><td>work</td><td>1.000</td><td>27.8</td><td>1m 20s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>.gitignore</td><td>4</td><td>0</td><td>other</td></tr>
+<tr><td>BuildScripts/build-libflac.sh</td><td>13</td><td>2</td><td>other</td></tr>
+<tr><td>Docs/Plans/12-AddFLACDocumentOpenSupport.md</td><td>142</td><td>0</td><td>plans</td></tr>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-03-31-1-12-AddFLACDocumentOpenSupport.md</td><td>392</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag.xcodeproj/project.pbxproj</td><td>12</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_128x128.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_128x128@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_16x16.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_16x16@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_256x256.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_256x256@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_32x32.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_32x32@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_512x512.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagFLACDoc.iconset/icon_512x512@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_128x128.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_128x128@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_16x16.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_16x16@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_256x256.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_256x256@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_32x32.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_32x32@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_512x512.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Assets.xcassets/SwiftTagNamedDoc.iconset/icon_512x512@2x.png</td><td>0</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>137</td><td>28</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Info.plist</td><td>57</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift</td><td>108</td><td>8</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTagApp.swift</td><td>63</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>169</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>34</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>413.00</td></tr>
+<tr><td>transcript_lines</td><td>398.00</td></tr>
+<tr><td>plan_lines</td><td>142.00</td></tr>
+<tr><td>elapsed_time</td><td>44663.00</td></tr>
+<tr><td>assistant_processing_time</td><td>2948.00</td></tr>
+<tr><td>back_and_forth_count</td><td>12.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-04-24-1-26-AddAppleScriptSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-04-24-1-26-AddAppleScriptSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-04-24-1-26-AddAppleScriptSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>### Conversation Transcript</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>Date: 2026-04-24  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>References: 26-AddAppleScriptSupport.md  </pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Agent: GPT-5.5 Extra High (Codex app)  </pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>## User 2026-04-24T20:14:52Z </pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>Review plan `26-AddAppleScriptSupport.md` and app’s current `SwiftTag/SwiftTag.sdef`. </pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>The following:</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>``` applescript</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>tell application &quot;SwiftTag&quot;</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>	tell front editor window</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>		set title of first track to &quot;New Title&quot;</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>	end tell</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>end tell</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>```</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre></pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>returns. `error &quot;SwiftTag got an error: AppleEvent handler failed.&quot; number -10000`.  I would expect this to work, is the syntax wrong?</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>If the syntax is valid, then add functionality or fix issue with tests including osascript tests.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>When updating the app’s sdef, `SwiftTag.sdef` keep class properties in alphanumeric order.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>Review Apple’s AppleScript documentation to confirm use of latest technology, coding patterns and leverage SwiftUI where possible.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre></pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>## Assistant 2026-04-24T20:14:52Z (0s since User start)</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>Plan + sdef first. Then AppleScript docs check. Then trace handler path to find why valid command falls into -10000.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>Found existing AppleScript support files + tests. Reading plan, sdef, support layer, and current test guide next; issue likely handler-side, not AppleScript grammar.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>Plan says writable track properties must update in-memory editor state. sdef marks track.title writable. Need confirm Swift wrapper has setter path for property, then add missing bridge if absent.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre></pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>Apple docs check done: current Cocoa scripting still centers on SDEF + NSScriptObjectSpecifier + KVC/KVO-compatible ObjC-visible objects. AppleScript set can mutate application-defined writable properties. Syntax valid.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>Patch now. Add writable property setters on SwiftTagScriptTrack, backed by existing appleScriptUpsertTag bridge. Add unit coverage for KVC set title, plus gated osascript UI test matching user script.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre></pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>Setters added for writable track properties, not only title. sdef unchanged, so property order preserved. Running targeted diagnostics + tests.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre></pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>Code diagnostics clean. Need targeted unit test next, then build. osascript UI test gated by env, so normal target run will skip unless explicitly enabled.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>Build clean. Targeted AppleScript unit slice next.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>Unit slice passed. Now running gated UI osascript test with env flag; this may hit macOS Automation/TCC limits if runner lacks event permission.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>Xcode UI test target built but skipped; xcodebuild did not pass host env into runner. Running direct host osascript harness against built app now, same script path, actual AppleEvent.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre></pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>Direct host osascript returned &quot;New Title&quot;. Quit hung on unsaved-change prompt from deliberate title edit; terminating manual app process now so no sessions stay open.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre></pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>Actual AppleEvent path passed outside Xcode: osascript returned &quot;New Title&quot;. Running remaining AppleScript unit file to catch regressions across collection/set/tag behavior.</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre></pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>Syntax valid. Bug in app.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre></pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>`SwiftTag.sdef` already marks `track.title` writable. Handler failed because `SwiftTagScriptTrack` exposed writable SDEF properties as get-only Swift/KVC properties. `NSSetCommand` had nowhere to write, so AppleEvent handler returned `-10000`.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre></pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>Fixed:</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- Added KVC setters for writable `track` properties in `SwiftTagAppleScriptSupport.swift`</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- Routed writes through existing tag bridge into `TagEditorViewModel`</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- Added unit coverage for `setValue(..., forKey: &quot;title&quot;)`</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- Added gated osascript UI test for exact script shape</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- Left `SwiftTag/SwiftTag.sdef` unchanged, so property order unchanged</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre></pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- Build passed</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- Targeted AppleScript unit tests passed</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>- Full AppleScript unit test file passed</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- Direct `/usr/bin/osascript` against built app returned `&quot;New Title&quot;`</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre></pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>Apple docs reviewed: Foundation scripting support, `NSScriptCommand`, `NSSetCommand.keySpecifier`, `NSScriptObjectSpecifier`, `NSScriptSuiteRegistry`. Current Cocoa scripting bridge remains right path; SwiftUI state bridge stays valid.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre></pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>Note: `Docs/Plans/_SwiftTag.sdef` exists untracked, not touched.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre></pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>[ 2026-04-24T20:24:11Z (9m 19s since Assistant start) ]</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre></pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>## User 2026-04-24T21:59:27Z (1h 44m 36s since previous Assistant start) </pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre></pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>Review plan `26-AddAppleScriptSupport.md` and app’s current `SwiftTag/SwiftTag.sdef`. Then perform the following:</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>1. Update &quot;Standard Suite&quot; in `SwiftTag/SwiftTag.sdef` with the following enumerations:</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>```XML</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>&lt;enumeration name=&quot;save options&quot; code=&quot;savo&quot;&gt;</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>    &lt;enumerator name=&quot;yes&quot; code=&quot;yes &quot; description=&quot;Save the file.&quot;/&gt;</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>    &lt;enumerator name=&quot;no&quot; code=&quot;no  &quot; description=&quot;Do not save the file.&quot;/&gt;</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>    &lt;enumerator name=&quot;ask&quot; code=&quot;ask &quot; description=&quot;Ask the user whether or not to save the file.&quot;/&gt;</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>&lt;/enumeration&gt;</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre></pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>&lt;enumeration name=&quot;save scope options&quot; code=&quot;svso&quot;&gt;</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>    &lt;enumerator name=&quot;all tracks&quot; code=&quot;altr&quot; description=&quot;Save all editable tracks in an editor window.&quot;/&gt;</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>    &lt;enumerator name=&quot;selected tracks&quot; code=&quot;sltr&quot; description=&quot;Save selected editable tracks in an editor window.&quot;/&gt;</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>&lt;/enumeration&gt;</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre></pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>&lt;enumeration name=&quot;save payload options&quot; code=&quot;svpo&quot;&gt;</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>    &lt;enumerator name=&quot;tags&quot; code=&quot;tags&quot; description=&quot;Save editable track tags in an editor window.&quot;/&gt;</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>    &lt;enumerator name=&quot;pictures&quot; code=&quot;pics&quot; description=&quot;Save editable track pictures in an editor window.&quot;/&gt;</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>&lt;/enumeration&gt;</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>```</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>2. Add the close command definition:</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>```XML</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>name=&quot;close&quot; code=&quot;coreclos&quot; description=&quot;Close a document or editor window.&quot;&gt;</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>    &lt;cocoa class=&quot;NSCloseCommand&quot;/&gt;</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>    &lt;access-group identifier=&quot;*&quot;/&gt;</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>    &lt;direct-parameter type=&quot;specifier&quot; requires-access=&quot;r&quot; description=&quot;The document(s) or window(s) to close.&quot;/&gt;</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>    &lt;parameter name=&quot;saving&quot; code=&quot;savo&quot; type=&quot;save options&quot; optional=&quot;yes&quot; description=&quot;Should changes be saved before closing?&quot;&gt;</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>        &lt;cocoa key=&quot;SaveOptions&quot;/&gt;</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>    &lt;/parameter&gt;</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>    &lt;parameter name=&quot;saving in&quot; code=&quot;kfil&quot; type=&quot;file&quot; optional=&quot;yes&quot; description=&quot;The file in which to save the document, if so.&quot;&gt;</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>        &lt;cocoa key=&quot;File&quot;/&gt;</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>    &lt;/parameter&gt;</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>    &lt;parameter name=&quot;saving scope&quot; code=&quot;svso&quot; type=&quot;save scope options&quot; optional=&quot;yes&quot; description=&quot;The track selection scope of the save operation.&quot;&gt;</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>        &lt;cocoa key=&quot;SaveScopeOptions&quot;/&gt;</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>    &lt;/parameter&gt;</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>    &lt;parameter name=&quot;saving payload&quot; code=&quot;svpo&quot; type=&quot;save payload options&quot; optional=&quot;yes&quot; description=&quot;The track payload of the save operation.&quot;&gt;</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>        &lt;cocoa key=&quot;SavePayloadOptions&quot;/&gt;</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>    &lt;/parameter&gt;</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>&lt;/command&gt;</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>```</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>3. Update the save command definition to:</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>```XML</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre> name=&quot;save&quot; code=&quot;coresave&quot; description=&quot;Save a document or editor window.&quot;&gt;</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>    &lt;access-group identifier=&quot;*&quot;/&gt;</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>    &lt;direct-parameter type=&quot;specifier&quot; requires-access=&quot;r&quot; description=&quot;The document(s) or window(s) to save.&quot;/&gt;</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>    &lt;parameter name=&quot;in&quot; code=&quot;kfil&quot; type=&quot;file&quot; optional=&quot;yes&quot; description=&quot;The file in which to save the document.&quot;&gt;</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>        &lt;cocoa key=&quot;File&quot;/&gt;</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>    &lt;/parameter&gt;</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>    &lt;parameter name=&quot;scope&quot; code=&quot;svso&quot; type=&quot;save scope options&quot; optional=&quot;yes&quot; description=&quot;The track selection scope of the save operation.&quot;&gt;</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>        &lt;cocoa key=&quot;SaveScopeOptions&quot;/&gt;</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>    &lt;/parameter&gt;</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>    &lt;parameter name=&quot;payload&quot; code=&quot;svpo&quot; type=&quot;save payload options&quot; optional=&quot;yes&quot; description=&quot;The track payload of the save operation.&quot;&gt;</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>        &lt;cocoa key=&quot;SavePayloadOptions&quot;/&gt;</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>    &lt;/parameter&gt;</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>&lt;/command&gt;</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>```</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>4. Update existing code to use the new save command. Use/add appropriate tests including osascript tests. Make sure to complete this update before implementing more commands.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>5. Implement close command. Use/add appropriate tests including osascript tests.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre></pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>Review Apple’s AppleScript documentation to confirm use of latest technology, coding patterns and leverage SwiftUI where possible.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre></pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre></pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>## Assistant 2026-04-24T21:59:27Z (0s since User start)</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre></pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>Plan + sdef first. Need know current suite shape before touching XML; then line up tests around existing AppleScript harness.</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre></pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>Apple docs check: Cocoa scripting still centers on sdef + NSScriptCommand subclasses. Need verify local implementation maps Standard Suite terms into Swift object graph.</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre></pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>Found current save command uses boolean flags (all tracks, selected tracks, tags, pictures). Need replace with enum-backed scope and payload, then update command parser + tests.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre></pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>Edits now: sdef enum/command shape, parser from boolean flags to enum terms, close routing through same save/close infrastructure. Need small coordinator hook so scripted saving no can close without unsaved prompt.</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre></pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>Core shape in. Now compile pass catches Cocoa scripting type mismatches and any enum descriptor assumptions.</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre></pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>XML clean, source diagnostics clean. Build next, then targeted AppleScript unit tests.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre></pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>AppleScript unit bridge passed. Added UI osascript cases are gated like existing harness; run compile/skip path now, then try real harness if environment allows.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre></pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>Running one real osascript harness now. If sandbox blocks Apple events, result will say so and unit coverage still stands.</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre></pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>Xcode UI test runner still skipped because guard env did not propagate through xcodebuild. I am doing host-side osascript check against debug app directly.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre></pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>[ 2026-04-24T22:19:11Z (19m 44s since Assistant start) ]</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre></pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>## User 2026-04-24T22:19:11Z</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre></pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre></pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>The app is open with a track (filename: `swifttag-applescript-manual.flac`) loaded and changed, but I think one of your earlier tests resulted in an alert dialog titled `FLAC Import Error` and with message `The file “swifttag-applescript-manual.flac” couldn’t be opened.` Unless this is what you are expecting, I suggest terminating the app and starting tests again.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre></pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>## Assistant 2026-04-24T22:19:11Z (0s since User start)</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre></pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>Alert not expected. I killed manual app run first, then I will restart from clean state and avoid relying on preloaded track state.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre></pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>Clean app killed. Root cause likely my manual launch skipped fixture base64, so sandboxed app could not read /tmp copy. Relaunching with same fixture-materialization path UI tests use.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre></pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>[ 2026-04-24T22:21:44Z (2m 33s since Assistant start) ]</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre></pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>## User 2026-04-24T22:21:44Z</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre></pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre></pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>Just a heads up - same error alert just occurred.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre></pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>## Assistant 2026-04-24T22:21:44Z (0s since User start)</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre></pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>App terminated.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre></pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>Error not expected. Manual host-side launch path failed fixture import, so I will stop that route. Verified so far:</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>- `xmllint` passed for `SwiftTag.sdef`</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- Xcode build passed</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- `SwiftTagAppleScriptTests` passed: 18/18</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>- gated UI osascript tests compile/skip normally</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre></pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>Need next run use proper UI harness only, or debug fixture materialization before any more real app launches.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre></pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>[ 2026-04-24T22:22:03Z (19s since Assistant start) ]</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre></pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>## User 2026-04-24T22:35:27Z (13m 44s since previous Assistant start) </pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre></pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>Yes, get the UI test harness to reliably add track (handle alerts as needed). As mentioned earlier, one of your previous attempts worked. You may have interpreted a false negative because of the failure to open track alert dialog. Confirm you not have an introduced sandbox issue.  Continue tests and original implementation goal.</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre></pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>## Assistant 2026-04-24T22:35:27Z (0s since User start)</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre></pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>Need fix harness, not manual app poking. I will inspect launch helper and add fallback path: UI test opens track through app command/add command, detects import alert, and fails with exact cause instead of misreading AppleScript result.</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre></pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>Bad path isolated: new save UI test used launch-time fixture import. Existing working harness uses AppleScript add with copied fixture. I am switching new osascript save test to that path and adding alert detection so import failures become explicit, not false negatives.</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre></pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>Harness now has explicit import-alert detection and a sentinel fallback for Xcode env stripping. Running diagnostics/build before live test.</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre></pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>Build clean. Sentinel enabled because xcodebuild stripped env earlier. Running live save/add AppleScript UI test first.</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre></pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre></pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>Continuing from harness fix. First, collect live xcodebuild result, then run close osascript path, then clean sentinel.</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre></pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>Save osascript test did run now, not skip, but failed fast. Pulling .xcresult details next; likely script/assert detail hidden by terse xcodebuild tail.</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre></pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>Failure says osascript saw app not running (-600), not import alert. Need inspect harness launch path and app logs; this points more at launch/crash/automation timing than FLAC sandbox.</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre></pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>[ 2026-04-24T22:42:17Z (6m 50s since Assistant start) ]</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre></pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>## User 2026-04-24T22:42:17Z</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre></pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre></pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>A failure of -600 can be a sandbox issue, check logs.</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre></pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>## Assistant 2026-04-24T22:42:17Z (0s since User start)</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre></pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>-600 likely “target app not found/running,” but sandbox can cause same shape when Apple Events/LaunchServices lookup blocked. Checking focused logs: sandbox denies, TCC AppleEvents, crash/exit around failed test.</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre></pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>Logs confirm sandbox issue, not FLAC import: osascript(21335) deny(1) appleevent-send com.toowalks.swifttag. Need move osascript runner outside sandbox or give UI test runner AppleEvents entitlement. Checking project wiring now.</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre></pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>Test runner has no entitlement file. Faster, sturdier path: keep UI tests for app launch and run osascript as outer xcodebuild process? Need small harness script/command outside runner, or add entitlements if Xcode runner supports. Checking current AppleEvents entitlement shape before edit.</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre></pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>Edit: add UI test entitlements for AppleEvents temporary exception to SwiftTag only, wire target. This addresses exact appleevent-send denial without weakening app target.</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre></pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>Need rebuild so runner signs with entitlement. Then rerun save harness; sentinel still gates osascript path.</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre></pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>Entitlement fixed -600: runner now sends AppleEvents. New failure -10004 privilege violation, likely file access from runner container/temp to sandboxed app during add. Pulling focused logs.</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre></pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>New failure no file-read deny. This is scripting access-control: access-group &quot;*&quot;, sandboxed sender lacks matching com.apple.security.scripting-targets. Adding target entitlement.</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre></pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>Retest same save path. If it reaches file import alert next, then AppleEvents path clean and remaining issue is security-scoped file source.</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre></pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>Child osascript still has its own sender identity, so access-group check fails. Fix harness: execute AppleScript in UI runner with NSAppleScript; runner entitlements then apply.</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre></pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>Harness now in-process. Running save test again; this should answer whether add path itself has sandbox/file issue.</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre></pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>Compile fix in. Rerunning save harness.</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre></pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>Good: add/import works now. Failure moved to enum spelling: string fallback not accepted by NSAppleScript before command dispatch. Need use raw enum constants or terminology-safe names in test script.</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre></pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>Using raw AppleScript enum constants now. Keeps source ASCII through Swift Unicode escapes, avoids term collision with selected tracks property and tags element.</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre></pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>Rerunning save harness with raw constants.</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre></pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>Raw constant syntax corrected (**** + enumerator code). Running save test again.</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre></pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>Save harness now passes; add/import no alert. Running close command harness next.</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre></pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre>Close command reached app, but window count stayed 2 after fixed 1s delay. Could be async close timing. Hardening test to poll until count drops, then rerun.</pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre></pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>Polling close result now.</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre></pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>[ Context automatically compacted ]</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre></pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>Checking close path now. Need know whether AppleScript command reaches wrapper, controller, or window close path, then fix count staying 2.</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre></pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>Close command reaches closeEditorWindow, but UI count stays high. Reading window lifecycle now; likely performClose path refuses or closes wrong façade.</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre></pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre></pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>Fixing close path now. For saving yes/no, command already made save/discard decision, so controller can call window.close() and bypass delegate prompt. ask keeps performClose path.</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre></pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>Close patch in. Running targeted UI close test now; sentinel still enables AppleScript harness without shell env wrapping.</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre></pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre>window.close() still not reducing count. Likely command shape issue: close front editor window ... dispatches to application with direct parameter, while object handler covers tell front editor window to close. Adding application-level save/close dispatch so standard syntax works.</pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre></pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>[ 2026-04-24T23:00:32Z (18m 15s since Assistant start) ]</pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre></pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>## User 2026-04-25T03:51:28Z (5h 9m 12s since previous Assistant start) </pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre></pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>[ &quot;You&#x27;ve hit your usage limit.&quot;, hence the time break ]</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre></pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>I think window close is reducing count. What I see happening is the app opens with a window (as designed) and no tracks are in this window, then another window is opened (like a new command was issued) also no tracks in this second window, then the second window is closed, then there is a pause and then the app quits. You may want to debug your window existence and count expectations before attempting to determine close mechanics. In my testing in external environment the close command does work, however the window `count` is never decremented. Continue.</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre></pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre>## Assistant 2026-04-25T03:51:28Z (0s since User start)</pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre></pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre>User signal fits cache bug. Close likely closes real NSWindow; AppleScript count still sees stale pending wrapper. Inspecting pending/materialization logic and test timing now.</pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre></pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre>Two fixes now: filter closed/invisible NSWindow objects out of AppleScript window list, and unregister scripting cache immediately after bypass close. That matches observed UI: window gone, count stale.</pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre></pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>Patch in. Re-running close harness; expecting count to track real open editor windows now.</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre></pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>Close harness passes now. Running save harness plus unit/sdef checks; also checking stray untracked plan-like .sdef before deciding whether it belongs.</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre></pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>Save harness parse failed on raw «constant ****sltr». Better UI test should use published terminology: selected tracks, tags. Four-char parsing still covered in unit tests. Patching harness.</pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre></pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>Patched. Re-running save harness.</pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre></pre></td></tr>
+<tr id="L302"><th><a href="#L302">302</a></th><td><pre>[ 2026-04-25T04:07:57Z (16m 29s since Assistant start) ]</pre></td></tr>
+<tr id="L303"><th><a href="#L303">303</a></th><td><pre></pre></td></tr>
+<tr id="L304"><th><a href="#L304">304</a></th><td><pre>## User 2026-04-25T04:07:57Z</pre></td></tr>
+<tr id="L305"><th><a href="#L305">305</a></th><td><pre></pre></td></tr>
+<tr id="L306"><th><a href="#L306">306</a></th><td><pre>[ interrupted agent ]</pre></td></tr>
+<tr id="L307"><th><a href="#L307">307</a></th><td><pre></pre></td></tr>
+<tr id="L308"><th><a href="#L308">308</a></th><td><pre>Ignore `Docs/Plans/_SwiftTag.sdef`, only use `SwiftTag/SwiftTag.sdef`. I have updated command parameter names, enumeration names and char codes, read latest. I have updated the code in `SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift` to handle changes, read and confirm latest. I updated the previous tests to use the new definitions as well. Also note that AppleScript will not compile and send arbitrary strings for class, enumerations, etc., only char codes, so unless you have found something in Apple’s documentation to do testing for that is not of much use.</pre></td></tr>
+<tr id="L309"><th><a href="#L309">309</a></th><td><pre></pre></td></tr>
+<tr id="L310"><th><a href="#L310">310</a></th><td><pre>## Assistant 2026-04-25T04:07:57Z (0s since User start)</pre></td></tr>
+<tr id="L311"><th><a href="#L311">311</a></th><td><pre></pre></td></tr>
+<tr id="L312"><th><a href="#L312">312</a></th><td><pre>Need re-sync. User changed terminology/code/tests under me; reading current SwiftTag/SwiftTag.sdef, support file, test definitions only. Ignoring Docs/Plans/_SwiftTag.sdef.</pre></td></tr>
+<tr id="L313"><th><a href="#L313">313</a></th><td><pre></pre></td></tr>
+<tr id="L314"><th><a href="#L314">314</a></th><td><pre>Latest SwiftTag.sdef: save params now with scope and with payload; tests still had old scope/payload syntax in one UI harness. AppleScript must use terminology constants, not strings. Updating harness to compile against dictionary names.</pre></td></tr>
+<tr id="L315"><th><a href="#L315">315</a></th><td><pre></pre></td></tr>
+<tr id="L316"><th><a href="#L316">316</a></th><td><pre>Tests still carry old string assumptions. Patching unit tests to feed FourChar codes only, and UI script to use dictionary terminology: save with scope selected with payload tags only.</pre></td></tr>
+<tr id="L317"><th><a href="#L317">317</a></th><td><pre></pre></td></tr>
+<tr id="L318"><th><a href="#L318">318</a></th><td><pre>Docs check confirms Cocoa scripting command handlers consume NSScriptCommand arguments and NSAppleScript compiles/executes terminology-backed scripts. Running XML, unit, then targeted UI save/close.</pre></td></tr>
+<tr id="L319"><th><a href="#L319">319</a></th><td><pre></pre></td></tr>
+<tr id="L320"><th><a href="#L320">320</a></th><td><pre>Unit suite passes. UI save harness next; this validates compiler accepts terminology constants and app receives FourChar enum codes.</pre></td></tr>
+<tr id="L321"><th><a href="#L321">321</a></th><td><pre></pre></td></tr>
+<tr id="L322"><th><a href="#L322">322</a></th><td><pre>Save harness passes. Running close harness once more against latest window-count cache fix.</pre></td></tr>
+<tr id="L323"><th><a href="#L323">323</a></th><td><pre></pre></td></tr>
+<tr id="L324"><th><a href="#L324">324</a></th><td><pre>Both UI harnesses pass. Checking logs for sandbox/appleevent denial now, then quick diagnostics/status.</pre></td></tr>
+<tr id="L325"><th><a href="#L325">325</a></th><td><pre></pre></td></tr>
+<tr id="L326"><th><a href="#L326">326</a></th><td><pre>Diagnostics clean. One ignored untracked Docs/Plans/_SwiftTag.sdef remains untouched. Cleaning harness sentinel if present, then final status.</pre></td></tr>
+<tr id="L327"><th><a href="#L327">327</a></th><td><pre></pre></td></tr>
+<tr id="L328"><th><a href="#L328">328</a></th><td><pre>Implemented save/close AppleScript update.</pre></td></tr>
+<tr id="L329"><th><a href="#L329">329</a></th><td><pre></pre></td></tr>
+<tr id="L330"><th><a href="#L330">330</a></th><td><pre>Changed:</pre></td></tr>
+<tr id="L331"><th><a href="#L331">331</a></th><td><pre>- `SwiftTag/SwiftTag.sdef`: latest Standard Suite enums, `save`, `close`.</pre></td></tr>
+<tr id="L332"><th><a href="#L332">332</a></th><td><pre>- `SwiftTagAppleScriptSupport.swift`: enum FourChar parsing, save request, close request, close behavior, stale window cache cleanup.</pre></td></tr>
+<tr id="L333"><th><a href="#L333">333</a></th><td><pre>- UI harness: `NSAppleScript` in-process, alert handling, terminology-backed save/close scripts.</pre></td></tr>
+<tr id="L334"><th><a href="#L334">334</a></th><td><pre>- Added UI test entitlements.</pre></td></tr>
+<tr id="L335"><th><a href="#L335">335</a></th><td><pre>- Tests updated to use enum char codes, not arbitrary strings.</pre></td></tr>
+<tr id="L336"><th><a href="#L336">336</a></th><td><pre></pre></td></tr>
+<tr id="L337"><th><a href="#L337">337</a></th><td><pre>Confirmed `-600` was sandbox/TCC related for external AppleEvent senders. Latest targeted log check showed no `SwiftTagUITests-Runner`/`osascript` deny or `-600`; only AppleEvents connection entries.</pre></td></tr>
+<tr id="L338"><th><a href="#L338">338</a></th><td><pre></pre></td></tr>
+<tr id="L339"><th><a href="#L339">339</a></th><td><pre>Verification:</pre></td></tr>
+<tr id="L340"><th><a href="#L340">340</a></th><td><pre>- `xmllint --noout SwiftTag/SwiftTag.sdef`</pre></td></tr>
+<tr id="L341"><th><a href="#L341">341</a></th><td><pre>- `git diff --check`</pre></td></tr>
+<tr id="L342"><th><a href="#L342">342</a></th><td><pre>- `xcodebuild ... -only-testing:SwiftTagTests/SwiftTagAppleScriptTests`</pre></td></tr>
+<tr id="L343"><th><a href="#L343">343</a></th><td><pre>- `xcodebuild ... testAppleScriptHarnessSavesWithScopeAndPayloadEnumerations`</pre></td></tr>
+<tr id="L344"><th><a href="#L344">344</a></th><td><pre>- `xcodebuild ... testAppleScriptHarnessClosesEditorWindowSavingNo`</pre></td></tr>
+<tr id="L345"><th><a href="#L345">345</a></th><td><pre>- Xcode diagnostics clean for changed Swift files</pre></td></tr>
+<tr id="L346"><th><a href="#L346">346</a></th><td><pre></pre></td></tr>
+<tr id="L347"><th><a href="#L347">347</a></th><td><pre>Refs checked:</pre></td></tr>
+<tr id="L348"><th><a href="#L348">348</a></th><td><pre>- [NSScriptCommand](https://developer.apple.com/documentation/foundation/nsscriptcommand)</pre></td></tr>
+<tr id="L349"><th><a href="#L349">349</a></th><td><pre>- [NSAppleScript](https://developer.apple.com/documentation/foundation/nsapplescript)</pre></td></tr>
+<tr id="L350"><th><a href="#L350">350</a></th><td><pre>- [Apple Events entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.automation.apple-events)</pre></td></tr>
+<tr id="L351"><th><a href="#L351">351</a></th><td><pre></pre></td></tr>
+<tr id="L352"><th><a href="#L352">352</a></th><td><pre>Ignored `Docs/Plans/_SwiftTag.sdef` per instruction. Sentinel removed.</pre></td></tr>
+<tr id="L353"><th><a href="#L353">353</a></th><td><pre></pre></td></tr>
+<tr id="L354"><th><a href="#L354">354</a></th><td><pre>[ 2026-04-25T04:12:09Z (4m 12s since Assistant start) ]</pre></td></tr>
+<tr id="L355"><th><a href="#L355">355</a></th><td><pre></pre></td></tr>
+<tr id="L356"><th><a href="#L356">356</a></th><td><pre>## User 2026-04-25T05:15:33Z (1h 7m 37s since previous Assistant start) </pre></td></tr>
+<tr id="L357"><th><a href="#L357">357</a></th><td><pre></pre></td></tr>
+<tr id="L358"><th><a href="#L358">358</a></th><td><pre>Based on what was learned and validated, update `Docs/Guides/testing-guide.md` with useful information for AI agents with regards to latest effective usage of AppleScript and osascript in tests, including sandbox use, entitlements, and relevant documentation reference from Apple.</pre></td></tr>
+<tr id="L359"><th><a href="#L359">359</a></th><td><pre></pre></td></tr>
+<tr id="L360"><th><a href="#L360">360</a></th><td><pre>## Assistant 2026-04-25T05:15:33Z (0s since User start)</pre></td></tr>
+<tr id="L361"><th><a href="#L361">361</a></th><td><pre></pre></td></tr>
+<tr id="L362"><th><a href="#L362">362</a></th><td><pre>Updating guide only. Reading current testing guide shape first, then adding AppleScript test rules where they fit.</pre></td></tr>
+<tr id="L363"><th><a href="#L363">363</a></th><td><pre></pre></td></tr>
+<tr id="L364"><th><a href="#L364">364</a></th><td><pre>Guide already had older osascript notes. Replacing that with current validated split: parser/unit tests, in-process NSAppleScript UI harness, external osascript caveats, log diagnosis.</pre></td></tr>
+<tr id="L365"><th><a href="#L365">365</a></th><td><pre></pre></td></tr>
+<tr id="L366"><th><a href="#L366">366</a></th><td><pre>AppleScript section updated. Adding Apple docs references now, then markdown sanity check.</pre></td></tr>
+<tr id="L367"><th><a href="#L367">367</a></th><td><pre></pre></td></tr>
+<tr id="L368"><th><a href="#L368">368</a></th><td><pre>Updated [testing-guide.md](Swift/SwiftTag/Docs/Guides/testing-guide.md).</pre></td></tr>
+<tr id="L369"><th><a href="#L369">369</a></th><td><pre></pre></td></tr>
+<tr id="L370"><th><a href="#L370">370</a></th><td><pre>Added AI-agent guidance for:</pre></td></tr>
+<tr id="L371"><th><a href="#L371">371</a></th><td><pre>- AppleScript terminology tests using `SwiftTag/SwiftTag.sdef`</pre></td></tr>
+<tr id="L372"><th><a href="#L372">372</a></th><td><pre>- FourChar enum testing instead of arbitrary strings</pre></td></tr>
+<tr id="L373"><th><a href="#L373">373</a></th><td><pre>- `NSScriptCommand.evaluatedArguments`</pre></td></tr>
+<tr id="L374"><th><a href="#L374">374</a></th><td><pre>- current `NSAppleScript` UI harness usage</pre></td></tr>
+<tr id="L375"><th><a href="#L375">375</a></th><td><pre>- `osascript` sandbox inheritance and sender identity issues</pre></td></tr>
+<tr id="L376"><th><a href="#L376">376</a></th><td><pre>- `-600` log diagnosis</pre></td></tr>
+<tr id="L377"><th><a href="#L377">377</a></th><td><pre>- AppleEvent entitlements for UI test/helper targets</pre></td></tr>
+<tr id="L378"><th><a href="#L378">378</a></th><td><pre>- Apple docs references for scripting and entitlements</pre></td></tr>
+<tr id="L379"><th><a href="#L379">379</a></th><td><pre></pre></td></tr>
+<tr id="L380"><th><a href="#L380">380</a></th><td><pre>Validation: `git diff --check -- Docs/Guides/testing-guide.md` passed.</pre></td></tr>
+<tr id="L381"><th><a href="#L381">381</a></th><td><pre></pre></td></tr>
+<tr id="L382"><th><a href="#L382">382</a></th><td><pre>[ 2026-04-25T05:16:59Z (1m 26s since Assistant start) ]</pre></td></tr>
+<tr id="L383"><th><a href="#L383">383</a></th><td><pre></pre></td></tr>
+<tr id="L384"><th><a href="#L384">384</a></th><td><pre>End of Transcript</pre></td></tr></table></main></body></html>

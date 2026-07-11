@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 15-AddSwiftTagDocumentCreation</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 15-AddSwiftTagDocumentCreation</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/15-AddSwiftTagDocumentCreation.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add SwiftTag Document Creation Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Add creation and save/export support for SwiftTag package documents so the frontmost editor window can save its current session into a `.swifttag` file package containing a root `Info.plist` manifest plus a `Pictures` folder of deduplicated JPEG/PNG assets.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Register a SwiftTag document type for the `.swifttag` extension with the `SwiftTagNamedDoc` icon and `LSTypeIsPackage = true`.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Add a File menu command titled `Save SwiftTag Document...` immediately after the existing save-item group.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Route the new command from the frontmost editor window through the existing focused-scene command system.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Present a save dialog for choosing the destination `.swifttag` package path.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Serialize the frontmost editor session into a file package with:</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- root `Info.plist`</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- root `Pictures/` directory</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- document `Id`</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- document `Version` starting at `1.0.0`</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- document `Fingerprint`</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- per-track dictionaries containing track fingerprint, FLAC file URL, FLAC bookmark, FLAC fingerprint, tags, and picture references</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Write image assets using the editor’s deduplicated picture pool semantics so tracks refer to shared image files instead of embedding duplicate image bytes.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Add targeted tests for package serialization, hashing/reference stability, menu wiring, remembered document state, and package writing.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- Opening `.swifttag` documents back into the app.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Making SwiftTag an `NSDocument`-based or document-scene-based app.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Changing FLAC save/write behavior for `.flac` files.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- Syncing or auto-updating a previously saved `.swifttag` package after the editor changes unless explicitly added later.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- Supporting image formats beyond JPEG and PNG for package image assets.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre></pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- Latest numbered plan reviewed: `Docs/Plans/14-AddCompilationTag.md`.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Relevant prior plans reviewed:</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- `Docs/Plans/12-AddFLACDocumentOpenSupport.md`</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- `Docs/Plans/13-AddFLACFingerprintSupport.md`</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Current implementation files reviewed:</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- `SwiftTag/SwiftTag/SwiftTagApp.swift`</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- `SwiftTag/SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- `SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- `SwiftTag/SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift`</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- `SwiftTag/SwiftTag/Features/AlbumArt/AlbumArtTypes.swift`</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- `SwiftTag/SwiftTag/Features/FlacImport/FlacImportMapper.swift`</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- `SwiftTag/SwiftTag/Features/FlacImport/FlacWriteMapper.swift`</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- `SwiftTag/SwiftTag/Shared/Models/EditorSessionModels.swift`</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- `SwiftTag/SwiftTag/Shared/Models/Track.swift`</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- `SwiftTag/SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift`</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- `SwiftTag/SwiftTag/Info.plist`</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- `SwiftTag/SwiftTagUITests/SwiftTagUITests.swift`</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- `SwiftTag/SwiftTagTests/SwiftTagTests.swift`</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- `AGENTS.md`</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- Relevant fixtures inspected:</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- Constraints accounted for:</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>- The app currently uses `WindowGroup` plus focused-scene commands rather than `DocumentGroup` or `NSDocument`.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>- The existing File menu save commands operate on imported FLAC tracks only and do not maintain a current SwiftTag document URL for editor sessions.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- The new feature needs per-session remembered `.swifttag` document URL state and remembered document `Id` state once a package is first written.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- `Track` already carries security-scoped bookmark data and FLAC audio fingerprint data, which are likely the correct source inputs for the new package manifest.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- `AlbumArtViewModel` already maintains a deduplicated picture pool keyed by SHA-256 of image bytes, but pool entries are identified in-memory by UUID and per-track references carry slot, MIME type, and description metadata that are not yet serialized for a SwiftTag package.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- The current Swift-side picture models do not yet expose width, height, depth, or colors fields, so the plan must account for where those values will come from during export and save-difference detection.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- Existing save verification is split across unit tests, fixture-based service tests, and narrow XCUI menu assertions; save-panel interaction remains a likely XCUI-only seam.</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre></pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- `SwiftTagApp` replaces the standard save menu group with custom `Save`, `Save Tags`, and `Save Pictures` items, so the new command should be added in that command definition instead of relying on default document commands.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- `ContentView` exposes save/menu behavior through `FocusedValues`, making it the current source of truth for frontmost-editor command routing.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- `TagEditorViewModel` already exposes imported track references, per-track security-scoped bookmarks, per-track FLAC audio fingerprints, and file snapshots, but it does not currently provide a session-export snapshot, remembered `.swifttag` document state, or package-writing API.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- `AlbumArtViewModel` deduplicates image bytes with `SHA256.hash(data:)`, keeps pool items in memory, and preserves per-track reference metadata separately from pooled bytes.</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- `Info.plist` currently registers only `.flac` as a document type.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- The project already has XCUI coverage that asserts File menu items and launches fixture-backed editors, which is a useful seam for validating that the new command is present and enabled in the intended contexts.</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre></pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- The SwiftTag document extension is `.swifttag`.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- The SwiftTag document uses the `SwiftTagNamedDoc` asset as its document icon.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- The SwiftTag document is a file package, so its document registration must set `LSTypeIsPackage` to `true`.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- The file package contents are:</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- root `Info.plist`</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- root `Pictures/` folder</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- `Info.plist` includes:</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- `Id`</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- `Version`</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- `Fingerprint`</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>- `Tracks`</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- `Id` is a UUID for the document.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- A newly created `.swifttag` document gets a new UUID on first save.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- Once written to a document, that document `Id` does not change on later saves to the same remembered document URL.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- `Version` starts at `1.0.0`.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- `Fingerprint` is a hash of all track fingerprints.</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- SwiftTag should preserve a package’s existing `Id` whenever saving over an existing `.swifttag` package.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- Each track dictionary includes:</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- `Fingerprint`</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>- `FLAC File URL`</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>- `FLAC File Bookmark`</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- `FLAC Fingerprint`</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- track tags by key/value</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- `Pictures`</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- Track fingerprint content is based on all tags in alphanumeric order plus picture references from the editor state at save time.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>- FLAC audio MD5 fingerprints from source files and app-created SHA-256 fingerprints should preserve original key/value forms while trimming surrounding whitespace before hashing.</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>- `FLAC File URL` stores a normalized URL path.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- `FLAC File Bookmark` stores bookmark data for the original FLAC file.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- `FLAC Fingerprint` stores the FLAC stream MD5 already exposed through libFLAC.</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>- The `Pictures` folder stores pooled JPEG/PNG images from the editor at save time.</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>- Image filenames use the format `&lt;picture type number&gt;-&lt;hash&gt;.&lt;mime extension&gt;`.</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- Each picture reference stored in the plist is the full filename, for example `3-&lt;hash&gt;.png` or `4-&lt;hash&gt;.jpg`.</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>- The leading number in a picture filename is the FLAC picture type or app slot number used for the reference.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>- The hash portion reuses the same image-bytes hash concept already used by the app’s picture pool.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>- Each track’s `Pictures` value stores picture metadata including:</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>- a reference to the picture file in `Pictures/`</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- `FLAC Type`</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- `MIME Type`</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- `Description`</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- `Width`</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- `Height`</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- `Depth`</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- `Colors`</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>- Each track’s `Pictures` value is an array of picture dictionaries.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>- SwiftTag document export should preserve the original picture bytes while recording accurate picture specs computed from those original bytes.</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- If imported FLAC picture metadata specs differ from specs computed from the original picture bytes, SwiftTag should treat that mismatch as a saveable editor change for unlocked files.</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- Even when a file is locked and cannot be written back to FLAC, SwiftTag document export should still write the original picture bytes and the correct computed specs into the `.swifttag` package.</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- Tracks refer to shared pooled pictures instead of duplicating image bytes per track.</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>- The new File menu command title is `Save SwiftTag Document...`.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- Selecting the new command should save a SwiftTag document based on the frontmost editor contents.</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- The export source of truth is the full frontmost editor session contents, not only the currently selected tracks.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- `Save SwiftTag Document...` is disabled for an empty editor.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- Repeated saves to the same `.swifttag` should plan for per-session remembered document URLs.</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre></pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- The save command needs an explicit source of truth for the frontmost editor session and should reuse the same focused-scene routing approach as existing File menu commands.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Because the app is not document-based today, SwiftTag document creation should be treated as an export/save-package workflow rather than a replacement for the existing FLAC save lifecycle unless future work changes that model.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>- “Selected items” are not the source of truth for this feature; export should be session-scoped from the frontmost editor window unless a later clarification changes that behavior.</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>- Package serialization needs a stable, documented manifest schema so future open/import support can read it back without guessing at keys or normalization rules.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- Track fingerprint generation must define a canonical ordering and normalization strategy for:</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>- tag keys</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>- tag values</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- picture-reference ordering</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- mixed or absent picture metadata</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Image naming and manifest references must preserve enough metadata to reconstruct both shared pooled bytes and per-track picture association data later.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Package writing should avoid mutating original FLAC files; the only persisted side effect of this feature should be creation or replacement of the `.swifttag` package itself.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- The package writer must preserve JPEG versus PNG bytes from the current editor pool rather than re-encoding images, or hashes and future round-tripping may drift.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- The menu command’s enabled state must be defined for empty editors and editors without imported FLAC tracks.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>- If a save operation targets an existing package, the writer should replace obsolete pictures and manifest contents atomically enough to avoid partial packages on failure.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>- The writer needs a stable way to remember, per editor session, the chosen `.swifttag` destination URL and the document `Id` assigned on first save.</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre></pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>## Write-Back Behavior</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>- Preserved data:</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>- original FLAC files and their on-disk metadata remain unchanged</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>- the editor’s in-memory state remains the source used to build the export</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>- pooled image bytes are preserved without re-encoding when written into the package</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- the document `Id` remains unchanged for repeated saves to the same remembered `.swifttag` document</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- Replaced data when saving to an existing `.swifttag` path:</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>- the destination package’s `Info.plist`</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>- the destination package’s `Pictures` folder contents</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>- Removed data when overwriting an existing `.swifttag` path:</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>- obsolete picture files no longer referenced by the newly exported manifest</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>- any previous manifest fields or track entries no longer present in the new export snapshot</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- Selection semantics:</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- the export includes all loaded tracks and pooled pictures from the frontmost editor session</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- current table selection does not limit which tracks are written</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre></pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>- If manifest hashing rules are underspecified, identical editor state could produce different document fingerprints across saves, making future reopen/diff behavior unreliable.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>- If picture-spec correction is not based on the original stored picture bytes, SwiftTag could write incorrect dimensions/color information while still preserving the original file payload.</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>- If the save command uses the wrong editor/session source of truth, users could save a background window instead of the intended frontmost editor.</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- If stale or invalid security-scoped bookmarks are copied blindly into the package, later reopen support may fail in ways that are hard to diagnose.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>- If empty or partially loaded editors are handled inconsistently, users may get confusing enabled-state or empty-package behavior.</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>- If a later save to an already existing `.swifttag` path handles document identity incorrectly, the “new once, then stable” `Id` rule could drift.</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre></pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>### Tooling / Environment / Sandbox Risks</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>- Save-panel interaction is difficult to validate with lightweight SwiftUI inspection alone; a narrow XCUI path may still be required.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>- File-package writing and atomic replacement can be brittle if implemented through ad hoc filesystem calls rather than a single well-defined package writer seam.</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>- Info.plist document-type registration and icon/package metadata must be persisted in source, not just changed in Xcode UI state.</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>- Fixture-based verification can cover manifest generation and package layout, but bookmark bytes and sandbox behavior may still vary between tests and live app sessions.</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre></pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>1. Finalize Document Format And Save Semantics</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- Confirm unresolved format choices before implementation starts:</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>- manifest key names/casing</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>- canonical fingerprint normalization rules</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>- Define how a new document `Id` is created on first save and then preserved in memory for later saves to the same remembered document URL.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>- Define how first-save document creation interacts with the rule to preserve an existing package’s `Id` when saving over a pre-existing `.swifttag` package.</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre></pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>2. Register The SwiftTag Package Type</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>- Add a SwiftTag package document type to `Info.plist`.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>- Register the `.swifttag` extension, icon, type role, and package metadata with `LSTypeIsPackage = true`.</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>- Decide whether the new type should be exported, imported, or both based on whether creation-only support still needs Finder recognition immediately.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre></pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>3. Add A SwiftTag Document Model And Writer</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>- Create a dedicated manifest/package model for the root plist and picture inventory.</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>- Add helpers for:</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>- document fingerprint generation</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- per-track fingerprint generation</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- picture-reference generation from picture type plus hashed image bytes plus MIME-derived file extension</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>- picture metadata capture for `FLAC Type`, `MIME Type`, `Description`, `Width`, `Height`, `Depth`, and `Colors`</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>- picture-spec computation from original picture bytes without mutating or re-encoding those bytes</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- stable sorting of tags, tracks, and picture assets</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>- Implement a package writer that produces:</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>- `Info.plist`</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>- `Pictures/`</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>- only the picture files referenced by the exported tracks</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>- Prefer a single writer seam that can target a temporary directory/package and then replace the destination package cleanly.</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre></pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>4. Build Export Snapshots From The Frontmost Editor</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>- Add a frontmost-editor export API that gathers the current editor session state without altering existing FLAC save behavior.</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>- Build the export snapshot from the current source-of-truth state:</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>- `TagEditorViewModel.trackItems`</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>- remembered SwiftTag document URL and document `Id` state for the current session</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>- imported track bookmarks</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>- per-track FLAC fingerprint values</pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>- `AlbumArtViewModel.picturePool`</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>- `AlbumArtViewModel.trackReferencesByTrackID`</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>- FLAC/import metadata or image-derived metadata needed for width, height, depth, and colors</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>- Map per-track tags and picture references into manifest dictionaries.</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>- Use pooled image bytes and reference metadata to decide picture filenames and manifest references.</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>- Define how non-imported tracks, missing bookmarks, or missing fingerprints are handled during export.</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>- Add a comparison path so incorrect imported picture specs versus computed specs are surfaced as saveable differences for unlocked FLAC tracks.</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre></pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>5. Add Menu Command And Save Dialog Flow</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre>- Extend `FocusedValues` and `ContentView` with a new frontmost-editor action for SwiftTag document saving.</pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>- Add `Save SwiftTag Document...` to the File menu immediately after the existing save-item group in `SwiftTagApp`.</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre>- Present a save dialog constrained to `.swifttag`.</pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>- On first save, store the selected destination and the newly assigned document `Id` in per-session state for later saves.</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>- Route the selected destination into the package writer and surface failures through the app’s existing save error presentation or a dedicated SwiftTag-document error path if needed.</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>- Define and implement command enablement for no-editor, empty-editor, and in-progress-save states, with the command disabled for empty editors.</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre></pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>6. Add Targeted Tests And Verification</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>- Add unit tests for:</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>- track fingerprint canonicalization</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>- document fingerprint canonicalization</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>- picture-reference naming</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>- manifest sorting and plist encoding</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>- Add service/file tests using temporary directories and checked-in FLAC fixtures to verify:</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>- package layout</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>- `Info.plist` contents</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>- `Pictures` deduplication</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>- preservation of JPEG/PNG extensions</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>- copied normalized FLAC file URL, bookmark, and fingerprint values</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>- picture dictionaries include the expected metadata fields in array form</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>- exported picture specs are computed from original picture bytes while preserving the original bytes unchanged</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>- incorrect imported picture specs are surfaced as saveable differences for unlocked tracks</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre>- repeated saves preserve the same document `Id`</pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>- Add targeted UI/XCUI coverage for:</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>- File menu contains `Save SwiftTag Document...`</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>- command is disabled in an empty editor and enabled in a loaded editor</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>- save-panel flow only if a narrow automation seam is practical</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>- Prefer `BuildProject`, then targeted tests, and reserve a broader UI run only if the save-panel path proves unstable.</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre></pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>Order:</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>1. Pure unit tests:</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>- track fingerprint generation uses stable alphanumeric tag ordering</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>- hashing trims surrounding whitespace but preserves original stored key/value forms</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>- picture-reference generation uses the full filename format `&lt;picture type&gt;-&lt;hash&gt;.&lt;extension&gt;`</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>- picture metadata mapping includes `FLAC Type`, `MIME Type`, `Description`, `Width`, `Height`, `Depth`, and `Colors`</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>- per-track `Pictures` serialization uses an array of picture dictionaries</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>- picture-spec computation reads original bytes and does not re-encode image data</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>- document fingerprint generation is stable for identical track sets</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>- plist model encoding preserves the expected key/value structure</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>2. Service/file tests using temp directories plus fixtures:</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>- export of a fixture-backed editor writes `Info.plist` and `Pictures/`</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>- duplicate pooled pictures are written once even when referenced by multiple tracks</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>- mixed JPEG/PNG assets keep the expected extension</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>- track dictionaries contain normalized FLAC file URLs, bookmark data, and FLAC fingerprint values</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre>- track `Pictures` data includes the expected picture metadata payload for each referenced picture in array form</pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre>- exported picture bytes match the original bytes used by the editor pool</pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>- exported width, height, depth, and colors reflect computed specs from those original bytes</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre>- repeated saves to the same remembered document path preserve the same document `Id`</pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>- replacing an existing package removes obsolete picture files and leaves a valid final package</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>3. Targeted SwiftUI/state tests where practical:</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>- focused-scene export action is published only for active editor content</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>- command enablement matches the chosen empty-editor rule</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>- per-session remembered document URL and document `Id` state update on first save</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>- picture-spec mismatch contributes to saveable-difference detection when the file is unlocked</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>4. Targeted XCUI tests only where lighter seams are insufficient:</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>- File menu shows `Save SwiftTag Document...`</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>- invoking the menu command from a loaded editor reaches the expected save flow if the panel can be driven reliably</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>5. Verification workflow:</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre>- `BuildProject`</pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre>- targeted `RunSomeTests`</pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>- narrow XCUI run only for the menu/save-panel scenario if needed</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre></pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>- The app registers `.swifttag` as a packaged document type with the `SwiftTagNamedDoc` icon and package metadata persisted in source.</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre>- The File menu shows `Save SwiftTag Document...` immediately after the existing save-item group.</pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>- The command operates on the frontmost editor session, not a background editor.</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre>- The command is disabled for an empty editor.</pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>- Invoking the command opens a save dialog for a `.swifttag` destination.</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre>- Saving writes a file package containing `Info.plist` and `Pictures/`.</pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre>- `Info.plist` contains document `Id`, `Version`, `Fingerprint`, and a `Tracks` array.</pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre>- Each exported track dictionary contains its editor-state fingerprint, normalized FLAC file URL, FLAC bookmark, FLAC fingerprint, serialized tags, and a `Pictures` array with picture metadata and picture-file references.</pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre>- The package fingerprint is derived from the exported track fingerprints using the documented canonical ordering.</pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre>- App-created SHA-256 hashes and FLAC MD5 values are computed from trimmed inputs while preserving original stored key/value forms.</pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre>- Picture assets are deduplicated at the package level and named with the `&lt;picture type&gt;-&lt;hash&gt;.&lt;extension&gt;` reference format.</pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre>- Tracks sharing the same pooled picture refer to the same picture file instead of duplicating bytes.</pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>- Exported `.swifttag` picture entries preserve original picture bytes while recording accurately computed width, height, depth, and colors from those bytes.</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre>- Incorrect imported picture specs are treated as saveable differences for unlocked FLAC files.</pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>- Repeated saves to the same remembered `.swifttag` path preserve the document `Id`.</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre>- Saving a SwiftTag document does not modify the original FLAC files.</pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>- Targeted automated tests cover manifest generation, package layout, remembered document state, and command/menu wiring sufficiently for implementation sign-off.</pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre></pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre>- None currently.</pre></td></tr></table></main></body></html>

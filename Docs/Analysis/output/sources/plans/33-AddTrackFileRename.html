@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 33-AddTrackFileRename</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 33-AddTrackFileRename</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/33-AddTrackFileRename.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add Track File Rename Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre></pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>Add editor-window scoped track file rename commands and configuration UI that</pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>derive new FLAC file names from track tags, preview the first selected track&#x27;s</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>new name or first loaded track&#x27;s new name, sanitize configured output, and</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>rename selected or all loaded track files on disk.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre></pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>### In Scope</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre></pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Add `File` menu items immediately before `Reload Selected Tracks`:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>  - `Rename Track Files`</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>  - `Rename Selected Track Files`</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>  - `Rename Track Files Config...`</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>  - divider</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Route all rename menu items to the key editor window using focused values.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Add a rename configuration sheet presented from the key editor window.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Add rename configuration state:</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>  - default `Rename Format`: `|TRACKNUMBER| |TITLE|`</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>  - default `Invalid Replacement`: `-`</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>  - default `Space Replacement`: `none`</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>  - default `Strict`: `false`</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- Persist rename format, invalid replacement selection, space replacement</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>  selection, and strict selection with `@AppStorage`.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- Generate a live `Rename Example` from the first selected track or first</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>  loaded track when nothing is selected.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- Parse `|TAGKEY|` placeholders and literal text in rename format.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Validate and normalize completed tag placeholders against known track tags.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- Support fuzzy tag matching such as `|track number|` and `|number|`</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>  resolving to `|TRACKNUMBER|`.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Support zero-padded numeric placeholders:</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>  - `|zpTRACKNUMBER|`</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>  - `|zpDISCNUMBER|`</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>  - `|zpTOTALTRACKS|`</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>  - `|zpTOTALDISCS|`</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>  - `|zpTRACKTOTAL|`</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>  - `|zpDISCTOTAL|`</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Treat `TOTALTRACKS` and `TRACKTOTAL` as synonymous track-total tags.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- Treat `TOTALDISCS` and `DISCTOTAL` as synonymous disc-total tags.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- Replace invalid filename characters using an `Invalid Replacement` picker with:</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>  - `-`</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>  - `_`</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>  - `.`</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>  - `space`</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- Replace whitespace after invalid-character formatting using a</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>  `Space Replacement` picker with:</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>  - `-`</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>  - `_`</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>  - `.`</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>  - `none`</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- Apply selected invalid filename character replacement:</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>  - non-strict: `/`, `:`, and NUL</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>  - strict: `/`, `:`, NUL, `&lt;`, `&gt;`, `&quot;`, `\`, `|`, `?`, `*`, and ASCII</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>    control characters</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- Apply selected space replacement after invalid filename character replacement.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- Preserve original `.flac` extension after filename-stem generation.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- Rename all loaded track files from:</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>  - `Rename Track Files`</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>  - sheet `Rename All Track Files`</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- Rename selected loaded track files from:</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>  - `Rename Selected Track Files`</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>  - sheet `Rename Selected Track Files`</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- Update editor track file references after successful renames.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- Update `.swifttag` document export data so renamed source file paths and</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>  refreshed bookmarks are saved.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- Add focused unit, file-operation, ViewInspector/source-order, and build</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  verification coverage.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- Update user documentation for menu commands and rename format syntax.</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre></pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>### Out Of Scope</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre></pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- Writing FLAC metadata during rename.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- Moving files to a different folder.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- Renaming non-FLAC imported files.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- Adding AppleScript rename commands.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- Adding batch preview table UI beyond the requested single `Rename Example`.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- Adding undo for file renames unless confirmed.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- Changing existing save, reload, remove, sort, numbering, or total commands.</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre></pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- Latest numbered plan reviewed:</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>  - `Docs/Plans/32-AutoUpdateDiscTotal.md`</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- Closest related plan reviewed:</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>  - `Docs/Plans/31-SetTrackNumbersAndSortTracks.md`</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>  - `Docs/Plans/26-AddAppleScriptSupport.md`</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>  - `AGENTS.md`</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>  - `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>  - `Docs/AppleDocsIndex/apple-docs-scout-agent.md`</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- Apple Docs Scout used:</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>  - Built-in explorer agent reviewed current SwiftUI, Foundation, Picker, and</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>    FileManager documentation.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>- Relevant app files reviewed:</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>  - `SwiftTag/SwiftTagApp.swift`</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>  - `SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorView.swift`</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift`</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>  - `SwiftTag/Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>  - `SwiftTag/Shared/Models/Track.swift`</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>  - `SwiftTag/Shared/Models/TagKey.swift`</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>  - `SwiftTag/Shared/Utilities/SandboxPathBookmarkAccess.swift`</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>  - `SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift`</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>  - `SwiftTag/SwiftTag.sdef`</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- Relevant tests to inspect/update during implementation:</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>  - `SwiftTagTests/SwiftTagTests.swift`</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>  - `SwiftTagTests/TrackStatusViewInspectorTests.swift`</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>  - `SwiftTagUITests/SwiftTagUITests.swift`</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- Fixture applicability:</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>  - Rename does not parse or write FLAC metadata.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>  - File-operation tests should still copy `SwiftTagTestFiles/test.flac` into a</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>    temporary directory before mutating it.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre></pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>## Apple Documentation Findings</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre></pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>### SwiftUI Sheet Presentation</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre></pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- Symbol/topic:</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>  - `View.sheet(isPresented:onDismiss:content:)`</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>  - `View.sheet(item:onDismiss:content:)`</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>- Framework: SwiftUI</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- Source:</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>  - `/documentation/SwiftUI/View-Presentation`</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>  - `/documentation/swiftui/view/sheet(ispresented:ondismiss:content:)`</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Finding:</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>  - Use editor-owned state and attach `.sheet` to `ContentView` or another view</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>    inside the key editor window. SwiftUI presentation modifiers are</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>    state-driven, so menu commands should mutate editor-scoped state rather than</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>    imperatively creating an AppKit sheet.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>### Focused Command Routing</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre></pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Symbol/topic:</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>  - `FocusedValue`</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>  - `FocusedBinding`</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- Framework: SwiftUI</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>- Source:</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>  - `/documentation/SwiftUI/FocusedValue`</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>  - `/documentation/SwiftUI/FocusedBinding`</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>- Finding:</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>  - Existing focused values are the right pattern for key-window menu routing.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>    Add rename command closures, titles, and enablement beside existing</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>    `performReloadSelectedTracks` focused values.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre></pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>### Text Entry Updates</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre></pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>- Symbol/topic:</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>  - `TextField(text:)`</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>  - `View.onChange(of:initial:_:)`</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>  - `Binding.init(get:set:)`</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>- Framework: SwiftUI</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- Source:</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>  - `/documentation/SwiftUI/TextField`</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>  - `/documentation/swiftui/view/onchange(of:initial:_:)`</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>  - `/documentation/SwiftUI/Binding/init(get:set:)`</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>- Finding:</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>  - `TextField(text:)` updates bound `String` values continuously as the user</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>    types. Use a string binding for `Rename Format`. Use computed preview state</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>    for display. Use a custom `Binding` setter or guarded `onChange` for</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>    immediate tag-token normalization.</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre></pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>### Picker And App Storage</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre></pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- Symbol/topic:</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>  - `Picker`</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>  - `Toggle`</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>  - `AppStorage`</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>- Framework: SwiftUI</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>- Source:</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>  - `/documentation/SwiftUI/Picker`</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>  - `/documentation/SwiftUI/Toggle`</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>  - `/documentation/SwiftUI/AppStorage`</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- Finding:</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>  - Use SwiftUI pickers for limited invalid and space replacement values and a</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>    toggle for strict mode. Store rename format, invalid replacement selection,</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>    space replacement selection, and strict selection in `@AppStorage` so</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>    direct menu commands use the last saved configuration across launches.</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre></pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>### File Rename</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre></pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>- Symbol/topic:</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>  - `FileManager.moveItem(at:to:)`</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>- Framework: Foundation</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>- Source:</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>  - `/documentation/Foundation/FileManager/moveItem(at:to:)`</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>- Finding:</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>  - Implement rename as same-directory file move to a destination URL containing</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>    the new last path component. Validate collisions first because</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>    `moveItem(at:to:)` fails when the destination exists.</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre></pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre></pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>- `SwiftTagApp.AppCommands` owns `File` menu construction.</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>- Existing `File` menu order near the requested insertion point is:</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>  - `Set Disc Total (...)`</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>  - divider</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre>  - `Reload Selected Tracks`</pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>  - `Remove Selected Tracks`</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>- `ContentView` publishes editor-scoped menu actions with `.focusedSceneValue`.</pre></td></tr>
+<tr id="L203"><th><a href="#L203">203</a></th><td><pre>- `ContentView` already presents an editor-attached sheet for album art with</pre></td></tr>
+<tr id="L204"><th><a href="#L204">204</a></th><td><pre>  `.sheet(isPresented:)`.</pre></td></tr>
+<tr id="L205"><th><a href="#L205">205</a></th><td><pre>- `ContentView` owns save/import/reload/remove alerts and destructive action</pre></td></tr>
+<tr id="L206"><th><a href="#L206">206</a></th><td><pre>  confirmation state.</pre></td></tr>
+<tr id="L207"><th><a href="#L207">207</a></th><td><pre>- `TagEditorViewModel` owns track selection, track file references, security</pre></td></tr>
+<tr id="L208"><th><a href="#L208">208</a></th><td><pre>  scoped bookmark resolution, reload, save, and file-monitor refresh helpers.</pre></td></tr>
+<tr id="L209"><th><a href="#L209">209</a></th><td><pre>- `Track.displayFileName` uses `sourceFileURL.lastPathComponent` when present.</pre></td></tr>
+<tr id="L210"><th><a href="#L210">210</a></th><td><pre>- Imported tracks store:</pre></td></tr>
+<tr id="L211"><th><a href="#L211">211</a></th><td><pre>  - `sourceFileURL`</pre></td></tr>
+<tr id="L212"><th><a href="#L212">212</a></th><td><pre>  - `securityScopedBookmarkData`</pre></td></tr>
+<tr id="L213"><th><a href="#L213">213</a></th><td><pre>  - `latestFileSnapshot`</pre></td></tr>
+<tr id="L214"><th><a href="#L214">214</a></th><td><pre>  - `tags[TagKey.filename]`</pre></td></tr>
+<tr id="L215"><th><a href="#L215">215</a></th><td><pre>- `.swifttag` export writes `sourceFileURL` and `securityScopedBookmarkData`.</pre></td></tr>
+<tr id="L216"><th><a href="#L216">216</a></th><td><pre>- `SwiftTag.sdef` and `SwiftTagScriptTrack.scriptPropertyTagKeys` contain the</pre></td></tr>
+<tr id="L217"><th><a href="#L217">217</a></th><td><pre>  broadest current track-property-to-tag mapping.</pre></td></tr>
+<tr id="L218"><th><a href="#L218">218</a></th><td><pre></pre></td></tr>
+<tr id="L219"><th><a href="#L219">219</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L220"><th><a href="#L220">220</a></th><td><pre></pre></td></tr>
+<tr id="L221"><th><a href="#L221">221</a></th><td><pre>- Menu item labels are exactly:</pre></td></tr>
+<tr id="L222"><th><a href="#L222">222</a></th><td><pre>  - `Rename Track Files`</pre></td></tr>
+<tr id="L223"><th><a href="#L223">223</a></th><td><pre>  - `Rename Selected Track Files`</pre></td></tr>
+<tr id="L224"><th><a href="#L224">224</a></th><td><pre>  - `Rename Track Files Config...`</pre></td></tr>
+<tr id="L225"><th><a href="#L225">225</a></th><td><pre>- Rename menu items appear before `Reload Selected Tracks`.</pre></td></tr>
+<tr id="L226"><th><a href="#L226">226</a></th><td><pre>- Rename menu items are followed by a divider before `Reload Selected Tracks`.</pre></td></tr>
+<tr id="L227"><th><a href="#L227">227</a></th><td><pre>- Configuration sheet opens on the key editor window.</pre></td></tr>
+<tr id="L228"><th><a href="#L228">228</a></th><td><pre>- Sheet controls are:</pre></td></tr>
+<tr id="L229"><th><a href="#L229">229</a></th><td><pre>  - read-only `Rename Example`</pre></td></tr>
+<tr id="L230"><th><a href="#L230">230</a></th><td><pre>  - `Rename Format` text field</pre></td></tr>
+<tr id="L231"><th><a href="#L231">231</a></th><td><pre>  - `Invalid Replacement` picker menu containing `-`, `_`, `.`, and `space`</pre></td></tr>
+<tr id="L232"><th><a href="#L232">232</a></th><td><pre>  - `Strict` checkbox</pre></td></tr>
+<tr id="L233"><th><a href="#L233">233</a></th><td><pre>  - `Space Replacement` picker menu containing `-`, `_`, `.`, and `none`</pre></td></tr>
+<tr id="L234"><th><a href="#L234">234</a></th><td><pre>  - `Cancel`</pre></td></tr>
+<tr id="L235"><th><a href="#L235">235</a></th><td><pre>  - `Rename Selected Track Files`</pre></td></tr>
+<tr id="L236"><th><a href="#L236">236</a></th><td><pre>  - `Rename All Track Files`</pre></td></tr>
+<tr id="L237"><th><a href="#L237">237</a></th><td><pre>- Default rename format is `|TRACKNUMBER| |TITLE|`.</pre></td></tr>
+<tr id="L238"><th><a href="#L238">238</a></th><td><pre>- Default invalid replacement selection is `-`.</pre></td></tr>
+<tr id="L239"><th><a href="#L239">239</a></th><td><pre>- Default space replacement selection is `none`.</pre></td></tr>
+<tr id="L240"><th><a href="#L240">240</a></th><td><pre>- Default strict value is `false`.</pre></td></tr>
+<tr id="L241"><th><a href="#L241">241</a></th><td><pre>- Rename format string, invalid replacement selection, space replacement</pre></td></tr>
+<tr id="L242"><th><a href="#L242">242</a></th><td><pre>  selection, and strict selection are saved with `@AppStorage`.</pre></td></tr>
+<tr id="L243"><th><a href="#L243">243</a></th><td><pre>- There is no `Zero Pad` checkbox.</pre></td></tr>
+<tr id="L244"><th><a href="#L244">244</a></th><td><pre>- Zero padding is requested with dedicated tags:</pre></td></tr>
+<tr id="L245"><th><a href="#L245">245</a></th><td><pre>  - `|zpTRACKNUMBER|`</pre></td></tr>
+<tr id="L246"><th><a href="#L246">246</a></th><td><pre>  - `|zpDISCNUMBER|`</pre></td></tr>
+<tr id="L247"><th><a href="#L247">247</a></th><td><pre>  - `|zpTOTALTRACKS|`</pre></td></tr>
+<tr id="L248"><th><a href="#L248">248</a></th><td><pre>  - `|zpTOTALDISCS|`</pre></td></tr>
+<tr id="L249"><th><a href="#L249">249</a></th><td><pre>  - `|zpTRACKTOTAL|`</pre></td></tr>
+<tr id="L250"><th><a href="#L250">250</a></th><td><pre>  - `|zpDISCTOTAL|`</pre></td></tr>
+<tr id="L251"><th><a href="#L251">251</a></th><td><pre>- `TOTALTRACKS` is synonymous with `TRACKTOTAL`.</pre></td></tr>
+<tr id="L252"><th><a href="#L252">252</a></th><td><pre>  - User-entered `|total tracks|` resolves to `|TOTALTRACKS|`.</pre></td></tr>
+<tr id="L253"><th><a href="#L253">253</a></th><td><pre>  - User-entered `|track total|` resolves to `|TRACKTOTAL|`.</pre></td></tr>
+<tr id="L254"><th><a href="#L254">254</a></th><td><pre>  - Plausible track-total aliases such as `|track count|` default to</pre></td></tr>
+<tr id="L255"><th><a href="#L255">255</a></th><td><pre>    `|TOTALTRACKS|`.</pre></td></tr>
+<tr id="L256"><th><a href="#L256">256</a></th><td><pre>- `TOTALDISCS` is synonymous with `DISCTOTAL`.</pre></td></tr>
+<tr id="L257"><th><a href="#L257">257</a></th><td><pre>  - User-entered `|total discs|` resolves to `|TOTALDISCS|`.</pre></td></tr>
+<tr id="L258"><th><a href="#L258">258</a></th><td><pre>  - User-entered `|disc total|` resolves to `|DISCTOTAL|`.</pre></td></tr>
+<tr id="L259"><th><a href="#L259">259</a></th><td><pre>  - Plausible disc-total aliases such as `|disc count|` default to</pre></td></tr>
+<tr id="L260"><th><a href="#L260">260</a></th><td><pre>    `|TOTALDISCS|`.</pre></td></tr>
+<tr id="L261"><th><a href="#L261">261</a></th><td><pre>- `Rename Track Files` uses the same behavior as sheet</pre></td></tr>
+<tr id="L262"><th><a href="#L262">262</a></th><td><pre>  `Rename All Track Files`.</pre></td></tr>
+<tr id="L263"><th><a href="#L263">263</a></th><td><pre>- `Rename Selected Track Files` uses the same behavior as sheet</pre></td></tr>
+<tr id="L264"><th><a href="#L264">264</a></th><td><pre>  `Rename Selected Track Files`.</pre></td></tr>
+<tr id="L265"><th><a href="#L265">265</a></th><td><pre>- Direct menu rename commands use the current saved rename configuration.</pre></td></tr>
+<tr id="L266"><th><a href="#L266">266</a></th><td><pre>- Format output is always treated as a filename stem. The original `.flac`</pre></td></tr>
+<tr id="L267"><th><a href="#L267">267</a></th><td><pre>  extension is always preserved.</pre></td></tr>
+<tr id="L268"><th><a href="#L268">268</a></th><td><pre>- Dedicated `zp...` tags use the same padding behavior as existing</pre></td></tr>
+<tr id="L269"><th><a href="#L269">269</a></th><td><pre>  padding-on-save functionality.</pre></td></tr>
+<tr id="L270"><th><a href="#L270">270</a></th><td><pre>- Batch rename conflicts abort the whole batch and show a dialog explaining the</pre></td></tr>
+<tr id="L271"><th><a href="#L271">271</a></th><td><pre>  issue.</pre></td></tr>
+<tr id="L272"><th><a href="#L272">272</a></th><td><pre>- Locked tracks are excluded from rename because lock means read-only.</pre></td></tr>
+<tr id="L273"><th><a href="#L273">273</a></th><td><pre>- Tracks added via `Add FLAC files (read-only)...` are not renameable because</pre></td></tr>
+<tr id="L274"><th><a href="#L274">274</a></th><td><pre>  they are locked.</pre></td></tr>
+<tr id="L275"><th><a href="#L275">275</a></th><td><pre>- Deleted-in-table or missing-file tracks are skipped with a warning.</pre></td></tr>
+<tr id="L276"><th><a href="#L276">276</a></th><td><pre>- `Rename Example` uses the first selected track, or the first loaded track when</pre></td></tr>
+<tr id="L277"><th><a href="#L277">277</a></th><td><pre>  nothing is selected.</pre></td></tr>
+<tr id="L278"><th><a href="#L278">278</a></th><td><pre>- When there is no selection, the `Rename Selected Track Files` menu item and</pre></td></tr>
+<tr id="L279"><th><a href="#L279">279</a></th><td><pre>  sheet button are disabled.</pre></td></tr>
+<tr id="L280"><th><a href="#L280">280</a></th><td><pre>- Renaming marks the referenced `.swifttag` document state as modified</pre></td></tr>
+<tr id="L281"><th><a href="#L281">281</a></th><td><pre>  immediately so closing prompts to save updated file references.</pre></td></tr>
+<tr id="L282"><th><a href="#L282">282</a></th><td><pre>- Direct menu rename commands do not prompt before renaming. They execute</pre></td></tr>
+<tr id="L283"><th><a href="#L283">283</a></th><td><pre>  immediately when configuration and batch plan are valid, or show a dialog for</pre></td></tr>
+<tr id="L284"><th><a href="#L284">284</a></th><td><pre>  invalid configuration or batch rename error conditions.</pre></td></tr>
+<tr id="L285"><th><a href="#L285">285</a></th><td><pre></pre></td></tr>
+<tr id="L286"><th><a href="#L286">286</a></th><td><pre>## Product Behavior</pre></td></tr>
+<tr id="L287"><th><a href="#L287">287</a></th><td><pre></pre></td></tr>
+<tr id="L288"><th><a href="#L288">288</a></th><td><pre>### Menu Commands</pre></td></tr>
+<tr id="L289"><th><a href="#L289">289</a></th><td><pre></pre></td></tr>
+<tr id="L290"><th><a href="#L290">290</a></th><td><pre>1. User opens `File` menu with an editor window focused.</pre></td></tr>
+<tr id="L291"><th><a href="#L291">291</a></th><td><pre>2. Before `Reload Selected Tracks`, user sees:</pre></td></tr>
+<tr id="L292"><th><a href="#L292">292</a></th><td><pre>   - `Rename Track Files`</pre></td></tr>
+<tr id="L293"><th><a href="#L293">293</a></th><td><pre>   - `Rename Selected Track Files`</pre></td></tr>
+<tr id="L294"><th><a href="#L294">294</a></th><td><pre>   - `Rename Track Files Config...`</pre></td></tr>
+<tr id="L295"><th><a href="#L295">295</a></th><td><pre>   - divider</pre></td></tr>
+<tr id="L296"><th><a href="#L296">296</a></th><td><pre>3. `Rename Track Files` renames all renameable loaded track files in the key</pre></td></tr>
+<tr id="L297"><th><a href="#L297">297</a></th><td><pre>   editor window.</pre></td></tr>
+<tr id="L298"><th><a href="#L298">298</a></th><td><pre>4. `Rename Selected Track Files` renames renameable selected track files in the</pre></td></tr>
+<tr id="L299"><th><a href="#L299">299</a></th><td><pre>   key editor window.</pre></td></tr>
+<tr id="L300"><th><a href="#L300">300</a></th><td><pre>5. `Rename Track Files Config...` opens the sheet on the key editor window.</pre></td></tr>
+<tr id="L301"><th><a href="#L301">301</a></th><td><pre>6. Commands are disabled while a save or rename operation is running.</pre></td></tr>
+<tr id="L302"><th><a href="#L302">302</a></th><td><pre>7. `Rename Selected Track Files` is disabled when no tracks are selected.</pre></td></tr>
+<tr id="L303"><th><a href="#L303">303</a></th><td><pre>8. Direct rename commands execute immediately when configuration and batch plan</pre></td></tr>
+<tr id="L304"><th><a href="#L304">304</a></th><td><pre>   are valid.</pre></td></tr>
+<tr id="L305"><th><a href="#L305">305</a></th><td><pre>9. Direct rename commands show a dialog for invalid configuration or batch</pre></td></tr>
+<tr id="L306"><th><a href="#L306">306</a></th><td><pre>   rename error conditions.</pre></td></tr>
+<tr id="L307"><th><a href="#L307">307</a></th><td><pre></pre></td></tr>
+<tr id="L308"><th><a href="#L308">308</a></th><td><pre>### Rename Config Sheet</pre></td></tr>
+<tr id="L309"><th><a href="#L309">309</a></th><td><pre></pre></td></tr>
+<tr id="L310"><th><a href="#L310">310</a></th><td><pre>1. Sheet initializes from persisted rename configuration.</pre></td></tr>
+<tr id="L311"><th><a href="#L311">311</a></th><td><pre>2. `Rename Example` shows proposed output for the first selected track, or the</pre></td></tr>
+<tr id="L312"><th><a href="#L312">312</a></th><td><pre>   first loaded track when nothing is selected.</pre></td></tr>
+<tr id="L313"><th><a href="#L313">313</a></th><td><pre>3. If no selected track is available, sheet uses the first loaded track for</pre></td></tr>
+<tr id="L314"><th><a href="#L314">314</a></th><td><pre>   preview.</pre></td></tr>
+<tr id="L315"><th><a href="#L315">315</a></th><td><pre>4. Editing `Rename Format`, `Invalid Replacement`, `Strict`, or</pre></td></tr>
+<tr id="L316"><th><a href="#L316">316</a></th><td><pre>   `Space Replacement` refreshes `Rename Example`.</pre></td></tr>
+<tr id="L317"><th><a href="#L317">317</a></th><td><pre>5. Completing a placeholder by typing trailing `|` attempts to normalize it to</pre></td></tr>
+<tr id="L318"><th><a href="#L318">318</a></th><td><pre>   a known tag key.</pre></td></tr>
+<tr id="L319"><th><a href="#L319">319</a></th><td><pre>6. `Rename Selected Track Files` is disabled when no tracks are selected.</pre></td></tr>
+<tr id="L320"><th><a href="#L320">320</a></th><td><pre>7. Buttons at bottom right:</pre></td></tr>
+<tr id="L321"><th><a href="#L321">321</a></th><td><pre>   - `Cancel` closes without renaming.</pre></td></tr>
+<tr id="L322"><th><a href="#L322">322</a></th><td><pre>   - `Rename Selected Track Files` saves configuration and renames selected</pre></td></tr>
+<tr id="L323"><th><a href="#L323">323</a></th><td><pre>     track files.</pre></td></tr>
+<tr id="L324"><th><a href="#L324">324</a></th><td><pre>   - `Rename All Track Files` saves configuration and renames all loaded track</pre></td></tr>
+<tr id="L325"><th><a href="#L325">325</a></th><td><pre>     files.</pre></td></tr>
+<tr id="L326"><th><a href="#L326">326</a></th><td><pre></pre></td></tr>
+<tr id="L327"><th><a href="#L327">327</a></th><td><pre>### Rename Format</pre></td></tr>
+<tr id="L328"><th><a href="#L328">328</a></th><td><pre></pre></td></tr>
+<tr id="L329"><th><a href="#L329">329</a></th><td><pre>1. Text outside `|...|` is literal.</pre></td></tr>
+<tr id="L330"><th><a href="#L330">330</a></th><td><pre>2. Text inside `|...|` is a tag placeholder.</pre></td></tr>
+<tr id="L331"><th><a href="#L331">331</a></th><td><pre>3. Placeholder keys are normalized by trimming whitespace, removing separator</pre></td></tr>
+<tr id="L332"><th><a href="#L332">332</a></th><td><pre>   noise for matching, and resolving aliases.</pre></td></tr>
+<tr id="L333"><th><a href="#L333">333</a></th><td><pre>4. Exact normalized tags are preferred over fuzzy matches.</pre></td></tr>
+<tr id="L334"><th><a href="#L334">334</a></th><td><pre>5. Known aliases include:</pre></td></tr>
+<tr id="L335"><th><a href="#L335">335</a></th><td><pre>   - `TRACK`, `TRACK NUMBER`, `NUMBER` -&gt; `TRACKNUMBER`</pre></td></tr>
+<tr id="L336"><th><a href="#L336">336</a></th><td><pre>   - `TITLE`, `NAME` -&gt; `TITLE`</pre></td></tr>
+<tr id="L337"><th><a href="#L337">337</a></th><td><pre>   - `DISC`, `DISC NUMBER` -&gt; `DISCNUMBER`</pre></td></tr>
+<tr id="L338"><th><a href="#L338">338</a></th><td><pre>   - `TOTAL TRACKS`, `TRACK COUNT` -&gt; `TOTALTRACKS`</pre></td></tr>
+<tr id="L339"><th><a href="#L339">339</a></th><td><pre>   - `TRACK TOTAL` -&gt; `TRACKTOTAL`</pre></td></tr>
+<tr id="L340"><th><a href="#L340">340</a></th><td><pre>   - `TOTAL DISCS`, `DISC COUNT` -&gt; `TOTALDISCS`</pre></td></tr>
+<tr id="L341"><th><a href="#L341">341</a></th><td><pre>   - `DISC TOTAL` -&gt; `DISCTOTAL`</pre></td></tr>
+<tr id="L342"><th><a href="#L342">342</a></th><td><pre>6. `TOTALTRACKS` and `TRACKTOTAL` read the same track-total value.</pre></td></tr>
+<tr id="L343"><th><a href="#L343">343</a></th><td><pre>7. `TOTALDISCS` and `DISCTOTAL` read the same disc-total value.</pre></td></tr>
+<tr id="L344"><th><a href="#L344">344</a></th><td><pre>8. Plausible track-total aliases default to `TOTALTRACKS`.</pre></td></tr>
+<tr id="L345"><th><a href="#L345">345</a></th><td><pre>9. Plausible disc-total aliases default to `TOTALDISCS`.</pre></td></tr>
+<tr id="L346"><th><a href="#L346">346</a></th><td><pre>10. Dedicated zero-padded tags read the underlying numeric value and pad before</pre></td></tr>
+<tr id="L347"><th><a href="#L347">347</a></th><td><pre>    substitution using existing padding-on-save behavior:</pre></td></tr>
+<tr id="L348"><th><a href="#L348">348</a></th><td><pre>    - `zpTRACKNUMBER`</pre></td></tr>
+<tr id="L349"><th><a href="#L349">349</a></th><td><pre>    - `zpDISCNUMBER`</pre></td></tr>
+<tr id="L350"><th><a href="#L350">350</a></th><td><pre>    - `zpTOTALTRACKS`</pre></td></tr>
+<tr id="L351"><th><a href="#L351">351</a></th><td><pre>    - `zpTOTALDISCS`</pre></td></tr>
+<tr id="L352"><th><a href="#L352">352</a></th><td><pre>    - `zpTRACKTOTAL`</pre></td></tr>
+<tr id="L353"><th><a href="#L353">353</a></th><td><pre>    - `zpDISCTOTAL`</pre></td></tr>
+<tr id="L354"><th><a href="#L354">354</a></th><td><pre>11. Broader known tag keys come from shared tag catalog data based on:</pre></td></tr>
+<tr id="L355"><th><a href="#L355">355</a></th><td><pre>   - `TagKey`</pre></td></tr>
+<tr id="L356"><th><a href="#L356">356</a></th><td><pre>   - `SwiftTag.sdef` track properties</pre></td></tr>
+<tr id="L357"><th><a href="#L357">357</a></th><td><pre>   - `SwiftTagScriptTrack.scriptPropertyTagKeys`</pre></td></tr>
+<tr id="L358"><th><a href="#L358">358</a></th><td><pre>12. Unknown placeholders produce validation errors and disable rename actions.</pre></td></tr>
+<tr id="L359"><th><a href="#L359">359</a></th><td><pre>13. Missing tag values render as empty strings for preview and rename.</pre></td></tr>
+<tr id="L360"><th><a href="#L360">360</a></th><td><pre>14. Output whitespace is trimmed at the filename-stem boundary.</pre></td></tr>
+<tr id="L361"><th><a href="#L361">361</a></th><td><pre></pre></td></tr>
+<tr id="L362"><th><a href="#L362">362</a></th><td><pre>### Replacement Controls</pre></td></tr>
+<tr id="L363"><th><a href="#L363">363</a></th><td><pre></pre></td></tr>
+<tr id="L364"><th><a href="#L364">364</a></th><td><pre>1. `Invalid Replacement` is a picker menu.</pre></td></tr>
+<tr id="L365"><th><a href="#L365">365</a></th><td><pre>2. Menu values are:</pre></td></tr>
+<tr id="L366"><th><a href="#L366">366</a></th><td><pre>   - `-`</pre></td></tr>
+<tr id="L367"><th><a href="#L367">367</a></th><td><pre>   - `_`</pre></td></tr>
+<tr id="L368"><th><a href="#L368">368</a></th><td><pre>   - `.`</pre></td></tr>
+<tr id="L369"><th><a href="#L369">369</a></th><td><pre>   - `space`</pre></td></tr>
+<tr id="L370"><th><a href="#L370">370</a></th><td><pre>3. Selected invalid replacement text is used in place of invalid filename</pre></td></tr>
+<tr id="L371"><th><a href="#L371">371</a></th><td><pre>   characters.</pre></td></tr>
+<tr id="L372"><th><a href="#L372">372</a></th><td><pre>4. When `Strict` is unchecked, invalid filename characters are:</pre></td></tr>
+<tr id="L373"><th><a href="#L373">373</a></th><td><pre>   - `/`</pre></td></tr>
+<tr id="L374"><th><a href="#L374">374</a></th><td><pre>   - `:`</pre></td></tr>
+<tr id="L375"><th><a href="#L375">375</a></th><td><pre>   - NUL</pre></td></tr>
+<tr id="L376"><th><a href="#L376">376</a></th><td><pre>5. When `Strict` is checked, invalid filename characters are:</pre></td></tr>
+<tr id="L377"><th><a href="#L377">377</a></th><td><pre>   - `/`</pre></td></tr>
+<tr id="L378"><th><a href="#L378">378</a></th><td><pre>   - `:`</pre></td></tr>
+<tr id="L379"><th><a href="#L379">379</a></th><td><pre>   - NUL</pre></td></tr>
+<tr id="L380"><th><a href="#L380">380</a></th><td><pre>   - `&lt;`</pre></td></tr>
+<tr id="L381"><th><a href="#L381">381</a></th><td><pre>   - `&gt;`</pre></td></tr>
+<tr id="L382"><th><a href="#L382">382</a></th><td><pre>   - `&quot;`</pre></td></tr>
+<tr id="L383"><th><a href="#L383">383</a></th><td><pre>   - `\`</pre></td></tr>
+<tr id="L384"><th><a href="#L384">384</a></th><td><pre>   - `|`</pre></td></tr>
+<tr id="L385"><th><a href="#L385">385</a></th><td><pre>   - `?`</pre></td></tr>
+<tr id="L386"><th><a href="#L386">386</a></th><td><pre>   - `*`</pre></td></tr>
+<tr id="L387"><th><a href="#L387">387</a></th><td><pre>   - ASCII control characters, codes 0-31</pre></td></tr>
+<tr id="L388"><th><a href="#L388">388</a></th><td><pre>6. `Space Replacement` is a picker menu.</pre></td></tr>
+<tr id="L389"><th><a href="#L389">389</a></th><td><pre>7. Menu values are:</pre></td></tr>
+<tr id="L390"><th><a href="#L390">390</a></th><td><pre>   - `-`</pre></td></tr>
+<tr id="L391"><th><a href="#L391">391</a></th><td><pre>   - `_`</pre></td></tr>
+<tr id="L392"><th><a href="#L392">392</a></th><td><pre>   - `.`</pre></td></tr>
+<tr id="L393"><th><a href="#L393">393</a></th><td><pre>   - `none`</pre></td></tr>
+<tr id="L394"><th><a href="#L394">394</a></th><td><pre>8. Default `Space Replacement` value is `none`.</pre></td></tr>
+<tr id="L395"><th><a href="#L395">395</a></th><td><pre>9. When `Space Replacement` is not `none`, selected text replaces all</pre></td></tr>
+<tr id="L396"><th><a href="#L396">396</a></th><td><pre>   whitespace in the filename after invalid-character replacement.</pre></td></tr>
+<tr id="L397"><th><a href="#L397">397</a></th><td><pre>10. Space replacement runs after invalid-character replacement so whitespace</pre></td></tr>
+<tr id="L398"><th><a href="#L398">398</a></th><td><pre>    produced by invalid-character replacement is included.</pre></td></tr>
+<tr id="L399"><th><a href="#L399">399</a></th><td><pre>11. Rename format string, invalid replacement selection, space replacement</pre></td></tr>
+<tr id="L400"><th><a href="#L400">400</a></th><td><pre>    selection, and strict selection are saved with `@AppStorage`.</pre></td></tr>
+<tr id="L401"><th><a href="#L401">401</a></th><td><pre></pre></td></tr>
+<tr id="L402"><th><a href="#L402">402</a></th><td><pre>### File Rename Execution</pre></td></tr>
+<tr id="L403"><th><a href="#L403">403</a></th><td><pre></pre></td></tr>
+<tr id="L404"><th><a href="#L404">404</a></th><td><pre>1. Build rename plan for requested scope before moving any files.</pre></td></tr>
+<tr id="L405"><th><a href="#L405">405</a></th><td><pre>2. Scope `all` means all loaded tracks that are renameable.</pre></td></tr>
+<tr id="L406"><th><a href="#L406">406</a></th><td><pre>3. Renameable tracks exclude locked tracks.</pre></td></tr>
+<tr id="L407"><th><a href="#L407">407</a></th><td><pre>4. Tracks added via `Add FLAC files (read-only)...` are not renameable because</pre></td></tr>
+<tr id="L408"><th><a href="#L408">408</a></th><td><pre>   they are locked.</pre></td></tr>
+<tr id="L409"><th><a href="#L409">409</a></th><td><pre>5. Scope `selected` means the track-table selection in the key editor window.</pre></td></tr>
+<tr id="L410"><th><a href="#L410">410</a></th><td><pre>6. Deleted-in-table or missing-file tracks are skipped with a warning.</pre></td></tr>
+<tr id="L411"><th><a href="#L411">411</a></th><td><pre>7. Resolve each track file through existing security-scoped bookmark behavior.</pre></td></tr>
+<tr id="L412"><th><a href="#L412">412</a></th><td><pre>8. Destination parent directory is the current source file parent directory.</pre></td></tr>
+<tr id="L413"><th><a href="#L413">413</a></th><td><pre>9. Destination last path component is generated from:</pre></td></tr>
+<tr id="L414"><th><a href="#L414">414</a></th><td><pre>   - format output</pre></td></tr>
+<tr id="L415"><th><a href="#L415">415</a></th><td><pre>   - selected invalid replacement sanitization</pre></td></tr>
+<tr id="L416"><th><a href="#L416">416</a></th><td><pre>   - selected space replacement sanitization</pre></td></tr>
+<tr id="L417"><th><a href="#L417">417</a></th><td><pre>   - original `.flac` extension preservation</pre></td></tr>
+<tr id="L418"><th><a href="#L418">418</a></th><td><pre>10. Validate before executing:</pre></td></tr>
+<tr id="L419"><th><a href="#L419">419</a></th><td><pre>   - source is a regular file</pre></td></tr>
+<tr id="L420"><th><a href="#L420">420</a></th><td><pre>   - source file extension is `.flac`</pre></td></tr>
+<tr id="L421"><th><a href="#L421">421</a></th><td><pre>   - destination name is non-empty</pre></td></tr>
+<tr id="L422"><th><a href="#L422">422</a></th><td><pre>   - destination stays in same parent directory</pre></td></tr>
+<tr id="L423"><th><a href="#L423">423</a></th><td><pre>   - destination does not already exist unless it is the same path</pre></td></tr>
+<tr id="L424"><th><a href="#L424">424</a></th><td><pre>   - no two planned renames target the same destination path</pre></td></tr>
+<tr id="L425"><th><a href="#L425">425</a></th><td><pre>   - parent directory is writable or accessible through security-scoped access</pre></td></tr>
+<tr id="L426"><th><a href="#L426">426</a></th><td><pre>11. If validation finds a conflict, no files are moved and a dialog explains the</pre></td></tr>
+<tr id="L427"><th><a href="#L427">427</a></th><td><pre>    issue.</pre></td></tr>
+<tr id="L428"><th><a href="#L428">428</a></th><td><pre>12. If validation fails for invalid configuration or another batch-level error,</pre></td></tr>
+<tr id="L429"><th><a href="#L429">429</a></th><td><pre>    no files are moved and a dialog explains the issue.</pre></td></tr>
+<tr id="L430"><th><a href="#L430">430</a></th><td><pre>13. If moving fails after validation, show error and refresh track file state.</pre></td></tr>
+<tr id="L431"><th><a href="#L431">431</a></th><td><pre>14. After each successful move:</pre></td></tr>
+<tr id="L432"><th><a href="#L432">432</a></th><td><pre>    - update `track.sourceFileURL`</pre></td></tr>
+<tr id="L433"><th><a href="#L433">433</a></th><td><pre>    - refresh `track.securityScopedBookmarkData`</pre></td></tr>
+<tr id="L434"><th><a href="#L434">434</a></th><td><pre>    - update `track.tags[TagKey.filename]`</pre></td></tr>
+<tr id="L435"><th><a href="#L435">435</a></th><td><pre>    - refresh track monitoring</pre></td></tr>
+<tr id="L436"><th><a href="#L436">436</a></th><td><pre>    - register editor session changes</pre></td></tr>
+<tr id="L437"><th><a href="#L437">437</a></th><td><pre>    - mark the referenced `.swifttag` document state as modified</pre></td></tr>
+<tr id="L438"><th><a href="#L438">438</a></th><td><pre></pre></td></tr>
+<tr id="L439"><th><a href="#L439">439</a></th><td><pre>## Destructive / Write-Back Behavior</pre></td></tr>
+<tr id="L440"><th><a href="#L440">440</a></th><td><pre></pre></td></tr>
+<tr id="L441"><th><a href="#L441">441</a></th><td><pre>### Existing Data Preserved</pre></td></tr>
+<tr id="L442"><th><a href="#L442">442</a></th><td><pre></pre></td></tr>
+<tr id="L443"><th><a href="#L443">443</a></th><td><pre>- FLAC audio data.</pre></td></tr>
+<tr id="L444"><th><a href="#L444">444</a></th><td><pre>- FLAC metadata blocks.</pre></td></tr>
+<tr id="L445"><th><a href="#L445">445</a></th><td><pre>- FLAC pictures.</pre></td></tr>
+<tr id="L446"><th><a href="#L446">446</a></th><td><pre>- Editor tag values.</pre></td></tr>
+<tr id="L447"><th><a href="#L447">447</a></th><td><pre>- Album art state.</pre></td></tr>
+<tr id="L448"><th><a href="#L448">448</a></th><td><pre>- Track lock values.</pre></td></tr>
+<tr id="L449"><th><a href="#L449">449</a></th><td><pre>- Track order and selection where possible.</pre></td></tr>
+<tr id="L450"><th><a href="#L450">450</a></th><td><pre>- Existing `.swifttag` document package contents until user saves it.</pre></td></tr>
+<tr id="L451"><th><a href="#L451">451</a></th><td><pre></pre></td></tr>
+<tr id="L452"><th><a href="#L452">452</a></th><td><pre>### Existing Data Replaced</pre></td></tr>
+<tr id="L453"><th><a href="#L453">453</a></th><td><pre></pre></td></tr>
+<tr id="L454"><th><a href="#L454">454</a></th><td><pre>- On-disk file path for each renamed track.</pre></td></tr>
+<tr id="L455"><th><a href="#L455">455</a></th><td><pre>- Editor `sourceFileURL` for each renamed track.</pre></td></tr>
+<tr id="L456"><th><a href="#L456">456</a></th><td><pre>- Editor security-scoped bookmark data for each renamed track.</pre></td></tr>
+<tr id="L457"><th><a href="#L457">457</a></th><td><pre>- Editor `FILENAME` tag mirror for each renamed track.</pre></td></tr>
+<tr id="L458"><th><a href="#L458">458</a></th><td><pre>- `.swifttag` document track references on next document save.</pre></td></tr>
+<tr id="L459"><th><a href="#L459">459</a></th><td><pre></pre></td></tr>
+<tr id="L460"><th><a href="#L460">460</a></th><td><pre>### Existing Data Removed</pre></td></tr>
+<tr id="L461"><th><a href="#L461">461</a></th><td><pre></pre></td></tr>
+<tr id="L462"><th><a href="#L462">462</a></th><td><pre>- Old file path disappears because same-directory rename is a move.</pre></td></tr>
+<tr id="L463"><th><a href="#L463">463</a></th><td><pre>- No FLAC tag or picture data is removed.</pre></td></tr>
+<tr id="L464"><th><a href="#L464">464</a></th><td><pre>- No `.swifttag` file is removed.</pre></td></tr>
+<tr id="L465"><th><a href="#L465">465</a></th><td><pre></pre></td></tr>
+<tr id="L466"><th><a href="#L466">466</a></th><td><pre>### Partial Save Behavior</pre></td></tr>
+<tr id="L467"><th><a href="#L467">467</a></th><td><pre></pre></td></tr>
+<tr id="L468"><th><a href="#L468">468</a></th><td><pre>- Rename is independent of tag-only, picture-only, and tags-and-pictures save</pre></td></tr>
+<tr id="L469"><th><a href="#L469">469</a></th><td><pre>  payloads.</pre></td></tr>
+<tr id="L470"><th><a href="#L470">470</a></th><td><pre>- After rename, later FLAC saves target the new file path.</pre></td></tr>
+<tr id="L471"><th><a href="#L471">471</a></th><td><pre>- After rename, later `.swifttag` saves write the new file path/bookmark.</pre></td></tr>
+<tr id="L472"><th><a href="#L472">472</a></th><td><pre></pre></td></tr>
+<tr id="L473"><th><a href="#L473">473</a></th><td><pre>### Selected Items Source Of Truth</pre></td></tr>
+<tr id="L474"><th><a href="#L474">474</a></th><td><pre></pre></td></tr>
+<tr id="L475"><th><a href="#L475">475</a></th><td><pre>- Selected items means `TagEditorViewModel.selectedTrackIDs`, the same table</pre></td></tr>
+<tr id="L476"><th><a href="#L476">476</a></th><td><pre>  selection used by reload/remove/lock commands.</pre></td></tr>
+<tr id="L477"><th><a href="#L477">477</a></th><td><pre></pre></td></tr>
+<tr id="L478"><th><a href="#L478">478</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L479"><th><a href="#L479">479</a></th><td><pre></pre></td></tr>
+<tr id="L480"><th><a href="#L480">480</a></th><td><pre>### Product Constraints</pre></td></tr>
+<tr id="L481"><th><a href="#L481">481</a></th><td><pre></pre></td></tr>
+<tr id="L482"><th><a href="#L482">482</a></th><td><pre>- Filename generation must not silently create path separators.</pre></td></tr>
+<tr id="L483"><th><a href="#L483">483</a></th><td><pre>- Batch rename must abort the whole batch when conflicts are known up front.</pre></td></tr>
+<tr id="L484"><th><a href="#L484">484</a></th><td><pre>- Fuzzy tag matching must be predictable and test-covered.</pre></td></tr>
+<tr id="L485"><th><a href="#L485">485</a></th><td><pre>- Direct menu commands require persisted `@AppStorage` configuration.</pre></td></tr>
+<tr id="L486"><th><a href="#L486">486</a></th><td><pre>- Single example preview cannot show all batch conflicts; validation still must</pre></td></tr>
+<tr id="L487"><th><a href="#L487">487</a></th><td><pre>  cover full requested scope before execution.</pre></td></tr>
+<tr id="L488"><th><a href="#L488">488</a></th><td><pre>- Rename should not hide unsaved tag changes.</pre></td></tr>
+<tr id="L489"><th><a href="#L489">489</a></th><td><pre>- Locked and read-only tracks must remain unchanged.</pre></td></tr>
+<tr id="L490"><th><a href="#L490">490</a></th><td><pre>- Missing or deleted files must be reported as skipped warnings.</pre></td></tr>
+<tr id="L491"><th><a href="#L491">491</a></th><td><pre></pre></td></tr>
+<tr id="L492"><th><a href="#L492">492</a></th><td><pre>### Tooling, Environment, Sandbox, Filesystem Constraints</pre></td></tr>
+<tr id="L493"><th><a href="#L493">493</a></th><td><pre></pre></td></tr>
+<tr id="L494"><th><a href="#L494">494</a></th><td><pre>- Sandboxed file access may require existing track security-scoped bookmarks or</pre></td></tr>
+<tr id="L495"><th><a href="#L495">495</a></th><td><pre>  configured sandbox path bookmarks.</pre></td></tr>
+<tr id="L496"><th><a href="#L496">496</a></th><td><pre>- `FileManager.moveItem(at:to:)` fails if destination exists.</pre></td></tr>
+<tr id="L497"><th><a href="#L497">497</a></th><td><pre>- A same-directory rename can still fail due to permissions, stale bookmarks,</pre></td></tr>
+<tr id="L498"><th><a href="#L498">498</a></th><td><pre>  external moves, or locked files.</pre></td></tr>
+<tr id="L499"><th><a href="#L499">499</a></th><td><pre>- Track file monitor may observe rename as external delete/move while rename is</pre></td></tr>
+<tr id="L500"><th><a href="#L500">500</a></th><td><pre>  in progress.</pre></td></tr>
+<tr id="L501"><th><a href="#L501">501</a></th><td><pre>- ViewInspector is preferred for SwiftUI sheet state and command wiring tests.</pre></td></tr>
+<tr id="L502"><th><a href="#L502">502</a></th><td><pre>- XCUI should be reserved for menu integration if ViewInspector/source-order</pre></td></tr>
+<tr id="L503"><th><a href="#L503">503</a></th><td><pre>  tests cannot validate it.</pre></td></tr>
+<tr id="L504"><th><a href="#L504">504</a></th><td><pre></pre></td></tr>
+<tr id="L505"><th><a href="#L505">505</a></th><td><pre>## High-Risk Implementation Concerns</pre></td></tr>
+<tr id="L506"><th><a href="#L506">506</a></th><td><pre></pre></td></tr>
+<tr id="L507"><th><a href="#L507">507</a></th><td><pre>### Product Or Behavioral Risks</pre></td></tr>
+<tr id="L508"><th><a href="#L508">508</a></th><td><pre></pre></td></tr>
+<tr id="L509"><th><a href="#L509">509</a></th><td><pre>- Batch collision handling can surprise users if one generated name duplicates</pre></td></tr>
+<tr id="L510"><th><a href="#L510">510</a></th><td><pre>  another generated name.</pre></td></tr>
+<tr id="L511"><th><a href="#L511">511</a></th><td><pre>- Unknown or fuzzy placeholder matches can rename many files incorrectly if the</pre></td></tr>
+<tr id="L512"><th><a href="#L512">512</a></th><td><pre>  matcher is too permissive.</pre></td></tr>
+<tr id="L513"><th><a href="#L513">513</a></th><td><pre>- Synonymous total tags must resolve predictably while reading the same value.</pre></td></tr>
+<tr id="L514"><th><a href="#L514">514</a></th><td><pre>- Zero-padded tags must match existing padding-on-save output.</pre></td></tr>
+<tr id="L515"><th><a href="#L515">515</a></th><td><pre>- Invalid replacement can create whitespace that space replacement must catch.</pre></td></tr>
+<tr id="L516"><th><a href="#L516">516</a></th><td><pre>- File extension preservation must be consistent even when format text includes</pre></td></tr>
+<tr id="L517"><th><a href="#L517">517</a></th><td><pre>  extension-like literal text.</pre></td></tr>
+<tr id="L518"><th><a href="#L518">518</a></th><td><pre></pre></td></tr>
+<tr id="L519"><th><a href="#L519">519</a></th><td><pre>### Tooling, Environment, Sandbox, Or Filesystem Risks</pre></td></tr>
+<tr id="L520"><th><a href="#L520">520</a></th><td><pre></pre></td></tr>
+<tr id="L521"><th><a href="#L521">521</a></th><td><pre>- Security-scoped bookmark resolution may fail for files imported from folders</pre></td></tr>
+<tr id="L522"><th><a href="#L522">522</a></th><td><pre>  that no longer have valid access.</pre></td></tr>
+<tr id="L523"><th><a href="#L523">523</a></th><td><pre>- `moveItem` can leave a partial batch if external filesystem state changes</pre></td></tr>
+<tr id="L524"><th><a href="#L524">524</a></th><td><pre>  after validation.</pre></td></tr>
+<tr id="L525"><th><a href="#L525">525</a></th><td><pre>- Rename may race with `TrackFileMonitor` external-change refresh.</pre></td></tr>
+<tr id="L526"><th><a href="#L526">526</a></th><td><pre>- UI tests that rename files must use copied fixtures inside writable temp or</pre></td></tr>
+<tr id="L527"><th><a href="#L527">527</a></th><td><pre>  app-owned caches directories.</pre></td></tr>
+<tr id="L528"><th><a href="#L528">528</a></th><td><pre></pre></td></tr>
+<tr id="L529"><th><a href="#L529">529</a></th><td><pre>## Proposed Implementation</pre></td></tr>
+<tr id="L530"><th><a href="#L530">530</a></th><td><pre></pre></td></tr>
+<tr id="L531"><th><a href="#L531">531</a></th><td><pre>### 1. Shared Rename Configuration Model</pre></td></tr>
+<tr id="L532"><th><a href="#L532">532</a></th><td><pre></pre></td></tr>
+<tr id="L533"><th><a href="#L533">533</a></th><td><pre>Add new model types, likely under `SwiftTag/Shared/Models` or</pre></td></tr>
+<tr id="L534"><th><a href="#L534">534</a></th><td><pre>`SwiftTag/Features/TagEditor`:</pre></td></tr>
+<tr id="L535"><th><a href="#L535">535</a></th><td><pre></pre></td></tr>
+<tr id="L536"><th><a href="#L536">536</a></th><td><pre>- `TrackRenameConfiguration`</pre></td></tr>
+<tr id="L537"><th><a href="#L537">537</a></th><td><pre>  - `format: String`</pre></td></tr>
+<tr id="L538"><th><a href="#L538">538</a></th><td><pre>  - `invalidReplacementText: TrackRenameInvalidReplacementText`</pre></td></tr>
+<tr id="L539"><th><a href="#L539">539</a></th><td><pre>  - `spaceReplacement: TrackRenameSpaceReplacement`</pre></td></tr>
+<tr id="L540"><th><a href="#L540">540</a></th><td><pre>  - `strictReplacement: Bool`</pre></td></tr>
+<tr id="L541"><th><a href="#L541">541</a></th><td><pre>- `TrackRenameConfigurationDefaults`</pre></td></tr>
+<tr id="L542"><th><a href="#L542">542</a></th><td><pre>- `TrackRenameConfigurationKey`</pre></td></tr>
+<tr id="L543"><th><a href="#L543">543</a></th><td><pre>- `TrackRenameInvalidReplacementText`</pre></td></tr>
+<tr id="L544"><th><a href="#L544">544</a></th><td><pre>  - `.hyphen`</pre></td></tr>
+<tr id="L545"><th><a href="#L545">545</a></th><td><pre>  - `.underscore`</pre></td></tr>
+<tr id="L546"><th><a href="#L546">546</a></th><td><pre>  - `.period`</pre></td></tr>
+<tr id="L547"><th><a href="#L547">547</a></th><td><pre>  - `.space`</pre></td></tr>
+<tr id="L548"><th><a href="#L548">548</a></th><td><pre>- `TrackRenameSpaceReplacement`</pre></td></tr>
+<tr id="L549"><th><a href="#L549">549</a></th><td><pre>  - `.hyphen`</pre></td></tr>
+<tr id="L550"><th><a href="#L550">550</a></th><td><pre>  - `.underscore`</pre></td></tr>
+<tr id="L551"><th><a href="#L551">551</a></th><td><pre>  - `.period`</pre></td></tr>
+<tr id="L552"><th><a href="#L552">552</a></th><td><pre>  - `.none`</pre></td></tr>
+<tr id="L553"><th><a href="#L553">553</a></th><td><pre>- `TrackRenameScope`</pre></td></tr>
+<tr id="L554"><th><a href="#L554">554</a></th><td><pre>  - `.allTracks`</pre></td></tr>
+<tr id="L555"><th><a href="#L555">555</a></th><td><pre>  - `.selectedTracks`</pre></td></tr>
+<tr id="L556"><th><a href="#L556">556</a></th><td><pre>- Persist format string, invalid replacement selection, space replacement</pre></td></tr>
+<tr id="L557"><th><a href="#L557">557</a></th><td><pre>  selection, and strict selection with `@AppStorage` so direct menu commands</pre></td></tr>
+<tr id="L558"><th><a href="#L558">558</a></th><td><pre>  use last configured values.</pre></td></tr>
+<tr id="L559"><th><a href="#L559">559</a></th><td><pre></pre></td></tr>
+<tr id="L560"><th><a href="#L560">560</a></th><td><pre>### 2. Shared Tag Catalog</pre></td></tr>
+<tr id="L561"><th><a href="#L561">561</a></th><td><pre></pre></td></tr>
+<tr id="L562"><th><a href="#L562">562</a></th><td><pre>Add a reusable catalog, likely `TrackRenameTagCatalog`, with:</pre></td></tr>
+<tr id="L563"><th><a href="#L563">563</a></th><td><pre></pre></td></tr>
+<tr id="L564"><th><a href="#L564">564</a></th><td><pre>- canonical FLAC tag keys</pre></td></tr>
+<tr id="L565"><th><a href="#L565">565</a></th><td><pre>- AppleScript property aliases</pre></td></tr>
+<tr id="L566"><th><a href="#L566">566</a></th><td><pre>- user-facing aliases</pre></td></tr>
+<tr id="L567"><th><a href="#L567">567</a></th><td><pre>- fuzzy normalization</pre></td></tr>
+<tr id="L568"><th><a href="#L568">568</a></th><td><pre>- exact match before fuzzy match</pre></td></tr>
+<tr id="L569"><th><a href="#L569">569</a></th><td><pre></pre></td></tr>
+<tr id="L570"><th><a href="#L570">570</a></th><td><pre>Implementation options:</pre></td></tr>
+<tr id="L571"><th><a href="#L571">571</a></th><td><pre></pre></td></tr>
+<tr id="L572"><th><a href="#L572">572</a></th><td><pre>- Extract public/shared data from `SwiftTagScriptTrack.scriptPropertyTagKeys`.</pre></td></tr>
+<tr id="L573"><th><a href="#L573">573</a></th><td><pre>- Keep AppleScript-specific wrappers private but duplicate canonical mapping in</pre></td></tr>
+<tr id="L574"><th><a href="#L574">574</a></th><td><pre>  a neutral shared catalog and update AppleScript to consume it later.</pre></td></tr>
+<tr id="L575"><th><a href="#L575">575</a></th><td><pre></pre></td></tr>
+<tr id="L576"><th><a href="#L576">576</a></th><td><pre>Initial canonical keys should include at least:</pre></td></tr>
+<tr id="L577"><th><a href="#L577">577</a></th><td><pre></pre></td></tr>
+<tr id="L578"><th><a href="#L578">578</a></th><td><pre>- `ALBUM`</pre></td></tr>
+<tr id="L579"><th><a href="#L579">579</a></th><td><pre>- `ALBUMARTIST`</pre></td></tr>
+<tr id="L580"><th><a href="#L580">580</a></th><td><pre>- `ARTIST`</pre></td></tr>
+<tr id="L581"><th><a href="#L581">581</a></th><td><pre>- `COMMENT`</pre></td></tr>
+<tr id="L582"><th><a href="#L582">582</a></th><td><pre>- `COMPILATION`</pre></td></tr>
+<tr id="L583"><th><a href="#L583">583</a></th><td><pre>- `COMPOSER`</pre></td></tr>
+<tr id="L584"><th><a href="#L584">584</a></th><td><pre>- `DATE`</pre></td></tr>
+<tr id="L585"><th><a href="#L585">585</a></th><td><pre>- `DESCRIPTION`</pre></td></tr>
+<tr id="L586"><th><a href="#L586">586</a></th><td><pre>- `DISCNUMBER`</pre></td></tr>
+<tr id="L587"><th><a href="#L587">587</a></th><td><pre>- `GENRE`</pre></td></tr>
+<tr id="L588"><th><a href="#L588">588</a></th><td><pre>- `LOCATION`</pre></td></tr>
+<tr id="L589"><th><a href="#L589">589</a></th><td><pre>- `TITLE`</pre></td></tr>
+<tr id="L590"><th><a href="#L590">590</a></th><td><pre>- `TOTALDISCS`</pre></td></tr>
+<tr id="L591"><th><a href="#L591">591</a></th><td><pre>- `TOTALTRACKS`</pre></td></tr>
+<tr id="L592"><th><a href="#L592">592</a></th><td><pre>- `DISCTOTAL`</pre></td></tr>
+<tr id="L593"><th><a href="#L593">593</a></th><td><pre>- `TRACKTOTAL`</pre></td></tr>
+<tr id="L594"><th><a href="#L594">594</a></th><td><pre>- `zpDISCNUMBER`</pre></td></tr>
+<tr id="L595"><th><a href="#L595">595</a></th><td><pre>- `zpDISCTOTAL`</pre></td></tr>
+<tr id="L596"><th><a href="#L596">596</a></th><td><pre>- `zpTOTALDISCS`</pre></td></tr>
+<tr id="L597"><th><a href="#L597">597</a></th><td><pre>- `zpTOTALTRACKS`</pre></td></tr>
+<tr id="L598"><th><a href="#L598">598</a></th><td><pre>- `zpTRACKNUMBER`</pre></td></tr>
+<tr id="L599"><th><a href="#L599">599</a></th><td><pre>- `zpTRACKTOTAL`</pre></td></tr>
+<tr id="L600"><th><a href="#L600">600</a></th><td><pre>- `TRACKNUMBER`</pre></td></tr>
+<tr id="L601"><th><a href="#L601">601</a></th><td><pre>- broader AppleScript-backed keys such as `CONDUCTOR`, `COPYRIGHT`,</pre></td></tr>
+<tr id="L602"><th><a href="#L602">602</a></th><td><pre>  `ENCODED_BY`, `ISRC`, `PERFORMER`, `SOURCE`, and sort/replaygain keys.</pre></td></tr>
+<tr id="L603"><th><a href="#L603">603</a></th><td><pre></pre></td></tr>
+<tr id="L604"><th><a href="#L604">604</a></th><td><pre>### 3. Format Parser And Renderer</pre></td></tr>
+<tr id="L605"><th><a href="#L605">605</a></th><td><pre></pre></td></tr>
+<tr id="L606"><th><a href="#L606">606</a></th><td><pre>Add pure logic types:</pre></td></tr>
+<tr id="L607"><th><a href="#L607">607</a></th><td><pre></pre></td></tr>
+<tr id="L608"><th><a href="#L608">608</a></th><td><pre>- `TrackRenameFormatParser`</pre></td></tr>
+<tr id="L609"><th><a href="#L609">609</a></th><td><pre>- `TrackRenameFormatToken`</pre></td></tr>
+<tr id="L610"><th><a href="#L610">610</a></th><td><pre>  - `.literal(String)`</pre></td></tr>
+<tr id="L611"><th><a href="#L611">611</a></th><td><pre>  - `.tag(raw: String, resolvedKey: String?)`</pre></td></tr>
+<tr id="L612"><th><a href="#L612">612</a></th><td><pre>- `TrackRenameFormatRenderer`</pre></td></tr>
+<tr id="L613"><th><a href="#L613">613</a></th><td><pre>- `TrackRenameValidationIssue`</pre></td></tr>
+<tr id="L614"><th><a href="#L614">614</a></th><td><pre></pre></td></tr>
+<tr id="L615"><th><a href="#L615">615</a></th><td><pre>Responsibilities:</pre></td></tr>
+<tr id="L616"><th><a href="#L616">616</a></th><td><pre></pre></td></tr>
+<tr id="L617"><th><a href="#L617">617</a></th><td><pre>- Tokenize literals and `|...|` placeholders.</pre></td></tr>
+<tr id="L618"><th><a href="#L618">618</a></th><td><pre>- Detect unclosed placeholders.</pre></td></tr>
+<tr id="L619"><th><a href="#L619">619</a></th><td><pre>- Normalize completed placeholders.</pre></td></tr>
+<tr id="L620"><th><a href="#L620">620</a></th><td><pre>- Render track values.</pre></td></tr>
+<tr id="L621"><th><a href="#L621">621</a></th><td><pre>- Render `TOTALTRACKS` and `TRACKTOTAL` from the same track-total value.</pre></td></tr>
+<tr id="L622"><th><a href="#L622">622</a></th><td><pre>- Render `TOTALDISCS` and `DISCTOTAL` from the same disc-total value.</pre></td></tr>
+<tr id="L623"><th><a href="#L623">623</a></th><td><pre>- Apply zero padding to numeric values only when using dedicated `zp...` tags,</pre></td></tr>
+<tr id="L624"><th><a href="#L624">624</a></th><td><pre>  using existing padding-on-save behavior.</pre></td></tr>
+<tr id="L625"><th><a href="#L625">625</a></th><td><pre>- Produce a normalized format string for completed tag tokens when safe.</pre></td></tr>
+<tr id="L626"><th><a href="#L626">626</a></th><td><pre>- Produce preview and validation errors without mutating tracks.</pre></td></tr>
+<tr id="L627"><th><a href="#L627">627</a></th><td><pre></pre></td></tr>
+<tr id="L628"><th><a href="#L628">628</a></th><td><pre>### 4. Replacement Selection And Sanitizer</pre></td></tr>
+<tr id="L629"><th><a href="#L629">629</a></th><td><pre></pre></td></tr>
+<tr id="L630"><th><a href="#L630">630</a></th><td><pre>Add pure logic types:</pre></td></tr>
+<tr id="L631"><th><a href="#L631">631</a></th><td><pre></pre></td></tr>
+<tr id="L632"><th><a href="#L632">632</a></th><td><pre>- `TrackRenameInvalidReplacementText`</pre></td></tr>
+<tr id="L633"><th><a href="#L633">633</a></th><td><pre>- `TrackRenameSpaceReplacement`</pre></td></tr>
+<tr id="L634"><th><a href="#L634">634</a></th><td><pre>- `TrackRenameFilenameSanitizer`</pre></td></tr>
+<tr id="L635"><th><a href="#L635">635</a></th><td><pre></pre></td></tr>
+<tr id="L636"><th><a href="#L636">636</a></th><td><pre>Responsibilities:</pre></td></tr>
+<tr id="L637"><th><a href="#L637">637</a></th><td><pre></pre></td></tr>
+<tr id="L638"><th><a href="#L638">638</a></th><td><pre>- Map picker selections to literal replacement strings:</pre></td></tr>
+<tr id="L639"><th><a href="#L639">639</a></th><td><pre>  - `-`</pre></td></tr>
+<tr id="L640"><th><a href="#L640">640</a></th><td><pre>  - `_`</pre></td></tr>
+<tr id="L641"><th><a href="#L641">641</a></th><td><pre>  - `.`</pre></td></tr>
+<tr id="L642"><th><a href="#L642">642</a></th><td><pre>  - ` `</pre></td></tr>
+<tr id="L643"><th><a href="#L643">643</a></th><td><pre>- Map space replacement picker selections to:</pre></td></tr>
+<tr id="L644"><th><a href="#L644">644</a></th><td><pre>  - `-`</pre></td></tr>
+<tr id="L645"><th><a href="#L645">645</a></th><td><pre>  - `_`</pre></td></tr>
+<tr id="L646"><th><a href="#L646">646</a></th><td><pre>  - `.`</pre></td></tr>
+<tr id="L647"><th><a href="#L647">647</a></th><td><pre>  - no replacement</pre></td></tr>
+<tr id="L648"><th><a href="#L648">648</a></th><td><pre>- Replace non-strict invalid characters:</pre></td></tr>
+<tr id="L649"><th><a href="#L649">649</a></th><td><pre>  - `/`</pre></td></tr>
+<tr id="L650"><th><a href="#L650">650</a></th><td><pre>  - `:`</pre></td></tr>
+<tr id="L651"><th><a href="#L651">651</a></th><td><pre>  - NUL</pre></td></tr>
+<tr id="L652"><th><a href="#L652">652</a></th><td><pre>- Replace strict invalid characters:</pre></td></tr>
+<tr id="L653"><th><a href="#L653">653</a></th><td><pre>  - `/`</pre></td></tr>
+<tr id="L654"><th><a href="#L654">654</a></th><td><pre>  - `:`</pre></td></tr>
+<tr id="L655"><th><a href="#L655">655</a></th><td><pre>  - NUL</pre></td></tr>
+<tr id="L656"><th><a href="#L656">656</a></th><td><pre>  - `&lt;`</pre></td></tr>
+<tr id="L657"><th><a href="#L657">657</a></th><td><pre>  - `&gt;`</pre></td></tr>
+<tr id="L658"><th><a href="#L658">658</a></th><td><pre>  - `&quot;`</pre></td></tr>
+<tr id="L659"><th><a href="#L659">659</a></th><td><pre>  - `\`</pre></td></tr>
+<tr id="L660"><th><a href="#L660">660</a></th><td><pre>  - `|`</pre></td></tr>
+<tr id="L661"><th><a href="#L661">661</a></th><td><pre>  - `?`</pre></td></tr>
+<tr id="L662"><th><a href="#L662">662</a></th><td><pre>  - `*`</pre></td></tr>
+<tr id="L663"><th><a href="#L663">663</a></th><td><pre>  - ASCII control characters, codes 0-31</pre></td></tr>
+<tr id="L664"><th><a href="#L664">664</a></th><td><pre>- Apply space replacement after invalid-character replacement.</pre></td></tr>
+<tr id="L665"><th><a href="#L665">665</a></th><td><pre>- Return validation errors instead of throwing into the UI layer.</pre></td></tr>
+<tr id="L666"><th><a href="#L666">666</a></th><td><pre></pre></td></tr>
+<tr id="L667"><th><a href="#L667">667</a></th><td><pre>### 5. Rename Planner</pre></td></tr>
+<tr id="L668"><th><a href="#L668">668</a></th><td><pre></pre></td></tr>
+<tr id="L669"><th><a href="#L669">669</a></th><td><pre>Add pure/service logic:</pre></td></tr>
+<tr id="L670"><th><a href="#L670">670</a></th><td><pre></pre></td></tr>
+<tr id="L671"><th><a href="#L671">671</a></th><td><pre>- `TrackFileRenamePlanner`</pre></td></tr>
+<tr id="L672"><th><a href="#L672">672</a></th><td><pre>- `TrackFileRenameRequest`</pre></td></tr>
+<tr id="L673"><th><a href="#L673">673</a></th><td><pre>- `TrackFileRenameCandidate`</pre></td></tr>
+<tr id="L674"><th><a href="#L674">674</a></th><td><pre>- `TrackFileRenamePlan`</pre></td></tr>
+<tr id="L675"><th><a href="#L675">675</a></th><td><pre>- `TrackFileRenameError`</pre></td></tr>
+<tr id="L676"><th><a href="#L676">676</a></th><td><pre></pre></td></tr>
+<tr id="L677"><th><a href="#L677">677</a></th><td><pre>Responsibilities:</pre></td></tr>
+<tr id="L678"><th><a href="#L678">678</a></th><td><pre></pre></td></tr>
+<tr id="L679"><th><a href="#L679">679</a></th><td><pre>- Select tracks by scope.</pre></td></tr>
+<tr id="L680"><th><a href="#L680">680</a></th><td><pre>- Exclude locked tracks from rename candidates.</pre></td></tr>
+<tr id="L681"><th><a href="#L681">681</a></th><td><pre>- Treat read-only imports as locked, non-renameable tracks.</pre></td></tr>
+<tr id="L682"><th><a href="#L682">682</a></th><td><pre>- Resolve generated destination names.</pre></td></tr>
+<tr id="L683"><th><a href="#L683">683</a></th><td><pre>- Always preserve the original `.flac` extension.</pre></td></tr>
+<tr id="L684"><th><a href="#L684">684</a></th><td><pre>- Return skipped warnings for missing or deleted files.</pre></td></tr>
+<tr id="L685"><th><a href="#L685">685</a></th><td><pre>- Validate conflicts before move and abort the whole batch on conflicts.</pre></td></tr>
+<tr id="L686"><th><a href="#L686">686</a></th><td><pre>- Return plan summary, skipped warnings, and blocking errors for execution and</pre></td></tr>
+<tr id="L687"><th><a href="#L687">687</a></th><td><pre>  tests.</pre></td></tr>
+<tr id="L688"><th><a href="#L688">688</a></th><td><pre></pre></td></tr>
+<tr id="L689"><th><a href="#L689">689</a></th><td><pre>### 6. View Model Rename API</pre></td></tr>
+<tr id="L690"><th><a href="#L690">690</a></th><td><pre></pre></td></tr>
+<tr id="L691"><th><a href="#L691">691</a></th><td><pre>Add `TagEditorViewModel` APIs:</pre></td></tr>
+<tr id="L692"><th><a href="#L692">692</a></th><td><pre></pre></td></tr>
+<tr id="L693"><th><a href="#L693">693</a></th><td><pre>- `renameExample(configuration:) -&gt; TrackRenamePreview`</pre></td></tr>
+<tr id="L694"><th><a href="#L694">694</a></th><td><pre>- `canRenameTrackFiles(scope:configuration:) -&gt; Bool`</pre></td></tr>
+<tr id="L695"><th><a href="#L695">695</a></th><td><pre>- `validateTrackRenames(scope:configuration:) -&gt; TrackRenameValidation`</pre></td></tr>
+<tr id="L696"><th><a href="#L696">696</a></th><td><pre>- `renameTrackFiles(scope:configuration:) throws -&gt; TrackFileRenameResult`</pre></td></tr>
+<tr id="L697"><th><a href="#L697">697</a></th><td><pre></pre></td></tr>
+<tr id="L698"><th><a href="#L698">698</a></th><td><pre>Execution should:</pre></td></tr>
+<tr id="L699"><th><a href="#L699">699</a></th><td><pre></pre></td></tr>
+<tr id="L700"><th><a href="#L700">700</a></th><td><pre>- Use existing `withResolvedTrackFileURL` / security scoped access path.</pre></td></tr>
+<tr id="L701"><th><a href="#L701">701</a></th><td><pre>- Call `FileManager.moveItem(at:to:)`.</pre></td></tr>
+<tr id="L702"><th><a href="#L702">702</a></th><td><pre>- Update track URL/bookmark/filename mirror.</pre></td></tr>
+<tr id="L703"><th><a href="#L703">703</a></th><td><pre>- Refresh or suppress external difference state around the rename.</pre></td></tr>
+<tr id="L704"><th><a href="#L704">704</a></th><td><pre>- Mark the referenced `.swifttag` document state as modified after successful</pre></td></tr>
+<tr id="L705"><th><a href="#L705">705</a></th><td><pre>  renames.</pre></td></tr>
+<tr id="L706"><th><a href="#L706">706</a></th><td><pre>- No-op same-path renames.</pre></td></tr>
+<tr id="L707"><th><a href="#L707">707</a></th><td><pre></pre></td></tr>
+<tr id="L708"><th><a href="#L708">708</a></th><td><pre>### 7. ContentView State And Sheet</pre></td></tr>
+<tr id="L709"><th><a href="#L709">709</a></th><td><pre></pre></td></tr>
+<tr id="L710"><th><a href="#L710">710</a></th><td><pre>Add state to `ContentView`:</pre></td></tr>
+<tr id="L711"><th><a href="#L711">711</a></th><td><pre></pre></td></tr>
+<tr id="L712"><th><a href="#L712">712</a></th><td><pre>- `@State private var isRenameSheetPresented`</pre></td></tr>
+<tr id="L713"><th><a href="#L713">713</a></th><td><pre>- `@State private var isRenameOperationRunning`</pre></td></tr>
+<tr id="L714"><th><a href="#L714">714</a></th><td><pre>- `@State private var renameErrorMessage`</pre></td></tr>
+<tr id="L715"><th><a href="#L715">715</a></th><td><pre>- `@State private var isRenameErrorPresented`</pre></td></tr>
+<tr id="L716"><th><a href="#L716">716</a></th><td><pre>- `@AppStorage` values for rename format, invalid replacement selection,</pre></td></tr>
+<tr id="L717"><th><a href="#L717">717</a></th><td><pre>  space replacement selection, and strict selection.</pre></td></tr>
+<tr id="L718"><th><a href="#L718">718</a></th><td><pre></pre></td></tr>
+<tr id="L719"><th><a href="#L719">719</a></th><td><pre>Add:</pre></td></tr>
+<tr id="L720"><th><a href="#L720">720</a></th><td><pre></pre></td></tr>
+<tr id="L721"><th><a href="#L721">721</a></th><td><pre>- `renameSheetView`</pre></td></tr>
+<tr id="L722"><th><a href="#L722">722</a></th><td><pre>- `showRenameTrackFilesConfig()`</pre></td></tr>
+<tr id="L723"><th><a href="#L723">723</a></th><td><pre>- `renameTrackFiles(scope:)`</pre></td></tr>
+<tr id="L724"><th><a href="#L724">724</a></th><td><pre>- `canRenameTrackFiles`</pre></td></tr>
+<tr id="L725"><th><a href="#L725">725</a></th><td><pre>- `canRenameSelectedTrackFiles`</pre></td></tr>
+<tr id="L726"><th><a href="#L726">726</a></th><td><pre>- `renameExample`</pre></td></tr>
+<tr id="L727"><th><a href="#L727">727</a></th><td><pre></pre></td></tr>
+<tr id="L728"><th><a href="#L728">728</a></th><td><pre>Attach sheet:</pre></td></tr>
+<tr id="L729"><th><a href="#L729">729</a></th><td><pre></pre></td></tr>
+<tr id="L730"><th><a href="#L730">730</a></th><td><pre>```swift</pre></td></tr>
+<tr id="L731"><th><a href="#L731">731</a></th><td><pre>.sheet(isPresented: $isRenameSheetPresented) {</pre></td></tr>
+<tr id="L732"><th><a href="#L732">732</a></th><td><pre>    TrackRenameConfigurationSheet(...)</pre></td></tr>
+<tr id="L733"><th><a href="#L733">733</a></th><td><pre>}</pre></td></tr>
+<tr id="L734"><th><a href="#L734">734</a></th><td><pre>```</pre></td></tr>
+<tr id="L735"><th><a href="#L735">735</a></th><td><pre></pre></td></tr>
+<tr id="L736"><th><a href="#L736">736</a></th><td><pre>### 8. Rename Configuration Sheet View</pre></td></tr>
+<tr id="L737"><th><a href="#L737">737</a></th><td><pre></pre></td></tr>
+<tr id="L738"><th><a href="#L738">738</a></th><td><pre>Add `TrackRenameConfigurationSheet`, likely under</pre></td></tr>
+<tr id="L739"><th><a href="#L739">739</a></th><td><pre>`SwiftTag/Features/TagEditor`.</pre></td></tr>
+<tr id="L740"><th><a href="#L740">740</a></th><td><pre></pre></td></tr>
+<tr id="L741"><th><a href="#L741">741</a></th><td><pre>Layout:</pre></td></tr>
+<tr id="L742"><th><a href="#L742">742</a></th><td><pre></pre></td></tr>
+<tr id="L743"><th><a href="#L743">743</a></th><td><pre>- Top read-only `Text` or labeled row for `Rename Example`.</pre></td></tr>
+<tr id="L744"><th><a href="#L744">744</a></th><td><pre>- `TextField(&quot;Rename Format&quot;, text: ...)`</pre></td></tr>
+<tr id="L745"><th><a href="#L745">745</a></th><td><pre>- `Picker(&quot;Invalid Replacement&quot;, selection: ...)` with `-`, `_`, `.`, and</pre></td></tr>
+<tr id="L746"><th><a href="#L746">746</a></th><td><pre>  `space`</pre></td></tr>
+<tr id="L747"><th><a href="#L747">747</a></th><td><pre>- `Toggle(&quot;Strict&quot;, isOn: ...)`</pre></td></tr>
+<tr id="L748"><th><a href="#L748">748</a></th><td><pre>- `Picker(&quot;Space Replacement&quot;, selection: ...)` with `-`, `_`, `.`, and</pre></td></tr>
+<tr id="L749"><th><a href="#L749">749</a></th><td><pre>  `none`</pre></td></tr>
+<tr id="L750"><th><a href="#L750">750</a></th><td><pre>- bottom trailing buttons:</pre></td></tr>
+<tr id="L751"><th><a href="#L751">751</a></th><td><pre>  - `Cancel`</pre></td></tr>
+<tr id="L752"><th><a href="#L752">752</a></th><td><pre>  - `Rename Selected Track Files`</pre></td></tr>
+<tr id="L753"><th><a href="#L753">753</a></th><td><pre>  - `Rename All Track Files`</pre></td></tr>
+<tr id="L754"><th><a href="#L754">754</a></th><td><pre></pre></td></tr>
+<tr id="L755"><th><a href="#L755">755</a></th><td><pre>Use accessibility identifiers:</pre></td></tr>
+<tr id="L756"><th><a href="#L756">756</a></th><td><pre></pre></td></tr>
+<tr id="L757"><th><a href="#L757">757</a></th><td><pre>- `rename.example`</pre></td></tr>
+<tr id="L758"><th><a href="#L758">758</a></th><td><pre>- `rename.formatField`</pre></td></tr>
+<tr id="L759"><th><a href="#L759">759</a></th><td><pre>- `rename.invalidReplacementTextPicker`</pre></td></tr>
+<tr id="L760"><th><a href="#L760">760</a></th><td><pre>- `rename.strictToggle`</pre></td></tr>
+<tr id="L761"><th><a href="#L761">761</a></th><td><pre>- `rename.spaceReplacementPicker`</pre></td></tr>
+<tr id="L762"><th><a href="#L762">762</a></th><td><pre>- `rename.cancelButton`</pre></td></tr>
+<tr id="L763"><th><a href="#L763">763</a></th><td><pre>- `rename.renameSelectedButton`</pre></td></tr>
+<tr id="L764"><th><a href="#L764">764</a></th><td><pre>- `rename.renameAllButton`</pre></td></tr>
+<tr id="L765"><th><a href="#L765">765</a></th><td><pre></pre></td></tr>
+<tr id="L766"><th><a href="#L766">766</a></th><td><pre>### 9. Menu And Focused Values</pre></td></tr>
+<tr id="L767"><th><a href="#L767">767</a></th><td><pre></pre></td></tr>
+<tr id="L768"><th><a href="#L768">768</a></th><td><pre>Extend `FocusedValues`:</pre></td></tr>
+<tr id="L769"><th><a href="#L769">769</a></th><td><pre></pre></td></tr>
+<tr id="L770"><th><a href="#L770">770</a></th><td><pre>- `performRenameTrackFiles`</pre></td></tr>
+<tr id="L771"><th><a href="#L771">771</a></th><td><pre>- `performRenameSelectedTrackFiles`</pre></td></tr>
+<tr id="L772"><th><a href="#L772">772</a></th><td><pre>- `showRenameTrackFilesConfig`</pre></td></tr>
+<tr id="L773"><th><a href="#L773">773</a></th><td><pre>- `canPerformRenameTrackFiles`</pre></td></tr>
+<tr id="L774"><th><a href="#L774">774</a></th><td><pre>- `canPerformRenameSelectedTrackFiles`</pre></td></tr>
+<tr id="L775"><th><a href="#L775">775</a></th><td><pre>- `canShowRenameTrackFilesConfig`</pre></td></tr>
+<tr id="L776"><th><a href="#L776">776</a></th><td><pre></pre></td></tr>
+<tr id="L777"><th><a href="#L777">777</a></th><td><pre>Wire in `ContentView.commandFocusedContent`.</pre></td></tr>
+<tr id="L778"><th><a href="#L778">778</a></th><td><pre></pre></td></tr>
+<tr id="L779"><th><a href="#L779">779</a></th><td><pre>Update `SwiftTagApp.AppCommands` before `Reload Selected Tracks`:</pre></td></tr>
+<tr id="L780"><th><a href="#L780">780</a></th><td><pre></pre></td></tr>
+<tr id="L781"><th><a href="#L781">781</a></th><td><pre>```swift</pre></td></tr>
+<tr id="L782"><th><a href="#L782">782</a></th><td><pre>Button(&quot;Rename Track Files&quot;) { performRenameTrackFiles?() }</pre></td></tr>
+<tr id="L783"><th><a href="#L783">783</a></th><td><pre>    .disabled(!(canPerformRenameTrackFiles ?? false))</pre></td></tr>
+<tr id="L784"><th><a href="#L784">784</a></th><td><pre></pre></td></tr>
+<tr id="L785"><th><a href="#L785">785</a></th><td><pre>Button(&quot;Rename Selected Track Files&quot;) { performRenameSelectedTrackFiles?() }</pre></td></tr>
+<tr id="L786"><th><a href="#L786">786</a></th><td><pre>    .disabled(!(canPerformRenameSelectedTrackFiles ?? false))</pre></td></tr>
+<tr id="L787"><th><a href="#L787">787</a></th><td><pre></pre></td></tr>
+<tr id="L788"><th><a href="#L788">788</a></th><td><pre>Button(&quot;Rename Track Files Config...&quot;) { showRenameTrackFilesConfig?() }</pre></td></tr>
+<tr id="L789"><th><a href="#L789">789</a></th><td><pre>    .disabled(!(canShowRenameTrackFilesConfig ?? false))</pre></td></tr>
+<tr id="L790"><th><a href="#L790">790</a></th><td><pre></pre></td></tr>
+<tr id="L791"><th><a href="#L791">791</a></th><td><pre>Divider()</pre></td></tr>
+<tr id="L792"><th><a href="#L792">792</a></th><td><pre>```</pre></td></tr>
+<tr id="L793"><th><a href="#L793">793</a></th><td><pre></pre></td></tr>
+<tr id="L794"><th><a href="#L794">794</a></th><td><pre>### 10. Track Table Context Menu</pre></td></tr>
+<tr id="L795"><th><a href="#L795">795</a></th><td><pre></pre></td></tr>
+<tr id="L796"><th><a href="#L796">796</a></th><td><pre>No context-menu rename item requested.</pre></td></tr>
+<tr id="L797"><th><a href="#L797">797</a></th><td><pre></pre></td></tr>
+<tr id="L798"><th><a href="#L798">798</a></th><td><pre>Do not add one unless confirmed.</pre></td></tr>
+<tr id="L799"><th><a href="#L799">799</a></th><td><pre></pre></td></tr>
+<tr id="L800"><th><a href="#L800">800</a></th><td><pre>### 11. User Documentation</pre></td></tr>
+<tr id="L801"><th><a href="#L801">801</a></th><td><pre></pre></td></tr>
+<tr id="L802"><th><a href="#L802">802</a></th><td><pre>Update docs where file menu workflows are documented, likely:</pre></td></tr>
+<tr id="L803"><th><a href="#L803">803</a></th><td><pre></pre></td></tr>
+<tr id="L804"><th><a href="#L804">804</a></th><td><pre>- `Docs/UserDocumentation/workflows/tags.html`</pre></td></tr>
+<tr id="L805"><th><a href="#L805">805</a></th><td><pre>- `Docs/UserDocumentation/workflows/settings.html` if persistent rename</pre></td></tr>
+<tr id="L806"><th><a href="#L806">806</a></th><td><pre>  defaults are documented there.</pre></td></tr>
+<tr id="L807"><th><a href="#L807">807</a></th><td><pre>- `Docs/UserDocumentation/index.html` if navigation needs a link.</pre></td></tr>
+<tr id="L808"><th><a href="#L808">808</a></th><td><pre></pre></td></tr>
+<tr id="L809"><th><a href="#L809">809</a></th><td><pre>Document:</pre></td></tr>
+<tr id="L810"><th><a href="#L810">810</a></th><td><pre></pre></td></tr>
+<tr id="L811"><th><a href="#L811">811</a></th><td><pre>- format placeholders</pre></td></tr>
+<tr id="L812"><th><a href="#L812">812</a></th><td><pre>- fuzzy tag examples</pre></td></tr>
+<tr id="L813"><th><a href="#L813">813</a></th><td><pre>- dedicated zero-padded tags</pre></td></tr>
+<tr id="L814"><th><a href="#L814">814</a></th><td><pre>- `TOTALTRACKS`/`TRACKTOTAL` and `TOTALDISCS`/`DISCTOTAL` synonyms</pre></td></tr>
+<tr id="L815"><th><a href="#L815">815</a></th><td><pre>- replacement text picker values</pre></td></tr>
+<tr id="L816"><th><a href="#L816">816</a></th><td><pre>- strict vs non-strict invalid character behavior</pre></td></tr>
+<tr id="L817"><th><a href="#L817">817</a></th><td><pre>- conflict behavior</pre></td></tr>
+<tr id="L818"><th><a href="#L818">818</a></th><td><pre>- selected vs all scope</pre></td></tr>
+<tr id="L819"><th><a href="#L819">819</a></th><td><pre></pre></td></tr>
+<tr id="L820"><th><a href="#L820">820</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L821"><th><a href="#L821">821</a></th><td><pre></pre></td></tr>
+<tr id="L822"><th><a href="#L822">822</a></th><td><pre>Follow `Docs/Guides/testing-guide.md` order.</pre></td></tr>
+<tr id="L823"><th><a href="#L823">823</a></th><td><pre></pre></td></tr>
+<tr id="L824"><th><a href="#L824">824</a></th><td><pre>### Unit Tests</pre></td></tr>
+<tr id="L825"><th><a href="#L825">825</a></th><td><pre></pre></td></tr>
+<tr id="L826"><th><a href="#L826">826</a></th><td><pre>Add tests for:</pre></td></tr>
+<tr id="L827"><th><a href="#L827">827</a></th><td><pre></pre></td></tr>
+<tr id="L828"><th><a href="#L828">828</a></th><td><pre>- `|TRACKNUMBER| |TITLE|` tokenization.</pre></td></tr>
+<tr id="L829"><th><a href="#L829">829</a></th><td><pre>- literal-only format.</pre></td></tr>
+<tr id="L830"><th><a href="#L830">830</a></th><td><pre>- unclosed placeholder validation.</pre></td></tr>
+<tr id="L831"><th><a href="#L831">831</a></th><td><pre>- unknown placeholder validation.</pre></td></tr>
+<tr id="L832"><th><a href="#L832">832</a></th><td><pre>- exact tag match normalization.</pre></td></tr>
+<tr id="L833"><th><a href="#L833">833</a></th><td><pre>- fuzzy matches:</pre></td></tr>
+<tr id="L834"><th><a href="#L834">834</a></th><td><pre>  - `|track number|` -&gt; `|TRACKNUMBER|`</pre></td></tr>
+<tr id="L835"><th><a href="#L835">835</a></th><td><pre>  - `|number|` -&gt; `|TRACKNUMBER|`</pre></td></tr>
+<tr id="L836"><th><a href="#L836">836</a></th><td><pre>  - `|total tracks|` -&gt; `|TOTALTRACKS|`</pre></td></tr>
+<tr id="L837"><th><a href="#L837">837</a></th><td><pre>  - `|track total|` -&gt; `|TRACKTOTAL|`</pre></td></tr>
+<tr id="L838"><th><a href="#L838">838</a></th><td><pre>  - `|track count|` -&gt; `|TOTALTRACKS|`</pre></td></tr>
+<tr id="L839"><th><a href="#L839">839</a></th><td><pre>  - `|total discs|` -&gt; `|TOTALDISCS|`</pre></td></tr>
+<tr id="L840"><th><a href="#L840">840</a></th><td><pre>  - `|disc total|` -&gt; `|DISCTOTAL|`</pre></td></tr>
+<tr id="L841"><th><a href="#L841">841</a></th><td><pre>  - `|disc count|` -&gt; `|TOTALDISCS|`</pre></td></tr>
+<tr id="L842"><th><a href="#L842">842</a></th><td><pre>- ambiguous fuzzy matches produce validation errors.</pre></td></tr>
+<tr id="L843"><th><a href="#L843">843</a></th><td><pre>- zero padding numeric `zpTRACKNUMBER`.</pre></td></tr>
+<tr id="L844"><th><a href="#L844">844</a></th><td><pre>- zero padding numeric `zpDISCNUMBER`.</pre></td></tr>
+<tr id="L845"><th><a href="#L845">845</a></th><td><pre>- zero padding numeric total tags.</pre></td></tr>
+<tr id="L846"><th><a href="#L846">846</a></th><td><pre>- zero-padded tags match existing padding-on-save behavior.</pre></td></tr>
+<tr id="L847"><th><a href="#L847">847</a></th><td><pre>- non-numeric `zp...` values stay unchanged.</pre></td></tr>
+<tr id="L848"><th><a href="#L848">848</a></th><td><pre>- regular `TRACKNUMBER`, `DISCNUMBER`, and total tags are not zero-padded.</pre></td></tr>
+<tr id="L849"><th><a href="#L849">849</a></th><td><pre>- invalid replacement picker maps `-`, `_`, `.`, and `space` to literal</pre></td></tr>
+<tr id="L850"><th><a href="#L850">850</a></th><td><pre>  replacement text.</pre></td></tr>
+<tr id="L851"><th><a href="#L851">851</a></th><td><pre>- space replacement picker maps `-`, `_`, `.`, and `none` to whitespace</pre></td></tr>
+<tr id="L852"><th><a href="#L852">852</a></th><td><pre>  replacement behavior.</pre></td></tr>
+<tr id="L853"><th><a href="#L853">853</a></th><td><pre>- non-strict sanitizer replaces `/`, `:`, and NUL.</pre></td></tr>
+<tr id="L854"><th><a href="#L854">854</a></th><td><pre>- strict sanitizer replaces strict invalid characters.</pre></td></tr>
+<tr id="L855"><th><a href="#L855">855</a></th><td><pre>- whitespace sanitizer replaces whitespace after invalid-character</pre></td></tr>
+<tr id="L856"><th><a href="#L856">856</a></th><td><pre>  replacement.</pre></td></tr>
+<tr id="L857"><th><a href="#L857">857</a></th><td><pre>- generated filename rejects empty output.</pre></td></tr>
+<tr id="L858"><th><a href="#L858">858</a></th><td><pre>- generated filename rejects path separators after replacement.</pre></td></tr>
+<tr id="L859"><th><a href="#L859">859</a></th><td><pre>- generated filename always preserves original `.flac` extension.</pre></td></tr>
+<tr id="L860"><th><a href="#L860">860</a></th><td><pre>- duplicate generated destinations are detected.</pre></td></tr>
+<tr id="L861"><th><a href="#L861">861</a></th><td><pre>- existing destination files are detected.</pre></td></tr>
+<tr id="L862"><th><a href="#L862">862</a></th><td><pre>- locked tracks are excluded from rename candidates.</pre></td></tr>
+<tr id="L863"><th><a href="#L863">863</a></th><td><pre>- missing or deleted files are returned as skipped warnings.</pre></td></tr>
+<tr id="L864"><th><a href="#L864">864</a></th><td><pre></pre></td></tr>
+<tr id="L865"><th><a href="#L865">865</a></th><td><pre>### Service / File Operation Tests</pre></td></tr>
+<tr id="L866"><th><a href="#L866">866</a></th><td><pre></pre></td></tr>
+<tr id="L867"><th><a href="#L867">867</a></th><td><pre>Use copied fixtures in temporary directories:</pre></td></tr>
+<tr id="L868"><th><a href="#L868">868</a></th><td><pre></pre></td></tr>
+<tr id="L869"><th><a href="#L869">869</a></th><td><pre>- Copy `SwiftTagTestFiles/test.flac` to temp.</pre></td></tr>
+<tr id="L870"><th><a href="#L870">870</a></th><td><pre>- Import or construct track with source URL in temp.</pre></td></tr>
+<tr id="L871"><th><a href="#L871">871</a></th><td><pre>- Rename to generated filename.</pre></td></tr>
+<tr id="L872"><th><a href="#L872">872</a></th><td><pre>- Verify old path missing and new path exists.</pre></td></tr>
+<tr id="L873"><th><a href="#L873">873</a></th><td><pre>- Verify `track.sourceFileURL` updates.</pre></td></tr>
+<tr id="L874"><th><a href="#L874">874</a></th><td><pre>- Verify `track.tags[TagKey.filename]` updates.</pre></td></tr>
+<tr id="L875"><th><a href="#L875">875</a></th><td><pre>- Verify bookmark data refreshes when available.</pre></td></tr>
+<tr id="L876"><th><a href="#L876">876</a></th><td><pre>- Verify FLAC metadata is not rewritten by rename.</pre></td></tr>
+<tr id="L877"><th><a href="#L877">877</a></th><td><pre>- Verify batch aborts before move when two tracks target same name.</pre></td></tr>
+<tr id="L878"><th><a href="#L878">878</a></th><td><pre>- Verify locked tracks are not renamed.</pre></td></tr>
+<tr id="L879"><th><a href="#L879">879</a></th><td><pre>- Verify missing source file is skipped with warning.</pre></td></tr>
+<tr id="L880"><th><a href="#L880">880</a></th><td><pre>- Verify conflict dialog blocks the whole batch before any move.</pre></td></tr>
+<tr id="L881"><th><a href="#L881">881</a></th><td><pre>- Verify same-path rename no-ops without error.</pre></td></tr>
+<tr id="L882"><th><a href="#L882">882</a></th><td><pre>- Verify successful rename marks the referenced `.swifttag` document modified.</pre></td></tr>
+<tr id="L883"><th><a href="#L883">883</a></th><td><pre></pre></td></tr>
+<tr id="L884"><th><a href="#L884">884</a></th><td><pre>### SwiftUI / ViewInspector Tests</pre></td></tr>
+<tr id="L885"><th><a href="#L885">885</a></th><td><pre></pre></td></tr>
+<tr id="L886"><th><a href="#L886">886</a></th><td><pre>- `TrackRenameConfigurationSheet` renders requested controls.</pre></td></tr>
+<tr id="L887"><th><a href="#L887">887</a></th><td><pre>- Editing format updates preview.</pre></td></tr>
+<tr id="L888"><th><a href="#L888">888</a></th><td><pre>- Changing invalid replacement picker updates preview.</pre></td></tr>
+<tr id="L889"><th><a href="#L889">889</a></th><td><pre>- Changing space replacement picker updates preview.</pre></td></tr>
+<tr id="L890"><th><a href="#L890">890</a></th><td><pre>- Toggling strict updates preview.</pre></td></tr>
+<tr id="L891"><th><a href="#L891">891</a></th><td><pre>- Invalid format disables rename buttons.</pre></td></tr>
+<tr id="L892"><th><a href="#L892">892</a></th><td><pre>- No selection disables selected rename menu item and sheet button.</pre></td></tr>
+<tr id="L893"><th><a href="#L893">893</a></th><td><pre>- No selection uses first loaded track for preview.</pre></td></tr>
+<tr id="L894"><th><a href="#L894">894</a></th><td><pre>- Button callbacks pass selected/all scope.</pre></td></tr>
+<tr id="L895"><th><a href="#L895">895</a></th><td><pre>- `TagEditorTrackFileView` remains unchanged unless context-menu rename is</pre></td></tr>
+<tr id="L896"><th><a href="#L896">896</a></th><td><pre>  later confirmed.</pre></td></tr>
+<tr id="L897"><th><a href="#L897">897</a></th><td><pre></pre></td></tr>
+<tr id="L898"><th><a href="#L898">898</a></th><td><pre>### Source Order / Command Wiring Tests</pre></td></tr>
+<tr id="L899"><th><a href="#L899">899</a></th><td><pre></pre></td></tr>
+<tr id="L900"><th><a href="#L900">900</a></th><td><pre>- Verify `File` menu source order:</pre></td></tr>
+<tr id="L901"><th><a href="#L901">901</a></th><td><pre>  - `Rename Track Files`</pre></td></tr>
+<tr id="L902"><th><a href="#L902">902</a></th><td><pre>  - `Rename Selected Track Files`</pre></td></tr>
+<tr id="L903"><th><a href="#L903">903</a></th><td><pre>  - `Rename Track Files Config...`</pre></td></tr>
+<tr id="L904"><th><a href="#L904">904</a></th><td><pre>  - divider</pre></td></tr>
+<tr id="L905"><th><a href="#L905">905</a></th><td><pre>  - `Reload Selected Tracks`</pre></td></tr>
+<tr id="L906"><th><a href="#L906">906</a></th><td><pre>- Verify focused values expose rename actions and enablement from `ContentView`.</pre></td></tr>
+<tr id="L907"><th><a href="#L907">907</a></th><td><pre>- Verify direct menu rename commands execute without confirmation when valid.</pre></td></tr>
+<tr id="L908"><th><a href="#L908">908</a></th><td><pre>- Verify direct menu rename commands show dialogs for invalid configuration or</pre></td></tr>
+<tr id="L909"><th><a href="#L909">909</a></th><td><pre>  batch rename errors.</pre></td></tr>
+<tr id="L910"><th><a href="#L910">910</a></th><td><pre></pre></td></tr>
+<tr id="L911"><th><a href="#L911">911</a></th><td><pre>### XCUI Tests</pre></td></tr>
+<tr id="L912"><th><a href="#L912">912</a></th><td><pre></pre></td></tr>
+<tr id="L913"><th><a href="#L913">913</a></th><td><pre>Add only if ViewInspector/source-order tests cannot verify menu integration.</pre></td></tr>
+<tr id="L914"><th><a href="#L914">914</a></th><td><pre>If needed:</pre></td></tr>
+<tr id="L915"><th><a href="#L915">915</a></th><td><pre></pre></td></tr>
+<tr id="L916"><th><a href="#L916">916</a></th><td><pre>- Launch with copied FLAC fixture materialized in app-owned cache.</pre></td></tr>
+<tr id="L917"><th><a href="#L917">917</a></th><td><pre>- Select track.</pre></td></tr>
+<tr id="L918"><th><a href="#L918">918</a></th><td><pre>- Open rename config.</pre></td></tr>
+<tr id="L919"><th><a href="#L919">919</a></th><td><pre>- Verify controls by accessibility identifier.</pre></td></tr>
+<tr id="L920"><th><a href="#L920">920</a></th><td><pre>- Trigger selected rename and verify table filename updates.</pre></td></tr>
+<tr id="L921"><th><a href="#L921">921</a></th><td><pre></pre></td></tr>
+<tr id="L922"><th><a href="#L922">922</a></th><td><pre>### Verification Commands</pre></td></tr>
+<tr id="L923"><th><a href="#L923">923</a></th><td><pre></pre></td></tr>
+<tr id="L924"><th><a href="#L924">924</a></th><td><pre>1. `XcodeRefreshCodeIssuesInFile` for new/changed files.</pre></td></tr>
+<tr id="L925"><th><a href="#L925">925</a></th><td><pre>2. `BuildProject`.</pre></td></tr>
+<tr id="L926"><th><a href="#L926">926</a></th><td><pre>3. Targeted `SwiftTagTests` for rename parser/planner/service tests.</pre></td></tr>
+<tr id="L927"><th><a href="#L927">927</a></th><td><pre>4. Targeted ViewInspector tests for sheet/source-order coverage.</pre></td></tr>
+<tr id="L928"><th><a href="#L928">928</a></th><td><pre>5. Targeted `SwiftTagUITests` only if needed.</pre></td></tr>
+<tr id="L929"><th><a href="#L929">929</a></th><td><pre></pre></td></tr>
+<tr id="L930"><th><a href="#L930">930</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L931"><th><a href="#L931">931</a></th><td><pre></pre></td></tr>
+<tr id="L932"><th><a href="#L932">932</a></th><td><pre>- `File` menu shows rename items in requested order before reload.</pre></td></tr>
+<tr id="L933"><th><a href="#L933">933</a></th><td><pre>- Config sheet opens on key editor window.</pre></td></tr>
+<tr id="L934"><th><a href="#L934">934</a></th><td><pre>- Sheet contains requested label, text field, picker, checkbox, and buttons.</pre></td></tr>
+<tr id="L935"><th><a href="#L935">935</a></th><td><pre>- Sheet does not contain a `Zero Pad` checkbox.</pre></td></tr>
+<tr id="L936"><th><a href="#L936">936</a></th><td><pre>- Sheet contains `Invalid Replacement` picker values `-`, `_`, `.`, and</pre></td></tr>
+<tr id="L937"><th><a href="#L937">937</a></th><td><pre>  `space`.</pre></td></tr>
+<tr id="L938"><th><a href="#L938">938</a></th><td><pre>- Sheet contains `Space Replacement` picker values `-`, `_`, `.`, and `none`.</pre></td></tr>
+<tr id="L939"><th><a href="#L939">939</a></th><td><pre>- Default config matches requested values.</pre></td></tr>
+<tr id="L940"><th><a href="#L940">940</a></th><td><pre>- Rename format, invalid replacement selection, space replacement selection,</pre></td></tr>
+<tr id="L941"><th><a href="#L941">941</a></th><td><pre>  and strict selection persist via `@AppStorage`.</pre></td></tr>
+<tr id="L942"><th><a href="#L942">942</a></th><td><pre>- `Rename Example` updates live as format/replacement settings change.</pre></td></tr>
+<tr id="L943"><th><a href="#L943">943</a></th><td><pre>- Completed tag placeholders normalize to canonical known tags.</pre></td></tr>
+<tr id="L944"><th><a href="#L944">944</a></th><td><pre>- `|track number|` and `|number|` normalize to `|TRACKNUMBER|`.</pre></td></tr>
+<tr id="L945"><th><a href="#L945">945</a></th><td><pre>- Dedicated `zp...` tags zero-pad numeric values.</pre></td></tr>
+<tr id="L946"><th><a href="#L946">946</a></th><td><pre>- Dedicated `zp...` tags match existing padding-on-save behavior.</pre></td></tr>
+<tr id="L947"><th><a href="#L947">947</a></th><td><pre>- `|total tracks|` normalizes to `|TOTALTRACKS|`.</pre></td></tr>
+<tr id="L948"><th><a href="#L948">948</a></th><td><pre>- `|track total|` normalizes to `|TRACKTOTAL|`.</pre></td></tr>
+<tr id="L949"><th><a href="#L949">949</a></th><td><pre>- `|track count|` defaults to `|TOTALTRACKS|`.</pre></td></tr>
+<tr id="L950"><th><a href="#L950">950</a></th><td><pre>- `|total discs|` normalizes to `|TOTALDISCS|`.</pre></td></tr>
+<tr id="L951"><th><a href="#L951">951</a></th><td><pre>- `|disc total|` normalizes to `|DISCTOTAL|`.</pre></td></tr>
+<tr id="L952"><th><a href="#L952">952</a></th><td><pre>- `|disc count|` defaults to `|TOTALDISCS|`.</pre></td></tr>
+<tr id="L953"><th><a href="#L953">953</a></th><td><pre>- Invalid placeholders disable rename actions.</pre></td></tr>
+<tr id="L954"><th><a href="#L954">954</a></th><td><pre>- Non-strict replacement sanitizes `/`, `:`, and NUL with selected invalid</pre></td></tr>
+<tr id="L955"><th><a href="#L955">955</a></th><td><pre>  replacement text.</pre></td></tr>
+<tr id="L956"><th><a href="#L956">956</a></th><td><pre>- Strict replacement sanitizes requested strict invalid filename characters with</pre></td></tr>
+<tr id="L957"><th><a href="#L957">957</a></th><td><pre>  selected invalid replacement text.</pre></td></tr>
+<tr id="L958"><th><a href="#L958">958</a></th><td><pre>- Space replacement sanitizes whitespace after invalid-character replacement.</pre></td></tr>
+<tr id="L959"><th><a href="#L959">959</a></th><td><pre>- Space replacement default `none` leaves whitespace unchanged.</pre></td></tr>
+<tr id="L960"><th><a href="#L960">960</a></th><td><pre>- Menu rename all and sheet rename all share same code path.</pre></td></tr>
+<tr id="L961"><th><a href="#L961">961</a></th><td><pre>- Menu rename selected and sheet rename selected share same code path.</pre></td></tr>
+<tr id="L962"><th><a href="#L962">962</a></th><td><pre>- Direct menu rename commands do not prompt before valid renames.</pre></td></tr>
+<tr id="L963"><th><a href="#L963">963</a></th><td><pre>- Invalid direct menu rename configuration shows a dialog.</pre></td></tr>
+<tr id="L964"><th><a href="#L964">964</a></th><td><pre>- Selected rename uses current track-table selection.</pre></td></tr>
+<tr id="L965"><th><a href="#L965">965</a></th><td><pre>- Selected rename controls are disabled when no tracks are selected.</pre></td></tr>
+<tr id="L966"><th><a href="#L966">966</a></th><td><pre>- Rename preview uses first selected track, or first loaded track when nothing</pre></td></tr>
+<tr id="L967"><th><a href="#L967">967</a></th><td><pre>  is selected.</pre></td></tr>
+<tr id="L968"><th><a href="#L968">968</a></th><td><pre>- Locked and read-only tracks are excluded from rename.</pre></td></tr>
+<tr id="L969"><th><a href="#L969">969</a></th><td><pre>- Missing or deleted files are skipped with warning.</pre></td></tr>
+<tr id="L970"><th><a href="#L970">970</a></th><td><pre>- Format output is treated as filename stem and original `.flac` extension is</pre></td></tr>
+<tr id="L971"><th><a href="#L971">971</a></th><td><pre>  always preserved.</pre></td></tr>
+<tr id="L972"><th><a href="#L972">972</a></th><td><pre>- Rename updates table filename display.</pre></td></tr>
+<tr id="L973"><th><a href="#L973">973</a></th><td><pre>- Rename updates track source file URL and bookmark.</pre></td></tr>
+<tr id="L974"><th><a href="#L974">974</a></th><td><pre>- Rename marks referenced `.swifttag` document state as modified immediately.</pre></td></tr>
+<tr id="L975"><th><a href="#L975">975</a></th><td><pre>- Rename does not write FLAC metadata.</pre></td></tr>
+<tr id="L976"><th><a href="#L976">976</a></th><td><pre>- Batch conflicts abort the whole batch before files move and show a dialog.</pre></td></tr>
+<tr id="L977"><th><a href="#L977">977</a></th><td><pre>- Build succeeds.</pre></td></tr>
+<tr id="L978"><th><a href="#L978">978</a></th><td><pre>- Focused unit/service/ViewInspector coverage passes.</pre></td></tr>
+<tr id="L979"><th><a href="#L979">979</a></th><td><pre></pre></td></tr>
+<tr id="L980"><th><a href="#L980">980</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L981"><th><a href="#L981">981</a></th><td><pre></pre></td></tr>
+<tr id="L982"><th><a href="#L982">982</a></th><td><pre>None. Prior open questions have been moved into `Confirmed Decisions`.</pre></td></tr></table></main></body></html>

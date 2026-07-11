@@ -91,6 +91,8 @@ You are still getting the flac file could not be loaded dialog.
 
 I think the remaining issue is the command-layer shortcut itself. Right now the File menu is bypassing the active editor and simulating an external document open, which is a rough fit for a sandboxed UI test. I’m switching the menu test hook to prefer the focused editor’s own add action first, and only fall back to global routing if there isn’t an active editor yet.
 
+[ 2026-04-05T17:44:11Z (22s since Assistant start) ]
+
 ## User 2026-04-05T17:44:41Z 
 
 [interrupted agent]
@@ -102,7 +104,6 @@ The dialog is still popping up so whereever you a trying to open the UUID named 
 I’m removing the external UUID file path from the menu test input entirely. The UI test will now send only the FLAC bytes plus a plain file name, and the app will write that into its own caches directory before importing, so we know the actual add-file path is app-owned and sandbox-readable.
 
 The menu add path is now app-owned end to end: the UI test only supplies bytes and a file name, and the app writes the .flac into its own caches directory before import. I’m rebuilding and rerunning the focused UI test one more time to see if we’ve cleared the dialog and moved on to the actual icon assertion.
-
 
 The permission issue looks gone now. The UI test is failing for a cleaner reason: there are two editor windows, and the helper is trying to use a single global albumTextField match. I’m narrowing the helper so it targets the editable album field instead of assuming only one window exists.
 

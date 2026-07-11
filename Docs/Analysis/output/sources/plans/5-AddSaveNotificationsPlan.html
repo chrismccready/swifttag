@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 5-AddSaveNotificationsPlan</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 5-AddSaveNotificationsPlan</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/5-AddSaveNotificationsPlan.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add Save Notifications Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Add a local notification after a successful save of tags, pictures, or both. The notification must carry enough context to:</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre>- Bring the existing editor window for the saved track set to the front without reloading tracks when that window is still open.</pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>- Open a new editor window and load the saved tracks when no matching window is currently open.</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre></pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Local notification authorization, scheduling, and response handling for successful save operations.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- A stable notification payload that identifies the save operation, saved track set, save kind, and originating editor session.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Window/session identity plumbing so the app can find an already-open editor window that owns the saved track set.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- New-window opening and track loading when a notification is activated for a track set that is not currently open.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Tests for notification payload encoding/decoding, window match logic, and notification-triggered open/foreground behavior.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre></pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Notifications for failed saves or partial-save failures unless needed for internal error cleanup.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Remote notifications, notification actions beyond the default click action, or rich custom notification UI.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Replacing the current save command behavior or changing FLAC write semantics.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Merging multiple open windows that happen to contain overlapping but non-identical track sets.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- A notification is posted only after a save completes successfully for the requested target set.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Clicking the notification should prefer the already-open window that contains the saved track files and should not reload tracks into that window.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- If that window is not open, clicking the notification should open a new editor window and load the tracks described by the notification payload.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- The source of truth for “the given set of tracks” is the set of saved FLAC file URLs/bookmarks produced by the completed save operation.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- The notification payload must use bookmark data refreshed from the file state after the save finishes, not bookmark data captured before writeback begins.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre></pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- The app currently uses a single generic `WindowGroup` in [SwiftTagApp.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/SwiftTagApp.swift), so notification routing requires explicit scene/value identity rather than relying on the current one-window setup.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Save execution currently happens in [TagEditorViewModel.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift) and is invoked from [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift); the notification trigger should be driven from the final successful save result rather than from per-file writes.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- Imported FLAC tracks already carry `sourceFileURL` and `securityScopedBookmarkData` in [Track.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Shared/Models/Track.swift), which should be reused for reopening tracks from a notification.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- Apple’s current SwiftUI window APIs support data-presenting `WindowGroup` scenes and `openWindow(value:)`, which can bring an existing matching window to the front when the presented value matches.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- `UNUserNotificationCenterDelegate` must be assigned before launch finishes, so notification response handling belongs in app-level startup, not lazily inside a view.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- Notification authorization may be denied, and badge delivery may be disabled independently of alert delivery. The save flow must not fail if notification scheduling is unavailable.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- Security-scoped access may not survive indefinitely if only raw file paths are stored. Notification payloads should therefore reference bookmark-backed reopening data or a persisted app-owned session store keyed by a stable identifier.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre></pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>### Product Or Behavioral Risks</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Matching “the same window” by a saved track set is ambiguous if multiple windows can contain the same files in different edit states. The plan should define a window session identifier and a canonical saved-track-set fingerprint so matching behavior is deterministic.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- Reloading tracks into an already-open window would discard unsaved edits. Existing-window activation must be strictly separated from new-window loading.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- Save notifications for selected-track saves need clear semantics. The track set in the notification should reflect only the tracks actually written during that save, not all tracks loaded in the window.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- Notifications may become stale if files are moved or bookmark resolution later fails. The response path needs graceful failure reporting instead of silently doing nothing.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>### Tooling, Environment, Or Filesystem Risks</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- A local notification response may arrive when the app is cold-launched. App startup must restore enough routing infrastructure before handling the response.</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- UI tests for Notification Center interactions can be flaky or unavailable in Xcode automation. The implementation should isolate routing and payload parsing so most coverage stays in unit tests.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- Opening a new window from a notification requires scene-safe routing and may expose SwiftUI state-restoration behavior. Explicit restoration behavior may be needed if automatic restoration conflicts with notification-targeted opens.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- Bookmark resolution for notification-triggered reopen must respect sandbox rules and may require stale-bookmark refresh logic similar to the current save path.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- FLAC fixtures without padding can trigger full-file rewrite behavior, so save-notification verification must explicitly cover `test.flac` to ensure the notification payload/store uses the final post-save bookmark produced after rewrite. Use `test-with_padding.flac` only for separate in-place-write coverage if needed.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre></pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre></pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>### 1. Define notification and window identity models</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>- Add a dedicated save-notification payload model, for example `SaveNotificationPayload`, with fields such as:</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>  - Notification/session identifier</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>  - Originating window/editor session identifier</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>  - Save payload kind (`tags`, `pictures`, `tagsAndPictures`)</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>  - Saved track descriptors containing file path plus security-scoped bookmark data or a persisted reference key</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>  - Canonical saved-track-set fingerprint derived from the saved file set</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>  - Optional user-facing summary data for the notification title/body</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- Add a dedicated editor-window value model, for example `EditorSessionValue`, that is `Codable`, `Hashable`, and suitable for a value-presenting `WindowGroup`.</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- Define a deterministic fingerprint rule for a track set, such as sorted standardized file URLs or bookmark-derived file identifiers, so window matching is stable.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre></pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>### 2. Introduce an editor session / window registry</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- Add an app-level registry object that tracks open editor windows by:</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>  - Window/editor session identifier</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>  - Current saved-track-set fingerprint</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  - Current imported track descriptors</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>  - Weak or indirect activation handle as needed for AppKit foregrounding</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- Update the editor root so each window registers on appear and unregisters on close.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- Keep this registry independent from transient in-window edits; it should identify which files a window owns, not serialize all editor state.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre></pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>### 3. Restructure scenes for value-based window opening</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- Update [SwiftTagApp.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/SwiftTagApp.swift) to use a data-presenting `WindowGroup` with an explicit scene id and a typed value.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- Define behavior for:</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>  - Default empty/new editor windows</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>  - Editor windows opened with a saved track-set/session value</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- Ensure `openWindow(value:)` can reopen or foreground a window when the presented value matches an existing session value.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- Keep the settings scene unchanged except for any app-level notification wiring needed at startup.</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>### 4. Separate editor bootstrap from in-window edits</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- Extract content bootstrapping logic from [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift) and [TagEditorViewModel.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift) so a new window can load tracks from an external session value or notification payload.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- Add an explicit “load imported tracks into a fresh editor session” path that is only used for newly opened windows.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- Preserve the existing “no reload when already open” rule by avoiding this bootstrap path for windows found in the registry.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre></pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>### 5. Add local notification service</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- Add a small notification service responsible for:</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>  - Requesting notification authorization in context</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>  - Checking current notification settings</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>  - Scheduling a success notification after a completed save</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>  - Incrementing or setting the app badge count when permitted</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>  - Encoding save payload data into `UNNotificationContent.userInfo`</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- Keep save operations non-blocking with respect to notification delivery; notification failures should be logged or surfaced only if needed for debugging.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- Use the default notification action for click handling unless a stronger product need emerges.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>### 6. Trigger notifications from the completed save result</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- Extend the save flow to return a structured success result rather than only throwing on failure. That result should include:</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>  - The actual saved track set</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>  - Payload type written</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>  - Originating editor session id</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- Refresh each saved track’s bookmark from the written file after the save completes and use that refreshed bookmark in the save result.</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>- Trigger notification scheduling only after the save operation completes with no failures.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>- Do not emit a success notification for partial failures unless product behavior is explicitly changed to support a mixed-result notification.</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre></pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>### 7. Handle notification activation at app level</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- Add an app-level notification delegate object and assign it before launch completes.</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- On notification click:</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>  - Decode the save payload from `userInfo`</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>  - Ask the window registry whether a matching editor session or matching track-set fingerprint is open</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>  - If a match exists, bring that window forward and make it key/main without re-importing files</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>  - If no match exists, open a new editor window with the payload’s session/open value and bootstrap its track import from the saved descriptors</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- Define fallback behavior when decoding fails or files cannot be reopened:</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>  - Surface an alert or logged error</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>  - Avoid opening an empty misleading window</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre></pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>### 8. Add foregrounding support for existing windows</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- If SwiftUI’s value-based window reopening is insufficient for the “already open but do not reload” case, add a small AppKit bridge that can:</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>  - Find the existing `NSWindow` for a registered editor session</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>  - Call `NSApp.activate(ignoringOtherApps:)`</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>  - Order the matched window front and make it key</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- Keep this bridge narrowly scoped to activation, not to content mutation.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre></pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>### 9. Persist the minimum reopening data needed for notification clicks</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Decide whether notification `userInfo` should contain:</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>  - The full saved-track descriptors directly, or</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>  - A stable save/session identifier that resolves through a lightweight persisted store</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>- Recommended approach:</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>  - Keep the notification payload small and store the detailed reopen descriptors in an app-owned persisted store keyed by save/session identifier.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>  - Store bookmark data and canonical track ordering there, not in the live window registry alone, so cold-launch notification responses work.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>- Add cleanup rules for old persisted save-notification records to avoid unbounded growth.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>## Suggested File Updates</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- Update [SwiftTagApp.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/SwiftTagApp.swift)</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Update [ContentView.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/ContentView.swift)</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Update [TagEditorViewModel.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift)</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- Update [Track.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTag/Shared/Models/Track.swift) if additional persisted reopen metadata is needed</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- Add a notification service/coordinator under `SwiftTag/SwiftTag/Shared` or a dedicated feature folder</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>- Add editor session/window registry types under `SwiftTag/SwiftTag/Shared` or a dedicated scene-management area</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>- Add tests under [SwiftTagTests.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTagTests/SwiftTagTests.swift) or split them into focused test files</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>- Add targeted UI coverage in [SwiftTagUITests.swift](/Users/ccm/Dev/Swift/SwiftTag/SwiftTagUITests/SwiftTagUITests.swift) where Notification Center interaction is practical</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre></pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>- Prefer unit tests first:</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>  - Save notification payload encoding/decoding</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>  - Track-set fingerprint generation and matching rules</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>  - Registry behavior for registering, updating, finding, and removing editor sessions</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>  - Save result to notification scheduling decisions</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>  - Reopen descriptor persistence and lookup</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre>- Add service-level tests with copied FLAC fixtures from `SwiftTagTestFiles`:</pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>  - Successful tag save schedules a notification payload for only the written track set</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>  - Successful picture-only save schedules the correct payload kind</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>  - Partial failures do not schedule a success notification</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>  - Use `test.flac` for a save-result bookmark test that resolves the returned post-save bookmark after rewrite and confirms it reads the updated file</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- Add targeted UI tests only for app-controlled flows:</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>  - A save operation produces observable in-app state that confirms a notification request was enqueued or recorded in a test seam</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>  - Opening a new window from a simulated notification response loads the expected fixture tracks</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>  - Handling a simulated notification response for an already-open session brings that window forward without replacing edited text fields</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>- Avoid end-to-end Notification Center automation as the primary verification path unless it proves reliable in Xcode.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>- Build validation should use `BuildProject`, with targeted tests preferred over full-suite runs when notification-related UI automation is unstable.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre></pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- No open questions at this time. Implementation should proceed with the confirmed decisions above.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre></pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- After a successful save, the app schedules a local notification that identifies the saved operation and the saved track set.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>- The notification includes enough persisted context for a click response to work after a cold launch.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>- Clicking the notification while the matching editor window is already open brings that window to the front without reloading tracks or overwriting in-progress edits.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>- Clicking the notification when no matching window is open creates a new editor window and loads the saved tracks into that new session.</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>- Selected-track saves reopen or foreground using only the tracks actually written by that save.</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>- The saved-track descriptors stored for notification reopening use bookmark data refreshed from the final written file state.</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>- Notification scheduling failure or denied authorization does not cause the save operation itself to fail.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>- Notification response failures caused by missing files or invalid bookmark data are surfaced cleanly and do not crash the app.</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>- The implementation is covered by unit tests for payloads, matching, and routing, plus targeted integration/UI verification for notification-triggered window behavior.</pre></td></tr></table></main></body></html>

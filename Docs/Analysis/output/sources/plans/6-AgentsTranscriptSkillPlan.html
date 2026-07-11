@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 6-AgentsTranscriptSkillPlan</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 6-AgentsTranscriptSkillPlan</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/6-AgentsTranscriptSkillPlan.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Agents Transcript Skill Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Create a plan for the user and assistant to work together to improve transcript-generation guidance so the assistant can create conversation transcript files with consistent formatting. The primary target is the `## Transcripts` section of [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md), with [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md) and [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) used only if they materially help achieve that goal.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Clarify and strengthen transcript-generation instructions in the `## Transcripts` section of [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md).</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Decide whether [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md) is necessary to reach the goal, and if so, refine it only as needed.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Decide whether [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) is necessary to reach the goal, and if so, align it to the finalized transcript rules.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Define how the user and assistant collaborate to iteratively validate transcript instructions against one or more real transcript outputs.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Capture the rule that `Project structure:` file lists appear only once near the beginning and once near the end when available.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Enforce the file-boundary rule that only [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md), [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md), [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md), [6-AgentsTranscriptSkill.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/Plans/6-AgentsTranscriptSkill.md), or files created during plan execution may be modified.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre></pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Changes to app runtime code, FLAC import/write behavior, or SwiftUI features.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Changes to numbered implementation plans unrelated to transcript creation guidance.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- Building an automated transcript exporter unless follow-up work explicitly expands scope.</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Modifying any section of [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md) outside `## Transcripts`.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Modifying files outside the explicitly allowed documentation files unless a new file is created as part of this plan’s execution.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre></pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- The implementation-driving output for this request is this numbered plan file: [6-AgentsTranscriptSkill.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/Plans/6-AgentsTranscriptSkill.md).</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- The primary implementation target is only the `## Transcripts` section of [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md).</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Transcript creation guidance may refer to [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md), but the template should only remain part of the solution if it is actually needed to achieve consistent transcript formatting.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- `TranscriptTemplate.md` uses literal text when not surrounded by angle brackets, and variable text when surrounded by `&lt; &gt;`, with the instruction for that variable supplied by the following parenthetical note.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md), [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md), and [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) may all be iteratively updated as needed to reach a workable transcript-generation workflow.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- When available, the `Project structure:` file list should appear once near the beginning of a transcript and once near the end, not repeated on every turn.</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) is now present in the workspace and should be treated as a verification artifact that must stay synchronized with the finalized template behavior.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- No files outside [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md), [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md), [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md), [6-AgentsTranscriptSkill.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/Plans/6-AgentsTranscriptSkill.md), or files created during plan execution may be modified.</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre></pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre></pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre></pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre></pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>\</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- The latest numbered plan format is established by [5-AddSaveNotificationsPlan.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/Plans/5-AddSaveNotificationsPlan.md), so this plan should follow that structure and level of specificity.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- Existing transcript rules already live in [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md), but those rules currently describe transcript content more than template application mechanics.</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- Only the `## Transcripts` section of [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md) is eligible for modification under this plan, so any needed guidance must fit within that section without relying on edits elsewhere in the file.</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md) currently contains placeholder semantics that need to be translated into concrete agent instructions, especially around literal text, variable substitution, optional sections, and repetition.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) now exists and provides an additional source of truth for expected output shape, but it must be checked against both the template and `AGENTS-copy.md` because examples can drift.</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- Transcript files remain documentation artifacts and should continue to live under `Docs/Plans/Transcripts` unless the user explicitly requests another location.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- The assistant can only use visible chat content and must not reconstruct hidden or unavailable turns.</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre></pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre></pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>### Product Or Behavioral Risks</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- The current rules may not clearly separate template literals from substitution fields, which can cause malformed transcripts or inconsistent output between sessions.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- The current transcript guidance may leave optional sections underspecified, especially for missing timestamps, absent selections, repeated project structure blocks, or truncated prior turns.</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- If the template and `AGENTS-copy.md` diverge, future transcript files can appear valid while still violating one of the two sources of truth.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- If the example file diverges from the template or `AGENTS-copy.md`, the assistant may infer formatting rules incorrectly from the example.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre></pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>### Tooling, Environment, Or Filesystem Risks</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>- Some documentation files may exist on disk without appearing in the Xcode navigator, so verification needs to account for both project-structure visibility and filesystem reality.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>- Transcript preparation depends on visible-thread availability; older turns may drop out of context, and the instructions must explicitly define how to represent that limitation.</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- MCP and Xcode-oriented tools are less suitable for non-project documentation files that are not part of the navigator, so implementation may need a mixed verification approach.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre></pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre></pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>### 1. Audit the current transcript sources of truth</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- Re-read the `## Transcripts` section of [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md) and [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md) together.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- Extract all transcript-specific rules into a checklist:</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>  - naming</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>  - storage location</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>  - visible-content limits</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>  - timestamp handling</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>  - section ordering</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>  - repeated boilerplate handling</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>  - placeholder substitution semantics</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- Identify rule gaps, contradictions, and anything that currently depends on informal chat interpretation.</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- Identify which of those rules can live entirely inside the `## Transcripts` section and which, if any, still justify keeping a separate template file.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre></pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>### 2. Verify the example-file baseline</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- Compare [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) line by line against [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md) and note mismatches.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- Compare the example against the transcript rules in [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md) so the example is not only template-compliant but also policy-compliant.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- Confirm the example demonstrates the `Project structure:` rule by showing the file list only at the beginning and the end when available.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- Confirm the example also demonstrates the intended bulleting and metadata conventions for `Project structure:`, current file, and selection state.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>### 3. Tighten `AGENTS-copy.md` transcript instructions</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- Add explicit instructions to the `## Transcripts` section for how transcript creation should work.</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>- If the template remains necessary, add explicit instructions for how to read and apply [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md).</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- State plainly that:</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>  - literals in the template are copied exactly</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>  - `&lt;placeholder&gt;` text is replaced with concrete content</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>  - the following parenthetical note defines how the placeholder should be resolved</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>  - optional sections must be omitted or replaced with prescribed fallback text rather than improvised prose</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- Add guidance for how transcript creators should decide when to preserve, abbreviate, or omit repeated blocks.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- Add guidance for missing or partial visible history so the assistant records limitations instead of fabricating content.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- Keep all `AGENTS-copy.md` edits confined to the `## Transcripts` section.</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre></pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>### 4. Refine the transcript template itself</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- Only if needed, update [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md) so placeholder rules are unambiguous.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- Only if needed, normalize any malformed or incomplete placeholder syntax.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- Only if needed, clarify repeated-turn structure and where one-time sections belong.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- Only if needed, ensure the template makes the `Project structure:` placement rule explicit rather than implied.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>### 5. Build or repair the example transcript</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- Only if the template remains part of the solution, update [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) so it is a direct worked example of the final template contract.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>- Use realistic but clearly example-only content that demonstrates:</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>  - transcript header metadata</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>  - user and assistant turn sections</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>  - no-timestamp fallback behavior</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>  - project structure placement</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>  - selected-code handling</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>  - transcript ending</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>- Keep the example stable and easy to diff against the template.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre></pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>### 6. User-and-assistant iterative review loop</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- Have the assistant draft the first pass of the document updates.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- Have the user review for missing rules, wording problems, or mismatches with expected transcript outputs.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- Update the docs based on that review and then generate a sample transcript from an actual visible conversation.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- Compare the generated transcript against the updated template and example.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- Repeat until the user confirms the instructions are specific enough that transcript generation no longer depends on ad hoc interpretation.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre></pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>### 7. Verify with a transcript trial</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- Produce at least one transcript using the updated guidance.</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- Validate that the output satisfies:</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>  - naming convention</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>  - template literal preservation</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>  - correct variable substitution</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>  - proper handling of absent timestamps</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>  - correct `Project structure:` placement</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>  - no hidden-message leakage</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- If the transcript generation process still requires unwritten assumptions, feed those assumptions back into [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md) or [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md).</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre></pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>## Suggested File Updates</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Update only the `## Transcripts` section in [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md)</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>- Update [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md) only if the template is needed</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>- Update [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) only if the template remains part of the solution</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- Add transcripts under [Docs/Plans/Transcripts](/Users/ccm/Dev/Swift/SwiftTag/Docs/Plans/Transcripts) only if needed for validation</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre></pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- Use document review rather than code tests as the primary verification method.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- Validate the updated rules by generating at least one real transcript artifact from visible conversation history.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Compare the generated artifact against both [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md) and [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md).</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Compare [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) directly to the finalized template to ensure every template construct is exercised at least once.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- Prefer focused verification passes over broad document rewrites so each ambiguity is resolved with a concrete output example.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre></pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>- Should the finalized instructions require the `Project structure:` block at the end of every transcript whenever it was present at the beginning, or only when the visible conversation actually repeats it at the end?</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre></pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>- The `## Transcripts` section of [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md) clearly tells the assistant how to create transcript files with consistent formatting without relying on informal interpretation.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>- If [TranscriptTemplate.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplate.md) remains part of the solution, it clearly distinguishes literals, placeholders, optional content, and repeated sections.</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>- If [TranscriptTemplateExample.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/TranscriptTemplateExample.md) remains part of the solution, it matches the finalized template behavior and transcript rules.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>- The transcript instructions explicitly cover visible-only sourcing, missing timestamps, selected-code handling, and the `Project structure:` placement rule.</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- No modifications are required outside the allowed files, and no section of [AGENTS-copy.md](/Users/ccm/Dev/Swift/SwiftTag/Docs/AGENTS-copy.md) outside `## Transcripts` is changed.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- A sample transcript can be produced that matches the updated rules without inventing content or leaking hidden instructions.</pre></td></tr></table></main></body></html>

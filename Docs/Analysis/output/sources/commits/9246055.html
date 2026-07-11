@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: fix(sync): restore repeated external album updates across windows</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: fix(sync): restore repeated external album updates across windows</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-09</p>
+<p><code>92460554b47e6062390266578964fe59fd5af784</code></p>
+<p>fix(sync): restore repeated external album updates across windows</p>
+<h2>Body</h2><pre>- rebind track file monitor observations when same-path saves replace the monitored file
+- expose selected album external file values through a gated UI test metadata probe
+- add a monitor regression for repeated same-path rewrites on the same FLAC path
+- add deterministic open-panel window targeting and shared-FLAC multi-window UI regressions
+
+docs(transcript): add bug fix implementation transcript</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>61.0 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>1h 3m</span></div>
+  <div><strong>Assistant</strong><span>47m 5s</span></div>
+  <div><strong>User Response</strong><span>16m 47s</span></div>
+  <div><strong>Back/Forth</strong><span>3.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p>None</p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-09-1-ExternalDifferenceDetectionFix.html#L1">transcript-2026-04-09-1-ExternalDifferenceDetectionFix</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-09-1-ExternalDifferenceDetectionFix.html#L12">transcript-2026-04-09-1-ExternalDifferenceDetectionFix</a></td><td>transcript-2026-04-09-1-ExternalDifferenceDetectionFix:segment-001</td><td>work</td><td>1.000</td><td>91.4</td><td>27m 25s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-09-1-ExternalDifferenceDetectionFix.html#L98">transcript-2026-04-09-1-ExternalDifferenceDetectionFix</a></td><td>transcript-2026-04-09-1-ExternalDifferenceDetectionFix:segment-002</td><td>work</td><td>1.000</td><td>48.9</td><td>23m 53s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-09-1-ExternalDifferenceDetectionFix.html#L144">transcript-2026-04-09-1-ExternalDifferenceDetectionFix</a></td><td>transcript-2026-04-09-1-ExternalDifferenceDetectionFix:segment-003</td><td>work</td><td>1.000</td><td>63.8</td><td>12m 34s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-09-1-ExternalDifferenceDetectionFix.md</td><td>204</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>21</td><td>11</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>28</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/TrackFileMonitor.swift</td><td>7</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>95</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>367</td><td>5</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>69.00</td></tr>
+<tr><td>transcript_lines</td><td>204.00</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>3832.00</td></tr>
+<tr><td>assistant_processing_time</td><td>2825.00</td></tr>
+<tr><td>back_and_forth_count</td><td>3.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

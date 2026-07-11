@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 10-AddTrackManagement</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 10-AddTrackManagement</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/10-AddTrackManagement.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add Track Management Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Implement track-table and editor command enhancements for track numbering display, additive FLAC import, bulk track total management, destructive reload/remove safeguards, drag and drop add flows, and File menu parity/shortcuts.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Add a read-only track number column labeled `#` in the tracks table (after status icon, before `Title`) and make it default ascending sort.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Add `Auto update Track Total` setting in `TagWriteSettingsView` after `Zero pad Disc Number/Total`.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Add `Update Track Total on Locked Tracks` setting in `TagWriteSettingsView` after `Auto update Track Total`.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- When auto-update is on:</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Disable total-tracks editor field.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Keep total-tracks field synced to loaded track count excluding deleted tracks still present in table.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>- Apply track-total value across tracks based on `Update Track Total on Locked Tracks`.</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>- Add `Set Track Total (*)` command (table context menu, total-tracks field context menu, File menu).</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Add additive import commands:</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- `Add FLAC files...`</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>- `Add FLAC files (read-only)...`</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>- Context menu access in track table and main editor window.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- File menu entries after load commands.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Duplicate-file prevention before add using bookmark-resolution identity.</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- Add drag and drop `.flac` support to table and editor container with additive behavior.</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- Option-key drop variant always imports as locked, even with other modifiers.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- Add `Reload Selected Track(s)` command with selection-aware label and guarded destructive behavior.</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- Add `Remove Selected Track(s)` command with selection-aware label and guarded destructive behavior.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- Disable reload/remove selected-track commands when no tracks are selected.</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- Add File menu entries for reload/remove with required separators and enablement parity.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- Update File menu shortcuts:</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- `Load FLAC files (read-only)...` -&gt; Option+Command+L</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- `Add FLAC files...` -&gt; Shift+Command+L</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- `Add FLAC files (read-only)...` -&gt; Shift+Option+Command+L</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- Introduce/extend shared destructive-change confirmation flow for load/reload/remove/close/quit paths.</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre></pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- FLAC bridge C-layer changes.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>- Album art editing behavior changes unrelated to reload/remove protection.</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>- Save pipeline semantics beyond new total-track management and destructive-action guard integration.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- Broad settings UI redesign.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre></pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- Latest numbered plan reviewed: `Docs/Plans/9-AddUIFeedbackSettings.md`.</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- Current implementation files reviewed:</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- `SwiftTag/ContentView.swift`</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- `Features/TagEditor/TagEditorView.swift`</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- `Features/TagEditor/TagEditorTrackFileView.swift`</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- `Features/TagEditor/TagEditorCoreTagsView.swift`</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- `Features/TagEditor/TagEditorViewModel.swift`</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- `Features/Settings/TagWriteSettingsView.swift`</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>- `SwiftTagApp.swift`</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- `AGENTS.md`</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- Fixture-first check completed for FLAC behavior:</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- `SwiftTagTestFiles/test.flac`</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>- `SwiftTagTestFiles/test-with_padding.flac`</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>- Constraints accounted for:</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- Security-scoped bookmark handling for import/save/reload flows.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- Existing external file monitoring (`TrackFileMonitor`) behavior.</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- Existing focused command routing and File menu command model.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre></pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- Add/import commands must preserve security-scoped bookmark creation and later re-resolution.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- Duplicate detection must use bookmark-resolution identity for already-loaded tracks and incoming files.</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- Track table currently uses `Table(trackItems, selection:)`; default sort and column order must stay stable.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- Command enablement must be exposed through `FocusedValues` so File menu mirrors focused editor state.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- Destructive operation guard must work for:</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- In-view actions (load/reload/remove).</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- App lifecycle close/quit behaviors.</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- Selection semantics must be explicit when selection is empty vs non-empty.</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre></pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- Conflicting assumptions around total-tracks scope and deleted-track exclusion can cause silent metadata overwrites.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- Reload and remove operations can destroy local unsaved edits if guard criteria are incorrect.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- Additive import with duplicate detection can accidentally skip valid files if bookmark identity matching is incomplete.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- Drag-and-drop target scoping can interfere with text drag/drop in editors if drop handlers are attached too broadly.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre></pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>### Tooling / Environment / Sandbox Risks</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- macOS modifier-key detection during drop (`Option`) can differ by event source and needs deterministic fallback behavior.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- App/window close interception for custom discard alerts may require AppKit integration points not yet centralized.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- Security-scoped bookmark edge cases (stale bookmark or move/rename) can affect reload/add duplicate checks.</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre></pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>## Destructive / Write-Back Behavior</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- Preserved:</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- Existing save format/padding behavior and FLAC write mapper canonicalization rules.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- Existing locked-track editing protections except where the new locked-track total-update setting explicitly permits updates.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>- Replaced/extended:</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- `importFlacFiles` currently replaces all loaded tracks; additive import path will append non-duplicate tracks.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- New reload/remove commands introduce explicit destructive guard flow.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- Removed:</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>- No existing persisted data removal by default; remove action only affects in-memory editor track list unless separately saved.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre></pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>Write-back specifics to enforce in implementation:</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- `Set Track Total (*)` and auto-update behavior must honor `Update Track Total on Locked Tracks` (default Off).</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>- Auto-update track-total count must exclude tracks whose source file is currently deleted/unavailable and marked as deleted in table state.</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>- Reload overwrites current in-memory tag/picture edits from file for eligible tracks with diffs.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>- Remove deletes selected tracks from current editor session state (not from disk).</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre></pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>1. Track Table Data/Presentation</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>- Add `#` read-only column after status icon and before `Title`.</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>- Bind display to normalized `trackNumber` tag value for each row.</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- Set default table sort to `trackNumber` ascending with deterministic fallback for empty/non-numeric values.</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>- Add/adjust tests for column order and displayed values.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre></pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>2. Settings + Track Total Automation</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>- Add new `@AppStorage` key/default for `Auto update Track Total` (default Off).</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- Add new `@AppStorage` key/default for `Update Track Total on Locked Tracks` (default Off).</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- Add toggle UI in `TagWriteSettingsView` after zero-pad disc toggle.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- Add ContentView/ViewModel wiring so auto mode:</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- Disables total-tracks text field.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- Recomputes total-tracks on load/add/remove operations using non-deleted track count only.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- Applies track-total key value per strategy/formatting rules, including locked tracks only when enabled by the new setting.</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- Add explicit command `Set Track Total (*)` with enablement and placements.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre></pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>3. Additive Import Commands And Duplicate Prevention</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>- Split import behavior into:</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- Replace (existing load)</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- Additive append (new add commands/context menu/drop)</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>- Add focused actions for add and add-read-only commands.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- Add File menu entries and shortcuts.</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- Implement duplicate guard before import add using bookmark-resolution identity strategy.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>- Add context menu entries in table and editor container.</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre></pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>4. Drag &amp; Drop Add Flows</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Add `.flac` drop handlers to track table container and approved editor-surface container.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- Ensure drop handlers are not attached to tag-edit text controls.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Implement option-key-detected drop path that always forces locked add.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre>- Reuse additive import and duplicate filtering logic.</pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre></pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>5. Reload/Remove Commands + Destructive Guard</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>- Add selection-aware command labels for reload/remove in context menus and File menu.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>- Enable only when command preconditions are satisfied and disable when selection is empty.</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- Add reload behavior to refresh selected tracks from file only when diffs exist.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- Add remove behavior for selected tracks.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>- Create centralized destructive confirmation model that:</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>- Reuses for load/reload/remove/close/quit destructive transitions.</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- Suppresses alert for external-only diffs with no in-editor edits.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- Shows pending unsaved counts (`N tag edits`, `M picture edits`) when applicable.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>- Supports context-specific confirm button labels (`Quit`, `Close Window`, `Reload File(s)`, `Load File(s)`, etc.).</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre></pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>6. Command Plumbing And Menu Structure</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>- Extend `FocusedValues` with new action/title/enablement entries.</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>- Update `AppCommands` File menu ordering and separators exactly as requested.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>- Update keyboard shortcuts and resolve conflicts.</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre></pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>7. Validation And Hardening</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- Verify compile/build.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- Run targeted tests for modified areas.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>- Add new tests for additive import, bookmark-based duplicate prevention, reload/remove enablement, and total-tracks automation behavior.</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre></pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>Order (per guide):</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>1. Unit tests (`SwiftTagTests`) for:</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- Duplicate detection rules (bookmark-resolution identity).</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- Auto total-tracks recomputation/apply logic (including deleted-track exclusion and locked-track-setting behavior).</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- Reload eligibility logic (diff-aware, selection-aware, external-only bypass conditions).</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>- Destructive guard decision model (when to show prompt, edit counts, confirm button title).</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>2. Service/fixture tests with copied FLAC fixtures for:</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>- Additive import append behavior and lock-on-add path.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>- Reload behavior replacing in-memory tags/pictures from file snapshots.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>3. ViewInspector tests (`TrackStatusViewInspectorTests` or new focused file) for:</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>- Table column order includes `#` between status and `Title`.</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- Total-tracks field disabled when auto-update enabled.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>- Context menu command presence/enablement based on selection and state.</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>4. Targeted UI tests only if needed for:</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- File menu keyboard shortcuts and routed command execution.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>- Drag/drop integration if ViewInspector cannot validate reliably.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre></pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>Validation tools:</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>- `XcodeRefreshCodeIssuesInFile` on touched files.</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>- `BuildProject` for compile validation.</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>- `RunSomeTests` for targeted tests.</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre></pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- Track table shows read-only `#` column after status and before `Title`, default-sorted ascending by track number.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>- `Auto update Track Total` toggle exists in settings and defaults to Off.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>- `Update Track Total on Locked Tracks` toggle exists after auto-update toggle and defaults to Off.</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>- Auto-update keeps total track value in sync with non-deleted track count and updates track-total values according to formatting/key rules.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>- Locked tracks are included/excluded from total-track updates based on `Update Track Total on Locked Tracks`.</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre>- `Set Track Total (*)` appears in required context menus and File menu, with required enablement gating.</pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>- Additive import commands exist in context menus and File menu; add-read-only variant imports locked tracks.</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>- Add commands append without replacing existing tracks and skip already loaded files using bookmark-resolution duplicate detection.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>- Drag/drop `.flac` on table/main editor performs additive import; option-key drop always adds locked.</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>- Reload selected and remove selected commands exist with singular/plural labels and are disabled when no tracks are selected.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>- Destructive confirmation is shown for in-editor unsaved edit loss scenarios and reused for load/reload/remove/close/quit flows, with action-specific confirm labels.</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>- Destructive confirmation includes `N tag edits` and `M picture edits` counts when applicable.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>- Required menu separators and keyboard shortcuts are updated as specified.</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre></pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- `Auto update Track Total` defaults to Off.</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- Add `Update Track Total on Locked Tracks` after `Auto update Track Total`; default Off.</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>- Auto-update and `Set Track Total (*)` honor `Update Track Total on Locked Tracks` to decide locked-track inclusion.</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>- Duplicate detection for add flows is based on bookmark resolution identity.</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- `Reload Selected Track(s)` and `Remove Selected Track(s)` are disabled when no tracks are selected.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre>- Destructive alerts display counts (`N tag edits`, `M picture edits`).</pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>- Destructive protection scope is limited to load/reload/remove/close/quit.</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>- Option key always forces locked import for drag/drop add even when combined with other modifiers.</pre></td></tr>
+<tr id="L199"><th><a href="#L199">199</a></th><td><pre>- Deleted files that remain in the track table are excluded from auto-update track-total counting and resulting updates.</pre></td></tr>
+<tr id="L200"><th><a href="#L200">200</a></th><td><pre></pre></td></tr>
+<tr id="L201"><th><a href="#L201">201</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L202"><th><a href="#L202">202</a></th><td><pre>- None currently.</pre></td></tr></table></main></body></html>

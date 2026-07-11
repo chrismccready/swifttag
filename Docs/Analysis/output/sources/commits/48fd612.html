@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: fix(date): preserve partial DATE tag text</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: fix(date): preserve partial DATE tag text</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-05-30</p>
+<p><code>48fd612594d6a6ae7f88cfe82807c8c31823b63d</code></p>
+<p>fix(date): preserve partial DATE tag text</p>
+<h2>Body</h2><pre>- add DateTagFormatter.tagText for editable YYYY, YYYY-MM, and YYYY-MM-DD values
+- use preserved date text during FLAC import and SwiftTag document track normalization
+- compare DATE values as literal trimmed text instead of numeric-normalized values
+- add tests for partial DATE import, bindings, and literal difference detection</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>52.3 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>1h 31m</span></div>
+  <div><strong>Assistant</strong><span>5m 46s</span></div>
+  <div><strong>User Response</strong><span>1h 25m</span></div>
+  <div><strong>Back/Forth</strong><span>1.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/diff.html">Diff</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p>None</p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-05-30-1-DiffFormatAndTestFix.html#L1">transcript-2026-05-30-1-DiffFormatAndTestFix</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-05-30-1-DiffFormatAndTestFix.html#L159">transcript-2026-05-30-1-DiffFormatAndTestFix</a></td><td>transcript-2026-05-30-1-DiffFormatAndTestFix:segment-003</td><td>work</td><td>1.000</td><td>44.4</td><td>1h 31m</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>SwiftTag/Features/FlacImport/FlacImportMapper.swift</td><td>1</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>14</td><td>6</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/DateTagFormatter.swift</td><td>52</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>80</td><td>3</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>74.00</td></tr>
+<tr><td>transcript_lines</td><td>44.38</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>5467.00</td></tr>
+<tr><td>assistant_processing_time</td><td>346.00</td></tr>
+<tr><td>back_and_forth_count</td><td>1.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

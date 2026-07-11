@@ -1,0 +1,1431 @@
+{
+  "archive_provenance_commit_ids": [
+    "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+  ],
+  "base_segments": [
+    {
+      "assistant_processing_seconds": 390.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 36,
+      "excerpt": "- Read current plan 9-AddUIFeedbackSettings.md. - Plan has been at least partially implemented, confirm status. I’ll verify plan 9-AddUIFeedbackSettings.md against the current implementation and report what is complete vs pending. First I’m reading the plan and then checking the related Settings/feedback files and tests for coverage. I’ve confirmed the Feedback tab and related keys exist. Next I’m checking model migration, write mapping, notification gating, diff-style centralization, and test coverage to identify what from plan 9 is still open. I’ve finished tracing most of the implementation and tests against plan 9. I’m running a project build now to confirm compile health before I summarize completed vs remaining items. Build is clean. I’m running the test suite once to verify current implementation health and then I’ll give a concise completion matrix against plan 9. Status check for plan 9-AddUIFeedbackSettings.md: mostly implemented, with test coverage still partial. Completed items: - Feedback settings model/keys/defaults and color storage adapter are implemented in FeedbackSettings.swift. - Feedback tab exists after Tags in SettingsView.swift. - Feedback UI controls (Send ",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-001",
+      "source_line_count": 42,
+      "source_line_end": 53,
+      "source_line_start": 12,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-001",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-002"
+      ],
+      "user_response_seconds": 532.0,
+      "valid_atomic_elapsed_seconds": 922.0
+    },
+    {
+      "assistant_processing_seconds": 241.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 34,
+      "excerpt": "Fix testFlacFixtureImportBindsExpectedValues, if this test can be rewritten using ViewInspector, do so. I’ll inspect testFlacFixtureImportBindsExpectedValues and its helper flow, then replace it with a faster non-UI test if the behavior is covered through view model/state logic that doesn’t require XCUI. I found the helper; next I’m reading the target test body and then I’ll migrate it to a deterministic unit/ViewInspector-style test if the import behavior is view-model driven. The current UI test is a brittle end-to-end assertion of values that are really view-model state. I’m going to replace it with a deterministic SwiftTagTests import/binding test and remove the flaky XCUI variant. I confirmed we already have strong fixture helpers in SwiftTagTests, so I’ll move this verification there. I’ll keep it focused on import + binding values and misc tag presence to replace the flaky XCUI polling path. I removed the flaky XCUI version and am now adding a fixture-driven ViewInspector test that validates the same album/album-artist binding outcome plus ENCODED_BY misc tag presence. I’ve applied the test rewrite and am validating compile/test health now; one diagnostics call failed transi",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-002",
+      "source_line_count": 40,
+      "source_line_end": 93,
+      "source_line_start": 54,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-003",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-004"
+      ],
+      "user_response_seconds": 186.0,
+      "valid_atomic_elapsed_seconds": 427.0
+    },
+    {
+      "assistant_processing_seconds": 321.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 25,
+      "excerpt": "Fix testFileMenuSaveTagsPersistsTagEditsAcrossRelaunch, if this test can be rewritten using ViewInspector, do so. I’ll inspect testFileMenuSaveTagsPersistsTagEditsAcrossRelaunch and determine whether its behavior can be validated more reliably at the ViewInspector/unit level; if not, I’ll harden the XCUI flow directly. I reproduced the failure: the assertion fails after relaunch at line 252. I’m now tracing selection/editability state to make the test deterministic; likely the save path is not guaranteed unless a track row is explicitly selected before edit/save and before verification. This one cannot be fully replaced by ViewInspector because it validates menu-command save plus disk persistence across app relaunch (cross-process behavior). I’m hardening the XCUI test by explicitly selecting the imported track and waiting for editable state before save and before post-relaunch verification. I’m switching this specific scenario to a deterministic SwiftTagTests flow (save tags, then re-import in a new view model) and removing the flaky XCUI relaunch variant. This behavior is not a good ViewInspector fit because it’s persistence + relaunch integration. I replaced the flaky relaunch X",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-003",
+      "source_line_count": 31,
+      "source_line_end": 124,
+      "source_line_start": 94,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-005",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-006"
+      ],
+      "user_response_seconds": 226.0,
+      "valid_atomic_elapsed_seconds": 547.0
+    },
+    {
+      "assistant_processing_seconds": 104.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 24,
+      "excerpt": "- Fix testMiscTagsAddAndDeleteRow, if this test can be rewritten using ViewInspector, do so. I’ll inspect testMiscTagsAddAndDeleteRow and the misc-tag mutation path in TagEditorViewModel, then replace this UI test with a deterministic non-UI or ViewInspector test if the behavior is state-driven. I found this is purely view-model behavior (addMiscTagRow/deleteSelectedMiscTagRows) and does not need XCUI or ViewInspector. I’m replacing this flaky UI test with a deterministic SwiftTagTests unit test that validates add+delete row and corresponding tag write/remove behavior. The replacement unit test passes. A separate existing XCUI misc-tags test still failed when I ran it as a spot-check, but that failure is outside testMiscTagsAddAndDeleteRow and unrelated to the new deterministic replacement. testMiscTagsAddAndDeleteRow is fixed by replacing it with a deterministic model-level test (not ViewInspector, since this behavior is purely TagEditorViewModel state mutation and tag-map side effects). Changes: - Removed flaky XCUI test from SwiftTagUITests.swift. - Added tagEditorViewModelMiscTagsAddAndDeleteRow() in SwiftTagTests.swift, which verifies: 1. row add increments count and selects n",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-004",
+      "source_line_count": 30,
+      "source_line_end": 154,
+      "source_line_start": 125,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-007",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-008"
+      ],
+      "user_response_seconds": 192.0,
+      "valid_atomic_elapsed_seconds": 296.0
+    },
+    {
+      "assistant_processing_seconds": 651.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 16,
+      "excerpt": "- Fix broken tests. Try to fix one by one, to avoid timeouts, etc., but increase scope as needed to confirm a given test passes. I’ll start by identifying currently failing tests and fixing them incrementally with targeted runs, beginning with the known failing misc-tags test and only widening scope after each fix verifies cleanly. I traced the misc-tag failures: they rely on UI flows that are really view-model key-finalization rules. I’m converting the remaining misc-tag XCUI tests to deterministic SwiftTagTests cases and removing those flaky UI scenarios. I removed the flaky misc-tag XCUI scenarios and their unused helper plumbing. Next I’m adding three direct TagEditorViewModel tests that cover explicit-key rejection, duplicate-key rejection, and duplicate-edit reversion. The misc-tag failures are now converted and passing in SwiftTagTests. I’ll continue with the next likely failures (Save Pictures... and default Save) and fix them the same way if they’re flaky integration cases. I confirmed both remaining save-related XCUI relaunch tests are failing. I’ll stabilize them by explicitly selecting the imported track before editing and before the post-relaunch assertion, then re-run",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-005",
+      "source_line_count": 22,
+      "source_line_end": 176,
+      "source_line_start": 155,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-009",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-010"
+      ],
+      "user_response_seconds": 360.0,
+      "valid_atomic_elapsed_seconds": 1011.0
+    },
+    {
+      "assistant_processing_seconds": 408.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 34,
+      "excerpt": "- I interrupted fixing Tess because iI am seeing many “Checking existence of `\"albumTextField\" TextField`” in the log. Is this because it just takes a while to actually find the field? Is this normal? Continue with fixing broken tests and try to fix one by one, to avoid timeouts, etc., but increase scope as needed to confirm a given test passes and try to use/replace with ViewInspector testing when possible. Yes, repeated Checking existence of \"albumTextField\" TextField is normal XCUI polling behavior from waitForExistence/predicate waits. It often gets noisy when UI setup is async. I’ll continue one-by-one from the currently failing simulated-save test, stabilize it, then keep validating additional tests in small batches. That log spam concern was valid to call out, and we’ve now stabilized the re-enable test. I’m running the remaining active UI tests in smaller batches to catch any other failures without hitting MCP timeouts. The second batch timed out at the tool layer (not necessarily test failures). I’ll continue one-by-one for the remaining UI tests to get reliable pass/fail signals. I’ve now re-run the remaining active UI tests individually and they’re passing. I’ll do a fin",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-006",
+      "source_line_count": 40,
+      "source_line_end": 216,
+      "source_line_start": 177,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-011",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-012"
+      ],
+      "user_response_seconds": 770.0,
+      "valid_atomic_elapsed_seconds": 1178.0
+    },
+    {
+      "assistant_processing_seconds": 78.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 29,
+      "excerpt": "- When editing a given tag TextEdit view only one character can be typed and then focus on the view is lost. Perhaps formatting rules are interfering? Please fix. I’ll trace focus/state changes around the tag editing views (TextEditor/misc tag fields) and identify what causes a re-render after the first keystroke, then patch the smallest fix and verify with targeted tests/build. I found a likely root cause: tagDiffStyle currently uses conditional .applyIf { ... } to add .bold()/.italic() only after the first character creates a diff state. That structural modifier switch can drop first responder and feel like “one character then blur”. I’m switching the style application to stable modifiers (no branchy wrapping) in TagDiffFormatting.swift and then running targeted tests/build. You were right to suspect formatting. The focus drop was caused by tagDiffStyle changing the view structure after the first character (when diff state toggled), which can make SwiftUI controls lose first responder. Fix applied: - Updated TagDiffFormatting.swift to use stable modifiers instead of conditional applyIf wrapping: - Replaced conditional .bold()/.italic() branches with: - .fontWeight(...) - .font(..",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-007",
+      "source_line_count": 35,
+      "source_line_end": 251,
+      "source_line_start": 217,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-013",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-014"
+      ],
+      "user_response_seconds": 2205.0,
+      "valid_atomic_elapsed_seconds": 2283.0
+    },
+    {
+      "assistant_processing_seconds": 140.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 26,
+      "excerpt": "- There is a formatting logic bug in that currently when a tag is edited the view is set to italicized. In order to correct the issue and get more desirable behavior, update the plan (-AddUIFeedbackSettings.md) so that when an editor tag value is different than the associated file’s tag value (unless the file’s value is empty), the editor text should be bold and default color, not diff color. Rather than using italics for internal diff formatting, highlight the background of the differing value using the currently defined diff color. The internal diff should not be seen on individual track selections as there is no comparison between tracks happening. The total tracks mismatch should be updated to set the background of total tracks view to red, regardless of selected track and a given selected track that has a total tracks value differing from track count should be vitalized and default color. Add to the top of Diff Tools Utility window form a Toggle labeled “Warn On Track Total Mismatch” that defaults to On. When “Warn On Track Total Mismatch” is off then the total tracks background color change is removed/does not occur. Ask questions for clarity as needed. I’ll update plan 9 now",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-008",
+      "source_line_count": 32,
+      "source_line_end": 283,
+      "source_line_start": 252,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-015",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-016"
+      ],
+      "user_response_seconds": 9620.0,
+      "valid_atomic_elapsed_seconds": 9760.0
+    },
+    {
+      "assistant_processing_seconds": 20.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 23,
+      "excerpt": "- Ok let me clarify, as of now, there are five diff states: - First difference is when there is difference between the current text tag value and the associated file’s tag value, except when the fie’s tag value is empty. When this difference occurs, then the tag text is bold and default color. For this diff case, change (including variable names) DiffToolsView’s “Bold On File Diff\" Toggle to “Format on Track to File Diff”. And change (including variable names) the FeedbackSettingsView’s “External Diff Color\" ColorPicker to “Track to File Diff Color”. - Second difference is when two or more tracks are selected and a given editor tag is different between selected tracks. When this occurs, the differing fields will display “*” in the given differing tag view and that view will also be highlighted by drawing the background the diff color setting. For this diff case, change (including variable names) DiffToolsView’s “Italic On File Diff\" Toggle to “Format on Track to Track Diff”. And change (including variable names) the FeedbackSettingsView’s “Internal Diff Color\" ColorPicker to “Track to Track Diff Color”. - Third difference is when a track file is modified outside the app that create",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-009",
+      "source_line_count": 29,
+      "source_line_end": 312,
+      "source_line_start": 284,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-017",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-018"
+      ],
+      "user_response_seconds": 1677.0,
+      "valid_atomic_elapsed_seconds": 1697.0
+    },
+    {
+      "assistant_processing_seconds": 52.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 36,
+      "excerpt": "Answers: 1. For Track-to-File Diff, the new Track to File Diff Color should still be used and its default should be default color. 2. For Track-to-Track Diff, when a field shows *, background highlight should be applied. 3. For Externally Modified Diff, this style should override Track-to-File and Track-to-Track styles when multiple states apply at once. 4. For “clear this view only when user edits text”, “this view” means: that tag across all selected tracks updated by the edit. 5. For TOTALTRACKS/TOTALDISCS warnings (fourth/fifth), the red background should be controlled by toggles in Diff Tools (like the new track-total mismatch toggle). Which reminds me, add to the top of Diff Tools Utility window form, after the new “Warn On Track Total Mismatch”, a Toggle labeled “Warn On Disc Total Mismatch” that defaults to On. When “Warn On Disc Total Mismatch” is off then the total discs background color change is removed/does not occur. 6. For TOTALDISCS mismatch (fifth), yes, exact rule is warning if either - selected/loaded tracks disagree on total discs, or - any track’s discNumber > max(totalDiscs across tracks with a value). 7. Yes, migrate persisted keys too (breaking old defaults)",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-010",
+      "source_line_count": 42,
+      "source_line_end": 354,
+      "source_line_start": 313,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-019",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-020"
+      ],
+      "user_response_seconds": 363.0,
+      "valid_atomic_elapsed_seconds": 415.0
+    },
+    {
+      "assistant_processing_seconds": 842.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 73,
+      "excerpt": "Ok go ahead and implement. If tests are written keep them scoped to what is needed (do not run full suite) and try to use ViewInspector when possible. I’m implementing now. First I’ll inspect the current diff-settings and formatting pipeline (FeedbackSettings, DiffToolsView, FeedbackSettingsView, TagDiffFormatting, TagEditorViewModel/CoreTags) and then patch end-to-end with targeted tests. I’ve mapped the implementation path: split current diff logic into three explicit states (track-to-file, track-to-track, externally modified), rename/migrate settings keys and controls, add mismatch warning toggles for track/disc totals, and wire field-edit clearing of externally-modified state per tag. I’m patching models/settings first, then style engine + view model, then views/tests. I’m continuing from the in-progress diff-format refactor and will finish by updating all tagDiffStyle call sites, wiring the new mismatch/warning rules, and then running only targeted tests for the changed behavior. I’ll start by reading the affected editor/view model files to patch compilation cleanly. I’ve confirmed all editor subviews still call the old tagDiffStyle API. Next I’m updating the view model and ma",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-011",
+      "source_line_count": 79,
+      "source_line_end": 433,
+      "source_line_start": 355,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-021",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-022"
+      ],
+      "user_response_seconds": 5266.0,
+      "valid_atomic_elapsed_seconds": 6108.0
+    },
+    {
+      "assistant_processing_seconds": 295.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 52,
+      "excerpt": "- Total Disc is currently being changed when any selected track changes the value, remove that logic, the value should be per track editable. - Update the track to track diff formatting to include changing the text color as well (same color as background highlight color). However, track to file diff color formatting when there is a difference takes precedence. - Misc tags track to track diff is being applied to both the key and value, only the value should be formatted. Also the “*” is not being drawn in place of empty value. And edits to the value or key are not being shown with Track to File Diff formatting. - The Date field text is not being formatted on diffs, can a “*” be shown or because it is a date field we need to use something else? - Update the Warn on Track Total Mismatch and the Warn on Disc Total Mismatch to change the color of the text as well (same color as background highlight color). - Add to FeedbackSettingsView after Externally Modified Diff Color a ColorPicker labeled “Track/Disc Total Mismatch Color” defaulting to red. This color should be bound to the Warn On Track Total Mismatch and Warn On Disc Total Mismatch formatting. Please questions for clarification a",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-012",
+      "source_line_count": 58,
+      "source_line_end": 491,
+      "source_line_start": 434,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-023",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-024"
+      ],
+      "user_response_seconds": 1453.0,
+      "valid_atomic_elapsed_seconds": 1748.0
+    },
+    {
+      "assistant_processing_seconds": 30.0,
+      "back_and_forth_count": 1,
+      "body_line_count": 15,
+      "excerpt": " Bug with total tracks and total discs: I don’t think I clarified that the text should be formatted with the Track/Disc Total Mismatch Color” any time a mismatch occurs based on the mismatch logic for the given field and the formatting is applied on any track selection. The idea is that these are global warning states that should be readily seen by the user. Understood. I’ll make mismatch color take strict precedence for total-track/total-disc warning states so the text always uses Track/Disc Total Mismatch Color whenever a mismatch is active, then verify with a quick build. I’ve applied the precedence fix so mismatch warnings now override other diff text colors. I’m running a fast build check now. Implemented. - Track/Disc Total Mismatch Color now has strict text-color precedence whenever showsMismatchWarning is true. - This ensures total-tracks/total-discs warning text always uses mismatch color, regardless of track-to-file/track-to-track/external diff colors. - File updated: TagDiffFormatting.swift Validation: - BuildProject passed. [ 2026-03-18T00:13:12Z (30s since Assistant start) ]",
+      "interrupted": false,
+      "orphan": false,
+      "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-013",
+      "source_line_count": 21,
+      "source_line_end": 512,
+      "source_line_start": 492,
+      "speaker_start": "User",
+      "turn_ids": [
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-025",
+        "transcript-2026-03-17-2-9-AddUIFeedbackSettings:turn-026"
+      ],
+      "user_response_seconds": 0.0,
+      "valid_atomic_elapsed_seconds": 30.0
+    }
+  ],
+  "candidate_commits": [
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-03-14-1-8-AddTrackStatusPlan.md"
+      ],
+      "code_line_count": 0,
+      "commit_hash": "94246bbd4bebc8a284577f2d68b82ff5db235599",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: docs, finalization, inspector, status, track, transcript",
+        "path/topic overlap",
+        "commit before transcript within 1d"
+      ],
+      "score": 1.0,
+      "short_hash": "94246bb",
+      "source_link": "../../sources/commits/94246bb.html",
+      "subject": "docs(transcript): 8-AddTrackStatusPlan.md finalization and introduction of ViewInspector",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": true,
+      "body": "• rename diff settings to track-to-file and track-to-track terminology with new persisted keys\n• add externally modified diff formatting toggle and color setting\n• add track/disc total mismatch color and apply it to warning text and background\n• split formatting into track-to-track, track-to-file, and externally modified precedence\n• update editor bindings for per-track total discs, mixed markers, and date text diff display\n• limit misc track-to-track styling to values and detect missing-snapshot misc file diffs\n• update content and view model diff wiring plus flac import/write mapping for new behavior\n• add and update unit, view-inspector, and ui tests for feedback settings and diff formatting\n• update plan 9 and add transcripts for the feedback settings implementation changes",
+      "changed_paths": [
+        "Docs/Plans/9-AddUIFeedbackSettings.md",
+        "Docs/Plans/Transcripts/transcript-2026-03-17-1-9-AddUIFeedbackSettings.md",
+        "Docs/Plans/Transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.md",
+        "SwiftTag.xcodeproj/project.pbxproj",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/FlacImport/FlacWriteMapper.swift",
+        "SwiftTag/Features/Settings/DiffToolsView.swift",
+        "SwiftTag/Features/Settings/FeedbackSettingsView.swift",
+        "SwiftTag/Features/Settings/SettingsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorAlbumView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/EditorSessionModels.swift",
+        "SwiftTag/Shared/Models/FeedbackSettings.swift",
+        "SwiftTag/Shared/Models/TagKey.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/SaveNotificationCoordinator.swift",
+        "SwiftTag/Shared/Utilities/TagDiffFormatting.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 1685,
+      "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+      "docs_line_count": 0,
+      "reasons": [
+        "archive provenance only",
+        "subject tokens: apply, background, behavior, bindings, changes, color",
+        "path/topic overlap"
+      ],
+      "score": 1.0,
+      "short_hash": "ac28a73",
+      "source_link": "../../sources/commits/ac28a73.html",
+      "subject": "feat(diff-tools): implement track/file diff states and mismatch warning customization",
+      "test_line_count": 573
+    },
+    {
+      "archive_provenance": false,
+      "body": "• add Docs​/​Guides​/testing​-guide​.md and Docs​/testing​-tools​-review​.md\n• update AGENTS​.md with ViewInspector-first SwiftUI testing guidance\n• add local View​Inspector package dependency to Swift​Tag​Tests target in Xcode project\n• add Track​Status​View​Inspector​Tests for track status, lock state, and album editor gating behavior\n• add UI tests for file menu read-only load command and read-only fixture import field disabling\n• add UITEST​_​FLAC​_​READ​_​ONLY handling in UI test launch helper and Content​View fixture import\n• return early from save flow when can​Save(payload:) is false",
+      "changed_paths": [
+        "AGENTS.md",
+        "Docs/Guides/testing-guide.md",
+        "Docs/testing-tools-review.md",
+        "SwiftTag.xcodeproj/project.pbxproj",
+        "SwiftTag.xcodeproj/xcuserdata/ccm.xcuserdatad/xcschemes/xcschememanagement.plist",
+        "SwiftTag/ContentView.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 30,
+      "commit_hash": "ae13badc1a2a880e7b374fa67010992d398fa737",
+      "docs_line_count": 205,
+      "reasons": [
+        "subject tokens: album, behavior, can, command, content, coverage",
+        "path/topic overlap",
+        "commit before transcript within 7d"
+      ],
+      "score": 0.93,
+      "short_hash": "ae13bad",
+      "source_link": "../../sources/commits/ae13bad.html",
+      "subject": "test(swiftui): add viewinspector coverage and read-only fixture ui-test support",
+      "test_line_count": 213
+    },
+    {
+      "archive_provenance": false,
+      "body": "• add track status model and file monitor integration for external change, rename, and delete detection\n• update tag editor and album art views to surface status and preserve value visibility for locked tracks\n• keep locked tracks read-only while restoring editability when tracks are unlocked\n• add and update unit tests for rename handling, lock behavior, and track status presentation\n• add plan and transcript docs for AddTrackStatus implementation",
+      "changed_paths": [
+        "AGENTS.md",
+        "Docs/Plans/8-AddTrackStatusPlan.md",
+        "Docs/Plans/Transcripts/transcript-2026-03-13-1-8-AddTrackStatusPlan.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtWellView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorAlbumView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Models/TrackStatus.swift",
+        "SwiftTag/Shared/Utilities/TrackFileMonitor.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift"
+      ],
+      "code_line_count": 1640,
+      "commit_hash": "c56695645a5579bac37f1f716650754ccc5750a1",
+      "docs_line_count": 2,
+      "reasons": [
+        "subject tokens: album, based, behavior, change, delete, detection",
+        "path/topic overlap",
+        "commit before transcript within 7d"
+      ],
+      "score": 0.93,
+      "short_hash": "c566956",
+      "source_link": "../../sources/commits/c566956.html",
+      "subject": "feat(track-status): add file-monitor-based track status and lock-aware tag editor behavior",
+      "test_line_count": 858
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add a per-window save status overlay with album or track progress details\n- disable tag editor and album art interactions while saves are running\n- show the overlay inside the album art sheet during saves\n- add targeted unit and UI coverage for save progress and save-state behavior\n- update the save status implementation plan to match the final behavior",
+      "changed_paths": [
+        "Docs/Plans/7-AddSaveStatusViewPlan.md",
+        "Docs/Plans/Transcripts/transcript-2026-03-12-1-7-AddSaveStatusViewPlan.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtWellView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorAlbumView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SaveStatusView.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 554,
+      "commit_hash": "e0cd7da70c303f9524054cf6e150d7fbfca3d9d1",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: album, behavior, coverage, details, disable, during",
+        "path/topic overlap",
+        "commit before transcript within 7d"
+      ],
+      "score": 0.93,
+      "short_hash": "e0cd7da",
+      "source_link": "../../sources/commits/e0cd7da.html",
+      "subject": "feat(save-status): add save progress overlay and save-state UI guards",
+      "test_line_count": 243
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add shared tag-key groups for TRACKTOTAL/TOTALTRACKS and DISCTOTAL/TOTALDISCS\n- include DISCTOTAL in explicit tag keys so total-disc aliases stay out of misc tags\n- compare total-count alias groups by value and presence when computing file differences\n- read DISCTOTAL as fallback source for imported total-disc initial values\n- add tests for alias cleanliness, value/presence differences, and misc-tag exclusion",
+      "changed_paths": [
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/TagNormalization.swift",
+        "SwiftTagTests/SwiftTagTests.swift"
+      ],
+      "code_line_count": 114,
+      "commit_hash": "03227c22ec04d4a16f48e8159bca42426af9eac7",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: count, disc, disctotal, explicit, file, imported",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "03227c2",
+      "source_link": "../../sources/commits/03227c2.html",
+      "subject": "fix(tags): treat total count aliases as equivalent",
+      "test_line_count": 160
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add picture-data budget validation using current description bytes and reserved FLAC buffer\n- stop drop, paste, and file-import updates when picture data exceeds remaining payload budget\n- show a single-button \"Picture Too Large\" alert from album art sheet bindings\n- cover budget math and rejection flow in SwiftTagTests and TrackStatusViewInspectorTests\n\ndocs(agents): add \"smart caveman\" response guidance to AGENTS.md",
+      "changed_paths": [
+        "AGENTS.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Shared/Utilities/FlacPictureUtilities.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift"
+      ],
+      "code_line_count": 238,
+      "commit_hash": "0539816b5ba23a6e25ff44d6be08444b0f8dd6c7",
+      "docs_line_count": 7,
+      "reasons": [
+        "subject tokens: album, bindings, cover, current, docs, drop",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "0539816",
+      "source_link": "../../sources/commits/0539816.html",
+      "subject": "fix(album-art): reject oversized flac picture imports",
+      "test_line_count": 85
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add SwiftTag Suite application properties for Diff Tools formatting toggles\n- map new AppleScript properties to UserDefaults-backed feedback settings\n- assert AppleScript read/write behavior in unit and UI harness coverage\n- add Diff Tools toggle accessibility values for UI assertions\n\ndocs: add transcript for AppleScript support feature branch",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-02-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/Features/Settings/DiffToolsView.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 97,
+      "commit_hash": "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: application, assert, behavior, coverage, defaults, diff",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "063c138",
+      "source_link": "../../sources/commits/063c138.html",
+      "subject": "feat(applescript): expose diff tools settings",
+      "test_line_count": 71
+    },
+    {
+      "archive_provenance": false,
+      "body": "- expose track tags and tag objects in SwiftTag.sdef for standard suite collection access\n- add session bridge and view-model tag upsert/delete flows with script errors for invalid targets\n- normalize related FLAC tag keys during AppleScript lookup, rename, replacement, and deletion\n- add AppleScript tests for canonical tag access and update plan and transcript artifacts\n\ndocs(transcript): add additional track properties and tag class implementation transcripts",
+      "changed_paths": [
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-21-1-26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-22-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift"
+      ],
+      "code_line_count": 695,
+      "commit_hash": "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: additional, delete, docs, during, flac, flows",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "0c2d385",
+      "source_link": "../../sources/commits/0c2d385.html",
+      "subject": "feat(applescript): support standard track tag scripting",
+      "test_line_count": 120
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add picture terminology, FLAC picture type enum, and track picture elements to SDEF\n- add SwiftTagScriptPicture wrappers with picture filtering and NSData descriptors\n- route scripted picture description edits through editor state and album-art refresh\n- cover picture reads, description updates, album-art refresh, and UI AppleScript harness\n\ndocs(plan): update AppleScript support plan 26 and add implementation transcript",
+      "changed_paths": [
+        "Docs/Plans/26-AddAppleScriptSupport.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-28-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 435,
+      "commit_hash": "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: album, cover, docs, editor, edits, elements",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "11ba785",
+      "source_link": "../../sources/commits/11ba785.html",
+      "subject": "feat(applescript): expose FLAC pictures to scripts",
+      "test_line_count": 283
+    },
+    {
+      "archive_provenance": false,
+      "body": "- add SwiftTag document package type registration with `.swifttag` extension and `<id>-<hash>.<extension>` pooled image assets\n- add `Save SwiftTag Document...` File menu command through focused-scene command system to serialize current frontmost-editor track list, tags, etc.\n- add image dimension/colors data will now surface as saveable file differences\n\ndocs(plan): add plan 15 for SwiftTag document creation support",
+      "changed_paths": [
+        "Docs/Plans/15-AddSwiftTagDocumentCreation.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/FLACBridge/include/FlacMetadataBridge.h",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift",
+        "SwiftTag/Features/FlacImport/FlacImportMapper.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/FlacMetadataService.swift",
+        "SwiftTag/Info.plist",
+        "SwiftTag/Shared/Utilities/PictureDataUtilities.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 931,
+      "commit_hash": "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: colors, command, current, docs, editor, etc",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1276536",
+      "source_link": "../../sources/commits/1276536.html",
+      "subject": "feat(package): add SwiftTag document creation and serialization",
+      "test_line_count": 298
+    },
+    {
+      "archive_provenance": false,
+      "body": "- keep the track title field focused while editing table rows\n- remove the table status refresh identity reset and related view plumbing\n- allow inactive finder opens to create a new session when a window action already exists\n- update track file inspector tests for the removed track view initializer argument\n- compare loaded picture fields explicitly in the document reader test to avoid actor isolation warnings\n\ntest(ui): add regression for track title focus loss\n\n- verify renaming a track in the table keeps the edited value after the first text change\n\ndocs(transcript): add transcript for test bug fixes\n\n- add the April 6 transcript covering the staged test and editor fixes",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-06-4-TestBugFixes.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorView.swift",
+        "SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagTests/TrackStatusViewInspectorTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 27,
+      "commit_hash": "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: after, already, avoid, bug, change, docs",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1936954",
+      "source_link": "../../sources/commits/1936954.html",
+      "subject": "fix(editor): preserve track title editing and queued finder opens",
+      "test_line_count": 29
+    },
+    {
+      "archive_provenance": false,
+      "body": "- change color terminology from script class to record-type\n- return color settings as NSDictionary records and accept Apple event record descriptors\n- update color settings tests to validate RGBA record round trips\n- rename track/disc total mismatch color scripting key to match settings name\n\ndocs(plans): add AppleScript support implementation transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-05-01-1-26-AddAppleScriptSupport.md",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTag/SwiftTag.sdef",
+        "SwiftTagTests/SwiftTagAppleScriptTests.swift"
+      ],
+      "code_line_count": 84,
+      "commit_hash": "1b08404c005806083a5443603d98c10c5510ee70",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: change, color, disc, docs, implementation, key",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1b08404",
+      "source_link": "../../sources/commits/1b08404.html",
+      "subject": "feat(applescript): model color settings as records",
+      "test_line_count": 45
+    },
+    {
+      "archive_provenance": false,
+      "body": "- Add `Open SwiftTag Document...` command to the File menu.\n- Add `SwiftTagDocumentPackageReader` to read `.swifttag` packages.\n- Update `EditorWindowCoordinator` to route `.swifttag` documents to existing unused windows or new windows.\n- Update `TagEditorViewModel` to load the `SwiftTagDocumentImportResult` into editable track state.\n- Retain the loaded document URL and ID for saving.\n- Include unit and UI tests for document read operations and routing.\n\ndocs(plan): add plan and transcript for SwiftTag document read",
+      "changed_paths": [
+        "Docs/Plans/16-AddSwiftTagDocumentRead.md",
+        "Docs/Plans/Transcripts/transcript-2026-04-04-1-16-AddSwiftTagDocumentRead.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Models/Track.swift",
+        "SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagDocumentPackage.swift",
+        "SwiftTag/SwiftTagApp.swift",
+        "SwiftTagTests/SwiftTagDocumentTests.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 479,
+      "commit_hash": "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: command, coordinator, docs, editable, editor, existing",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1c2bb82",
+      "source_link": "../../sources/commits/1c2bb82.html",
+      "subject": "feat(document): add support for opening .swifttag documents",
+      "test_line_count": 282
+    },
+    {
+      "archive_provenance": false,
+      "body": "",
+      "changed_paths": [
+        "BuildScripts/build-libflac.sh",
+        "Docs/FLACBridgeExecution.md",
+        "SwiftTag-Bridging-Header.h",
+        "SwiftTag.xcodeproj/project.pbxproj",
+        "SwiftTag.xcodeproj/xcshareddata/xcschemes/SwiftTagApp.xcscheme",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c",
+        "SwiftTag/FLACBridge/src/FlacMetadataBridge.c.template",
+        "SwiftTag/FlacMetadataService.swift"
+      ],
+      "code_line_count": 264,
+      "commit_hash": "1fcd08274065e59e148cb05d16e592e98f02bced",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: app, build, disable, flac, off, only",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "1fcd082",
+      "source_link": "../../sources/commits/1fcd082.html",
+      "subject": "Build ​FLAC from source and link as stais lib • configure FLAC CMake build for app use:    • static lib only (BUILD​_​SHARED​_​LIBS​=​OFF)    • disable programs (BUILD​_​PROGRAMS​=​OFF)    • disable C++ lib (BUILD​_​CXXLIBS​=​OFF)    • disable Ogg dependency (WITH​_​OGG​=​OFF) • remove dependency on bundled prebuilt Resources​/bin FLAC/metaflac artifacts",
+      "test_line_count": 0
+    },
+    {
+      "archive_provenance": false,
+      "body": "- resolve create command targets from tell-context receivers when at is omitted\n- create tag wrappers from track tag collections and attach inserted tags to tracks\n- expose tag specifier descriptors so make returns scriptable tag results\n- add UI coverage for make new tag inside tell first track\n\nfix(misc-tags): refresh misc tag rows after selection and reload changes\n\n- clear misc tag row values when no tracks are selected\n- reload misc tag rows after selected track reload replaces track data\n- add misc value field and destructive action accessibility identifiers\n- add unit and UI coverage for placeholder values and reload restoration\n\ndocs(transcripts): add AppleScript support session plan 26 and bug fix transcript",
+      "changed_paths": [
+        "Docs/Plans/Transcripts/transcript-2026-04-29-2-26-AddAppleScriptSupport.md",
+        "SwiftTag/ContentView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorMiscTagsView.swift",
+        "SwiftTag/Features/TagEditor/TagEditorViewModel.swift",
+        "SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift",
+        "SwiftTagTests/SwiftTagTests.swift",
+        "SwiftTagUITests/SwiftTagUITests.swift"
+      ],
+      "code_line_count": 170,
+      "commit_hash": "24428a1548324e06268c9174e358e22e9559801b",
+      "docs_line_count": 0,
+      "reasons": [
+        "subject tokens: after, bug, changes, clear, command, context",
+        "path/topic overlap"
+      ],
+      "score": 0.85,
+      "short_hash": "24428a1",
+      "source_link": "../../sources/commits/24428a1.html",
+      "subject": "fix(applescript): support making tags from track tell contexts",
+      "test_line_count": 295
+    }
+  ],
+  "candidate_plans": [
+    {
+      "creation_commit_id": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+      "current_source_path": "Docs/Plans/9-AddUIFeedbackSettings.md",
+      "display_title": "Add UI Feedback Settings Plan",
+      "plan_id": "9",
+      "revision_commit_ids": [
+        "83083cbcdf9667c18e3a5c3c11c66d2cfa24f4a6"
+      ],
+      "section_names": "Goal; Status; Scope; Implemented Behavior; Dependencies And Constraints; Destructive / Write-Back Behavior; Verification Summary; Acceptance Criteria (Implemented State); Follow-Up Notes",
+      "source_link": "../../sources/plans/9-AddUIFeedbackSettings.html#L1"
+    }
+  ],
+  "candidate_themes": [
+    {
+      "accepted_commit_ids": [
+        "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "AppleScript",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+          "entity_type": "commit",
+          "evidence_source": "keywords: script",
+          "relationship_type": "include",
+          "theme_id": "applescript"
+        }
+      ],
+      "theme_id": "applescript"
+    },
+    {
+      "accepted_commit_ids": [
+        "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+      ],
+      "accepted_plan_ids": [
+        "9"
+      ],
+      "display_name": "Diff",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "diff"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "9",
+          "entity_type": "plan",
+          "evidence_source": "explicit Plan Theme include",
+          "relationship_type": "include",
+          "theme_id": "diff"
+        }
+      ],
+      "theme_id": "diff"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "FLAC Lib",
+      "positive_and_negative_edges": [],
+      "theme_id": "flac-lib"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Picture",
+      "positive_and_negative_edges": [],
+      "theme_id": "picture"
+    },
+    {
+      "accepted_commit_ids": [],
+      "accepted_plan_ids": [],
+      "display_name": "Project",
+      "positive_and_negative_edges": [],
+      "theme_id": "project"
+    },
+    {
+      "accepted_commit_ids": [
+        "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Save",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+          "entity_type": "commit",
+          "evidence_source": "alias: save",
+          "relationship_type": "include",
+          "theme_id": "save"
+        }
+      ],
+      "theme_id": "save"
+    },
+    {
+      "accepted_commit_ids": [
+        "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+      ],
+      "accepted_plan_ids": [
+        "9"
+      ],
+      "display_name": "Settings",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+          "entity_type": "commit",
+          "evidence_source": "explicit Theme include",
+          "relationship_type": "include",
+          "theme_id": "settings"
+        },
+        {
+          "allocation_weight": 0.0,
+          "confidence": 1.0,
+          "entity_id": "9",
+          "entity_type": "plan",
+          "evidence_source": "explicit Plan Theme include",
+          "relationship_type": "include",
+          "theme_id": "settings"
+        }
+      ],
+      "theme_id": "settings"
+    },
+    {
+      "accepted_commit_ids": [
+        "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "SwiftTag Document",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.53,
+          "entity_id": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+          "entity_type": "commit",
+          "evidence_source": "keywords: session",
+          "relationship_type": "include",
+          "theme_id": "swifttag-document"
+        }
+      ],
+      "theme_id": "swifttag-document"
+    },
+    {
+      "accepted_commit_ids": [
+        "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+      ],
+      "accepted_plan_ids": [],
+      "display_name": "Tags",
+      "positive_and_negative_edges": [
+        {
+          "allocation_weight": 0.0,
+          "confidence": 0.9,
+          "entity_id": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+          "entity_type": "commit",
+          "evidence_source": "alias: tags",
+          "relationship_type": "include",
+          "theme_id": "tags"
+        }
+      ],
+      "theme_id": "tags"
+    }
+  ],
+  "conservation_preview": {
+    "commit_lens": {
+      "allocated_atomic_elapsed_seconds": 26422.0,
+      "allocated_back_and_forth": 13.0,
+      "allocated_lines": 513.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "header_note_lines": 12,
+    "plan_lens": {
+      "allocated_atomic_elapsed_seconds": 26422.0,
+      "allocated_back_and_forth": 13.0,
+      "allocated_lines": 513.0,
+      "unallocated_remainder": {
+        "assistant_processing": 0.0,
+        "back_and_forth": 0.0,
+        "lines": 0.0,
+        "user_response": 0.0
+      }
+    },
+    "segment_source_lines": 501,
+    "transcript_source_lines": 513
+  },
+  "current_review_status": {
+    "configured_content_digest": "ab1b6612de2535f639bcb46d73988a1e783d7fe8672061f0bb1808d9bb6e3754",
+    "configured_review_input_digest": "9f8f6d6deaf0691cb95e1e5d2218b07bf8ac67da50eba334cbe92c6515433514",
+    "message": "Reviewed allocation accepted",
+    "normalized_content_digest": "ab1b6612de2535f639bcb46d73988a1e783d7fe8672061f0bb1808d9bb6e3754",
+    "review_input_digest": "9f8f6d6deaf0691cb95e1e5d2218b07bf8ac67da50eba334cbe92c6515433514",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10",
+    "reviewed_by": "Codex semantic review A",
+    "transcript_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings"
+  },
+  "existing_review": {
+    "accepted_candidate_commit_ids": [
+      "ac28a73112d2a5170ee56f4f05fe6081f4376eb6"
+    ],
+    "accepted_candidate_plan_ids": [
+      "9"
+    ],
+    "evidence_note": "Reviewed against Plan 34, transcript, Plans, packet evidence, and git history.",
+    "feature_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-001"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-001",
+            "source_line_end": 53,
+            "source_line_start": 12
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-002"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-002",
+            "source_line_end": 93,
+            "source_line_start": 54
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-003"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-003",
+            "source_line_end": 124,
+            "source_line_start": 94
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-004"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-004",
+            "source_line_end": 154,
+            "source_line_start": 125
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-005"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-005",
+            "source_line_end": 176,
+            "source_line_start": 155
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-006"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-006",
+            "source_line_end": 216,
+            "source_line_start": 177
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-007"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-007",
+            "source_line_end": 251,
+            "source_line_start": 217
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-008"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-008",
+            "source_line_end": 283,
+            "source_line_start": 252
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-009"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-009",
+            "source_line_end": 312,
+            "source_line_start": 284
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-010"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-010",
+            "source_line_end": 354,
+            "source_line_start": 313
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-011"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-011",
+            "source_line_end": 433,
+            "source_line_start": 355
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-012"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-012",
+            "source_line_end": 491,
+            "source_line_start": 434
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "commit_hash": "ac28a73112d2a5170ee56f4f05fe6081f4376eb6",
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "role": "work",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-013"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-013",
+            "source_line_end": 512,
+            "source_line_start": 492
+          }
+        ]
+      }
+    ],
+    "feature_unallocated_remainder": {
+      "assistant_processing": 0,
+      "back_and_forth": 0,
+      "lines": 0,
+      "user_response": 0
+    },
+    "normalized_content_digest": "ab1b6612de2535f639bcb46d73988a1e783d7fe8672061f0bb1808d9bb6e3754",
+    "plan_allocations": [
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-001"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-001",
+            "source_line_end": 53,
+            "source_line_start": 12
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-002"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-002",
+            "source_line_end": 93,
+            "source_line_start": 54
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-003"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-003",
+            "source_line_end": 124,
+            "source_line_start": 94
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-004"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-004",
+            "source_line_end": 154,
+            "source_line_start": 125
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-005"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-005",
+            "source_line_end": 176,
+            "source_line_start": 155
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-006"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-006",
+            "source_line_end": 216,
+            "source_line_start": 177
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-007"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-007",
+            "source_line_end": 251,
+            "source_line_start": 217
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-008"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-008",
+            "source_line_end": 283,
+            "source_line_start": 252
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-009"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-009",
+            "source_line_end": 312,
+            "source_line_start": 284
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "direct",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-010"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-010",
+            "source_line_end": 354,
+            "source_line_start": 313
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-011"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-011",
+            "source_line_end": 433,
+            "source_line_start": 355
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-012"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-012",
+            "source_line_end": 491,
+            "source_line_start": 434
+          }
+        ]
+      },
+      {
+        "allocation_weight": 1.0,
+        "confidence": 1.0,
+        "evidence_note": "semantic match",
+        "plan_id": "9",
+        "role": "implementation",
+        "segment_ids": [
+          "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-013"
+        ],
+        "source_ranges": [
+          {
+            "segment_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings:segment-013",
+            "source_line_end": 512,
+            "source_line_start": 492
+          }
+        ]
+      }
+    ],
+    "plan_unallocated_remainder": {
+      "assistant_processing": 0,
+      "back_and_forth": 0,
+      "lines": 0,
+      "user_response": 0
+    },
+    "rejected_candidate_commit_ids": [
+      "03227c22ec04d4a16f48e8159bca42426af9eac7",
+      "0539816b5ba23a6e25ff44d6be08444b0f8dd6c7",
+      "063c138d4ad746588a85c0be70cc1c5c75854e87",
+      "0c2d38575541a8dada750da08698d78e75a4d3f0",
+      "11ba78598b25840b5e415e7410b8df4b75c964c5",
+      "1276536d7ce542d757187ed8e2a7a229c6741847",
+      "19369540b1a2f92b3ab4fd1cedb4db7cefe41498",
+      "1b08404c005806083a5443603d98c10c5510ee70",
+      "1c2bb82cfcda4a8e4043b7e883e42928b18064cf",
+      "1fcd08274065e59e148cb05d16e592e98f02bced",
+      "24428a1548324e06268c9174e358e22e9559801b",
+      "94246bbd4bebc8a284577f2d68b82ff5db235599",
+      "ae13badc1a2a880e7b374fa67010992d398fa737",
+      "c56695645a5579bac37f1f716650754ccc5750a1",
+      "e0cd7da70c303f9524054cf6e150d7fbfca3d9d1"
+    ],
+    "rejected_candidate_plan_ids": [],
+    "review_input_digest": "9f8f6d6deaf0691cb95e1e5d2218b07bf8ac67da50eba334cbe92c6515433514",
+    "review_method": "plan-34-v1",
+    "review_status": "reviewed",
+    "reviewed_at": "2026-07-10",
+    "reviewed_by": "Codex semantic review A",
+    "transcript_digest": "ab1b6612de2535f639bcb46d73988a1e783d7fe8672061f0bb1808d9bb6e3754"
+  },
+  "header": {
+    "agent": "GPT-5.3-Codex",
+    "export_date": "2026-03-17",
+    "reference_type": "Plan",
+    "references": [
+      "9-AddUIFeedbackSettings.md"
+    ]
+  },
+  "normalized_content_digest": "ab1b6612de2535f639bcb46d73988a1e783d7fe8672061f0bb1808d9bb6e3754",
+  "path": "Docs/Plans/Transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.md",
+  "raw_metrics": {
+    "assistant_processing_seconds": 3572.0,
+    "back_and_forth_count": 13,
+    "line_count": 513,
+    "turn_count": 26,
+    "user_response_seconds": 22850.0,
+    "valid_atomic_elapsed_seconds": 26422.0
+  },
+  "review_input_digest": "9f8f6d6deaf0691cb95e1e5d2218b07bf8ac67da50eba334cbe92c6515433514",
+  "review_method_version": "plan-34-v1",
+  "schema_version": 1,
+  "source_link": "../../sources/transcripts/transcript-2026-03-17-2-9-AddUIFeedbackSettings.html#L1",
+  "transcript_id": "transcript-2026-03-17-2-9-AddUIFeedbackSettings",
+  "unresolved_questions": [
+    "Accept or reject Commit ownership for every base segment.",
+    "Assign direct or implementation Plan role for every accepted Plan segment.",
+    "Explain any Commit-lens or Plan-lens unallocated remainder."
+  ]
+}

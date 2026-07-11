@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-05-26-1-MiscCleanupAndDocs</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-05-26-1-MiscCleanupAndDocs</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-05-26-1-MiscCleanupAndDocs.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>Date: 2026-05-26  </pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre>Reference Type: Misc  </pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>References: Documentation, Quick Look  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Agent: GPT-5.5 High (Codex app)  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre></pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>## User 2026-05-26T21:38:56Z </pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>Lines 52-58 of `SwiftTagDocumentQuickLookView.swift` were added as a starting point for showing from `.swifttag` document:</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>&lt;Bits Per Sample&gt; @ &lt;Sample Rate&gt; (&lt;#&gt; channel) &lt;space()r&gt; &lt;total duration&gt;</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>E.g.:</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>16 bit @ 44.1 kHz (stereo)      1:12:02</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre></pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>If `Bits Per Sample` or `Sample Rate` or `Channels` varies between tracks, then use the word &quot;mixed&quot;. If `Channels` is 1, then use the word &quot;mono&quot; else if `Channels` is 2, then use the word &quot;stereo&quot;. Total duration is to be computed as the sum of all track durations.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre></pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>Ask questions for clarification if needed.</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre></pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>## Assistant 2026-05-26T21:38:56Z (0s since User start)</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre></pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>Reading Quick Look snapshot/view now. Need find whether summary belongs in snapshot data or view-only formatting.</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre></pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>Snapshot already owns ordered rows and duration formatting, so summary should live there, with view only rendering it. Checking duplicate target file and current tests before edit.</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre></pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>Implementing snapshot-level audio summary: single-value fields display normal text, differing values display mixed, duration sums before formatting. View gets footer HStack so duration sits trailing.</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre></pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>Patch landed. Running focused diagnostics/build now; likely compile risk is Swift optional/generic formatting around summary helpers.</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre></pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>Build and QuickLook tests are green. Doing final diff/diagnostic sweep after small wrap cleanup.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre></pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>Implemented Quick Look audio summary.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre></pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>[SwiftTagDocumentQuickLookSnapshot.swift](Swift/SwiftTag/SwiftTag/Shared/QuickLook/SwiftTagDocumentQuickLookSnapshot.swift:235) now derives `16 bit @ 44.1 kHz (stereo)` style text, emits `mixed` for differing fields, maps `1`/`2` channels to `mono`/`stereo`, and sums track durations before formatting. [SwiftTagDocumentQuickLookView.swift](Swift/SwiftTag/SwiftTag/Shared/QuickLook/SwiftTagDocumentQuickLookView.swift:52) renders summary footer with trailing duration.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre></pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>Tests added in [SwiftTagQuickLookTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagQuickLookTests.swift:275). Verified: `BuildProject` passed, 11 `SwiftTagQuickLookTests` passed.</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre></pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>[ 2026-05-26T21:44:27Z (5m 31s since Assistant start) ]</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre></pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>## User 2026-05-26T22:45:27Z (1h 6m 31s since previous Assistant start) </pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre></pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>Remove `Show TOML` feature set including reference in README.md.</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre></pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>## Assistant 2026-05-26T22:45:27Z (0s since User start)</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre></pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>Need remove feature surface, not leave dead UI/doc hooks. I’ll trace Show TOML refs, then cut scoped code and verify build.</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre></pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>Found active refs in app menu, editor sheet, view model generator, utility view, plus Docs/README.md. Root README.md absent, so README target appears to be docs README.</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre></pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>Refs confined. Need remove state, focused value, menu item, sheet, helper, generator, utility view file, README bullets. Next edit scoped pieces.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre></pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>Editing now: command hook gone, sheet state gone, generator gone, utility view deleted, docs references removed.</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre></pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>Patch applied. Now scanning for remaining TOML hooks and build hazards before verify.</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre></pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>No remaining active TOML refs in app/tests/docs README. Build next, using Xcode tool so project graph catches stale file refs.</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre></pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>Removed `Show TOML` feature set.</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre></pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>Changed:</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- [SwiftTagApp.swift](Swift/SwiftTag/SwiftTag/SwiftTagApp.swift): removed command menu item</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- [ContentView.swift](Swift/SwiftTag/SwiftTag/ContentView.swift): removed sheet state/focused command/wiring</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- [TagEditorViewModel.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TagEditorViewModel.swift): removed TOML generator</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- Deleted [TOMLUtilityView.swift](Swift/SwiftTag/SwiftTag/Features/TagEditor/TOMLUtilityView.swift)</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- [Docs/README.md](Swift/SwiftTag/Docs/README.md): removed README refs</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre></pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- `rg` finds no active TOML refs in app/tests/docs README/project.</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>- Xcode build succeeds.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre></pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>[ 2026-05-26T22:47:23Z (1m 56s since Assistant start) ]</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre></pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>## User 2026-05-26T22:59:17Z (13m 51s since previous Assistant start) </pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre></pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>Update README.md: as this document was originally written at roughly the start of the project, much has changed. Review current app features from code, plans and user documentation and update accordingly.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre></pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>## Assistant 2026-05-26T22:59:17Z (0s since User start)</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>Reading project docs and app structure first. Need current feature surface before touching README.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>Found user docs, numbered plans through 29, app feature folders. Next: compare old README against current docs so update stays factual.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre></pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>Root README.md absent from current tree. Need confirm whether docs README is target or file missing and should be created at root.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre></pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>Only Docs/README.md exists, and it carries old “Does Today” snapshot plus plan list stuck at 1-4. Treating that as stale README source unless git says root file tracked/deleted.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre></pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>Need current feature map: commands, settings, document package, Quick Look, AppleScript, sandbox access. Reading source entry points plus user docs now.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre></pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>Docs confirm README stale: missing .swifttag sessions, Quick Look, AppleScript, sandbox paths, live diffs, duration/fingerprint columns, help docs. Checking model/service names so README points at right files.</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre></pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>Updating Docs/README.md now. Scope: replace early-project snapshot with current app overview, workflows, architecture map, tests, and AI context.</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre></pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>README rewrite done. Checking diff for accidental overreach and stale statements.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre></pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>Updated [Docs/README.md](Swift/SwiftTag/Docs/README.md). Root `README.md` not present; existing tracked README lives there.</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>Covered current app: FLAC editing, `.swifttag` documents, Quick Look, AppleScript, settings, sandbox paths, user docs, architecture map, tests, latest plan list. Docs-only change; no tests run.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre></pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>[ 2026-05-26T23:01:59Z (2m 42s since Assistant start) ]</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre></pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>## User 2026-05-26T23:26:13Z (26m 57s since previous Assistant start) </pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre></pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>Update `Build And Test` section of `Docs/README.md` to include information on dependencies (located in `ThirdParty` folder) including links to associated github repos.</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre></pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>## Assistant 2026-05-26T23:26:13Z (0s since User start)</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre></pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>Checking ThirdParty contents and README/license hints. Need dependency names and repo URLs from local source.</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre></pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>Found two vendored deps: libFLAC and ViewInspector. Reading repo metadata so links exact, not guessed.</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre></pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>Adding concise dependency note inside Build And Test. Will state vendored source, purpose, repo links, and no separate package fetch needed.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre></pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>Patch in place. Quick diff check and timestamp next.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre></pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>Updated [Docs/README.md](Swift/SwiftTag/Docs/README.md) `Build And Test` section with `ThirdParty/` dependency notes:</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre></pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>- `flac` linked to `https://github.com/xiph/flac`</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- `ViewInspector` linked to `https://github.com/nalexn/ViewInspector`</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>- noted vendored sources are project dependency source of truth</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre></pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>Docs-only change; no tests run.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre></pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>[ 2026-05-26T23:26:51Z (38s since Assistant start) ]</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre></pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

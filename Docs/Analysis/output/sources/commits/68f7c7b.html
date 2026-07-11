@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: feat(editor): add track management commands, safeguards, and additive import flows</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: feat(editor): add track management commands, safeguards, and additive import flows</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-03-19</p>
+<p><code>68f7c7b1c66c1a7acd0564610efe03ceff89180b</code></p>
+<p>feat(editor): add track management commands, safeguards, and additive import flows</p>
+<h2>Body</h2><pre>• add read-only # track table column and default ascending track-number sort
+• add Auto update ​Track ​Total and Update ​Track ​Total on ​Locked ​Tracks settings
+• disable total-tracks editing while auto update is enabled
+• sync track total from non-deleted track count and apply by locked-track setting
+• add Set ​Track ​Total (*) actions to table, total-tracks field, and File menu
+• add additive Add ​FLAC files... and read-only variant in context and File menus
+• add bookmark-identity duplicate filtering for additive import and drop flows
+• add .flac drag/drop additive import with Option modifier forcing locked add
+• add selection-aware reload/remove commands with enabled-state gating
+• add destructive confirmation flow for load, reload, remove, close window, and quit
+• include unsaved edit counts in destructive prompts and action-specific confirm labels
+• update File menu ordering, separators, focused command routing, and shortcuts
+• scope unsaved-edit/file references to each window/tab lifecycle
+• skip writing unchanged tracks during save operations
+• add unit and ViewInspector tests for total update, duplicate filtering, and UI states</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>90.9 Very High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>5h 17m</span></div>
+  <div><strong>Assistant</strong><span>34m 58s</span></div>
+  <div><strong>User Response</strong><span>4h 42m</span></div>
+  <div><strong>Back/Forth</strong><span>7.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/diff.html">Diff</a>, <a href="../../themes/save.html">Save</a>, <a href="../../themes/settings.html">Settings</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p><a href="../../plans/10.html">Plan 10: Add Track Management Plan</a></p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-03-19-1-10-AddTrackManagement.html#L1">transcript-2026-03-19-1-10-AddTrackManagement</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-19-1-10-AddTrackManagement.html#L12">transcript-2026-03-19-1-10-AddTrackManagement</a></td><td>transcript-2026-03-19-1-10-AddTrackManagement:segment-001</td><td>work</td><td>1.000</td><td>41.6</td><td>59m 48s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-19-1-10-AddTrackManagement.html#L52">transcript-2026-03-19-1-10-AddTrackManagement</a></td><td>transcript-2026-03-19-1-10-AddTrackManagement:segment-002</td><td>work</td><td>1.000</td><td>36.4</td><td>15m 51s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-19-1-10-AddTrackManagement.html#L87">transcript-2026-03-19-1-10-AddTrackManagement</a></td><td>transcript-2026-03-19-1-10-AddTrackManagement:segment-003</td><td>work</td><td>1.000</td><td>101.9</td><td>1h 17m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-19-1-10-AddTrackManagement.html#L185">transcript-2026-03-19-1-10-AddTrackManagement</a></td><td>transcript-2026-03-19-1-10-AddTrackManagement:segment-004</td><td>work</td><td>1.000</td><td>37.4</td><td>32m 18s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-19-1-10-AddTrackManagement.html#L221">transcript-2026-03-19-1-10-AddTrackManagement</a></td><td>transcript-2026-03-19-1-10-AddTrackManagement:segment-005</td><td>work</td><td>1.000</td><td>29.1</td><td>1h 36m</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-19-1-10-AddTrackManagement.html#L249">transcript-2026-03-19-1-10-AddTrackManagement</a></td><td>transcript-2026-03-19-1-10-AddTrackManagement:segment-006</td><td>work</td><td>1.000</td><td>30.2</td><td>31m 7s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-03-19-1-10-AddTrackManagement.html#L278">transcript-2026-03-19-1-10-AddTrackManagement</a></td><td>transcript-2026-03-19-1-10-AddTrackManagement:segment-007</td><td>work</td><td>1.000</td><td>37.4</td><td>5m 23s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/10-AddTrackManagement.md</td><td>202</td><td>0</td><td>plans</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>387</td><td>5</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/GeneralSettingsView.swift</td><td>1</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/Settings/TagWriteSettingsView.swift</td><td>10</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorCoreTagsView.swift</td><td>17</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift</td><td>77</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorView.swift</td><td>32</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorViewModel.swift</td><td>259</td><td>20</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/SaveSettings.swift</td><td>4</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Models/Track.swift</td><td>4</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/UnsavedChangesCoordinator.swift</td><td>63</td><td>0</td><td>app_code</td></tr>
+<tr><td>SwiftTag/SwiftTagApp.swift</td><td>49</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagTests.swift</td><td>119</td><td>0</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/TrackStatusViewInspectorTests.swift</td><td>135</td><td>5</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>932.00</td></tr>
+<tr><td>transcript_lines</td><td>314.00</td></tr>
+<tr><td>plan_lines</td><td>202.00</td></tr>
+<tr><td>elapsed_time</td><td>19077.00</td></tr>
+<tr><td>assistant_processing_time</td><td>2098.00</td></tr>
+<tr><td>back_and_forth_count</td><td>7.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>

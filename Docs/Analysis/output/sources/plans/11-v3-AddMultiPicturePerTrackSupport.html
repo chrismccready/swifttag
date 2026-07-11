@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plan Source: 11-v3-AddMultiPicturePerTrackSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Plan Source: 11-v3-AddMultiPicturePerTrackSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/11-v3-AddMultiPicturePerTrackSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre># Add Multi Picture Per Track Support Plan</pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre></pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>## Goal</pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Revise the multi-picture album-art implementation so album-level pinning directly controls persistent per-type pin state, remove the sheet-level track-scope picker and all transient pin-restoration behavior, and keep duplicate-reference add/navigation behavior unchanged.</pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>## Scope</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>In scope:</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Remove the sheet toolbar `Track Picture Scope` control identified as `albumArt.sheet.trackPictureScopePicker`.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre>- Change `Pin Album Pictures` so it becomes the source of truth for all `Pin Track Pictures` values instead of a temporary effective override.</pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>- Remove all transient pin-state preservation and restoration logic.</pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre>- Keep `Pin Track Pictures` initialization tied to the `Save all Pictures to all Tracks` setting only at creation/instantiation time.</pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>- Preserve the existing pooled-picture and duplicate-reference behavior when adding an image that already exists in the pool or is already referenced in the destination slot.</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>- Update plan coverage for model behavior, UI behavior, save/write behavior, and regression tests affected by the new pin semantics.</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre></pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>Out of scope:</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>- Unrelated tag-editing flows, settings redesign unrelated to the two existing picture-save toggles, or FLAC bridge format changes.</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>- Changing the existing `Type Picture Scope` browser control unless implementation review proves it is incompatible with the requested pin semantics.</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre></pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>## Plan Input Checklist Coverage</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>- Latest numbered plan reviewed: `Docs/Plans/11-v2-AddMultiPicturePerTrackSupport.md`.</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>- Current implementation files reviewed:</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>- `SwiftTag/Features/AlbumArt/AlbumArtSheetView.swift`</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>- `SwiftTag/Features/AlbumArt/AlbumArtViewModel.swift`</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>- `SwiftTag/Features/AlbumArt/AlbumArtTypes.swift`</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>- `SwiftTag/Features/Settings/TagWriteSettingsView.swift`</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>- `SwiftTag/Shared/Models/SaveSettings.swift`</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>- `SwiftTag/SwiftTagTests/TrackStatusViewInspectorTests.swift`</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>- Relevant guides reviewed:</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>- `AGENTS.md`</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>- `Docs/Guides/testing-guide.md`</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>- Fixture-first check: not required for this planning revision because the requested behavior change is centered on album-art editor state and settings semantics rather than FLAC import/write mapping changes. Fixture-backed verification remains part of the downstream implementation strategy where save/write behavior is touched.</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>- Constraints accounted for:</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>- Existing implementation already contains both scope pickers and a stored-vs-effective pin model, so this revision requires explicit removal/simplification rather than additive work.</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>- Locked-track protections and selection-based behavior already exist and must be reconciled with the new destructive album-pin behavior before implementation.</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>- Save settings currently persist only the two app-level defaults; per-slot pin state is editor-session state and must remain coherent across import, reload, selection changes, and save.</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre></pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>## Current Implementation Snapshot</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>- `AlbumArtSheetView` currently renders both `albumArt.sheet.trackPictureScopePicker` and `albumArt.sheet.typePictureScopePicker`.</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>- `AlbumArtViewModel` currently stores:</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>- `pinAlbumPictures`</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>- `trackPictureScope`</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>- `typePictureScopeBySlot`</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>- `unpinnedReferenceKeysByTrackID`</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>- forced/effective pin helpers that allow temporary UI override while preserving underlying state</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>- `setAlbumPicturesPinned(_:)` currently behaves like a temporary override, not a destructive reset of per-slot pin values.</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>- `isCurrentPicturePinned`, `setCurrentPicturePinned`, and `forcedTrackPinState` currently distinguish stored state from effective state.</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>- `configurePinSettings(saveFrontCoverToAllTracks:saveAllPicturesToAllTracks:)` currently updates runtime forced behavior, not just per-slot default initialization.</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>- Duplicate add behavior already has pooled-reference checks and current-picture navigation behavior that should remain intact.</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre></pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>## Confirmed Decisions</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>- Remove `albumArt.sheet.trackPictureScopePicker`.</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>- “pinned to all in type slot” means all loaded and unlocked tracks.</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>- `Pin Album Pictures` On:</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>- disables `Pin Track Pictures`</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>- sets all `Pin Track Pictures` to On/pinned</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>- does not preserve transient prior pin values for later restoration</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre>- makes newly added pictures pinned to all in their type slot</pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>- `Pin Album Pictures` Off:</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre>- enables `Pin Track Pictures`</pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>- sets all `Pin Track Pictures` to Off/unpinned</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>- does not preserve transient prior pin values for later restoration</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>- makes newly added pictures unpinned by default</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>- If a picture is added that already has a reference, do not modify its reference/pin state.</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre>- If a picture is added to a slot that already references it, navigate to that picture and do not modify reference/pin state.</pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>- Remove all pin-related transient state logic.</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre>- Locked tracks are excluded from destructive pin rewrites triggered by `Pin Album Pictures`.</pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>- `Save all Pictures to all Tracks` sets the default initial value of `Pin Track Pictures`:</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre>- On means newly instantiated `Pin Track Pictures` starts On</pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>- Off means newly instantiated `Pin Track Pictures` starts Off</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>- After initial instantiation, toggling `Save all Pictures to all Tracks` does not mutate existing `Pin Track Pictures` values</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre>- Initial instantiation of `Pin Track Pictures` means first `AlbumArtViewModel` creation.</pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>- `Save Front Cover to all Tracks` is not removed; it becomes a specialized initialization/default-plus-live-behavior rule for the `Front Cover` slot:</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre>- It can be toggled On or Off at any time.</pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>- When On:</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre>- `Pin Track Pictures` for `Front Cover` is set On and disabled.</pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>- `albumArt.sheet.typePictureScopePicker` for `Front Cover` is set to `allTrackPictures` and disabled.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre>- Any picture added to `Front Cover` is pinned.</pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>- No other setting overrides this behavior except locked tracks.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre>- Locked tracks never have pin settings changed or picture data written to them.</pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>- When Off:</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre>- `Pin Track Pictures` for `Front Cover` is set Off unless `Pin Album Pictures` is On.</pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>- `Pin Track Pictures` for `Front Cover` is enabled when `Pin Album Pictures` is Off.</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- `albumArt.sheet.typePictureScopePicker` for `Front Cover` is set to `selectedTrackPictures` and enabled.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- Any picture added to `Front Cover` is not pinned unless `Pin Album Pictures` is On.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- When `Save Front Cover to all Tracks` is toggled Off, `Pin Track Pictures` and `albumArt.sheet.typePictureScopePicker` for `Front Cover` are treated like any other slot and immediately follow `Pin Album Pictures`.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre></pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre>## Dependencies And Constraints</pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>- `AlbumArtViewModel` currently uses per-track reference sets plus `unpinnedReferenceKeysByTrackID`; the new behavior may allow that structure to be simplified or replaced, but the plan should avoid assuming a full storage redesign until implementation confirms the minimum change.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre>- `Type Picture Scope` currently influences visible pictures and manual track-pin target resolution. The requested behavior changes album-level pin semantics, but it does not explicitly redefine per-type scope behavior.</pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>- Locked tracks, selected-track semantics, and save-scope semantics remain a likely source of ambiguity because album-level pinning now sounds destructive rather than temporary.</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>- Locked tracks remain excluded from both destructive pin rewrites and picture-data writeback.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>- The save pipeline still needs to produce per-track picture payloads and respect existing multi-picture ordering constraints.</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- `Save Front Cover to all Tracks` now has slot-specific live UI and scope behavior that must coexist with `Pin Album Pictures` without reintroducing transient-state restoration.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre></pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre>## High-Risk Concerns</pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>### Product / Behavioral Risks</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre>- Destructive album-level pinning can silently wipe nuanced per-track pin choices unless the model and UI copy are explicit.</pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>- `Save Front Cover to all Tracks` now mixes initialization semantics with live forced behavior for the front-cover slot only; precedence with `Pin Album Pictures` must stay explicit and testable.</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre>- Removing transient pin logic may require a more direct representation of per-slot pin intent so that save output and visible UI stay aligned.</pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre></pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>### Tooling / Environment / Sandbox Risks</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>- Simplifying pin logic will touch UI and model code that already has ViewInspector coverage; tests should prefer stable binding/state assertions over brittle toolbar traversal.</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>- Save/write verification may still require fixture-backed tests if implementation changes alter how per-track pinned references are materialized at write time.</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre></pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>## Destructive / Write-Back Behavior</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>- Preserved:</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>- Duplicate pooled-picture detection and &quot;navigate instead of mutate&quot; behavior for already-referenced additions.</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>- Existing picture-only vs tag-only save entry points, unless implementation finds coupling that must be adjusted to keep pin behavior consistent.</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>- Existing bridge-level rewrite behavior that rewrites picture blocks from Swift-generated payloads.</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre>- Replaced:</pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>- Album-level pinning no longer acts as a temporary effective override; it directly resets all current `Pin Track Pictures` state.</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>- `Save all Pictures to all Tracks` no longer forcibly changes live `Pin Track Pictures` state after those controls have been instantiated.</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>- Removed:</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>- Temporary/effective pin UI state that differs from stored editor-session pin state.</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>- Restoration of prior pin values when `Pin Album Pictures` or settings toggles change.</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre></pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>## Implementation Phases</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>1. Pin-State Model Simplification</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>- Audit the current stored-vs-effective helpers in `AlbumArtViewModel`.</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>- Remove the model paths that preserve prior pin values for later restoration.</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>- Refactor album-level pinning so `setAlbumPicturesPinned(_:)` directly updates persistent editor-session `Pin Track Pictures` state for every slot across all loaded unlocked tracks.</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>- Reconcile `unpinnedReferenceKeysByTrackID` and related helpers with the simpler destructive semantics.</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre></pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>2. Sheet Toolbar And UI Behavior Update</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>- Remove `albumArt.sheet.trackPictureScopePicker` and any supporting sheet-level scope label logic that exists only for that control.</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre>- Keep `Pin Album Pictures` in the toolbar, but make its On/Off action destructive to all slot pin values.</pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>- Ensure `Pin Track Pictures` is disabled while `Pin Album Pictures` is On and enabled when it is Off.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>- Retain any UI needed for `Type Picture Scope` only if it still has a clear responsibility after the pin-model simplification.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>3. Add/Import Behavior Alignment</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>- When `Pin Album Pictures` is On, newly added pictures should enter as pinned across all loaded unlocked tracks for their slot.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>- When `Pin Album Pictures` is Off, newly added pictures should enter unpinned by default.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre>- For `Front Cover`, `Save Front Cover to all Tracks` On forces new additions to be pinned and forces type scope to `allTrackPictures` unless the affected tracks are locked.</pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>- For `Front Cover`, `Save Front Cover to all Tracks` Off forces new additions to be unpinned and forces type scope to `selectedTrackPictures` unless `Pin Album Pictures` is On.</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre>- Preserve the no-op behavior when adding a picture that is already referenced, and preserve navigation-only behavior when the destination slot already references that picture.</pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre></pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre>4. Settings Initialization Behavior</pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>- Change `Save all Pictures to all Tracks` handling so it only provides the default initial `Pin Track Pictures` value for newly instantiated slot state.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre>- Define first instantiation as first `AlbumArtViewModel` creation and ensure later `Save all Pictures to all Tracks` changes do not retroactively mutate existing slot state.</pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>- Rework `Save Front Cover to all Tracks` so it:</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre>- can be toggled live</pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>- forces `Front Cover` pin On + disabled and type scope `allTrackPictures` + disabled when On</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre>- forces `Front Cover` pin Off and type scope `selectedTrackPictures` immediately when Off</pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>- then lets `Front Cover` pin and type scope behave like any other slot, including immediate `Pin Album Pictures` control if album pin is On</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre>- never mutates locked tracks</pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre></pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre>5. Save Pipeline And Regression Alignment</pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>- Verify that the simplified pin model still produces correct per-track picture payloads.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre>- Remove any save-time reliance on temporary effective pin state.</pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>- Review reload/discard flows to ensure they rebuild pin defaults and live state predictably under the new rules.</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre></pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>6. Validation And Hardening</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre>- Refresh diagnostics for touched Swift files.</pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>- Build the project.</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- Add targeted tests for destructive album-pin transitions, slot default initialization, duplicate add/no-op behavior, and any save-path regressions.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre></pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>## Test Strategy</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>Order:</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre>1. Unit tests for `AlbumArtViewModel` behavior:</pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>- `Pin Album Pictures` On sets all slot pin states On and disables per-slot toggles.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre>- `Pin Album Pictures` Off sets all slot pin states Off and re-enables per-slot toggles.</pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>- No prior pin state is restored after toggling album pin back Off.</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>- Locked tracks are excluded from album-pin destructive rewrites.</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- Newly added pictures inherit pinned/unpinned default from current album-pin state.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>- Adding an already-referenced pooled picture does not change pin/reference state.</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>- Adding a picture to a slot that already references it navigates to it without mutation.</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- `Save all Pictures to all Tracks` only affects slot pin default at first `AlbumArtViewModel` instantiation.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre>- `Save Front Cover to all Tracks` On forces front-cover pin On and disabled, forces front-cover type scope to `allTrackPictures` and disabled, and pins new front-cover additions for unlocked tracks.</pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>- `Save Front Cover to all Tracks` Off switches front-cover type scope back to `selectedTrackPictures` immediately and then lets front-cover pin/scope behavior follow `Pin Album Pictures` like any other slot.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre>2. Fixture/service tests if implementation changes save payload generation:</pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>- verify per-track write payloads still match current pinned state</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre>- verify locked tracks are excluded from forced front-cover and album-pin write behavior</pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>- verify no hidden transient restoration path remains in save output</pre></td></tr>
+<tr id="L174"><th><a href="#L174">174</a></th><td><pre>3. ViewInspector tests:</pre></td></tr>
+<tr id="L175"><th><a href="#L175">175</a></th><td><pre>- `albumArt.sheet.trackPictureScopePicker` is absent.</pre></td></tr>
+<tr id="L176"><th><a href="#L176">176</a></th><td><pre>- `Pin Track Pictures` disabled-state follows `Pin Album Pictures`.</pre></td></tr>
+<tr id="L177"><th><a href="#L177">177</a></th><td><pre>- Front-cover `albumArt.sheet.typePictureScopePicker` disabled-state and bound value follow `Save Front Cover to all Tracks`.</pre></td></tr>
+<tr id="L178"><th><a href="#L178">178</a></th><td><pre>- Toolbar and metadata remain inspectable after removing the sheet scope picker.</pre></td></tr>
+<tr id="L179"><th><a href="#L179">179</a></th><td><pre>- Settings UI still exposes `Save all Pictures to all Tracks` with unchanged accessibility identifiers.</pre></td></tr>
+<tr id="L180"><th><a href="#L180">180</a></th><td><pre>4. XCUI only if toolbar/menu behavior cannot be asserted reliably with ViewInspector.</pre></td></tr>
+<tr id="L181"><th><a href="#L181">181</a></th><td><pre></pre></td></tr>
+<tr id="L182"><th><a href="#L182">182</a></th><td><pre>## Acceptance Criteria</pre></td></tr>
+<tr id="L183"><th><a href="#L183">183</a></th><td><pre>- The album-art sheet no longer contains `albumArt.sheet.trackPictureScopePicker`.</pre></td></tr>
+<tr id="L184"><th><a href="#L184">184</a></th><td><pre>- Turning `Pin Album Pictures` On sets every current `Pin Track Pictures` state to On, disables those controls, and does not preserve previous values for restoration.</pre></td></tr>
+<tr id="L185"><th><a href="#L185">185</a></th><td><pre>- Turning `Pin Album Pictures` Off sets every current `Pin Track Pictures` state to Off, enables those controls, and does not restore previous values.</pre></td></tr>
+<tr id="L186"><th><a href="#L186">186</a></th><td><pre>- Locked tracks are excluded from those On/Off destructive pin rewrites.</pre></td></tr>
+<tr id="L187"><th><a href="#L187">187</a></th><td><pre>- Newly added pictures default to pinned when `Pin Album Pictures` is On and default to unpinned when it is Off.</pre></td></tr>
+<tr id="L188"><th><a href="#L188">188</a></th><td><pre>- Adding an already-referenced picture remains a no-op with respect to pin/reference state.</pre></td></tr>
+<tr id="L189"><th><a href="#L189">189</a></th><td><pre>- Adding a picture to a slot that already references it navigates to the existing picture and remains a no-op with respect to pin/reference state.</pre></td></tr>
+<tr id="L190"><th><a href="#L190">190</a></th><td><pre>- No pin-related transient/effective-state restoration logic remains in the implementation.</pre></td></tr>
+<tr id="L191"><th><a href="#L191">191</a></th><td><pre>- `Save all Pictures to all Tracks` only sets the default initial `Pin Track Pictures` value at first `AlbumArtViewModel` creation and does not rewrite existing slot pin states when toggled later.</pre></td></tr>
+<tr id="L192"><th><a href="#L192">192</a></th><td><pre>- `Save Front Cover to all Tracks` On forces front-cover pin On + disabled, forces front-cover type scope to `allTrackPictures` + disabled, and causes new front-cover additions to pin across loaded unlocked tracks only.</pre></td></tr>
+<tr id="L193"><th><a href="#L193">193</a></th><td><pre>- `Save Front Cover to all Tracks` Off switches front-cover type scope to `selectedTrackPictures` immediately and then front-cover pin/scope follow `Pin Album Pictures` the same as any other slot.</pre></td></tr>
+<tr id="L194"><th><a href="#L194">194</a></th><td><pre>- Locked tracks never have pin settings changed or picture data written to them due to album-pin or front-cover setting behavior.</pre></td></tr>
+<tr id="L195"><th><a href="#L195">195</a></th><td><pre>- Save output follows the live current pin state, not a hidden effective override layer.</pre></td></tr>
+<tr id="L196"><th><a href="#L196">196</a></th><td><pre></pre></td></tr>
+<tr id="L197"><th><a href="#L197">197</a></th><td><pre>## Open Questions</pre></td></tr>
+<tr id="L198"><th><a href="#L198">198</a></th><td><pre>- None currently.</pre></td></tr></table></main></body></html>

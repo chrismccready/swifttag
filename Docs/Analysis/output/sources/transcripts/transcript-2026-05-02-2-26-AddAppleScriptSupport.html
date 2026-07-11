@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transcript Source: transcript-2026-05-02-2-26-AddAppleScriptSupport</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Transcript Source: transcript-2026-05-02-2-26-AddAppleScriptSupport</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main><p>Docs/Plans/Transcripts/transcript-2026-05-02-2-26-AddAppleScriptSupport.md</p><table class="source-lines"><tr id="L1"><th><a href="#L1">1</a></th><td><pre>Date: 2026-05-02    </pre></td></tr>
+<tr id="L2"><th><a href="#L2">2</a></th><td><pre>Reference Type: Plan  </pre></td></tr>
+<tr id="L3"><th><a href="#L3">3</a></th><td><pre>References: 26-AddAppleScriptSupport.md  </pre></td></tr>
+<tr id="L4"><th><a href="#L4">4</a></th><td><pre>Agent: GPT-5.5 Extra High (Codex app)  </pre></td></tr>
+<tr id="L5"><th><a href="#L5">5</a></th><td><pre></pre></td></tr>
+<tr id="L6"><th><a href="#L6">6</a></th><td><pre>Note:</pre></td></tr>
+<tr id="L7"><th><a href="#L7">7</a></th><td><pre>- This file contains the visible user/assistant conversation content from this session.</pre></td></tr>
+<tr id="L8"><th><a href="#L8">8</a></th><td><pre>- Hidden system and developer instructions are excluded.</pre></td></tr>
+<tr id="L9"><th><a href="#L9">9</a></th><td><pre></pre></td></tr>
+<tr id="L10"><th><a href="#L10">10</a></th><td><pre>## User 2026-05-02T20:33:08Z </pre></td></tr>
+<tr id="L11"><th><a href="#L11">11</a></th><td><pre></pre></td></tr>
+<tr id="L12"><th><a href="#L12">12</a></th><td><pre>1. Add to &quot;SwiftTag Suite&quot; of `SwiftTag.sdef`</pre></td></tr>
+<tr id="L13"><th><a href="#L13">13</a></th><td><pre>```XML</pre></td></tr>
+<tr id="L14"><th><a href="#L14">14</a></th><td><pre>&lt;class name=&quot;window&quot; code=&quot;cwin&quot; description=&quot;A window.&quot;&gt;</pre></td></tr>
+<tr id="L15"><th><a href="#L15">15</a></th><td><pre>    &lt;cocoa class=&quot;NSWindow&quot;/&gt;</pre></td></tr>
+<tr id="L16"><th><a href="#L16">16</a></th><td><pre>    &lt;property name=&quot;name&quot; code=&quot;pnam&quot; type=&quot;text&quot; access=&quot;r&quot; description=&quot;The title of the window.&quot;&gt;</pre></td></tr>
+<tr id="L17"><th><a href="#L17">17</a></th><td><pre>        &lt;cocoa key=&quot;title&quot;/&gt;</pre></td></tr>
+<tr id="L18"><th><a href="#L18">18</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L19"><th><a href="#L19">19</a></th><td><pre>    &lt;property name=&quot;id&quot; code=&quot;ID  &quot; type=&quot;integer&quot; access=&quot;r&quot; description=&quot;The unique identifier of the window.&quot;&gt;</pre></td></tr>
+<tr id="L20"><th><a href="#L20">20</a></th><td><pre>        &lt;cocoa key=&quot;uniqueID&quot;/&gt;</pre></td></tr>
+<tr id="L21"><th><a href="#L21">21</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L22"><th><a href="#L22">22</a></th><td><pre>    &lt;property name=&quot;index&quot; code=&quot;pidx&quot; type=&quot;integer&quot; description=&quot;The index of the window, ordered front to back.&quot;&gt;</pre></td></tr>
+<tr id="L23"><th><a href="#L23">23</a></th><td><pre>        &lt;cocoa key=&quot;orderedIndex&quot;/&gt;</pre></td></tr>
+<tr id="L24"><th><a href="#L24">24</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L25"><th><a href="#L25">25</a></th><td><pre>    &lt;property name=&quot;bounds&quot; code=&quot;pbnd&quot; type=&quot;rectangle&quot; description=&quot;The bounding rectangle of the window.&quot;&gt;</pre></td></tr>
+<tr id="L26"><th><a href="#L26">26</a></th><td><pre>        &lt;cocoa key=&quot;bounds&quot;/&gt;</pre></td></tr>
+<tr id="L27"><th><a href="#L27">27</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L28"><th><a href="#L28">28</a></th><td><pre>    &lt;property name=&quot;closeable&quot; code=&quot;hclb&quot; type=&quot;boolean&quot; access=&quot;r&quot; description=&quot;Does the window have a close button?&quot;&gt;</pre></td></tr>
+<tr id="L29"><th><a href="#L29">29</a></th><td><pre>        &lt;cocoa key=&quot;hasCloseBox&quot;/&gt;</pre></td></tr>
+<tr id="L30"><th><a href="#L30">30</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L31"><th><a href="#L31">31</a></th><td><pre>    &lt;property name=&quot;collapseable&quot; code=&quot;pWSh&quot; type=&quot;boolean&quot; access=&quot;r&quot; description=&quot;does the window have a collapse button?&quot;&gt;</pre></td></tr>
+<tr id="L32"><th><a href="#L32">32</a></th><td><pre>        &lt;cocoa key=&quot;isCollapseable&quot;/&gt;</pre></td></tr>
+<tr id="L33"><th><a href="#L33">33</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L34"><th><a href="#L34">34</a></th><td><pre>    &lt;property name=&quot;collapsed&quot; code=&quot;wshd&quot; type=&quot;boolean&quot; description=&quot;is the window collapsed?&quot;&gt;</pre></td></tr>
+<tr id="L35"><th><a href="#L35">35</a></th><td><pre>        &lt;cocoa key=&quot;isCollapsed&quot;/&gt;</pre></td></tr>
+<tr id="L36"><th><a href="#L36">36</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L37"><th><a href="#L37">37</a></th><td><pre>    &lt;property name=&quot;full screen&quot; code=&quot;pFSc&quot; type=&quot;boolean&quot; description=&quot;is the window full screen?&quot;&gt;</pre></td></tr>
+<tr id="L38"><th><a href="#L38">38</a></th><td><pre>        &lt;cocoa key=&quot;isFullScreen&quot;/&gt;</pre></td></tr>
+<tr id="L39"><th><a href="#L39">39</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L40"><th><a href="#L40">40</a></th><td><pre>    &lt;property name=&quot;position&quot; code=&quot;ppos&quot; type=&quot;point&quot; description=&quot;the upper left position of the window&quot;&gt;</pre></td></tr>
+<tr id="L41"><th><a href="#L41">41</a></th><td><pre>        &lt;cocoa key=&quot;position&quot;/&gt;</pre></td></tr>
+<tr id="L42"><th><a href="#L42">42</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L43"><th><a href="#L43">43</a></th><td><pre>    &lt;property name=&quot;resizable&quot; code=&quot;prsz&quot; type=&quot;boolean&quot; access=&quot;r&quot; description=&quot;Can the window be resized?&quot;&gt;</pre></td></tr>
+<tr id="L44"><th><a href="#L44">44</a></th><td><pre>        &lt;cocoa key=&quot;isResizable&quot;/&gt;</pre></td></tr>
+<tr id="L45"><th><a href="#L45">45</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L46"><th><a href="#L46">46</a></th><td><pre>    &lt;property name=&quot;visible&quot; code=&quot;pvis&quot; type=&quot;boolean&quot; description=&quot;Is the window visible right now?&quot;&gt;</pre></td></tr>
+<tr id="L47"><th><a href="#L47">47</a></th><td><pre>        &lt;cocoa key=&quot;isVisible&quot;/&gt;</pre></td></tr>
+<tr id="L48"><th><a href="#L48">48</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L49"><th><a href="#L49">49</a></th><td><pre>    &lt;property name=&quot;zoomable&quot; code=&quot;iszm&quot; type=&quot;boolean&quot; access=&quot;r&quot; description=&quot;Does the window have a zoom button?&quot;&gt;</pre></td></tr>
+<tr id="L50"><th><a href="#L50">50</a></th><td><pre>        &lt;cocoa key=&quot;isZoomable&quot;/&gt;</pre></td></tr>
+<tr id="L51"><th><a href="#L51">51</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L52"><th><a href="#L52">52</a></th><td><pre>    &lt;property name=&quot;zoomed&quot; code=&quot;pzum&quot; type=&quot;boolean&quot; description=&quot;Is the window zoomed right now?&quot;&gt;</pre></td></tr>
+<tr id="L53"><th><a href="#L53">53</a></th><td><pre>        &lt;cocoa key=&quot;isZoomed&quot;/&gt;</pre></td></tr>
+<tr id="L54"><th><a href="#L54">54</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L55"><th><a href="#L55">55</a></th><td><pre>&lt;/class&gt;</pre></td></tr>
+<tr id="L56"><th><a href="#L56">56</a></th><td><pre>```</pre></td></tr>
+<tr id="L57"><th><a href="#L57">57</a></th><td><pre></pre></td></tr>
+<tr id="L58"><th><a href="#L58">58</a></th><td><pre>2. Add to &quot;SwiftTag Suite&quot; &quot;editor window&quot; class definition of `SwiftTag.sdef`: `inherits=&quot;window&quot;`</pre></td></tr>
+<tr id="L59"><th><a href="#L59">59</a></th><td><pre></pre></td></tr>
+<tr id="L60"><th><a href="#L60">60</a></th><td><pre>3. Implement `window` class properties/functionality for `editor window`.</pre></td></tr>
+<tr id="L61"><th><a href="#L61">61</a></th><td><pre>When adding UI tests do not add to `scenarioAppleScriptHarnessReadsAndWritesApplicationSettings`, instead create a new test dedicated to these changes.</pre></td></tr>
+<tr id="L62"><th><a href="#L62">62</a></th><td><pre>Use Apple Docs Scout agent to review Apple’s AppleScript documentation to confirm use of latest technology, coding patterns, etc.</pre></td></tr>
+<tr id="L63"><th><a href="#L63">63</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L64"><th><a href="#L64">64</a></th><td><pre></pre></td></tr>
+<tr id="L65"><th><a href="#L65">65</a></th><td><pre>## Assistant 2026-05-02T20:33:08Z (0s since User start)</pre></td></tr>
+<tr id="L66"><th><a href="#L66">66</a></th><td><pre></pre></td></tr>
+<tr id="L67"><th><a href="#L67">67</a></th><td><pre>Need inspect sdef, Apple Docs Scout profile, guide, files. Window class likely in sdef. Use parallel.</pre></td></tr>
+<tr id="L68"><th><a href="#L68">68</a></th><td><pre></pre></td></tr>
+<tr id="L69"><th><a href="#L69">69</a></th><td><pre>Spawning</pre></td></tr>
+<tr id="L70"><th><a href="#L70">70</a></th><td><pre>Input: Apple Docs Scout task for SwiftTag AppleScript work. Read Docs/AppleDocsIndex/apple-docs-scout-agent.md. Review primary Apple documentation/local index for Cocoa scripting SDEF classes/properties, NSWindow AppleScript/KVC support, NSScriptCommand/NSScriptClassDescription patterns relevant to adding a `window` class inherited by `editor window` in SwiftTag.sdef. Return concise findings with source paths or Apple URLs, and call out implementation implications for exposing NSWindow properties like title, uniqueID, orderedIndex, bounds, closeable/collapsed/full screen/position/resizable/visible/zoomable/zoomed.</pre></td></tr>
+<tr id="L71"><th><a href="#L71">71</a></th><td><pre></pre></td></tr>
+<tr id="L72"><th><a href="#L72">72</a></th><td><pre>Found script wrapper shape. Need add window terminology plus KVC properties on SwiftTagScriptEditorWindow; UI test separate from settings suite.</pre></td></tr>
+<tr id="L73"><th><a href="#L73">73</a></th><td><pre></pre></td></tr>
+<tr id="L74"><th><a href="#L74">74</a></th><td><pre>Docs scout confirms AppKit standard keys. Patch now: SDEF inheritance, wrapper forwarding to live NSWindow, focused unit/UI tests.</pre></td></tr>
+<tr id="L75"><th><a href="#L75">75</a></th><td><pre></pre></td></tr>
+<tr id="L76"><th><a href="#L76">76</a></th><td><pre>Local diagnostics clean. XML parses. Build next, then targeted unit/UI AppleScript harness checks.</pre></td></tr>
+<tr id="L77"><th><a href="#L77">77</a></th><td><pre></pre></td></tr>
+<tr id="L78"><th><a href="#L78">78</a></th><td><pre>Unit coverage passes. Enabling AppleScript UI harness with temp sentinel, then run only new UI test.</pre></td></tr>
+<tr id="L79"><th><a href="#L79">79</a></th><td><pre></pre></td></tr>
+<tr id="L80"><th><a href="#L80">80</a></th><td><pre>Implemented.</pre></td></tr>
+<tr id="L81"><th><a href="#L81">81</a></th><td><pre></pre></td></tr>
+<tr id="L82"><th><a href="#L82">82</a></th><td><pre>Changed:</pre></td></tr>
+<tr id="L83"><th><a href="#L83">83</a></th><td><pre>- [SwiftTag.sdef](Swift/SwiftTag/SwiftTag/SwiftTag.sdef): added `window` class, made `editor window` inherit it.</pre></td></tr>
+<tr id="L84"><th><a href="#L84">84</a></th><td><pre>- [SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift): forwarded inherited window keys to live `NSWindow`.</pre></td></tr>
+<tr id="L85"><th><a href="#L85">85</a></th><td><pre>- [SwiftTagAppleScriptTests.swift](Swift/SwiftTag/SwiftTagTests/SwiftTagAppleScriptTests.swift): added unit coverage.</pre></td></tr>
+<tr id="L86"><th><a href="#L86">86</a></th><td><pre>- [SwiftTagUITests.swift](Swift/SwiftTag/SwiftTagUITests/SwiftTagUITests.swift): added dedicated AppleScript UI test, separate from settings scenario.</pre></td></tr>
+<tr id="L87"><th><a href="#L87">87</a></th><td><pre></pre></td></tr>
+<tr id="L88"><th><a href="#L88">88</a></th><td><pre>Apple Docs Scout checked AppKit Cocoa scripting docs and `NSWindowScripting.h`; implementation follows KVC scripting pattern while preserving existing `window id` UUID.</pre></td></tr>
+<tr id="L89"><th><a href="#L89">89</a></th><td><pre></pre></td></tr>
+<tr id="L90"><th><a href="#L90">90</a></th><td><pre>Verified:</pre></td></tr>
+<tr id="L91"><th><a href="#L91">91</a></th><td><pre>- `BuildProject` passed.</pre></td></tr>
+<tr id="L92"><th><a href="#L92">92</a></th><td><pre>- `SwiftTagAppleScriptTests`: 29 passed.</pre></td></tr>
+<tr id="L93"><th><a href="#L93">93</a></th><td><pre>- `SwiftTagAppleScriptUITests/testAppleScriptHarnessReadsEditorWindowWindowProperties()`: passed.</pre></td></tr>
+<tr id="L94"><th><a href="#L94">94</a></th><td><pre>- `xmllint --noout SwiftTag/SwiftTag.sdef`: passed.</pre></td></tr>
+<tr id="L95"><th><a href="#L95">95</a></th><td><pre></pre></td></tr>
+<tr id="L96"><th><a href="#L96">96</a></th><td><pre>[ 2026-05-02T20:43:58Z (10m 50s since Assistant start) ]</pre></td></tr>
+<tr id="L97"><th><a href="#L97">97</a></th><td><pre></pre></td></tr>
+<tr id="L98"><th><a href="#L98">98</a></th><td><pre>## User 2026-05-02T23:29:08Z (2h 56m 0s since Assistant start)</pre></td></tr>
+<tr id="L99"><th><a href="#L99">99</a></th><td><pre></pre></td></tr>
+<tr id="L100"><th><a href="#L100">100</a></th><td><pre>1. Add to &quot;SwiftTag Suite&quot; of `SwiftTag.sdef`</pre></td></tr>
+<tr id="L101"><th><a href="#L101">101</a></th><td><pre>```XML</pre></td></tr>
+<tr id="L102"><th><a href="#L102">102</a></th><td><pre>&lt;record-type name=&quot;point&quot; code=&quot;poin&quot; description=&quot;A point value in 2D space.&quot;&gt;</pre></td></tr>
+<tr id="L103"><th><a href="#L103">103</a></th><td><pre>    &lt;property name=&quot;x&quot; code=&quot;xpos&quot; type=&quot;integer&quot; description=&quot;The x coordinate value.&quot;&gt;</pre></td></tr>
+<tr id="L104"><th><a href="#L104">104</a></th><td><pre>        &lt;cocoa key=&quot;x&quot;/&gt;</pre></td></tr>
+<tr id="L105"><th><a href="#L105">105</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L106"><th><a href="#L106">106</a></th><td><pre>    &lt;property name=&quot;y&quot; code=&quot;ypos&quot; type=&quot;integer&quot; description=&quot;The y coordinate value.&quot;&gt;</pre></td></tr>
+<tr id="L107"><th><a href="#L107">107</a></th><td><pre>        &lt;cocoa key=&quot;y&quot;/&gt;</pre></td></tr>
+<tr id="L108"><th><a href="#L108">108</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L109"><th><a href="#L109">109</a></th><td><pre>&lt;/record-type&gt;</pre></td></tr>
+<tr id="L110"><th><a href="#L110">110</a></th><td><pre></pre></td></tr>
+<tr id="L111"><th><a href="#L111">111</a></th><td><pre>&lt;record-type name=&quot;rectangle&quot; code=&quot;rect&quot; description=&quot;A rectangle value in 2D space.&quot;&gt;</pre></td></tr>
+<tr id="L112"><th><a href="#L112">112</a></th><td><pre>    &lt;property name=&quot;x&quot; code=&quot;xpos&quot; type=&quot;integer&quot; description=&quot;The x coordinate value.&quot;&gt;</pre></td></tr>
+<tr id="L113"><th><a href="#L113">113</a></th><td><pre>        &lt;cocoa key=&quot;x&quot;/&gt;</pre></td></tr>
+<tr id="L114"><th><a href="#L114">114</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L115"><th><a href="#L115">115</a></th><td><pre>    &lt;property name=&quot;y&quot; code=&quot;ypos&quot; type=&quot;integer&quot; description=&quot;The y coordinate value.&quot;&gt;</pre></td></tr>
+<tr id="L116"><th><a href="#L116">116</a></th><td><pre>        &lt;cocoa key=&quot;y&quot;/&gt;</pre></td></tr>
+<tr id="L117"><th><a href="#L117">117</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L118"><th><a href="#L118">118</a></th><td><pre>    &lt;property name=&quot;width&quot; code=&quot;widt&quot; type=&quot;integer&quot; description=&quot;The width coordinate value.&quot;&gt;</pre></td></tr>
+<tr id="L119"><th><a href="#L119">119</a></th><td><pre>        &lt;cocoa key=&quot;width&quot;/&gt;</pre></td></tr>
+<tr id="L120"><th><a href="#L120">120</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L121"><th><a href="#L121">121</a></th><td><pre>    &lt;property name=&quot;height&quot; code=&quot;heig&quot; type=&quot;integer&quot; description=&quot;The height coordinate value.&quot;&gt;</pre></td></tr>
+<tr id="L122"><th><a href="#L122">122</a></th><td><pre>        &lt;cocoa key=&quot;height&quot;/&gt;</pre></td></tr>
+<tr id="L123"><th><a href="#L123">123</a></th><td><pre>    &lt;/property&gt;</pre></td></tr>
+<tr id="L124"><th><a href="#L124">124</a></th><td><pre>&lt;/record-type&gt;</pre></td></tr>
+<tr id="L125"><th><a href="#L125">125</a></th><td><pre>```</pre></td></tr>
+<tr id="L126"><th><a href="#L126">126</a></th><td><pre></pre></td></tr>
+<tr id="L127"><th><a href="#L127">127</a></th><td><pre>2. Update `SwiftTagAppleScriptSupport.swift` to use record-type `point` for `position` property of `window` class.</pre></td></tr>
+<tr id="L128"><th><a href="#L128">128</a></th><td><pre>3. Update `SwiftTagAppleScriptSupport.swift` to use record-type `rectangle` for `bounds` property of `window` class.</pre></td></tr>
+<tr id="L129"><th><a href="#L129">129</a></th><td><pre></pre></td></tr>
+<tr id="L130"><th><a href="#L130">130</a></th><td><pre>Add/update tests as needed.</pre></td></tr>
+<tr id="L131"><th><a href="#L131">131</a></th><td><pre>Use Apple Docs Scout agent to review Apple’s AppleScript documentation to confirm use of latest technology, coding patterns, etc.</pre></td></tr>
+<tr id="L132"><th><a href="#L132">132</a></th><td><pre>Ask questions for clarification as needed.</pre></td></tr>
+<tr id="L133"><th><a href="#L133">133</a></th><td><pre></pre></td></tr>
+<tr id="L134"><th><a href="#L134">134</a></th><td><pre>## Assistant 2026-05-02T23:29:08Z (0s since User start)</pre></td></tr>
+<tr id="L135"><th><a href="#L135">135</a></th><td><pre></pre></td></tr>
+<tr id="L136"><th><a href="#L136">136</a></th><td><pre>Using Apple Docs Scout profile first, then code. Need know current SDEF shape, AppleScript bridge helpers, existing harness before touching files.</pre></td></tr>
+<tr id="L137"><th><a href="#L137">137</a></th><td><pre></pre></td></tr>
+<tr id="L138"><th><a href="#L138">138</a></th><td><pre>Profile says prefer Xcode docs, local index, SDK headers, then Apple web. AppleScript SDEF docs likely thin locally, so checking exact local hits plus current source behavior now.</pre></td></tr>
+<tr id="L139"><th><a href="#L139">139</a></th><td><pre></pre></td></tr>
+<tr id="L140"><th><a href="#L140">140</a></th><td><pre>Found shape. position/bounds already declare custom type names but SDEF lacks record definitions, and support still returns lists. I’m changing runtime values to KVC dictionaries keyed by record properties, while keeping old list inputs accepted for script compatibility.</pre></td></tr>
+<tr id="L141"><th><a href="#L141">141</a></th><td><pre></pre></td></tr>
+<tr id="L142"><th><a href="#L142">142</a></th><td><pre>Runtime edit done. Now tests need prove: class description still maps property types, unit setters accept Apple event records, UI AppleScript can read record fields through terminology.</pre></td></tr>
+<tr id="L143"><th><a href="#L143">143</a></th><td><pre></pre></td></tr>
+<tr id="L144"><th><a href="#L144">144</a></th><td><pre>SDEF validates as XML. Dirty worktree had existing AppleScript window-class work before this turn; I’m leaving it intact and layering only record change on top. Next: build, then targeted AppleScript unit/UI harness if environment allows.</pre></td></tr>
+<tr id="L145"><th><a href="#L145">145</a></th><td><pre></pre></td></tr>
+<tr id="L146"><th><a href="#L146">146</a></th><td><pre>Build clean. Now running smallest useful tests: unit test for record-backed window properties first, then AppleScript UI harness for terminology field access.</pre></td></tr>
+<tr id="L147"><th><a href="#L147">147</a></th><td><pre></pre></td></tr>
+<tr id="L148"><th><a href="#L148">148</a></th><td><pre>UI harness skipped by design without osascript opt-in. Creating temporary sentinel in /tmp, rerunning single UI test, then removing sentinel.</pre></td></tr>
+<tr id="L149"><th><a href="#L149">149</a></th><td><pre></pre></td></tr>
+<tr id="L150"><th><a href="#L150">150</a></th><td><pre>UI failure exposed AppleScript count on typed record returns record-container count, not field count here. Field access is target behavior, so tightening test to check fields instead of record count.</pre></td></tr>
+<tr id="L151"><th><a href="#L151">151</a></th><td><pre></pre></td></tr>
+<tr id="L152"><th><a href="#L152">152</a></th><td><pre>Implemented.</pre></td></tr>
+<tr id="L153"><th><a href="#L153">153</a></th><td><pre></pre></td></tr>
+<tr id="L154"><th><a href="#L154">154</a></th><td><pre>Changed:</pre></td></tr>
+<tr id="L155"><th><a href="#L155">155</a></th><td><pre>- [SwiftTag.sdef](Swift/SwiftTag/SwiftTag/SwiftTag.sdef:197): added `point` and `rectangle` record types.</pre></td></tr>
+<tr id="L156"><th><a href="#L156">156</a></th><td><pre>- [SwiftTag.sdef](Swift/SwiftTag/SwiftTag/SwiftTag.sdef:383): `window.bounds` uses `rectangle`; `position` uses `point`.</pre></td></tr>
+<tr id="L157"><th><a href="#L157">157</a></th><td><pre>- [SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift:3875): `bounds` / `position` now return record dictionaries.</pre></td></tr>
+<tr id="L158"><th><a href="#L158">158</a></th><td><pre>- [SwiftTagAppleScriptSupport.swift](Swift/SwiftTag/SwiftTag/Shared/Utilities/SwiftTagAppleScriptSupport.swift:4205): setters accept record descriptors plus old list inputs.</pre></td></tr>
+<tr id="L159"><th><a href="#L159">159</a></th><td><pre></pre></td></tr>
+<tr id="L160"><th><a href="#L160">160</a></th><td><pre>Apple Docs Scout check: current Apple path remains SDEF + Cocoa scripting/KVC + `NSAppleEventDescriptor` records. Sources checked: Apple `NSScriptSuiteRegistry`, `NSScriptKeyValueCoding`, `NSAppleEventDescriptor.record()` docs, local `sdef.dtd`.</pre></td></tr>
+<tr id="L161"><th><a href="#L161">161</a></th><td><pre></pre></td></tr>
+<tr id="L162"><th><a href="#L162">162</a></th><td><pre>Verification:</pre></td></tr>
+<tr id="L163"><th><a href="#L163">163</a></th><td><pre>- BuildProject passed.</pre></td></tr>
+<tr id="L164"><th><a href="#L164">164</a></th><td><pre>- `xmllint --noout --valid SwiftTag/SwiftTag.sdef` passed.</pre></td></tr>
+<tr id="L165"><th><a href="#L165">165</a></th><td><pre>- `git diff --check` passed.</pre></td></tr>
+<tr id="L166"><th><a href="#L166">166</a></th><td><pre>- Targeted unit tests passed: 2/2.</pre></td></tr>
+<tr id="L167"><th><a href="#L167">167</a></th><td><pre>- Targeted AppleScript UI harness passed: 1/1.</pre></td></tr>
+<tr id="L168"><th><a href="#L168">168</a></th><td><pre></pre></td></tr>
+<tr id="L169"><th><a href="#L169">169</a></th><td><pre>Note: AppleScript `count` on typed record returned record-container count, not field count, so UI test now verifies direct field access: `x`, `y`, `width`, `height`.</pre></td></tr>
+<tr id="L170"><th><a href="#L170">170</a></th><td><pre></pre></td></tr>
+<tr id="L171"><th><a href="#L171">171</a></th><td><pre>[ 2026-05-02T23:37:33Z (8m 25s since Assistant start) ]</pre></td></tr>
+<tr id="L172"><th><a href="#L172">172</a></th><td><pre></pre></td></tr>
+<tr id="L173"><th><a href="#L173">173</a></th><td><pre>End of Transcription.</pre></td></tr></table></main></body></html>

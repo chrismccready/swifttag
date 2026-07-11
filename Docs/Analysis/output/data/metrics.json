@@ -1,0 +1,73 @@
+{
+  "analytical_lenses": {
+    "commit": "commits only",
+    "plan": "Plan direct and implementation rollup; not additive with Commit lens",
+    "theme": "Commit and Plan lenses reported separately"
+  },
+  "assistant_processing": {
+    "count": 435,
+    "max": 7545.0,
+    "mean": 477.4344827586207,
+    "median": 252.0,
+    "min": 6.0,
+    "total": 207684.0
+  },
+  "commit_count": 208,
+  "plan_count": 33,
+  "plan_source_count": 36,
+  "review_status_counts": {
+    "invalid": 0,
+    "reviewed": 81,
+    "stale": 0,
+    "unreviewed": 0
+  },
+  "theme_count": 10,
+  "theme_coverage_percentage": 100.0,
+  "themed_commit_count": 208,
+  "transcript_count": 81,
+  "transcript_segment_count": 524,
+  "unthemed_commit_count": 0,
+  "user_response": {
+    "count": 363,
+    "max": 177099.0,
+    "mean": 6100.66391184573,
+    "median": 1312.0,
+    "min": 0.0,
+    "total": 2214541.0
+  },
+  "user_response_brackets": {
+    "0-1h": {
+      "count": 279,
+      "max": 3597.0,
+      "mean": 1062.215053763441,
+      "median": 816.0,
+      "min": 0.0,
+      "total": 296358.0
+    },
+    "1-2h": {
+      "count": 29,
+      "max": 7128.0,
+      "mean": 4999.517241379311,
+      "median": 5121.0,
+      "min": 3653.0,
+      "total": 144986.0
+    },
+    "2-4h": {
+      "count": 21,
+      "max": 14143.0,
+      "mean": 10176.333333333334,
+      "median": 9620.0,
+      "min": 7646.0,
+      "total": 213703.0
+    },
+    ">4h": {
+      "count": 34,
+      "max": 177099.0,
+      "mean": 45867.470588235294,
+      "median": 38099.5,
+      "min": 14929.0,
+      "total": 1559494.0
+    }
+  },
+  "warning_count": 36
+}

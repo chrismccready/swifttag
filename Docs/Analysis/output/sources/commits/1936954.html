@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commit: fix(editor): preserve track title editing and queued finder opens</title>
+  <link rel="stylesheet" href="../../assets.css">
+</head>
+<body>
+<header><h1>Commit: fix(editor): preserve track title editing and queued finder opens</h1><nav>
+  <a href="../../index.html">Index</a>
+  <a href="../../commits.html">Commits</a>
+  <a href="../../plans.html">Plans</a>
+  <a href="../../themes.html">Themes</a>
+  <a href="../../response-times.html">Response Times</a>
+  <a href="../../difficulty.html">Difficulty</a>
+  <a href="../../charts.html">Charts</a>
+  <a href="../../transcripts.html">Transcripts</a>
+  <a href="../../warnings.html">Warnings</a>
+</nav></header><main>
+<p><strong>Commit Date:</strong> 2026-04-06</p>
+<p><code>19369540b1a2f92b3ab4fd1cedb4db7cefe41498</code></p>
+<p>fix(editor): preserve track title editing and queued finder opens</p>
+<h2>Body</h2><pre>- keep the track title field focused while editing table rows
+- remove the table status refresh identity reset and related view plumbing
+- allow inactive finder opens to create a new session when a window action already exists
+- update track file inspector tests for the removed track view initializer argument
+- compare loaded picture fields explicitly in the document reader test to avoid actor isolation warnings
+
+test(ui): add regression for track title focus loss
+
+- verify renaming a track in the table keeps the edited value after the first text change
+
+docs(transcript): add transcript for test bug fixes
+
+- add the April 6 transcript covering the staged test and editor fixes</pre>
+<section class="summary-grid">
+  <div><strong>Difficulty</strong><span>53.0 High</span></div>
+  <div><strong>Weight Coverage</strong><span>100%</span></div>
+  <div><strong>Elapsed</strong><span>36m 15s</span></div>
+  <div><strong>Assistant</strong><span>11m 23s</span></div>
+  <div><strong>User Response</strong><span>24m 52s</span></div>
+  <div><strong>Back/Forth</strong><span>5.0</span></div>
+</section>
+<h2>Themes</h2><p><a href="../../themes/applescript.html">AppleScript</a>, <a href="../../themes/diff.html">Diff</a>, <a href="../../themes/picture.html">Picture</a>, <a href="../../themes/project.html">Project</a>, <a href="../../themes/swifttag-document.html">SwiftTag Document</a>, <a href="../../themes/tags.html">Tags</a></p>
+<h2>Associated Plans</h2><p>None</p>
+<h2>Associated Transcripts</h2><p><a href="../../sources/transcripts/transcript-2026-04-06-4-TestBugFixes.html#L1">transcript-2026-04-06-4-TestBugFixes</a></p>
+<h2>Reviewed Segment Evidence</h2><table><thead><tr>
+<th>Transcript</th>
+<th>Segment</th>
+<th>Role</th>
+<th>Weight</th>
+<th>Lines</th>
+<th>Atomic Elapsed</th>
+</tr></thead><tbody>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-4-TestBugFixes.html#L12">transcript-2026-04-06-4-TestBugFixes</a></td><td>transcript-2026-04-06-4-TestBugFixes:segment-001</td><td>work</td><td>1.000</td><td>28.3</td><td>14m 9s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-4-TestBugFixes.html#L38">transcript-2026-04-06-4-TestBugFixes</a></td><td>transcript-2026-04-06-4-TestBugFixes:segment-002</td><td>work</td><td>1.000</td><td>47.9</td><td>9m 32s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-4-TestBugFixes.html#L82">transcript-2026-04-06-4-TestBugFixes</a></td><td>transcript-2026-04-06-4-TestBugFixes:segment-003</td><td>work</td><td>1.000</td><td>27.2</td><td>4m 3s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-4-TestBugFixes.html#L107">transcript-2026-04-06-4-TestBugFixes</a></td><td>transcript-2026-04-06-4-TestBugFixes:segment-004</td><td>work</td><td>1.000</td><td>23.9</td><td>6m 52s</td></tr>
+<tr><td><a href="../../sources/transcripts/transcript-2026-04-06-4-TestBugFixes.html#L129">transcript-2026-04-06-4-TestBugFixes</a></td><td>transcript-2026-04-06-4-TestBugFixes:segment-005</td><td>work</td><td>1.000</td><td>21.8</td><td>1m 39s</td></tr>
+</tbody></table>
+<h2>Changed Files</h2><table><thead><tr>
+<th>Path</th>
+<th>Additions</th>
+<th>Deletions</th>
+<th>Class</th>
+</tr></thead><tbody>
+<tr><td>Docs/Plans/Transcripts/transcript-2026-04-06-4-TestBugFixes.md</td><td>149</td><td>0</td><td>transcripts</td></tr>
+<tr><td>SwiftTag/ContentView.swift</td><td>0</td><td>16</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorTrackFileView.swift</td><td>3</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Features/TagEditor/TagEditorView.swift</td><td>0</td><td>2</td><td>app_code</td></tr>
+<tr><td>SwiftTag/Shared/Utilities/EditorWindowCoordinator.swift</td><td>3</td><td>1</td><td>app_code</td></tr>
+<tr><td>SwiftTagTests/SwiftTagDocumentTests.swift</td><td>10</td><td>1</td><td>tests</td></tr>
+<tr><td>SwiftTagTests/TrackStatusViewInspectorTests.swift</td><td>0</td><td>6</td><td>tests</td></tr>
+<tr><td>SwiftTagUITests/SwiftTagUITests.swift</td><td>12</td><td>0</td><td>tests</td></tr>
+</tbody></table>
+<h2>Difficulty Inputs</h2><table><thead><tr>
+<th>Signal</th>
+<th>Raw Value</th>
+</tr></thead><tbody>
+<tr><td>code_lines</td><td>27.00</td></tr>
+<tr><td>transcript_lines</td><td>149.00</td></tr>
+<tr><td>plan_lines</td><td>0.00</td></tr>
+<tr><td>elapsed_time</td><td>2175.00</td></tr>
+<tr><td>assistant_processing_time</td><td>683.00</td></tr>
+<tr><td>back_and_forth_count</td><td>5.00</td></tr>
+</tbody></table>
+<h2>Notes</h2>
+<p>No Commit-specific notes.</p></main></body></html>
